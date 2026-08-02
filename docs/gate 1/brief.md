@@ -6,7 +6,13 @@
 
 ## Vấn đề (The Problem)
 
-Sinh viên năm 3–4 và mới tốt nghiệp thường dùng một CV chung cho nhiều vị trí, chưa biết hồ sơ thiếu gì so với Job Description (JD) và thiếu môi trường luyện phỏng vấn có phản hồi cụ thể. Việc tự dùng template hoặc AI tổng quát cũng có nguy cơ tạo CV chung chung, thổi phồng kinh nghiệm và làm sinh viên thiếu tự tin khi ứng tuyển.
+Thực trạng tìm kiếm việc làm và thực tập của sinh viên hiện nay đang đối mặt với nhiều rào cản lớn từ cả phía cá nhân lẫn nguồn lực hỗ trợ từ nhà trường.
+
+Trước hết, phần lớn sinh viên chuẩn bị đi làm hoặc thực tập gặp tình trạng CV chưa chuẩn hóa theo JD. Các bạn thường có thói quen dùng duy nhất một bản CV chung cho mọi vị trí ứng tuyển, dẫn đến việc thiếu các từ khóa chuyên ngành, cấu trúc CV còn yếu và thiếu bằng chứng định lượng phù hợp với Job Description (JD). Điều này làm tăng nguy cơ bị loại ngay từ vòng lọc ATS ban đầu.
+
+Bên cạnh đó, sinh viên cũng thiếu cơ hội cọ xát phỏng vấn do không có môi trường luyện tập thực tế bám sát từng JD cụ thể, đồng thời thiếu nhận xét (feedback) chuyên sâu về kỹ năng trả lời. Hậu quả là các bạn dễ nảy sinh tâm lý lo âu và thiếu tự tin khi bước vào buổi phỏng vấn thật.
+
+Cuối cùng, rào cản còn đến từ sự giới hạn về nguồn lực cố vấn tại các trung tâm hướng nghiệp của trường đại học, khiến họ khó có thể cung cấp dịch vụ tư vấn 1-1 liên tục và mang tính cá nhân hóa trên quy mô lớn cho hàng nghìn sinh viên cùng lúc.
 
 ## Giải pháp (The Solution)
 
