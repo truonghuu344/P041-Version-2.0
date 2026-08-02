@@ -2,7 +2,7 @@
 
 ## Tên dự án (Project Name)
 
-**Career Assistant X** — Trợ lý nghề nghiệp AI giúp sinh viên tối ưu CV theo từng vị trí và luyện phỏng vấn thực tế.
+**CV Assistant** — Trợ lý nghề nghiệp AI giúp sinh viên tối ưu CV theo từng vị trí và luyện phỏng vấn thực tế.
 
 ## Vấn đề (The Problem)
 
