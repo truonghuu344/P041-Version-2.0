@@ -1,4 +1,4 @@
-# Gate 1 Brief — Career Assistant X
+# Gate 1 Brief — CV ASSISTANT
 
 ## Tên dự án (Project Name)
 
