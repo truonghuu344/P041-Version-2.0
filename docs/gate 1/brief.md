@@ -16,13 +16,13 @@ Cuối cùng, rào cản còn đến từ sự giới hạn về nguồn lực c
 
 ## Giải pháp (The Solution)
 
-Xây dựng web app cho phép sinh viên:
+Nhằm giải quyết triệt để các hạn chế trên, hệ thống triển khai giải pháp AI Agent với hai mô hình chủ lực.
 
-- Upload CV có sẵn hoặc tạo CV từ thông tin thật đã cung cấp.
-- Chọn JD từ thư viện hệ thống hoặc dán JD của công ty muốn ứng tuyển.
-- Nhận Match Score, Gap Analysis và gợi ý tối ưu CV theo JD.
-- Chọn template CV chuẩn ATS, chỉnh sửa, xác nhận và tải CV.
-- Luyện phỏng vấn thử theo CV + JD; nhận điểm và feedback theo rubric STAR.
+Đầu tiên là CV Gap Analysis Agent, đảm nhận nhiệm vụ so khớp CV của sinh viên với yêu cầu công việc (JD), từ đó chỉ ra các từ khóa hay kỹ năng còn thiếu và đề xuất cách tối ưu câu từ. Đáng chú ý, quá trình này hoàn toàn dựa trên kinh nghiệm thật của sinh viên, tuyệt đối không bịa đặt hay thổi phồng thông tin.
+
+Tiếp đến là Mock Interview Agent, đóng vai trò như một nhà tuyển dụng thực thụ để tổ chức các buổi phỏng vấn thử tương tác theo đúng vị trí ứng tuyển. Agent này sẽ đặt các câu hỏi đào sâu và tiến hành chấm điểm chi tiết dựa trên mô hình rubric STAR (Situation, Task, Action, Result).
+
+Sở dĩ AI mang lại hiệu quả vượt trội so với các giải pháp truyền thống là nhờ khả năng phân tích và đối soát CV với hàng loạt tiêu chí JD chỉ trong vài giây. Ngoài ra, AI còn cung cấp phản hồi cá nhân hóa 24/7, cho phép sinh viên chủ động luyện tập phỏng vấn lặp đi lặp lại không giới hạn số lần với chi phí tối ưu nhất.
 
 ## Vai trò của AI (AI Value Proposition)
 
