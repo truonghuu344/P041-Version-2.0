@@ -1,4 +1,4 @@
-# 📋 Product Requirements Document (PRD) — Trợ Lý Nghề Nghiệp X
+# 📋 Product Requirements Document (PRD) — CV ASSISTANT
 > **Agent tối ưu CV và phỏng vấn thử cho sinh viên**  
 > **Mã dự án:** P-041 | **Nhóm:** WinTop
 > **Mentor:** Trần Vũ Anh (Andy)  
