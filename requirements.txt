@@ -1,25 +1,56 @@
-# Core
+# ==========================================
+# 1. CORE & SERVER
+# ==========================================
 fastapi>=0.115.0
 uvicorn[standard]>=0.34.0
 pydantic>=2.10.0
 pydantic-settings>=2.7.0
 python-dotenv>=1.0.0
+python-multipart>=0.0.12        # Bắt buộc để nhận File upload (CV PDF/Word)
 
-# AI / LangChain
+# ==========================================
+# 2. AUTHENTICATION & SECURITY
+# ==========================================
+pyjwt>=2.8.0                    # Tạo và verify JWT token
+passlib[bcrypt]>=1.7.4          # Mã hóa mật khẩu
+bcrypt>=4.1.0                   # Engine mã hóa bcrypt
+
+# ==========================================
+# 3. DATABASE & CACHING
+# ==========================================
+sqlalchemy>=2.0.0               # ORM quản lý Database
+alembic>=1.14.0                 # DB Migration tool
+psycopg2-binary>=2.9.0          # Driver kết nối PostgreSQL
+asyncpg>=0.29.0                 # Async driver cho PostgreSQL (tùy chọn tối ưu tốc độ)
+redis>=5.0.0                    # Cache session & state cho LangGraph
+
+# ==========================================
+# 4. AI & LANGCHAIN FRAMEWORK
+# ==========================================
 langchain>=0.3.0
+langchain-community>=0.3.0
 langchain-openai>=0.3.0
-langgraph>=0.2.0
+langgraph>=0.2.0                # Xử lý luồng hội thoại phỏng vấn AI phức tạp
+tiktoken>=0.7.0                 # Dem token cho OpenAI
 
-# Database (uncomment as needed)
-# sqlalchemy>=2.0.0
-# alembic>=1.14.0
-# psycopg2-binary>=2.9.0
+# ==========================================
+# 5. DOCUMENT PROCESSING & EXPORT (XỬ LÝ CV)
+# ==========================================
+pypdf>=4.0.0                    # Đọc/trích xuất text từ CV PDF
+python-docx>=1.1.0              # Đọc/trích xuất text từ CV Word (.docx)
+weasyprint>=61.0                # Xuất báo cáo phỏng vấn / CV tối ưu ra file PDF
+jinja2>=3.1.0                   # Template engine để render HTML trước khi convert sang PDF
 
-# Vector Store (uncomment as needed)
-# chromadb>=0.5.0
+# ==========================================
+# 6. EMAIL & BACKGROUND TASKS
+# ==========================================
+resend>=2.0.0                   # Service gửi email thông báo (Lịch phỏng vấn / Từ chối)
+celery>=5.4.0                   # Quản lý task ngầm (Gửi mail, xử lý file nặng)
 
-# Dev tools
-ruff>=0.8.0
-pytest>=8.0.0
-pytest-asyncio>=0.24.0
-httpx>=0.28.0
+# ==========================================
+# 7. DEV, TESTING & HTTP CLIENT
+# ==========================================
+httpx>=0.28.0                   # HTTP Client async
+ruff>=0.8.0                     # Linter & Formatter code
+pytest>=8.0.0                   # Unit testing
+pytest-asyncio>=0.24.0          # Async testing
