@@ -768,24 +768,8 @@ function startAppLogic() {
   /* ============================================================
      🚀 ROUTER & SPACESHIP SINGLE PAGE VIEW SWITCHER
   ============================================================ */
-  const VIEW_ORDER = ['dashboard', 'cv', 'jobs', 'interview', 'gap'];
+  const ALL_VIEWS = ['dashboard', 'cv', 'jobs', 'interview', 'gap', 'history', 'profile'];
   let currentViewName = 'dashboard';
-
-  const views = {
-    dashboard: document.getElementById('view-dashboard'),
-    cv: document.getElementById('view-cv'),
-    jobs: document.getElementById('view-jobs'),
-    interview: document.getElementById('view-interview'),
-    gap: document.getElementById('view-gap')
-  };
-
-  const navLinks = {
-    dashboard: document.getElementById('nav-dashboard'),
-    cv: document.getElementById('nav-cv'),
-    jobs: document.getElementById('nav-jobs'),
-    interview: document.getElementById('nav-interview'),
-    gap: document.getElementById('nav-gap')
-  };
 
   const roomTitles = {
     dashboard: 'COMMAND DECK // HOME',
@@ -798,9 +782,9 @@ function startAppLogic() {
   };
 
   function switchView(targetViewName) {
-    if (!views[targetViewName]) targetViewName = 'dashboard';
-    if (targetViewName === currentViewName && document.querySelector('.app-view.active')) return;
+    if (!ALL_VIEWS.includes(targetViewName)) targetViewName = 'dashboard';
 
+    const VIEW_ORDER = ['dashboard', 'cv', 'jobs', 'interview', 'gap', 'history', 'profile'];
     const currentIndex = VIEW_ORDER.indexOf(currentViewName);
     const targetIndex = VIEW_ORDER.indexOf(targetViewName);
     const direction = targetIndex >= currentIndex ? 'right' : 'left';
@@ -814,26 +798,24 @@ function startAppLogic() {
       setTimeout(() => corridorSweep.classList.remove('active'), 550);
     }
 
-    const currentEl = views[currentViewName];
-    const targetEl = views[targetViewName];
-
-    // Animate current view out & target view in
-    Object.keys(views).forEach(key => {
-      const vEl = views[key];
-      if (!vEl) return;
-
-      vEl.classList.remove('slide-out-left', 'slide-out-right', 'slide-in-left', 'slide-in-right');
-
-      if (key === targetViewName) {
-        vEl.classList.add('active');
-        vEl.classList.add(direction === 'right' ? 'slide-in-right' : 'slide-in-left');
-      } else if (key === currentViewName) {
-        vEl.classList.add(direction === 'right' ? 'slide-out-left' : 'slide-out-right');
-        setTimeout(() => {
-          if (key !== currentViewName) vEl.classList.remove('active');
-        }, 400);
-      } else {
-        vEl.classList.remove('active');
+    ALL_VIEWS.forEach(key => {
+      const vEl = document.getElementById(`view-${key}`);
+      const navEl = document.getElementById(`nav-${key}`);
+      if (vEl) {
+        if (key === targetViewName) {
+          vEl.classList.add('active');
+          vEl.style.display = 'block';
+        } else {
+          vEl.classList.remove('active');
+          vEl.style.display = 'none';
+        }
+      }
+      if (navEl) {
+        if (key === targetViewName) {
+          navEl.classList.add('active');
+        } else {
+          navEl.classList.remove('active');
+        }
       }
     });
 
@@ -844,17 +826,6 @@ function startAppLogic() {
     if (indicatorLabel && roomTitles[targetViewName]) {
       indicatorLabel.textContent = roomTitles[targetViewName];
     }
-
-    // Update nav links active class
-    Object.keys(navLinks).forEach(key => {
-      if (navLinks[key]) {
-        if (key === targetViewName) {
-          navLinks[key].classList.add('active');
-        } else {
-          navLinks[key].classList.remove('active');
-        }
-      }
-    });
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
@@ -871,6 +842,8 @@ function startAppLogic() {
       populatePageGapOptions();
     }
   }
+
+  window.switchView = switchView;
 
   function initStarMapNodes() {
     const nodes = document.querySelectorAll('.star-map-container .node-job');
@@ -946,45 +919,61 @@ function startAppLogic() {
       'feat-match-desc': 'Gap Analysis',
       'feat-custom-name': 'Tạo Custom',
       'feat-custom-desc': 'Job Description',
-      'auth-title-login': 'Chào mừng trở lại',
-      'auth-sub-login': 'Đăng nhập để tiếp tục hành trình nâng cấp sự nghiệp cùng AI Agent',
-      'auth-title-reg': 'Tạo tài khoản mới',
-      'auth-sub-reg': 'Tham gia Career Assistant X để tối ưu CV & phỏng vấn',
-      'tab-auth-login': 'Đăng Nhập',
-      'tab-auth-register': 'Đăng Ký',
-      'label-fullname': 'Họ và tên',
-      'label-role': 'Vai trò',
-      'label-email': 'Email',
-      'label-password': 'Mật khẩu',
-      'btn-submit-login': 'Đăng nhập',
-      'btn-submit-reg': 'Đăng ký tài khoản',
-      'modal-cv-title': '📄 Upload & Quản Lý CV',
-      'modal-cv-sub': 'Trích xuất kỹ năng, kinh nghiệm & dự án tự động bằng AI',
-      'label-cv-name': 'Tên CV (Tùy chọn)',
-      'label-cv-file': 'Chọn File CV (.pdf hoặc .docx, max 10MB)',
-      'btn-cv-upload': 'Tải Lên & Parse CV',
-      'cv-saved-list-title': 'Danh sách CV đã lưu của bạn:',
-      'modal-jd-title': '💼 Thư Viện Job Descriptions (JD)',
-      'modal-jd-sub': 'Chọn JD mẫu từ hệ thống hoặc dán JD công ty bên ngoài',
-      'tab-system-jds': 'JD Mẫu Hệ Thống',
-      'tab-custom-jd': 'Dán JD Tùy Chỉnh',
-      'label-jd-position': 'Tên vị trí công việc',
-      'label-jd-company': 'Tên công ty',
-      'label-jd-location': 'Địa điểm',
-      'label-jd-requirements': 'Nội dung Yêu cầu Công việc (Requirements Text)',
-      'btn-save-custom-jd': 'Lưu Job Description Tùy Chỉnh',
-      'modal-gap-title': '🎯 Phân Tích Match Score & Gap Analysis',
-      'modal-gap-sub': 'So khớp CV với JD & đề xuất tối ưu câu từ Chân Thật (Anti-Hallucination)',
-      'label-select-cv': 'Chọn CV:',
-      'label-select-jd': 'Chọn JD Mục Tiêu:',
-      'btn-run-gap': 'Phân Tích Khớp CV - JD',
-      'modal-int-title': '🎙️ Phòng Phỏng Vấn Thử (STAR Rubric)',
-      'modal-int-sub': 'Đóng vai nhà tuyển dụng hỏi đáp chuyên sâu & tự động gợi mở follow-up',
-      'label-int-cv': 'Chọn CV Phỏng Vấn:',
-      'label-int-jd': 'Chọn JD Ứng Tuyển:',
-      'btn-start-int': 'Bắt Đầu Phiên Phỏng Vấn',
-      'placeholder-answer': 'Nhập câu trả lời của bạn...',
-      'btn-send-answer': 'Gửi'
+      'quick-access-badge': '✨ TRUY CẬP NHANH CÁC TÍNH NĂNG CỐT LÕI',
+      'icon-label-cv': '📄 CV Scanner',
+      'icon-label-jd': '💼 Thư viện JD',
+      'icon-label-interview': '🎙️ Phỏng vấn STAR',
+      'icon-label-gap': '🎯 Gap Analysis',
+      'title-cv-btn': 'Upload & Quản lý CV',
+      'title-jd-btn': 'Thư viện Job Descriptions (JD)',
+      'title-int-btn': 'Phòng phỏng vấn thử STAR',
+      'title-gap-btn': 'Chạy Gap Analysis (CV vs JD)',
+      'pricing-tag': '⚡ NÂNG CẤP SỨC MẠNH AI',
+      'pricing-title': 'Các Gói Dịch Vụ & Nâng Cấp',
+      'pricing-sub': 'Lựa chọn gói phù hợp để làm chủ hành trình chinh phục mọi nhà tuyển dụng',
+      'plan-basic-name': 'Gói Cơ Bản',
+      'plan-basic-desc': 'Trải nghiệm các tính năng cốt lõi cho ứng viên mới bắt đầu',
+      'plan-basic-price': '0đ',
+      'plan-free-forever': '/ Trọn đời',
+      'feat-b1': 'Tối ưu 3 CV cơ bản',
+      'feat-b2': 'Luyện phỏng vấn STAR 5 lượt/tháng',
+      'feat-b3': 'Tra cứu Thư viện JD mẫu hệ thống',
+      'feat-b4': 'Anti-Hallucination chuyên sâu',
+      'feat-b5': 'Tạo Custom Job Description',
+      'btn-plan-basic': 'Bắt Đầu Miễn Phí',
+      'badge-popular': '🔥 PHỔ BIẾN NHẤT',
+      'plan-pro-name': 'Gói Pro Copilot',
+      'plan-pro-desc': 'Tăng 300% cơ hội nhận Offer với sự trợ giúp toàn diện của AI Agent',
+      'plan-pro-price': '199.000đ',
+      'plan-period-month': '/ Tháng',
+      'feat-p1': 'Không giới hạn tối ưu CV theo JD',
+      'feat-p2': 'Luyện phỏng vấn STAR AI toàn diện & gợi mở follow-up',
+      'feat-p3': 'Thuật toán Anti-Hallucination bảo toàn 100% độ thật',
+      'feat-p4': 'Phân tích Gap Analysis & Đề xuất từ khóa ATS',
+      'feat-p5': 'Xuất báo cáo đánh giá kỹ năng phỏng vấn PDF',
+      'btn-plan-pro': 'Nâng Cấp Pro Ngay',
+      'plan-ent-name': 'Gói Enterprise / Mentor',
+      'plan-ent-desc': 'Giải pháp chuyên sâu cho Nhà tuyển dụng, HR & Chuyên gia Hướng nghiệp',
+      'plan-ent-price': '499.000đ',
+      'feat-e1': 'Tất cả đặc quyền của Gói Pro',
+      'feat-e2': 'Tạo Custom Job Description không giới hạn',
+      'feat-e3': 'Thiết lập bộ Rubric STAR phỏng vấn riêng',
+      'feat-e4': 'Quản lý kho ứng viên & Phân tích khớp hồ sơ hàng loạt',
+      'feat-e5': 'Hỗ trợ kỹ thuật 24/7 & API Integration',
+      'btn-plan-enterprise': 'Liên Hệ Tư Vấn Enterprise',
+      'stat-cv-label': 'CV Tối Ưu Thành Công',
+      'stat-pass-label': 'Tỷ Lệ Vượt Qua Phỏng Vấn',
+      'stat-rating-label': 'Đánh Giá Từ 5,000+ Ứng Viên',
+      'stat-speed-label': 'Thời Gian Phân Tích Match Score',
+      'testi-tag': '💬 CÂU CHUYỆN THÀNH CÔNG',
+      'testi-title': 'Ứng Viên Nói Gì Về Career Assistant X?',
+      'testi-sub': 'Hàng ngàn ứng viên đã chinh phục được công việc mơ ước nhờ sự đồng hành của AI Agent',
+      'testi-user1-text': '"Nhờ Gap Analysis mà tôi biết chính xác CV mình thiếu những từ khóa ATS nào đối với vị trí Senior Frontend. AI còn tự động tối ưu câu từ vô cùng chân thật!"',
+      'testi-user1-role': 'Senior Frontend Engineer @ Top Tech Corp',
+      'testi-user2-text': '"Luyện phỏng vấn STAR với AI Agent giúp tôi rèn luyện phản xạ tuyệt vời. Khi bước vào phỏng vấn thực tế với HR, tôi hoàn toàn tự tin trả lời gãy gọn mạch lạc!"',
+      'testi-user2-role': 'Product Manager @ Fintech Startup',
+      'testi-user3-text': '"Tính năng Anti-Hallucination là cứu cánh của tôi! CV không hề bị AI \'bốc phét\' thêm kinh nghiệm ảo, nhà tuyển dụng đánh giá rất cao độ trung thực."',
+      'testi-user3-role': 'AI Research Specialist @ Global Hub'
     },
     en: {
       'nav-dashboard': 'Dashboard',
@@ -994,17 +983,17 @@ function startAppLogic() {
       'nav-gap': 'Gap Analysis',
       'btn-login': 'Log in',
       'btn-logout': 'Log out',
-      'hero-title': 'Upgrade your CV & interview skills, <span class="hero-title-accent">Your AI Agent awaits.</span>',
-      'hero-sub': 'AI career copilot for JD-targeted CV optimization (Anti-Hallucination) & STAR Rubric mock interviews.',
-      'btn-try-free': 'PRACTICE INTERVIEW NOW',
-      'btn-consult': 'Optimize CV with AI',
-      'user-name-guest': 'Not Logged In',
+      'hero-title': 'Improve your CV and interview skills. <span class="hero-title-accent">Your agent is waiting.</span>',
+      'hero-sub': 'AI-powered career guidance tool to optimize your CV based on job descriptions (Anti-Hallucination) and practice mock interviews using the Rubric STAR method.',
+      'btn-try-free': 'TRY INTERVIEWING NOW',
+      'btn-consult': 'Optimize your CV with AI.',
+      'user-name-guest': 'Not logged in',
       'user-role-default': 'Career Assistant System X',
       'tab-overview': 'Overview',
       'tab-interviews': 'Interviews',
-      'tab-history': 'History',
-      'summary-title': 'PROFILE STATUS',
-      'label-cv-upload': 'Uploaded CV',
+      'tab-history': 'Association',
+      'summary-title': 'APPLICATION STATUS',
+      'label-cv-upload': 'CV has been uploaded.',
       'badge-cv-status': 'Ready',
       'label-interview-skills': 'Interview Skills',
       'badge-interview-status': 'STAR Rubric',
@@ -1013,7 +1002,7 @@ function startAppLogic() {
       'gauge-cv-label': 'Match Score (85%)',
       'gauge-interview-label': 'STAR Score (82/100)',
       'gauge-direction-label': 'Optimal Progress',
-      'chart-title': 'Interview Assessment & Profile Optimization History',
+      'chart-title': 'Interview evaluation history & resume optimization',
       'agent-title': 'AI Agent – Powered by<br />Artificial Intelligence',
       'feat-opt-name': 'Automatic',
       'feat-opt-desc': 'CV Optimization',
@@ -1023,45 +1012,61 @@ function startAppLogic() {
       'feat-match-desc': 'Gap Analysis',
       'feat-custom-name': 'Custom Job',
       'feat-custom-desc': 'Description',
-      'auth-title-login': 'Welcome Back',
-      'auth-sub-login': 'Log in to connect with FastAPI Backend',
-      'auth-title-reg': 'Create New Account',
-      'auth-sub-reg': 'Join Career Assistant X to optimize CV & interviews',
-      'tab-auth-login': 'Log In',
-      'tab-auth-register': 'Register',
-      'label-fullname': 'Full Name',
-      'label-role': 'Role',
-      'label-email': 'Email',
-      'label-password': 'Password',
-      'btn-submit-login': 'Log In',
-      'btn-submit-reg': 'Register Account',
-      'modal-cv-title': '📄 Upload & Manage CV',
-      'modal-cv-sub': 'Automated AI skill, experience & project extraction',
-      'label-cv-name': 'CV Title (Optional)',
-      'label-cv-file': 'Choose CV File (.pdf or .docx, max 10MB)',
-      'btn-cv-upload': 'Upload & Parse CV',
-      'cv-saved-list-title': 'Your Saved CVs:',
-      'modal-jd-title': '💼 Job Descriptions (JD) Library',
-      'modal-jd-sub': 'Select system sample JDs or paste external company JDs',
-      'tab-system-jds': 'System Sample JDs',
-      'tab-custom-jd': 'Paste Custom JD',
-      'label-jd-position': 'Job Position Title',
-      'label-jd-company': 'Company Name',
-      'label-jd-location': 'Location',
-      'label-jd-requirements': 'Job Requirements Text',
-      'btn-save-custom-jd': 'Save Custom Job Description',
-      'modal-gap-title': '🎯 Match Score & Gap Analysis',
-      'modal-gap-sub': 'Match CV with JD & get truthful (Anti-Hallucination) suggestions',
-      'label-select-cv': 'Select CV:',
-      'label-select-jd': 'Select Target JD:',
-      'btn-run-gap': 'Analyze CV - JD Match',
-      'modal-int-title': '🎙️ Mock Interview Room (STAR Rubric)',
-      'modal-int-sub': 'Roleplay recruiter for deep Q&A & automatic follow-ups',
-      'label-int-cv': 'Select Interview CV:',
-      'label-int-jd': 'Select Target JD:',
-      'btn-start-int': 'Start Interview Session',
-      'placeholder-answer': 'Enter your response...',
-      'btn-send-answer': 'Send'
+      'quick-access-badge': '✨ QUICK ACCESS TO CORE FEATURES',
+      'icon-label-cv': '📄 CV Scanner',
+      'icon-label-jd': '💼 JD Library',
+      'icon-label-interview': '🎙️ STAR Interview',
+      'icon-label-gap': '🎯 Gap Analysis',
+      'title-cv-btn': 'Upload & Manage CV',
+      'title-jd-btn': 'Job Descriptions Library',
+      'title-int-btn': 'STAR Mock Interview Room',
+      'title-gap-btn': 'Run Gap Analysis (CV vs JD)',
+      'pricing-tag': '⚡ UPGRADE YOUR AI POWER',
+      'pricing-title': 'Pricing Plans & Upgrades',
+      'pricing-sub': 'Choose the right plan to master your job hunt with AI Copilot',
+      'plan-basic-name': 'Basic Plan',
+      'plan-basic-desc': 'Experience core AI features for beginners',
+      'plan-basic-price': '$0',
+      'plan-free-forever': '/ Free forever',
+      'feat-b1': 'Optimize up to 3 basic CVs',
+      'feat-b2': '5 STAR interview sessions / month',
+      'feat-b3': 'Access system sample JDs library',
+      'feat-b4': 'Deep Anti-Hallucination check',
+      'feat-b5': 'Create Custom Job Descriptions',
+      'btn-plan-basic': 'Start Free',
+      'badge-popular': '🔥 MOST POPULAR',
+      'plan-pro-name': 'Pro Copilot Plan',
+      'plan-pro-desc': 'Boost your offer rate by 300% with full AI Agent support',
+      'plan-pro-price': '$9.99',
+      'plan-period-month': '/ Month',
+      'feat-p1': 'Unlimited JD-targeted CV optimizations',
+      'feat-p2': 'Comprehensive STAR AI mock interviews with follow-ups',
+      'feat-p3': 'Anti-Hallucination algorithm ensures 100% truthfulness',
+      'feat-p4': 'Deep Gap Analysis & ATS keyword recommendations',
+      'feat-p5': 'Export interview evaluation reports to PDF',
+      'btn-plan-pro': 'Upgrade to Pro',
+      'plan-ent-name': 'Enterprise / Mentor Plan',
+      'plan-ent-desc': 'Tailored solution for Recruiters, HRs & Career Coaches',
+      'plan-ent-price': '$24.99',
+      'feat-e1': 'All Pro Plan privileges included',
+      'feat-e2': 'Unlimited Custom Job Descriptions',
+      'feat-e3': 'Custom STAR interview rubric setup',
+      'feat-e4': 'Candidate pool management & bulk resume matching',
+      'feat-e5': '24/7 dedicated support & API integration',
+      'btn-plan-enterprise': 'Contact Enterprise',
+      'stat-cv-label': 'CVs Successfully Optimized',
+      'stat-pass-label': 'Interview Pass Rate',
+      'stat-rating-label': 'Rating from 5,000+ Candidates',
+      'stat-speed-label': 'Match Score Analysis Time',
+      'testi-tag': '💬 SUCCESS STORIES',
+      'testi-title': 'What Candidates Say About Career Assistant X',
+      'testi-sub': 'Thousands of candidates landed their dream job with AI Agent assistance',
+      'testi-user1-text': '"Thanks to Gap Analysis, I knew exactly which ATS keywords my CV was missing for the Senior Frontend role. AI rewrote it authentically without fluff!"',
+      'testi-user1-role': 'Senior Frontend Engineer @ Top Tech Corp',
+      'testi-user2-text': '"Practicing STAR interviews with AI Agent built my reflexes. When interviewing with HR, I answered confidently and structured every answer crisp!"',
+      'testi-user2-role': 'Product Manager @ Fintech Startup',
+      'testi-user3-text': '"Anti-Hallucination is a lifesaver! AI did not invent fake experiences on my CV. Recruiters praised my resume for its genuine transparency."',
+      'testi-user3-role': 'AI Research Specialist @ Global Hub'
     },
     ja: {
       'nav-dashboard': 'ダッシュボード',
@@ -1071,17 +1076,17 @@ function startAppLogic() {
       'nav-gap': 'ギャップ分析',
       'btn-login': 'ログイン',
       'btn-logout': 'ログアウト',
-      'hero-title': 'CVと面接をアップグレード、<span class="hero-title-accent">AIエージェントが待っています。</span>',
+      'hero-title': 'CVと面接スキルを強化、<span class="hero-title-accent">AIエージェントが待機中。</span>',
       'hero-sub': '求人票(JD)に合わせたCV最適化（アンチハルシネーション）＆ STARルーブリックによる模擬面接。',
       'btn-try-free': '今すぐ模擬面接を開始',
       'btn-consult': 'AIでCVを最適化',
       'user-name-guest': '未ログイン',
-      'user-role-default': 'キャリアアシスタントシステム X',
+      'user-role-default': 'キャリアアシスタント X',
       'tab-overview': '概要',
       'tab-interviews': '面接履歴',
-      'tab-history': '履歴',
-      'summary-title': 'プロフィール状態',
-      'label-cv-upload': 'CVアップロード',
+      'tab-history': '関連付け',
+      'summary-title': 'アプリケーションステータス',
+      'label-cv-upload': 'CVアップロード済み',
       'badge-cv-status': '準備完了',
       'label-interview-skills': '面接スキル',
       'badge-interview-status': 'STAR基準',
@@ -1100,45 +1105,61 @@ function startAppLogic() {
       'feat-match-desc': 'ギャップ分析',
       'feat-custom-name': 'カスタム作成',
       'feat-custom-desc': '求人票 (JD)',
-      'auth-title-login': 'おかえりなさい',
-      'auth-sub-login': 'FastAPIバックエンドにログイン',
-      'auth-title-reg': '新規アカウント作成',
-      'auth-sub-reg': 'AIエージェントの全機能を利用登録',
-      'tab-auth-login': 'ログイン',
-      'tab-auth-register': '新規登録',
-      'label-fullname': 'お名前',
-      'label-role': '役割',
-      'label-email': 'メールアドレス',
-      'label-password': 'パスワード',
-      'btn-submit-login': 'ログイン',
-      'btn-submit-reg': '今すぐ登録',
-      'modal-cv-title': '📄 CVのアップロードと管理',
-      'modal-cv-sub': 'AIによるスキル、経験、プロジェクトの自動抽出',
-      'label-cv-name': 'CVタイトル（任意）',
-      'label-cv-file': 'CVファイルを選択 (.pdf または .docx, 最大10MB)',
-      'btn-cv-upload': 'アップロードして解析',
-      'cv-saved-list-title': '保存済みCV一覧:',
-      'modal-jd-title': '💼 求人票 (JD) ライブラリ',
-      'modal-jd-sub': 'システムサンプルまたは外部企業の求人票を選択',
-      'tab-system-jds': 'システムサンプルJD',
-      'tab-custom-jd': 'カスタムJD貼り付け',
-      'label-jd-position': '職種名',
-      'label-jd-company': '会社名',
-      'label-jd-location': '勤務地',
-      'label-jd-requirements': '募集要件テキスト',
-      'btn-save-custom-jd': 'カスタムJDを保存',
-      'modal-gap-title': '🎯 マッチスコア ＆ ギャップ分析',
-      'modal-gap-sub': 'CVとJDを照合し、信頼性の高い改善案を提示（アンチハルシネーション）',
-      'label-select-cv': 'CVを選択:',
-      'label-select-jd': '目標JDを選択:',
-      'btn-run-gap': 'CV-JD適合度を分析',
-      'modal-int-title': '🎙️ 模擬面接ルーム (STAR基準)',
-      'modal-int-sub': '面接官AIによる深掘り質問と自動フォローアップ',
-      'label-int-cv': '面接用CVを選択:',
-      'label-int-jd': '応募先JDを選択:',
-      'btn-start-int': '面接セッションを開始',
-      'placeholder-answer': '回答を入力してください...',
-      'btn-send-answer': '送信'
+      'quick-access-badge': '✨ コア機能へのクイックアクセス',
+      'icon-label-cv': '📄 CVスキャナー',
+      'icon-label-jd': '💼 求人ライブラリ',
+      'icon-label-interview': '🎙️ STAR面接',
+      'icon-label-gap': '🎯 ギャップ分析',
+      'title-cv-btn': 'CVアップロード・管理',
+      'title-jd-btn': '求人票ライブラリ',
+      'title-int-btn': 'STAR模擬面接ルーム',
+      'title-gap-btn': 'ギャップ分析実行',
+      'pricing-tag': '⚡ AIパワーをアップグレード',
+      'pricing-title': 'サービスプランとアップグレード',
+      'pricing-sub': '面接成功に向けた最適なプランを選択しましょう',
+      'plan-basic-name': 'ベーシックプラン',
+      'plan-basic-desc': '初心者向けのコア機能を無料で体験',
+      'plan-basic-price': '¥0',
+      'plan-free-forever': '/ 永久無料',
+      'feat-b1': '基本CV最適化（3回まで）',
+      'feat-b2': 'STAR模擬面接（月5回まで）',
+      'feat-b3': 'システムサンプル求人票の閲覧',
+      'feat-b4': '詳細なアンチハルシネーション検証',
+      'feat-b5': 'カスタム求人票(JD)の作成',
+      'btn-plan-basic': '無料で始める',
+      'badge-popular': '🔥 一番人気',
+      'plan-pro-name': 'Pro Copilot プラン',
+      'plan-pro-desc': 'AIエージェントのフル活用で内定獲得率を300%向上',
+      'plan-pro-price': '¥1,480',
+      'plan-period-month': '/ 月',
+      'feat-p1': '無制限のJD適合CV最適化',
+      'feat-p2': 'STARルーブリックによる完全AI模擬面接＆深掘り質問',
+      'feat-p3': '100%信頼性を保つアンチハルシネーションアルゴリズム',
+      'feat-p4': 'ギャップ分析とATSキーワード推奨',
+      'feat-p5': '面接評価レポートのPDF出力',
+      'btn-plan-pro': '今すぐProにアップグレード',
+      'plan-ent-name': 'エンタープライズ / メンター',
+      'plan-ent-desc': '採用担当者、HR、キャリアアドバイザー向けソリューション',
+      'plan-ent-price': '¥3,980',
+      'feat-e1': 'Proプランのすべての特典を含む',
+      'feat-e2': 'カスタム求人票(JD)の無制限作成',
+      'feat-e3': '独自のSTAR面接評価基準の設定',
+      'feat-e4': '候補者プール管理と一括CV適合度分析',
+      'feat-e5': '24/7技術サポート＆API連携',
+      'btn-plan-enterprise': 'エンタープライズに相談',
+      'stat-cv-label': 'CV最適化実績数',
+      'stat-pass-label': '面接通過率',
+      'stat-rating-label': '5,000名以上のユーザー評価',
+      'stat-speed-label': '適合度分析スピード',
+      'testi-tag': '💬 成功事例・受講者の声',
+      'testi-title': 'Career Assistant Xの評判と評価',
+      'testi-sub': 'AIエージェントと共に夢の職種への転職を成功させたユーザーの声',
+      'testi-user1-text': '「ギャップ分析のおかげで、Senior Frontendポジションに必要なATSキーワードが明確になりました。AIの修正文も非常に誠実で魅力的です！」',
+      'testi-user1-role': 'Senior Frontend Engineer @ Top Tech Corp',
+      'testi-user2-text': '「STAR模擬面接で反復練習したおかげで、本番の面接でも焦らず論理的に答えることができました！」',
+      'testi-user2-role': 'Product Manager @ Fintech Startup',
+      'testi-user3-text': '「アンチハルシネーション機能のおかげで、経歴を誇張することなく本物のCVを作成でき、面接官からも高い評価を得ました。」',
+      'testi-user3-role': 'AI Research Specialist @ Global Hub'
     },
     ko: {
       'nav-dashboard': '대시보드',
@@ -1153,12 +1174,12 @@ function startAppLogic() {
       'btn-try-free': '지금 모의 면접 시작',
       'btn-consult': 'AI로 CV 최적화',
       'user-name-guest': '로그인되지 않음',
-      'user-role-default': '커리어 어시스턴트 시스템 X',
+      'user-role-default': '커리어 어시스턴트 X',
       'tab-overview': '개요',
       'tab-interviews': '면접',
-      'tab-history': '기록',
-      'summary-title': '프로필 상태',
-      'label-cv-upload': 'CV 업로드',
+      'tab-history': '연관성',
+      'summary-title': '지원 상태',
+      'label-cv-upload': 'CV 업로드됨',
       'badge-cv-status': '준비됨',
       'label-interview-skills': '면접 스킬',
       'badge-interview-status': 'STAR 루브릭',
@@ -1177,45 +1198,61 @@ function startAppLogic() {
       'feat-match-desc': '갭 분석',
       'feat-custom-name': '커스텀 생성',
       'feat-custom-desc': '직무 기술서 (JD)',
-      'auth-title-login': '다시 오신 것을 환영합니다',
-      'auth-sub-login': 'FastAPI 백엔드 연결을 위해 로그인하세요',
-      'auth-title-reg': '새 계정 생성',
-      'auth-sub-reg': 'AI 에이전트의 모든 기능을 사용하려면 가입하세요',
-      'tab-auth-login': '로그인',
-      'tab-auth-register': '회원가입',
-      'label-fullname': '이름',
-      'label-role': '역할',
-      'label-email': '이메일',
-      'label-password': '비밀번호',
-      'btn-submit-login': '로그인',
-      'btn-submit-reg': '지금 가입하기',
-      'modal-cv-title': '📄 CV 업로드 및 관리',
-      'modal-cv-sub': 'AI 기반 스킬, 경력 및 프로젝트 자동 추출',
-      'label-cv-name': 'CV 제목 (선택)',
-      'label-cv-file': 'CV 파일 선택 (.pdf 또는 .docx, 최대 10MB)',
-      'btn-cv-upload': '업로드 및 CV 파싱',
-      'cv-saved-list-title': '저장된 CV 목록:',
-      'modal-jd-title': '💼 직무 기술서 (JD) 라이브러리',
-      'modal-jd-sub': '시스템 샘플 JD 선택 또는 외부 기업 JD 붙여넣기',
-      'tab-system-jds': '시스템 샘플 JD',
-      'tab-custom-jd': '커스텀 JD 붙여넣기',
-      'label-jd-position': '직무 명칭',
-      'label-jd-company': '회사명',
-      'label-jd-location': '위치',
-      'label-jd-requirements': '자격 요건 텍스트',
-      'btn-save-custom-jd': '커스텀 JD 저장',
-      'modal-gap-title': '🎯 매칭 점수 & 갭 분석',
-      'modal-gap-sub': 'CV와 JD를 비교하고 신뢰성 높은 최적화 제안 (Anti-Hallucination)',
-      'label-select-cv': 'CV 선택:',
-      'label-select-jd': '목표 JD 선택:',
-      'btn-run-gap': 'CV - JD 매칭 분석',
-      'modal-int-title': '🎙️ 모의 면접실 (STAR 루브릭)',
-      'modal-int-sub': '면접관 역할 수행 및 심층 질문/팔로우업 질문 생성',
-      'label-int-cv': '면접용 CV 선택:',
-      'label-int-jd': '지원 JD 선택:',
-      'btn-start-int': '면접 세션 시작',
-      'placeholder-answer': '답변을 입력하세요...',
-      'btn-send-answer': '전송'
+      'quick-access-badge': '✨ 핵심 기능 빠른 액세스',
+      'icon-label-cv': '📄 CV 스캐너',
+      'icon-label-jd': '💼 JD 라이브러리',
+      'icon-label-interview': '🎙️ STAR 면접',
+      'icon-label-gap': '🎯 갭 분석',
+      'title-cv-btn': 'CV 업로드 및 관리',
+      'title-jd-btn': '직무 기술서 라이브러리',
+      'title-int-btn': 'STAR 모의 면접실',
+      'title-gap-btn': '갭 분석 실행',
+      'pricing-tag': '⚡ AI 파워 업그레이드',
+      'pricing-title': '서비스 요금제 및 업그레이드',
+      'pricing-sub': '목표 직무 합격을 위한 최적의 플랜을 선택하세요',
+      'plan-basic-name': '기본 플랜',
+      'plan-basic-desc': '초보자를 위한 핵심 AI 기능 무료 체험',
+      'plan-basic-price': '₩0',
+      'plan-free-forever': '/ 평생 무료',
+      'feat-b1': '기본 CV 최적화 3회',
+      'feat-b2': 'STAR 모의 면접 월 5회',
+      'feat-b3': '시스템 샘플 JD 라이브러리 열람',
+      'feat-b4': '심층 안티 헐루시네이션 검증',
+      'feat-b5': '커스텀 직무 기술서(JD) 생성',
+      'btn-plan-basic': '무료로 시작하기',
+      'badge-popular': '🔥 가장 인기',
+      'plan-pro-name': 'Pro Copilot 플랜',
+      'plan-pro-desc': 'AI 에이전트 전폭 지원으로 합격률 300% 향상',
+      'plan-pro-price': '₩12,900',
+      'plan-period-month': '/ 월',
+      'feat-p1': '무제한 JD 맞춤형 CV 최적화',
+      'feat-p2': '완벽한 STAR 루브릭 AI 면접 및 심층 팔로우업 질문',
+      'feat-p3': '100% 진실성을 보장하는 안티 헐루시네이션 알고리즘',
+      'feat-p4': '갭 분석 및 ATS 핵심 키워드 추천',
+      'feat-p5': '면접 평가 리포트 PDF 다운로드',
+      'btn-plan-pro': '지금 Pro로 업그레이드',
+      'plan-ent-name': '엔터프라이즈 / 멘토',
+      'plan-ent-desc': '채용 담당자, HR 및 커리어 코치를 위한 전문 솔루션',
+      'plan-ent-price': '₩34,900',
+      'feat-e1': 'Pro 플랜의 모든 혜택 포함',
+      'feat-e2': '무제한 커스텀 직무 기술서(JD) 생성',
+      'feat-e3': '자체 STAR 면접 평가 기준 설정',
+      'feat-e4': '지원자 풀 관리 및 대량 이력서 매칭 분석',
+      'feat-e5': '24/7 전담 지원 및 API 연동',
+      'btn-plan-enterprise': '엔터프라이즈 문의하기',
+      'stat-cv-label': '성공적으로 최적화된 CV',
+      'stat-pass-label': '면접 합격률',
+      'stat-rating-label': '5,000+ 지원자의 평점',
+      'stat-speed-label': '매칭 분석 소요 시간',
+      'testi-tag': '💬 합격 후기',
+      'testi-title': '지원자들이 말하는 Career Assistant X',
+      'testi-sub': '수천 명의 지원자가 AI 에이전트와 함께 꿈의 기업에 합격했습니다',
+      'testi-user1-text': '"갭 분석 덕분에 Senior Frontend 직무에 부족했던 ATS 키워드를 정확히 파악했습니다. AI 최적화 문장도 과장 없이 솔직하고 매끄러웠습니다!"',
+      'testi-user1-role': 'Senior Frontend Engineer @ Top Tech Corp',
+      'testi-user2-text': '"STAR 모의 면접으로 실전 순발력을 길렀습니다. 실제 HR 면접에서 자신감 있게 완벽한 답변을 할 수 있었습니다!"',
+      'testi-user2-role': 'Product Manager @ Fintech Startup',
+      'testi-user3-text': '"안티 헐루시네이션 기능이 핵심이었습니다! 거짓 경력 생성 없이 진실된 CV를 완성하여 면접관의 호평을 받았습니다."',
+      'testi-user3-role': 'AI Research Specialist @ Global Hub'
     },
     zh: {
       'nav-dashboard': '仪表板',
@@ -1233,8 +1270,8 @@ function startAppLogic() {
       'user-role-default': '职业助手系统 X',
       'tab-overview': '概览',
       'tab-interviews': '面试记录',
-      'tab-history': '历史',
-      'summary-title': '简历与面试状态',
+      'tab-history': '关联',
+      'summary-title': '申请状态',
       'label-cv-upload': '已上传简历',
       'badge-cv-status': '就绪',
       'label-interview-skills': '面试技能',
@@ -1254,45 +1291,61 @@ function startAppLogic() {
       'feat-match-desc': '差距分析',
       'feat-custom-name': '自定义',
       'feat-custom-desc': '职位描述 (JD)',
-      'auth-title-login': '欢迎回来',
-      'auth-sub-login': '登录以连接 FastAPI 后端',
-      'auth-title-reg': '创建新账号',
-      'auth-sub-reg': '注册以解锁 AI 智能助手全部功能',
-      'tab-auth-login': '登录',
-      'tab-auth-register': '注册',
-      'label-fullname': '姓名',
-      'label-role': '身份/角色',
-      'label-email': '邮箱',
-      'label-password': '密码',
-      'btn-submit-login': '登录',
-      'btn-submit-reg': '立即注册',
-      'modal-cv-title': '📄 上传与管理简历',
-      'modal-cv-sub': 'AI 自动提取技能、工作经验与项目经历',
-      'label-cv-name': '简历名称 (可选)',
-      'label-cv-file': '选择简历文件 (.pdf 或 .docx, 最大 10MB)',
-      'btn-cv-upload': '上传并解析简历',
-      'cv-saved-list-title': '您已保存的简历列表：',
-      'modal-jd-title': '💼 职位描述 (JD) 库',
-      'modal-jd-sub': '选择系统内置模板 JD 或粘贴外部公司 JD',
-      'tab-system-jds': '系统模板 JD',
-      'tab-custom-jd': '粘贴自定义 JD',
-      'label-jd-position': '职位名称',
-      'label-jd-company': '公司名称',
-      'label-jd-location': '工作地点',
-      'label-jd-requirements': '职位要求文本 (Requirements)',
-      'btn-save-custom-jd': '保存自定义 JD',
-      'modal-gap-title': '🎯 匹配得分与差距分析',
-      'modal-gap-sub': '对比 CV 与 JD 并提供真实可靠的优化建议 (Anti-Hallucination)',
-      'label-select-cv': '选择简历：',
-      'label-select-jd': '选择目标 JD：',
-      'btn-run-gap': '运行 CV - JD 匹配分析',
-      'modal-int-title': '🎙️ 模拟面试室 (STAR 标准)',
-      'modal-int-sub': '扮演面试官进行深度问答并自动生成追问',
-      'label-int-cv': '选择面试简历：',
-      'label-int-jd': '选择应聘 JD：',
-      'btn-start-int': '开始面试会话',
-      'placeholder-answer': '请输入您的回答...',
-      'btn-send-answer': '发送'
+      'quick-access-badge': '✨ 核心功能快速入口',
+      'icon-label-cv': '📄 简历扫描',
+      'icon-label-jd': '💼 职位库',
+      'icon-label-interview': '🎙️ STAR 面试',
+      'icon-label-gap': '🎯 差距分析',
+      'title-cv-btn': '上传与管理简历',
+      'title-jd-btn': '职位描述库',
+      'title-int-btn': 'STAR 模拟面试室',
+      'title-gap-btn': '运行差距分析',
+      'pricing-tag': '⚡ 升级 AI 赋能',
+      'pricing-title': '服务套餐与升级方案',
+      'pricing-sub': '选择最适合您的方案，在 AI 助手的陪伴下轻松斩获 Offer',
+      'plan-basic-name': '基础套餐',
+      'plan-basic-desc': '免费体验核心 AI 功能，适合刚开始求职的应届生与求职者',
+      'plan-basic-price': '¥0',
+      'plan-free-forever': '/ 永久免费',
+      'feat-b1': '基础简历优化 3 次',
+      'feat-b2': 'STAR 模拟面试 5 次/月',
+      'feat-b3': '查阅系统内置模板 JD 库',
+      'feat-b4': '防幻觉深度校验',
+      'feat-b5': '创建自定义职位描述 (JD)',
+      'btn-plan-basic': '免费开始使用',
+      'badge-popular': '🔥 最受欢迎',
+      'plan-pro-name': 'Pro 智能助手套餐',
+      'plan-pro-desc': '全方位 AI 助手辅助，提升 300% 的 Offer 获得率',
+      'plan-pro-price': '¥68',
+      'plan-period-month': '/ 月',
+      'feat-p1': '无限制基于 JD 优化简历',
+      'feat-p2': '全方位 STAR 标准 AI 模拟面试与智能追问',
+      'feat-p3': '防幻觉算法保障 100% 真实透明',
+      'feat-p4': '差距分析 (Gap Analysis) 与 ATS 关键词推荐',
+      'feat-p5': '导出 PDF 版面试能力评估报告',
+      'btn-plan-pro': '立即升级 Pro',
+      'plan-ent-name': '企业 / 导师套餐',
+      'plan-ent-desc': '专为招聘官、HR 及职业规划导师打造的深度解决方案',
+      'plan-ent-price': '¥188',
+      'feat-e1': '包含 Pro 套餐的所有高级特权',
+      'feat-e2': '无限制创建自定义 Job Description',
+      'feat-e3': '自定义 STAR 面试评估标准集',
+      'feat-e4': '人才库管理与批量简历匹配分析',
+      'feat-e5': '24/7 专属技术支持与 API 接口集成',
+      'btn-plan-enterprise': '联系企业咨询',
+      'stat-cv-label': '成功优化简历数',
+      'stat-pass-label': '面试通过率',
+      'stat-rating-label': '5,000+ 求职者五星好评',
+      'stat-speed-label': '匹配得分分析耗时',
+      'testi-tag': '💬 成功求职故事',
+      'testi-title': '求职者如何评价 Career Assistant X？',
+      'testi-sub': '数以千计的求职者在 AI 助手的陪伴下成功斩获心仪 Offer',
+      'testi-user1-text': '“多亏了 Gap Analysis 差距分析，我准确知道了 Senior Frontend 岗位简历缺少的 ATS 关键词。AI 自动润色语言既真实又专业！”',
+      'testi-user1-role': 'Senior Frontend Engineer @ Top Tech Corp',
+      'testi-user2-text': '“与 AI 智能助手进行 STAR 模拟面试极大地锻炼了我的应变能力。在真正的 HR 面试中，我回答得游刃有余！”',
+      'testi-user2-role': 'Product Manager @ Fintech Startup',
+      'testi-user3-text': '“防幻觉功能是我的救星！AI 完全没有凭空捏造虚假经历，面试官对简历的真实性给予了极高评价。”',
+      'testi-user3-role': 'AI Research Specialist @ Global Hub'
     }
   };
 
@@ -1337,6 +1390,13 @@ function startAppLogic() {
         const key = el.getAttribute('data-i18n-placeholder');
         if (dict[key] !== undefined) {
           el.placeholder = dict[key];
+        }
+      });
+
+      document.querySelectorAll('[data-i18n-title]').forEach(el => {
+        const key = el.getAttribute('data-i18n-title');
+        if (dict[key] !== undefined) {
+          el.title = dict[key];
         }
       });
     }
@@ -2092,7 +2152,6 @@ function startAppLogic() {
   function closeCVModal() { if (cvOverlay) cvOverlay.classList.remove('open'); }
   if (cvClose) cvClose.addEventListener('click', closeCVModal);
 
-  document.getElementById('nav-cv')?.addEventListener('click', (e) => { e.preventDefault(); openCVModal(); });
   document.getElementById('icon-cv-btn')?.addEventListener('click', openCVModal);
   document.getElementById('btn-consult')?.addEventListener('click', openCVModal);
 
@@ -2164,7 +2223,6 @@ function startAppLogic() {
   function closeJDModal() { if (jdOverlay) jdOverlay.classList.remove('open'); }
   if (jdClose) jdClose.addEventListener('click', closeJDModal);
 
-  document.getElementById('nav-jobs')?.addEventListener('click', (e) => { e.preventDefault(); openJDModal(); });
   document.getElementById('icon-location-btn')?.addEventListener('click', openJDModal);
   document.getElementById('feature-career')?.addEventListener('click', openJDModal);
 
@@ -2248,7 +2306,6 @@ function startAppLogic() {
   function closeGapModal() { if (gapOverlay) gapOverlay.classList.remove('open'); }
   if (gapClose) gapClose.addEventListener('click', closeGapModal);
 
-  document.getElementById('nav-gap')?.addEventListener('click', (e) => { e.preventDefault(); openGapModal(); });
   document.getElementById('icon-search-btn')?.addEventListener('click', openGapModal);
   document.getElementById('feature-optimize')?.addEventListener('click', openGapModal);
   document.getElementById('feature-keywords')?.addEventListener('click', openGapModal);
@@ -2338,7 +2395,6 @@ function startAppLogic() {
   function closeInterviewModal() { if (intOverlay) intOverlay.classList.remove('open'); }
   if (intClose) intClose.addEventListener('click', closeInterviewModal);
 
-  document.getElementById('nav-interview')?.addEventListener('click', (e) => { e.preventDefault(); openInterviewModal(); });
   document.getElementById('icon-megaphone-btn')?.addEventListener('click', openInterviewModal);
   document.getElementById('btn-try-free')?.addEventListener('click', openInterviewModal);
   document.getElementById('feature-deep-interview')?.addEventListener('click', openInterviewModal);

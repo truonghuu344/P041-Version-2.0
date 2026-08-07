@@ -131,11 +131,11 @@
         <span class="brand-name">CV Assistant</span>
       </a>
       <nav class="nav-links" id="nav-links">
-        <a href="#" class="nav-link active" id="nav-dashboard" data-i18n="nav-dashboard"><span class="nav-icon">🚀</span> <span class="nav-text">Dashboard</span></a>
-        <a href="#" class="nav-link" id="nav-cv" data-i18n="nav-cv"><span class="nav-icon">🧪</span> <span class="nav-text">CV Upload</span></a>
-        <a href="#" class="nav-link" id="nav-jobs" data-i18n="nav-jobs"><span class="nav-icon">🗺️</span> <span class="nav-text">Thư viện Jobs</span></a>
-        <a href="#" class="nav-link" id="nav-interview" data-i18n="nav-interview"><span class="nav-icon">🎙️</span> <span class="nav-text">Phỏng vấn STAR</span></a>
-        <a href="#" class="nav-link" id="nav-gap" data-i18n="nav-gap"><span class="nav-icon">🎯</span> <span class="nav-text">Gap Analysis</span></a>
+        <a href="#" class="nav-link active" id="nav-dashboard"><span class="nav-icon">🚀</span> <span class="nav-text" data-i18n="nav-dashboard">Dashboard</span></a>
+        <a href="#" class="nav-link" id="nav-cv"><span class="nav-icon">🧪</span> <span class="nav-text" data-i18n="nav-cv">CV Upload</span></a>
+        <a href="#" class="nav-link" id="nav-jobs"><span class="nav-icon">🗺️</span> <span class="nav-text" data-i18n="nav-jobs">Thư viện Jobs</span></a>
+        <a href="#" class="nav-link" id="nav-interview"><span class="nav-icon">🎙️</span> <span class="nav-text" data-i18n="nav-interview">Phỏng vấn STAR</span></a>
+        <a href="#" class="nav-link" id="nav-gap"><span class="nav-icon">🎯</span> <span class="nav-text" data-i18n="nav-gap">Gap Analysis</span></a>
       </nav>
 
       <div id="auth-container">
@@ -205,157 +205,130 @@
         <div class="stars stars-3" id="stars-3"></div>
         <div class="hero-slash" aria-hidden="true">/</div>
 
-        <div class="hero-content">
-          <h1 class="hero-title" id="hero-title" data-i18n="hero-title" data-i18n-html="true">
-            Nâng cấp CV và phỏng vấn,
-            <span class="hero-title-accent">Agent của bạn đang đợi.</span>
-          </h1>
-          <p class="hero-sub" id="hero-sub" data-i18n="hero-sub">
-            Công cụ AI hướng nghiệp tối ưu CV theo JD (Anti-Hallucination) & luyện phỏng vấn thử theo Rubric STAR.
-          </p>
-          <div class="hero-actions" id="hero-actions">
-            <button class="btn-primary" id="btn-try-free" data-i18n="btn-try-free">THỬ PHỎNG VẤN NGAY</button>
-            <button class="btn-outline" id="btn-consult" data-i18n="btn-consult">Tối ưu CV với AI</button>
-          </div>
-        </div>
-
-        <!-- ===== DASHBOARD PREVIEW CARD ===== -->
-        <div class="dashboard-card" id="dashboard-card">
-          <div class="card-header">
-            <div class="user-info">
-              <div class="avatar" id="user-avatar">
-                <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                  <rect width="32" height="32" rx="8" fill="#1a1a3e"/>
-                  <rect x="4" y="4" width="10" height="8" rx="1" fill="#7c4dff" opacity="0.7"/>
-                  <rect x="18" y="4" width="10" height="8" rx="1" fill="#00bcd4" opacity="0.7"/>
-                  <rect x="4" y="16" width="24" height="3" rx="1" fill="#ff4e6a" opacity="0.5"/>
-                  <rect x="4" y="22" width="16" height="3" rx="1" fill="#ffffff" opacity="0.3"/>
-                </svg>
-              </div>
-              <div class="user-text">
-                <span class="user-name" id="user-name" data-i18n="user-name-guest">Chưa đăng nhập</span>
-                <span class="user-role" id="user-role-display" data-i18n="user-role-default">Hệ thống Trợ Lý Nghề Nghiệp X</span>
-              </div>
-            </div>
-            <div class="card-tabs" id="card-tabs">
-              <button class="tab active" id="tab-overview" data-i18n="tab-overview">Overview</button>
-              <button class="tab" id="tab-interviews" data-i18n="tab-interviews">Interviews</button>
-              <button class="tab" id="tab-history" data-i18n="tab-history">History</button>
+        <div class="hero-container">
+          <div class="hero-content">
+            <h1 class="hero-title" id="hero-title" data-i18n="hero-title" data-i18n-html="true">
+              Improve your CV and interview skills.
+              <span class="hero-title-accent">Your agent is waiting.</span>
+            </h1>
+            <p class="hero-sub" id="hero-sub" data-i18n="hero-sub">
+              AI-powered career guidance tool to optimize your CV based on job descriptions (Anti-Hallucination) and practice mock interviews using the Rubric STAR method.
+            </p>
+            <div class="hero-actions" id="hero-actions">
+              <button class="btn-primary" id="btn-try-free" data-i18n="btn-try-free">TRY INTERVIEWING NOW</button>
+              <button class="btn-outline" id="btn-consult" data-i18n="btn-consult">Optimize your CV with AI.</button>
             </div>
           </div>
 
-          <div class="card-body">
-            <div class="card-summary" id="card-summary">
-              <p class="summary-title" data-i18n="summary-title">Tình Trạng Hồ Sơ</p>
-              <div class="summary-item">
-                <span class="summary-label" id="label-cv-upload" data-i18n="label-cv-upload">Đã Upload CV</span>
-                <span class="badge badge-ok" id="badge-cv-status" data-i18n="badge-cv-status">Sẵn sàng</span>
+          <!-- ===== DASHBOARD PREVIEW CARD ===== -->
+          <div class="dashboard-card" id="dashboard-card">
+            <div class="card-header">
+              <div class="user-info">
+                <div class="avatar" id="user-avatar">
+                  <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                    <rect width="32" height="32" rx="8" fill="#1a1a3e"/>
+                    <rect x="4" y="4" width="10" height="8" rx="1" fill="#7c4dff" opacity="0.7"/>
+                    <rect x="18" y="4" width="10" height="8" rx="1" fill="#00bcd4" opacity="0.7"/>
+                    <rect x="4" y="16" width="24" height="3" rx="1" fill="#ff4e6a" opacity="0.5"/>
+                    <rect x="4" y="22" width="16" height="3" rx="1" fill="#ffffff" opacity="0.3"/>
+                  </svg>
+                </div>
+                <div class="user-text">
+                  <span class="user-name" id="user-name" data-i18n="user-name-guest">Not logged in</span>
+                  <span class="user-role" id="user-role-display" data-i18n="user-role-default">Career Assistant System X</span>
+                </div>
               </div>
-              <div class="summary-item">
-                <span class="summary-label" id="label-interview-skills" data-i18n="label-interview-skills">Kỹ năng Phỏng vấn</span>
-                <span class="badge badge-need" id="badge-interview-status" data-i18n="badge-interview-status">STAR Rubric</span>
-              </div>
-              <div class="summary-item">
-                <span class="summary-label" id="label-ai-match" data-i18n="label-ai-match">AI Match Score</span>
-                <span class="badge badge-focus" id="badge-match-score" data-i18n="badge-match-score">Anti-Hallucination</span>
+              <div class="card-tabs" id="card-tabs">
+                <button class="tab active" id="tab-overview" data-i18n="tab-overview">Overview</button>
+                <button class="tab" id="tab-interviews" data-i18n="tab-interviews">Interviews</button>
+                <button class="tab" id="tab-history" data-i18n="tab-history">Association</button>
               </div>
             </div>
 
-            <div class="card-metrics" id="card-metrics">
-              <div class="gauges-row" id="gauges-row">
-                <div class="gauge-item" id="gauge-cv">
-                  <svg class="gauge-svg" viewBox="0 0 80 50" fill="none">
-                    <path d="M10 45 A30 30 0 0 1 70 45" stroke="#2a2a4a" stroke-width="6" stroke-linecap="round"/>
-                    <path d="M10 45 A30 30 0 0 1 70 45" stroke="url(#gCv)" stroke-width="6" stroke-linecap="round" stroke-dasharray="94" stroke-dashoffset="15" class="gauge-arc"/>
-                    <defs>
-                      <linearGradient id="gCv" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stop-color="#ff4e6a"/>
-                        <stop offset="100%" stop-color="#ff8c42"/>
-                      </linearGradient>
-                    </defs>
-                    <circle cx="40" cy="45" r="3" fill="#ff6a5e"/>
-                  </svg>
-                  <span class="gauge-label">Match Score (85%)</span>
+            <div class="card-body">
+              <div class="card-summary" id="card-summary">
+                <p class="summary-title" data-i18n="summary-title">APPLICATION STATUS</p>
+                <div class="summary-item">
+                  <span class="summary-label" id="label-cv-upload" data-i18n="label-cv-upload">CV has been uploaded.</span>
+                  <span class="badge badge-ok" id="badge-cv-status" data-i18n="badge-cv-status">Ready</span>
                 </div>
-                <div class="gauge-item" id="gauge-interview">
-                  <svg class="gauge-svg" viewBox="0 0 80 50" fill="none">
-                    <path d="M10 45 A30 30 0 0 1 70 45" stroke="#2a2a4a" stroke-width="6" stroke-linecap="round"/>
-                    <path d="M10 45 A30 30 0 0 1 70 45" stroke="url(#gInt)" stroke-width="6" stroke-linecap="round" stroke-dasharray="94" stroke-dashoffset="20" class="gauge-arc"/>
-                    <defs>
-                      <linearGradient id="gInt" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stop-color="#00e676"/>
-                        <stop offset="100%" stop-color="#00bcd4"/>
-                      </linearGradient>
-                    </defs>
-                    <circle cx="40" cy="45" r="3" fill="#00e676"/>
-                  </svg>
-                  <span class="gauge-label">STAR Score (82/100)</span>
+                <div class="summary-item">
+                  <span class="summary-label" id="label-interview-skills" data-i18n="label-interview-skills">Interview Skills</span>
+                  <span class="badge badge-need" id="badge-interview-status" data-i18n="badge-interview-status">STAR Rubric</span>
                 </div>
-                <div class="gauge-item" id="gauge-direction">
-                  <svg class="gauge-svg" viewBox="0 0 80 50" fill="none">
-                    <path d="M10 45 A30 30 0 0 1 70 45" stroke="#2a2a4a" stroke-width="6" stroke-linecap="round"/>
-                    <path d="M10 45 A30 30 0 0 1 70 45" stroke="url(#gDir)" stroke-width="6" stroke-linecap="round" stroke-dasharray="94" stroke-dashoffset="25" class="gauge-arc"/>
-                    <defs>
-                      <linearGradient id="gDir" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stop-color="#f9c74f"/>
-                        <stop offset="100%" stop-color="#f8961e"/>
-                      </linearGradient>
-                    </defs>
-                    <circle cx="40" cy="45" r="3" fill="#f9c74f"/>
-                  </svg>
-                  <span class="gauge-label">Tiến Độ Tối Ưu</span>
+                <div class="summary-item">
+                  <span class="summary-label" id="label-ai-match" data-i18n="label-ai-match">AI Match Score</span>
+                  <span class="badge badge-focus" id="badge-match-score" data-i18n="badge-match-score">Anti-Hallucination</span>
                 </div>
               </div>
 
-              <div class="chart-area" id="chart-area">
-                <p class="chart-label">Lịch sử đánh giá phỏng vấn & tối ưu hồ sơ</p>
-                <svg class="chart-svg" viewBox="0 0 300 80" preserveAspectRatio="none">
-                  <line x1="0" y1="20" x2="300" y2="20" stroke="#2a2a4a" stroke-width="0.5"/>
-                  <line x1="0" y1="40" x2="300" y2="40" stroke="#2a2a4a" stroke-width="0.5"/>
-                  <line x1="0" y1="60" x2="300" y2="60" stroke="#2a2a4a" stroke-width="0.5"/>
-                  <polyline points="0,70 40,55 80,40 120,50 160,30 200,45 240,20 300,35"
-                    fill="none" stroke="#ff4e9a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <polygon points="0,70 40,55 80,40 120,50 160,30 200,45 240,20 300,35 300,80 0,80"
-                    fill="url(#chartFill1)" opacity="0.2"/>
-                  <polyline points="0,60 40,65 80,55 120,60 160,50 200,35 240,45 300,15"
-                    fill="none" stroke="#7c4dff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
+              <div class="card-metrics" id="card-metrics">
+                <div class="gauges-row" id="gauges-row">
+                  <div class="gauge-item" id="gauge-cv">
+                    <svg class="gauge-svg" viewBox="0 0 80 50" fill="none">
+                      <path d="M10 45 A30 30 0 0 1 70 45" stroke="#2a2a4a" stroke-width="6" stroke-linecap="round"/>
+                      <path d="M10 45 A30 30 0 0 1 70 45" stroke="url(#gCv)" stroke-width="6" stroke-linecap="round" stroke-dasharray="94" stroke-dashoffset="15" class="gauge-arc"/>
+                      <defs>
+                        <linearGradient id="gCv" x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset="0%" stop-color="#ff4e6a"/>
+                          <stop offset="100%" stop-color="#ff8c42"/>
+                        </linearGradient>
+                      </defs>
+                      <circle cx="40" cy="45" r="3" fill="#ff6a5e"/>
+                    </svg>
+                    <span class="gauge-label" id="gauge-cv-label" data-i18n="gauge-cv-label">Match Score (85%)</span>
+                  </div>
+                  <div class="gauge-item" id="gauge-interview">
+                    <svg class="gauge-svg" viewBox="0 0 80 50" fill="none">
+                      <path d="M10 45 A30 30 0 0 1 70 45" stroke="#2a2a4a" stroke-width="6" stroke-linecap="round"/>
+                      <path d="M10 45 A30 30 0 0 1 70 45" stroke="url(#gInt)" stroke-width="6" stroke-linecap="round" stroke-dasharray="94" stroke-dashoffset="20" class="gauge-arc"/>
+                      <defs>
+                        <linearGradient id="gInt" x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset="0%" stop-color="#00e676"/>
+                          <stop offset="100%" stop-color="#00bcd4"/>
+                        </linearGradient>
+                      </defs>
+                      <circle cx="40" cy="45" r="3" fill="#00e676"/>
+                    </svg>
+                    <span class="gauge-label" id="gauge-interview-label" data-i18n="gauge-interview-label">STAR Score (82/100)</span>
+                  </div>
+                  <div class="gauge-item" id="gauge-direction">
+                    <svg class="gauge-svg" viewBox="0 0 80 50" fill="none">
+                      <path d="M10 45 A30 30 0 0 1 70 45" stroke="#2a2a4a" stroke-width="6" stroke-linecap="round"/>
+                      <path d="M10 45 A30 30 0 0 1 70 45" stroke="url(#gDir)" stroke-width="6" stroke-linecap="round" stroke-dasharray="94" stroke-dashoffset="25" class="gauge-arc"/>
+                      <defs>
+                        <linearGradient id="gDir" x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset="0%" stop-color="#f9c74f"/>
+                          <stop offset="100%" stop-color="#f8961e"/>
+                        </linearGradient>
+                      </defs>
+                      <circle cx="40" cy="45" r="3" fill="#f9c74f"/>
+                    </svg>
+                    <span class="gauge-label" id="gauge-direction-label" data-i18n="gauge-direction-label">Optimal Progress</span>
+                  </div>
+                </div>
+
+                <div class="chart-area" id="chart-area">
+                  <p class="chart-label" id="chart-title" data-i18n="chart-title">Interview evaluation history & resume optimization</p>
+                  <svg class="chart-svg" viewBox="0 0 300 80" preserveAspectRatio="none">
+                    <line x1="0" y1="20" x2="300" y2="20" stroke="#2a2a4a" stroke-width="0.5"/>
+                    <line x1="0" y1="40" x2="300" y2="40" stroke="#2a2a4a" stroke-width="0.5"/>
+                    <line x1="0" y1="60" x2="300" y2="60" stroke="#2a2a4a" stroke-width="0.5"/>
+                    <polyline points="0,70 40,55 80,40 120,50 160,30 200,45 240,20 300,35"
+                      fill="none" stroke="#ff4e9a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <polygon points="0,70 40,55 80,40 120,50 160,30 200,45 240,20 300,35 300,80 0,80"
+                      fill="url(#chartFill1)" opacity="0.2"/>
+                    <polyline points="0,60 40,65 80,55 120,60 160,50 200,35 240,45 300,15"
+                      fill="none" stroke="#7c4dff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- ===== ICON BUTTONS ROW ===== -->
-      <div class="icon-row-section" id="icon-row-section">
-        <div class="icon-row" id="icon-row">
-          <button class="icon-btn" id="icon-cv-btn" title="Upload & Quản Lý CV">
-            <svg width="26" height="26" fill="none" viewBox="0 0 24 24">
-              <path d="M12 3L4 7v10l8 4 8-4V7l-8-4z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-              <path d="M12 3v18M4 7l8 4 8-4" stroke="currentColor" stroke-width="1.5"/>
-            </svg>
-          </button>
-          <button class="icon-btn" id="icon-location-btn" title="Thư Viện Job Descriptions (JD)">
-            <svg width="26" height="26" fill="none" viewBox="0 0 24 24">
-              <path d="M12 21s-7-6.686-7-11A7 7 0 0 1 19 10c0 4.314-7 11-7 11z" stroke="#ff4e6a" stroke-width="1.5"/>
-              <circle cx="12" cy="10" r="2.5" stroke="#ff4e6a" stroke-width="1.5"/>
-            </svg>
-          </button>
-          <button class="icon-btn" id="icon-megaphone-btn" title="Phòng Phỏng Vấn Thử STAR">
-            <svg width="26" height="26" fill="none" viewBox="0 0 24 24">
-              <path d="M3 9v6h4l5 5V4L7 9H3z" stroke="#c084fc" stroke-width="1.5" stroke-linejoin="round"/>
-              <path d="M17 9a4 4 0 0 1 0 6" stroke="#c084fc" stroke-width="1.5" stroke-linecap="round"/>
-              <path d="M19.5 6.5a8 8 0 0 1 0 11" stroke="#c084fc" stroke-width="1.5" stroke-linecap="round"/>
-            </svg>
-          </button>
-          <button class="icon-btn" id="icon-search-btn" title="Chạy Gap Analysis (CV vs JD)">
-            <svg width="26" height="26" fill="none" viewBox="0 0 24 24">
-              <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.5"/>
-              <path d="M20 20l-3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            </svg>
-          </button>
-        </div>
-      </div>
+
 
       <!-- ===== AGENT AI SECTION ===== -->
       <div class="agent-section" id="agent-section">
@@ -424,6 +397,163 @@
           </div>
         </div>
       </div>
+      <!-- ===== 3. PRICING SECTION ===== -->
+      <section class="pricing-section" id="pricing-section">
+        <div class="section-header center-header">
+          <span class="section-tag" data-i18n="pricing-tag">⚡ NÂNG CẤP SỨC MẠNH AI</span>
+          <h2 class="section-title-large" data-i18n="pricing-title">Các Gói Dịch Vụ & Nâng Cấp</h2>
+          <p class="section-subtitle" data-i18n="pricing-sub">Lựa chọn gói phù hợp để làm chủ hành trình chinh phục mọi nhà tuyển dụng</p>
+        </div>
+
+        <div class="pricing-grid">
+          <!-- Basic Plan -->
+          <div class="pricing-card basic-card">
+            <div class="card-badge-placeholder"></div>
+            <div class="plan-header">
+              <h3 class="plan-title" data-i18n="plan-basic-name">Gói Cơ Bản</h3>
+              <p class="plan-desc" data-i18n="plan-basic-desc">Trải nghiệm các tính năng cốt lõi cho ứng viên mới bắt đầu</p>
+              <div class="plan-price">
+                <span class="price-amount" data-i18n="plan-basic-price">0đ</span>
+                <span class="price-period" data-i18n="plan-free-forever">/ Trọn đời</span>
+              </div>
+            </div>
+            <ul class="plan-features">
+              <li><span class="check-icon">✓</span> <span data-i18n="feat-b1">Tối ưu 3 CV cơ bản</span></li>
+              <li><span class="check-icon">✓</span> <span data-i18n="feat-b2">Luyện phỏng vấn STAR 5 lượt/tháng</span></li>
+              <li><span class="check-icon">✓</span> <span data-i18n="feat-b3">Tra cứu Thư viện JD mẫu hệ thống</span></li>
+              <li class="dimmed"><span class="cross-icon">✕</span> <span data-i18n="feat-b4">Anti-Hallucination chuyên sâu</span></li>
+              <li class="dimmed"><span class="cross-icon">✕</span> <span data-i18n="feat-b5">Tạo Custom Job Description</span></li>
+            </ul>
+            <button class="pricing-btn basic-btn" id="btn-plan-basic" data-i18n="btn-plan-basic">Bắt Đầu Miễn Phí</button>
+          </div>
+
+          <!-- Pro Plan (Highlighted) -->
+          <div class="pricing-card pro-card popular-highlight">
+            <div class="popular-badge" data-i18n="badge-popular">🔥 PHỔ BIẾN NHẤT</div>
+            <div class="plan-header">
+              <h3 class="plan-title pro-title" data-i18n="plan-pro-name">Gói Pro Copilot</h3>
+              <p class="plan-desc" data-i18n="plan-pro-desc">Tăng 300% cơ hội nhận Offer với sự trợ giúp toàn diện của AI Agent</p>
+              <div class="plan-price">
+                <span class="price-amount pro-price" data-i18n="plan-pro-price">199.000đ</span>
+                <span class="price-period" data-i18n="plan-period-month">/ Tháng</span>
+              </div>
+            </div>
+            <ul class="plan-features">
+              <li><span class="check-icon cyan">✓</span> <strong data-i18n="feat-p1">Không giới hạn tối ưu CV theo JD</strong></li>
+              <li><span class="check-icon cyan">✓</span> <strong data-i18n="feat-p2">Luyện phỏng vấn STAR AI toàn diện & gợi mở follow-up</strong></li>
+              <li><span class="check-icon cyan">✓</span> <span data-i18n="feat-p3">Thuật toán Anti-Hallucination bảo toàn 100% độ thật</span></li>
+              <li><span class="check-icon cyan">✓</span> <span data-i18n="feat-p4">Phân tích Gap Analysis & Đề xuất từ khóa ATS</span></li>
+              <li><span class="check-icon cyan">✓</span> <span data-i18n="feat-p5">Xuất báo cáo đánh giá kỹ năng phỏng vấn PDF</span></li>
+            </ul>
+            <button class="pricing-btn pro-btn" id="btn-plan-pro" data-i18n="btn-plan-pro">Nâng Cấp Pro Ngay</button>
+          </div>
+
+          <!-- Enterprise / Mentor Plan -->
+          <div class="pricing-card enterprise-card">
+            <div class="card-badge-placeholder"></div>
+            <div class="plan-header">
+              <h3 class="plan-title" data-i18n="plan-ent-name">Gói Enterprise / Mentor</h3>
+              <p class="plan-desc" data-i18n="plan-ent-desc">Giải pháp chuyên sâu cho Nhà tuyển dụng, HR & Chuyên gia Hướng nghiệp</p>
+              <div class="plan-price">
+                <span class="price-amount" data-i18n="plan-ent-price">499.000đ</span>
+                <span class="price-period" data-i18n="plan-period-month">/ Tháng</span>
+              </div>
+            </div>
+            <ul class="plan-features">
+              <li><span class="check-icon purple">✓</span> <strong data-i18n="feat-e1">Tất cả đặc quyền của Gói Pro</strong></li>
+              <li><span class="check-icon purple">✓</span> <strong data-i18n="feat-e2">Tạo Custom Job Description không giới hạn</strong></li>
+              <li><span class="check-icon purple">✓</span> <span data-i18n="feat-e3">Thiết lập bộ Rubric STAR phỏng vấn riêng</span></li>
+              <li><span class="check-icon purple">✓</span> <span data-i18n="feat-e4">Quản lý kho ứng viên & Phân tích khớp hồ sơ hàng loạt</span></li>
+              <li><span class="check-icon purple">✓</span> <span data-i18n="feat-e5">Hỗ trợ kỹ thuật 24/7 & API Integration</span></li>
+            </ul>
+            <button class="pricing-btn enterprise-btn" id="btn-plan-enterprise" data-i18n="btn-plan-enterprise">Liên Hệ Tư Vấn Enterprise</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== 4. SOCIAL PROOF & STATS SECTION ===== -->
+      <section class="stats-testimonials-section" id="stats-testimonials-section">
+        <!-- Counter Stats Grid -->
+        <div class="stats-container">
+          <div class="stat-box">
+            <div class="stat-number-wrap">
+              <span class="stat-number glow-cyan">10,000+</span>
+            </div>
+            <p class="stat-label" data-i18n="stat-cv-label">CV Tối Ưu Thành Công</p>
+          </div>
+          <div class="stat-box">
+            <div class="stat-number-wrap">
+              <span class="stat-number glow-purple">85%+</span>
+            </div>
+            <p class="stat-label" data-i18n="stat-pass-label">Tỷ Lệ Vượt Qua Phỏng Vấn</p>
+          </div>
+          <div class="stat-box">
+            <div class="stat-number-wrap">
+              <span class="stat-number glow-pink">4.9/5 ⭐</span>
+            </div>
+            <p class="stat-label" data-i18n="stat-rating-label">Đánh Giá Từ 5,000+ Ứng Viên</p>
+          </div>
+          <div class="stat-box">
+            <div class="stat-number-wrap">
+              <span class="stat-number glow-green">&lt; 30s</span>
+            </div>
+            <p class="stat-label" data-i18n="stat-speed-label">Thời Gian Phân Tích Match Score</p>
+          </div>
+        </div>
+
+        <!-- Testimonials -->
+        <div class="testimonials-wrap">
+          <div class="section-header center-header">
+            <span class="section-tag" data-i18n="testi-tag">💬 CÂU CHUYỆN THÀNH CÔNG</span>
+            <h2 class="section-title-large" data-i18n="testi-title">Ứng Viên Nói Gì Về Career Assistant X?</h2>
+            <p class="section-subtitle" data-i18n="testi-sub">Hàng ngàn ứng viên đã chinh phục được công việc mơ ước nhờ sự đồng hành của AI Agent</p>
+          </div>
+
+          <div class="testimonials-grid">
+            <div class="testimonial-card">
+              <div class="testi-stars">★★★★★</div>
+              <p class="testi-content" data-i18n="testi-user1-text">
+                "Nhờ Gap Analysis mà tôi biết chính xác CV mình thiếu những từ khóa ATS nào đối với vị trí Senior Frontend. AI còn tự động tối ưu câu từ vô cùng chân thật!"
+              </p>
+              <div class="testi-author">
+                <div class="author-avatar avatar-cyan">TT</div>
+                <div>
+                  <h4 class="author-name">Trần Minh Tuấn</h4>
+                  <p class="author-role" data-i18n="testi-user1-role">Senior Frontend Engineer @ Top Tech Corp</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="testimonial-card highlighted-testimonial">
+              <div class="testi-stars">★★★★★</div>
+              <p class="testi-content" data-i18n="testi-user2-text">
+                "Luyện phỏng vấn STAR với AI Agent giúp tôi rèn luyện phản xạ tuyệt vời. Khi bước vào phỏng vấn thực tế với HR, tôi hoàn toàn tự tin trả lời gãy gọn mạch lạc!"
+              </p>
+              <div class="testi-author">
+                <div class="author-avatar avatar-purple">LH</div>
+                <div>
+                  <h4 class="author-name">Lê Thu Hà</h4>
+                  <p class="author-role" data-i18n="testi-user2-role">Product Manager @ Fintech Startup</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="testimonial-card">
+              <div class="testi-stars">★★★★★</div>
+              <p class="testi-content" data-i18n="testi-user3-text">
+                "Tính năng Anti-Hallucination là cứu cánh của tôi! CV không hề bị AI 'bốc phét' thêm kinh nghiệm ảo, nhà tuyển dụng đánh giá rất cao độ trung thực."
+              </p>
+              <div class="testi-author">
+                <div class="author-avatar avatar-pink">NQ</div>
+                <div>
+                  <h4 class="author-name">Nguyễn Hoàng Quốc</h4>
+                  <p class="author-role" data-i18n="testi-user3-role">AI Research Specialist @ Global Hub</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
     </section>
 
     <!-- ============================================================

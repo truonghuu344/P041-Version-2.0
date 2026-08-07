@@ -135,11 +135,11 @@ export default function Page() {
             <span className="brand-name">CV Assistant</span>
           </a>
           <nav className="nav-links" id="nav-links">
-            <a href="#" className="nav-link active" id="nav-dashboard" data-i18n="nav-dashboard"><span className="nav-icon">🚀</span> <span className="nav-text">Dashboard</span></a>
-            <a href="#" className="nav-link" id="nav-cv" data-i18n="nav-cv"><span className="nav-icon">🧪</span> <span className="nav-text">CV Upload</span></a>
-            <a href="#" className="nav-link" id="nav-jobs" data-i18n="nav-jobs"><span className="nav-icon">🗺️</span> <span className="nav-text">Thư viện Jobs</span></a>
-            <a href="#" className="nav-link" id="nav-interview" data-i18n="nav-interview"><span className="nav-icon">🎙️</span> <span className="nav-text">Phỏng vấn STAR</span></a>
-            <a href="#" className="nav-link" id="nav-gap" data-i18n="nav-gap"><span className="nav-icon">🎯</span> <span className="nav-text">Gap Analysis</span></a>
+            <a href="#" className="nav-link active" id="nav-dashboard"><span className="nav-icon">🚀</span> <span className="nav-text" data-i18n="nav-dashboard">Dashboard</span></a>
+            <a href="#" className="nav-link" id="nav-cv"><span className="nav-icon">🧪</span> <span className="nav-text" data-i18n="nav-cv">CV Upload</span></a>
+            <a href="#" className="nav-link" id="nav-jobs"><span className="nav-icon">🗺️</span> <span className="nav-text" data-i18n="nav-jobs">Thư viện Jobs</span></a>
+            <a href="#" className="nav-link" id="nav-interview"><span className="nav-icon">🎙️</span> <span className="nav-text" data-i18n="nav-interview">Phỏng vấn STAR</span></a>
+            <a href="#" className="nav-link" id="nav-gap"><span className="nav-icon">🎯</span> <span className="nav-text" data-i18n="nav-gap">Gap Analysis</span></a>
           </nav>
 
           <div id="auth-container">
@@ -198,157 +198,136 @@ export default function Page() {
       </div>
 
       <main>
-        <section className="hero" id="hero">
-          <div className="stars" id="stars"></div>
-          <div className="stars stars-2" id="stars-2"></div>
-          <div className="stars stars-3" id="stars-3"></div>
-          <div className="hero-slash" aria-hidden="true">/</div>
+        <section className="app-view active" id="view-dashboard">
+          <div className="hero" id="hero">
+            <div className="stars" id="stars"></div>
+            <div className="stars stars-2" id="stars-2"></div>
+            <div className="stars stars-3" id="stars-3"></div>
+            <div className="hero-slash" aria-hidden="true">/</div>
 
-          <div className="hero-content">
-            <h1 className="hero-title" id="hero-title" data-i18n="hero-title" data-i18n-html="true">
-              Nâng cấp CV và phỏng vấn,
-              <span className="hero-title-accent">Agent của bạn đang đợi.</span>
-            </h1>
-            <p className="hero-sub" id="hero-sub" data-i18n="hero-sub">
-              Công cụ AI hướng nghiệp tối ưu CV theo JD (Anti-Hallucination) & luyện phỏng vấn thử theo Rubric STAR.
-            </p>
-            <div className="hero-actions" id="hero-actions">
-              <button className="btn-primary" id="btn-try-free" data-i18n="btn-try-free">THỬ PHỎNG VẤN NGAY</button>
-              <button className="btn-outline" id="btn-consult" data-i18n="btn-consult">Tối ưu CV với AI</button>
-            </div>
-          </div>
-
-          <div className="dashboard-card" id="dashboard-card">
-            <div className="card-header">
-              <div className="user-info">
-                <div className="avatar" id="user-avatar">
-                  <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                    <rect width="32" height="32" rx="8" fill="#1a1a3e"/>
-                    <rect x="4" y="4" width="10" height="8" rx="1" fill="#7c4dff" opacity="0.7"/>
-                    <rect x="18" y="4" width="10" height="8" rx="1" fill="#00bcd4" opacity="0.7"/>
-                    <rect x="4" y="16" width="24" height="3" rx="1" fill="#ff4e6a" opacity="0.5"/>
-                    <rect x="4" y="22" width="16" height="3" rx="1" fill="#ffffff" opacity="0.3"/>
-                  </svg>
-                </div>
-                <div className="user-text">
-                  <span className="user-name" id="user-name" data-i18n="user-name-guest">Chưa đăng nhập</span>
-                  <span className="user-role" id="user-role-display" data-i18n="user-role-default">Hệ thống Trợ Lý Nghề Nghiệp X</span>
-                </div>
-              </div>
-              <div className="card-tabs" id="card-tabs">
-                <button className="tab active" id="tab-overview" data-i18n="tab-overview">Overview</button>
-                <button className="tab" id="tab-interviews" data-i18n="tab-interviews">Interviews</button>
-                <button className="tab" id="tab-history" data-i18n="tab-history">History</button>
-              </div>
-            </div>
-
-            <div className="card-body">
-              <div className="card-summary" id="card-summary">
-                <p className="summary-title" data-i18n="summary-title">Tình Trạng Hồ Sơ</p>
-                <div className="summary-item">
-                  <span className="summary-label" id="label-cv-upload" data-i18n="label-cv-upload">Đã Upload CV</span>
-                  <span className="badge badge-ok" id="badge-cv-status" data-i18n="badge-cv-status">Sẵn sàng</span>
-                </div>
-                <div className="summary-item">
-                  <span className="summary-label" id="label-interview-skills" data-i18n="label-interview-skills">Kỹ năng Phỏng vấn</span>
-                  <span className="badge badge-need" id="badge-interview-status" data-i18n="badge-interview-status">STAR Rubric</span>
-                </div>
-                <div className="summary-item">
-                  <span className="summary-label" id="label-ai-match" data-i18n="label-ai-match">AI Match Score</span>
-                  <span className="badge badge-focus" id="badge-match-score" data-i18n="badge-match-score">Anti-Hallucination</span>
+            <div className="hero-container">
+              <div className="hero-content">
+                <h1 className="hero-title" id="hero-title" data-i18n="hero-title" data-i18n-html="true">
+                  Improve your CV and interview skills.
+                  <span className="hero-title-accent">Your agent is waiting.</span>
+                </h1>
+                <p className="hero-sub" id="hero-sub" data-i18n="hero-sub">
+                  AI-powered career guidance tool to optimize your CV based on job descriptions (Anti-Hallucination) and practice mock interviews using the Rubric STAR method.
+                </p>
+                <div className="hero-actions" id="hero-actions">
+                  <button className="btn-primary" id="btn-try-free" data-i18n="btn-try-free">TRY INTERVIEWING NOW</button>
+                  <button className="btn-outline" id="btn-consult" data-i18n="btn-consult">Optimize your CV with AI.</button>
                 </div>
               </div>
 
-              <div className="card-metrics" id="card-metrics">
-                <div className="gauges-row" id="gauges-row">
-                  <div className="gauge-item" id="gauge-cv">
-                    <svg className="gauge-svg" viewBox="0 0 80 50" fill="none">
-                      <path d="M10 45 A30 30 0 0 1 70 45" stroke="#2a2a4a" strokeWidth="6" strokeLinecap="round"/>
-                      <path d="M10 45 A30 30 0 0 1 70 45" stroke="url(#gCv)" strokeWidth="6" strokeLinecap="round" strokeDasharray="94" strokeDashoffset="15" className="gauge-arc"/>
-                      <defs>
-                        <linearGradient id="gCv" x1="0%" y1="0%" x2="100%" y2="0%">
-                          <stop offset="0%" stopColor="#ff4e6a"/>
-                          <stop offset="100%" stopColor="#ff8c42"/>
-                        </linearGradient>
-                      </defs>
-                      <circle cx="40" cy="45" r="3" fill="#ff6a5e"/>
-                    </svg>
-                    <span className="gauge-label" id="gauge-cv-label" data-i18n="gauge-cv-label">Match Score (85%)</span>
+              <div className="dashboard-card" id="dashboard-card">
+                <div className="card-header">
+                  <div className="user-info">
+                    <div className="avatar" id="user-avatar">
+                      <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                        <rect width="32" height="32" rx="8" fill="#1a1a3e"/>
+                        <rect x="4" y="4" width="10" height="8" rx="1" fill="#7c4dff" opacity="0.7"/>
+                        <rect x="18" y="4" width="10" height="8" rx="1" fill="#00bcd4" opacity="0.7"/>
+                        <rect x="4" y="16" width="24" height="3" rx="1" fill="#ff4e6a" opacity="0.5"/>
+                        <rect x="4" y="22" width="16" height="3" rx="1" fill="#ffffff" opacity="0.3"/>
+                      </svg>
+                    </div>
+                    <div className="user-text">
+                      <span className="user-name" id="user-name" data-i18n="user-name-guest">Not logged in</span>
+                      <span className="user-role" id="user-role-display" data-i18n="user-role-default">Career Assistant System X</span>
+                    </div>
                   </div>
-                  <div className="gauge-item" id="gauge-interview">
-                    <svg className="gauge-svg" viewBox="0 0 80 50" fill="none">
-                      <path d="M10 45 A30 30 0 0 1 70 45" stroke="#2a2a4a" strokeWidth="6" strokeLinecap="round"/>
-                      <path d="M10 45 A30 30 0 0 1 70 45" stroke="url(#gInt)" strokeWidth="6" strokeLinecap="round" strokeDasharray="94" strokeDashoffset="20" className="gauge-arc"/>
-                      <defs>
-                        <linearGradient id="gInt" x1="0%" y1="0%" x2="100%" y2="0%">
-                          <stop offset="0%" stopColor="#00e676"/>
-                          <stop offset="100%" stopColor="#00bcd4"/>
-                        </linearGradient>
-                      </defs>
-                      <circle cx="40" cy="45" r="3" fill="#00e676"/>
-                    </svg>
-                    <span className="gauge-label" id="gauge-interview-label" data-i18n="gauge-interview-label">STAR Score (82/100)</span>
-                  </div>
-                  <div className="gauge-item" id="gauge-direction">
-                    <svg className="gauge-svg" viewBox="0 0 80 50" fill="none">
-                      <path d="M10 45 A30 30 0 0 1 70 45" stroke="#2a2a4a" strokeWidth="6" strokeLinecap="round"/>
-                      <path d="M10 45 A30 30 0 0 1 70 45" stroke="url(#gDir)" strokeWidth="6" strokeLinecap="round" strokeDasharray="94" strokeDashoffset="25" className="gauge-arc"/>
-                      <defs>
-                        <linearGradient id="gDir" x1="0%" y1="0%" x2="100%" y2="0%">
-                          <stop offset="0%" stopColor="#f9c74f"/>
-                          <stop offset="100%" stopColor="#f8961e"/>
-                        </linearGradient>
-                      </defs>
-                      <circle cx="40" cy="45" r="3" fill="#f9c74f"/>
-                    </svg>
-                    <span className="gauge-label" id="gauge-direction-label" data-i18n="gauge-direction-label">Tiến Độ Tối Ưu</span>
+                  <div className="card-tabs" id="card-tabs">
+                    <button className="tab active" id="tab-overview" data-i18n="tab-overview">Overview</button>
+                    <button className="tab" id="tab-interviews" data-i18n="tab-interviews">Interviews</button>
+                    <button className="tab" id="tab-history" data-i18n="tab-history">Association</button>
                   </div>
                 </div>
 
-                <div className="chart-area" id="chart-area">
-                  <p className="chart-label" id="chart-title" data-i18n="chart-title">Lịch sử đánh giá phỏng vấn & tối ưu hồ sơ</p>
-                  <svg className="chart-svg" viewBox="0 0 300 80" preserveAspectRatio="none">
-                    <line x1="0" y1="20" x2="300" y2="20" stroke="#2a2a4a" strokeWidth="0.5"/>
-                    <line x1="0" y1="40" x2="300" y2="40" stroke="#2a2a4a" strokeWidth="0.5"/>
-                    <line x1="0" y1="60" x2="300" y2="60" stroke="#2a2a4a" strokeWidth="0.5"/>
-                    <polyline points="0,70 40,55 80,40 120,50 160,30 200,45 240,20 300,35"
-                      fill="none" stroke="#ff4e9a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
+                <div className="card-body">
+                  <div className="card-summary" id="card-summary">
+                    <p className="summary-title" data-i18n="summary-title">APPLICATION STATUS</p>
+                    <div className="summary-item">
+                      <span className="summary-label" id="label-cv-upload" data-i18n="label-cv-upload">CV has been uploaded.</span>
+                      <span className="badge badge-ok" id="badge-cv-status" data-i18n="badge-cv-status">Ready</span>
+                    </div>
+                    <div className="summary-item">
+                      <span className="summary-label" id="label-interview-skills" data-i18n="label-interview-skills">Interview Skills</span>
+                      <span className="badge badge-need" id="badge-interview-status" data-i18n="badge-interview-status">STAR Rubric</span>
+                    </div>
+                    <div className="summary-item">
+                      <span className="summary-label" id="label-ai-match" data-i18n="label-ai-match">AI Match Score</span>
+                      <span className="badge badge-focus" id="badge-match-score" data-i18n="badge-match-score">Anti-Hallucination</span>
+                    </div>
+                  </div>
+
+                  <div className="card-metrics" id="card-metrics">
+                    <div className="gauges-row" id="gauges-row">
+                      <div className="gauge-item" id="gauge-cv">
+                        <svg className="gauge-svg" viewBox="0 0 80 50" fill="none">
+                          <path d="M10 45 A30 30 0 0 1 70 45" stroke="#2a2a4a" strokeWidth="6" strokeLinecap="round"/>
+                          <path d="M10 45 A30 30 0 0 1 70 45" stroke="url(#gCv)" strokeWidth="6" strokeLinecap="round" strokeDasharray="94" strokeDashoffset="15" className="gauge-arc"/>
+                          <defs>
+                            <linearGradient id="gCv" x1="0%" y1="0%" x2="100%" y2="0%">
+                              <stop offset="0%" stopColor="#ff4e6a"/>
+                              <stop offset="100%" stopColor="#ff8c42"/>
+                            </linearGradient>
+                          </defs>
+                          <circle cx="40" cy="45" r="3" fill="#ff6a5e"/>
+                        </svg>
+                        <span className="gauge-label" id="gauge-cv-label" data-i18n="gauge-cv-label">Match Score (85%)</span>
+                      </div>
+                      <div className="gauge-item" id="gauge-interview">
+                        <svg className="gauge-svg" viewBox="0 0 80 50" fill="none">
+                          <path d="M10 45 A30 30 0 0 1 70 45" stroke="#2a2a4a" strokeWidth="6" strokeLinecap="round"/>
+                          <path d="M10 45 A30 30 0 0 1 70 45" stroke="url(#gInt)" strokeWidth="6" strokeLinecap="round" strokeDasharray="94" strokeDashoffset="20" className="gauge-arc"/>
+                          <defs>
+                            <linearGradient id="gInt" x1="0%" y1="0%" x2="100%" y2="0%">
+                              <stop offset="0%" stopColor="#00e676"/>
+                              <stop offset="100%" stopColor="#00bcd4"/>
+                            </linearGradient>
+                          </defs>
+                          <circle cx="40" cy="45" r="3" fill="#00e676"/>
+                        </svg>
+                        <span className="gauge-label" id="gauge-interview-label" data-i18n="gauge-interview-label">STAR Score (82/100)</span>
+                      </div>
+                      <div className="gauge-item" id="gauge-direction">
+                        <svg className="gauge-svg" viewBox="0 0 80 50" fill="none">
+                          <path d="M10 45 A30 30 0 0 1 70 45" stroke="#2a2a4a" strokeWidth="6" strokeLinecap="round"/>
+                          <path d="M10 45 A30 30 0 0 1 70 45" stroke="url(#gDir)" strokeWidth="6" strokeLinecap="round" strokeDasharray="94" strokeDashoffset="25" className="gauge-arc"/>
+                          <defs>
+                            <linearGradient id="gDir" x1="0%" y1="0%" x2="100%" y2="0%">
+                              <stop offset="0%" stopColor="#f9c74f"/>
+                              <stop offset="100%" stopColor="#f8961e"/>
+                            </linearGradient>
+                          </defs>
+                          <circle cx="40" cy="45" r="3" fill="#f9c74f"/>
+                        </svg>
+                        <span className="gauge-label" id="gauge-direction-label" data-i18n="gauge-direction-label">Optimal Progress</span>
+                      </div>
+                    </div>
+
+                    <div className="chart-area" id="chart-area">
+                      <p className="chart-label" id="chart-title" data-i18n="chart-title">Interview evaluation history & resume optimization</p>
+                      <svg className="chart-svg" viewBox="0 0 300 80" preserveAspectRatio="none">
+                        <line x1="0" y1="20" x2="300" y2="20" stroke="#2a2a4a" strokeWidth="0.5"/>
+                        <line x1="0" y1="40" x2="300" y2="40" stroke="#2a2a4a" strokeWidth="0.5"/>
+                        <line x1="0" y1="60" x2="300" y2="60" stroke="#2a2a4a" strokeWidth="0.5"/>
+                        <polyline points="0,70 40,55 80,40 120,50 160,30 200,45 240,20 300,35"
+                          fill="none" stroke="#ff4e9a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <polygon points="0,70 40,55 80,40 120,50 160,30 200,45 240,20 300,35 300,80 0,80"
+                          fill="url(#chartFill1)" opacity="0.2"/>
+                        <polyline points="0,60 40,65 80,55 120,60 160,50 200,35 240,45 300,15"
+                          fill="none" stroke="#7c4dff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </section>
 
-        <section className="icon-row-section" id="icon-row-section">
-          <div className="icon-row" id="icon-row">
-            <button className="icon-btn" id="icon-cv-btn" title="Upload & Quản Lý CV">
-              <svg width="26" height="26" fill="none" viewBox="0 0 24 24">
-                <path d="M12 3L4 7v10l8 4 8-4V7l-8-4z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
-                <path d="M12 3v18M4 7l8 4 8-4" stroke="currentColor" strokeWidth="1.5"/>
-              </svg>
-            </button>
-            <button className="icon-btn" id="icon-location-btn" title="Thư Viện Job Descriptions (JD)">
-              <svg width="26" height="26" fill="none" viewBox="0 0 24 24">
-                <path d="M12 21s-7-6.686-7-11A7 7 0 0 1 19 10c0 4.314-7 11-7 11z" stroke="#ff4e6a" strokeWidth="1.5"/>
-                <circle cx="12" cy="10" r="2.5" stroke="#ff4e6a" strokeWidth="1.5"/>
-              </svg>
-            </button>
-            <button className="icon-btn" id="icon-megaphone-btn" title="Phòng Phỏng Vấn Thử STAR">
-              <svg width="26" height="26" fill="none" viewBox="0 0 24 24">
-                <path d="M3 9v6h4l5 5V4L7 9H3z" stroke="#c084fc" strokeWidth="1.5" strokeLinejoin="round"/>
-                <path d="M17 9a4 4 0 0 1 0 6" stroke="#c084fc" strokeWidth="1.5" strokeLinecap="round"/>
-                <path d="M19.5 6.5a8 8 0 0 1 0 11" stroke="#c084fc" strokeWidth="1.5" strokeLinecap="round"/>
-              </svg>
-            </button>
-            <button className="icon-btn" id="icon-search-btn" title="Chạy Gap Analysis (CV vs JD)">
-              <svg width="26" height="26" fill="none" viewBox="0 0 24 24">
-                <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.5"/>
-                <path d="M20 20l-3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-              </svg>
-            </button>
-          </div>
-        </section>
+
 
         <section className="agent-section" id="agent-section">
           <div className="agent-card" id="agent-card">
@@ -416,7 +395,741 @@ export default function Page() {
             </div>
           </div>
         </section>
-      </main>
+
+        {/* ===== 3. PRICING SECTION ===== */}
+        <section className="pricing-section" id="pricing-section">
+          <div className="section-header center-header">
+            <span className="section-tag" data-i18n="pricing-tag">⚡ NÂNG CẤP SỨC MẠNH AI</span>
+            <h2 className="section-title-large" data-i18n="pricing-title">Các Gói Dịch Vụ & Nâng Cấp</h2>
+            <p className="section-subtitle" data-i18n="pricing-sub">Lựa chọn gói phù hợp để làm chủ hành trình chinh phục mọi nhà tuyển dụng</p>
+          </div>
+
+          <div className="pricing-grid">
+            {/* Basic Plan */}
+            <div className="pricing-card basic-card">
+              <div className="card-badge-placeholder"></div>
+              <div className="plan-header">
+                <h3 className="plan-title" data-i18n="plan-basic-name">Gói Cơ Bản</h3>
+                <p className="plan-desc" data-i18n="plan-basic-desc">Trải nghiệm các tính năng cốt lõi cho ứng viên mới bắt đầu</p>
+                <div className="plan-price">
+                  <span className="price-amount" data-i18n="plan-basic-price">0đ</span>
+                  <span className="price-period" data-i18n="plan-free-forever">/ Trọn đời</span>
+                </div>
+              </div>
+              <ul className="plan-features">
+                <li><span className="check-icon">✓</span> <span data-i18n="feat-b1">Tối ưu 3 CV cơ bản</span></li>
+                <li><span className="check-icon">✓</span> <span data-i18n="feat-b2">Luyện phỏng vấn STAR 5 lượt/tháng</span></li>
+                <li><span className="check-icon">✓</span> <span data-i18n="feat-b3">Tra cứu Thư viện JD mẫu hệ thống</span></li>
+                <li className="dimmed"><span className="cross-icon">✕</span> <span data-i18n="feat-b4">Anti-Hallucination chuyên sâu</span></li>
+                <li className="dimmed"><span className="cross-icon">✕</span> <span data-i18n="feat-b5">Tạo Custom Job Description</span></li>
+              </ul>
+              <button className="pricing-btn basic-btn" id="btn-plan-basic" data-i18n="btn-plan-basic">Bắt Đầu Miễn Phí</button>
+            </div>
+
+            {/* Pro Plan (Highlighted) */}
+            <div className="pricing-card pro-card popular-highlight">
+              <div className="popular-badge" data-i18n="badge-popular">🔥 PHỔ BIẾN NHẤT</div>
+              <div className="plan-header">
+                <h3 className="plan-title pro-title" data-i18n="plan-pro-name">Gói Pro Copilot</h3>
+                <p className="plan-desc" data-i18n="plan-pro-desc">Tăng 300% cơ hội nhận Offer với sự trợ giúp toàn diện của AI Agent</p>
+                <div className="plan-price">
+                  <span className="price-amount pro-price" data-i18n="plan-pro-price">199.000đ</span>
+                  <span className="price-period" data-i18n="plan-period-month">/ Tháng</span>
+                </div>
+              </div>
+              <ul className="plan-features">
+                <li><span className="check-icon cyan">✓</span> <strong data-i18n="feat-p1">Không giới hạn tối ưu CV theo JD</strong></li>
+                <li><span className="check-icon cyan">✓</span> <strong data-i18n="feat-p2">Luyện phỏng vấn STAR AI toàn diện & gợi mở follow-up</strong></li>
+                <li><span className="check-icon cyan">✓</span> <span data-i18n="feat-p3">Thuật toán Anti-Hallucination bảo toàn 100% độ thật</span></li>
+                <li><span className="check-icon cyan">✓</span> <span data-i18n="feat-p4">Phân tích Gap Analysis & Đề xuất từ khóa ATS</span></li>
+                <li><span className="check-icon cyan">✓</span> <span data-i18n="feat-p5">Xuất báo cáo đánh giá kỹ năng phỏng vấn PDF</span></li>
+              </ul>
+              <button className="pricing-btn pro-btn" id="btn-plan-pro" data-i18n="btn-plan-pro">Nâng Cấp Pro Ngay</button>
+            </div>
+
+            {/* Enterprise / Mentor Plan */}
+            <div className="pricing-card enterprise-card">
+              <div className="card-badge-placeholder"></div>
+              <div className="plan-header">
+                <h3 className="plan-title" data-i18n="plan-ent-name">Gói Enterprise / Mentor</h3>
+                <p className="plan-desc" data-i18n="plan-ent-desc">Giải pháp chuyên sâu cho Nhà tuyển dụng, HR & Chuyên gia Hướng nghiệp</p>
+                <div className="plan-price">
+                  <span className="price-amount" data-i18n="plan-ent-price">499.000đ</span>
+                  <span className="price-period" data-i18n="plan-period-month">/ Tháng</span>
+                </div>
+              </div>
+              <ul className="plan-features">
+                <li><span className="check-icon purple">✓</span> <strong data-i18n="feat-e1">Tất cả đặc quyền của Gói Pro</strong></li>
+                <li><span className="check-icon purple">✓</span> <strong data-i18n="feat-e2">Tạo Custom Job Description không giới hạn</strong></li>
+                <li><span className="check-icon purple">✓</span> <span data-i18n="feat-e3">Thiết lập bộ Rubric STAR phỏng vấn riêng</span></li>
+                <li><span className="check-icon purple">✓</span> <span data-i18n="feat-e4">Quản lý kho ứng viên & Phân tích khớp hồ sơ hàng loạt</span></li>
+                <li><span className="check-icon purple">✓</span> <span data-i18n="feat-e5">Hỗ trợ kỹ thuật 24/7 & API Integration</span></li>
+              </ul>
+              <button className="pricing-btn enterprise-btn" id="btn-plan-enterprise" data-i18n="btn-plan-enterprise">Liên Hệ Tư Vấn Enterprise</button>
+            </div>
+          </div>
+        </section>
+
+        {/* ===== 4. SOCIAL PROOF & STATS SECTION ===== */}
+        <section className="stats-testimonials-section" id="stats-testimonials-section">
+          {/* Counter Stats Grid */}
+          <div className="stats-container">
+            <div className="stat-box">
+              <div className="stat-number-wrap">
+                <span className="stat-number glow-cyan">10,000+</span>
+              </div>
+              <p className="stat-label" data-i18n="stat-cv-label">CV Tối Ưu Thành Công</p>
+            </div>
+            <div className="stat-box">
+              <div className="stat-number-wrap">
+                <span className="stat-number glow-purple">85%+</span>
+              </div>
+              <p className="stat-label" data-i18n="stat-pass-label">Tỷ Lệ Vượt Qua Phỏng Vấn</p>
+            </div>
+            <div className="stat-box">
+              <div className="stat-number-wrap">
+                <span className="stat-number glow-pink">4.9/5 ⭐</span>
+              </div>
+              <p className="stat-label" data-i18n="stat-rating-label">Đánh Giá Từ 5,000+ Ứng Viên</p>
+            </div>
+            <div className="stat-box">
+              <div className="stat-number-wrap">
+                <span className="stat-number glow-green">&lt; 30s</span>
+              </div>
+              <p className="stat-label" data-i18n="stat-speed-label">Thời Gian Phân Tích Match Score</p>
+            </div>
+          </div>
+
+          {/* Testimonials */}
+          <div className="testimonials-wrap">
+            <div className="section-header center-header">
+              <span className="section-tag" data-i18n="testi-tag">💬 CÂU CHUYỆN THÀNH CÔNG</span>
+              <h2 className="section-title-large" data-i18n="testi-title">Ứng Viên Nói Gì Về Career Assistant X?</h2>
+              <p className="section-subtitle" data-i18n="testi-sub">Hàng ngàn ứng viên đã chinh phục được công việc mơ ước nhờ sự đồng hành của AI Agent</p>
+            </div>
+
+            <div className="testimonials-grid">
+              <div className="testimonial-card">
+                <div className="testi-stars">★★★★★</div>
+                <p className="testi-content" data-i18n="testi-user1-text">
+                  "Nhờ Gap Analysis mà tôi biết chính xác CV mình thiếu những từ khóa ATS nào đối với vị trí Senior Frontend. AI còn tự động tối ưu câu từ vô cùng chân thật!"
+                </p>
+                <div className="testi-author">
+                  <div className="author-avatar avatar-cyan">TT</div>
+                  <div>
+                    <h4 className="author-name">Trần Minh Tuấn</h4>
+                    <p className="author-role" data-i18n="testi-user1-role">Senior Frontend Engineer @ Top Tech Corp</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="testimonial-card highlighted-testimonial">
+                <div className="testi-stars">★★★★★</div>
+                <p className="testi-content" data-i18n="testi-user2-text">
+                  "Luyện phỏng vấn STAR với AI Agent giúp tôi rèn luyện phản xạ tuyệt vời. Khi bước vào phỏng vấn thực tế với HR, tôi hoàn toàn tự tin trả lời gãy gọn mạch lạc!"
+                </p>
+                <div className="testi-author">
+                  <div className="author-avatar avatar-purple">LH</div>
+                  <div>
+                    <h4 className="author-name">Lê Thu Hà</h4>
+                    <p className="author-role" data-i18n="testi-user2-role">Product Manager @ Fintech Startup</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="testimonial-card">
+                <div className="testi-stars">★★★★★</div>
+                <p className="testi-content" data-i18n="testi-user3-text">
+                  "Tính năng Anti-Hallucination là cứu cánh của tôi! CV không hề bị AI 'bốc phét' thêm kinh nghiệm ảo, nhà tuyển dụng đánh giá rất cao độ trung thực."
+                </p>
+                <div className="testi-author">
+                  <div className="author-avatar avatar-pink">NQ</div>
+                  <div>
+                    <h4 className="author-name">Nguyễn Hoàng Quốc</h4>
+                    <p className="author-role" data-i18n="testi-user3-role">AI Research Specialist @ Global Hub</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      {/* ===== 2. VIEW: CV UPLOAD ===== */}
+      <section className="app-view" id="view-cv">
+        <div className="spaceship-stage">
+          <div className="spaceship-windows-bar">
+            <div className="porthole-window">
+              <div className="porthole-glass"></div>
+              <div className="porthole-ring"></div>
+              <div className="porthole-label">OBSERVATION BAY Alpha</div>
+            </div>
+            <div className="porthole-window center-porthole">
+              <div className="porthole-glass"></div>
+              <div className="porthole-ring"></div>
+              <div className="porthole-label">ORBITAL VIEW // CV PARSER COMMAND</div>
+            </div>
+            <div className="porthole-window">
+              <div className="porthole-glass"></div>
+              <div className="porthole-ring"></div>
+              <div className="porthole-label">OBSERVATION BAY Beta</div>
+            </div>
+          </div>
+
+          <div className="spaceship-vessel">
+            <div className="vessel-header">
+              <div className="vessel-badge">
+                <span className="pulse-dot"></span>
+                <span className="vessel-badge-text">WHITE SPACESHIP COMMAND DECK</span>
+              </div>
+              <h1 className="vessel-title">TRẠM TẢI LÊN & QUẢN LÝ HỒ SƠ CV VŨ TRỤ</h1>
+              <div className="vessel-status-pills">
+                <span className="status-pill"><i className="pill-dot green"></i> SYSTEM ONLINE</span>
+                <span className="status-pill"><i className="pill-dot cyan"></i> AI PARSER READY</span>
+                <span className="status-pill"><i className="pill-dot purple"></i> ATS VERIFIED</span>
+              </div>
+            </div>
+
+            <div className="vessel-grid">
+              <div className="vessel-card console-card">
+                <div className="console-header">
+                  <div className="console-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                      <path d="M12 3v12m0-12L8 7m4-4l4 4" stroke="#00d2ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke="#00d2ff" strokeWidth="2" strokeLinecap="round"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="console-title">TRẠM QUÉT CV (SCANNER DECK)</h3>
+                    <p className="console-subtitle">Tải lên file CV (.pdf, .docx) để AI trích xuất thông tin tự động</p>
+                  </div>
+                </div>
+
+                <form id="cv-page-upload-form" className="spaceship-form">
+                  <div className="form-group">
+                    <label className="ship-label" htmlFor="cv-page-title-input">Tên gợi nhớ CV (Tùy chọn)</label>
+                    <div className="ship-input-wrap">
+                      <input type="text" id="cv-page-title-input" className="ship-input" placeholder="Ví dụ: CV Software Engineer 2026" />
+                    </div>
+                  </div>
+
+                  <div className="upload-dropzone" id="cv-dropzone">
+                    <div className="dropzone-laser" id="dropzone-laser"></div>
+                    <div className="dropzone-content">
+                      <div className="dropzone-icon">
+                        <svg width="48" height="48" fill="none" viewBox="0 0 24 24">
+                          <path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" stroke="#2563eb" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                      <p className="dropzone-text">Kéo thả file CV vào đây hoặc <span className="highlight-text">bấm để chọn file</span></p>
+                      <p className="dropzone-sub">Hỗ trợ định dạng PDF, DOCX (Tối đa 10MB)</p>
+                      <input type="file" id="cv-page-file-input" accept=".pdf,.docx" style={{ display: 'none' }} />
+                      <span id="selected-file-name" className="selected-file-badge" style={{ display: 'none' }}></span>
+                    </div>
+                  </div>
+
+                  <button type="submit" className="ship-btn-primary" id="btn-page-do-upload">
+                    <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
+                      <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    TẢI LÊN & PARSE CV BẰNG AI ENGINE
+                  </button>
+                </form>
+
+                <div className="ship-info-box">
+                  <div className="box-title">⚡ TÍNH NĂNG TỰ ĐỘNG CỦA AI CORE</div>
+                  <ul className="box-list">
+                    <li><span className="check-mark">✓</span> Trích xuất kỹ năng Hard skills & Soft skills</li>
+                    <li><span className="check-mark">✓</span> Phân tích thời gian kinh nghiệm và dự án</li>
+                    <li><span className="check-mark">✓</span> Đánh giá chuẩn ATS & Anti-Hallucination</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="vessel-card manifest-card">
+                <div className="console-header">
+                  <div className="console-icon console-icon-purple">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                      <path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" stroke="#8b5cf6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="console-title">DANH SÁCH MANIFEST CV ĐÃ LƯU</h3>
+                    <p className="console-subtitle">Xem, quản lý và kiểm tra chi tiết các bản CV trong kho dữ liệu tàu</p>
+                  </div>
+                </div>
+
+                <div id="cv-page-list-container" className="cv-manifest-list">
+                  <div className="empty-manifest">
+                    <p>Đang tải dữ liệu CV từ kho dữ liệu tàu vũ trụ...</p>
+                  </div>
+                </div>
+
+                <div id="cv-detail-inspector" className="cv-detail-deck" style={{ display: 'none' }}>
+                  <div className="inspector-header">
+                    <span className="inspector-badge">AI CV INSPECTOR MONITOR</span>
+                    <button className="btn-close-inspector" id="btn-close-cv-detail">&times;</button>
+                  </div>
+                  <h4 id="inspector-cv-title" className="inspector-title">CV Software Engineer</h4>
+                  <p id="inspector-cv-meta" className="inspector-meta">Tạo lúc: --/--/---- | Trạng thái: Ready</p>
+
+                  <div className="inspector-body">
+                    <div className="inspector-section">
+                      <p className="section-label">📌 THÔNG TIN TRÍCH XUẤT</p>
+                      <div id="inspector-personal-info" className="info-grid"></div>
+                    </div>
+
+                    <div className="inspector-section">
+                      <p className="section-label">⚡ BỘ KỸ NĂNG PARSED (SKILLS TAG CLOUD)</p>
+                      <div id="inspector-skills-cloud" className="skills-cloud"></div>
+                    </div>
+
+                    <div className="inspector-section">
+                      <p className="section-label">💼 TÓM TẮT NỘI DUNG CV</p>
+                      <div id="inspector-raw-preview" className="content-preview-box"></div>
+                    </div>
+
+                    <div className="inspector-actions">
+                      <button id="btn-inspector-gap" className="ship-btn-accent">
+                        🎯 So khớp với JD (Gap Analysis)
+                      </button>
+                      <button id="btn-inspector-interview" className="ship-btn-success">
+                        🎙️ Luyện Phỏng Vấn STAR
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== 3. VIEW: THƯ VIỆN JOBS ===== */}
+      <section className="app-view" id="view-jobs">
+        <div className="page-container">
+          <div className="page-header">
+            <div className="page-badge">DECK BETA // CAREER NAVIGATION ROOM</div>
+            <h1 className="page-title">💼 Thư Viện Job Descriptions & Bản Đồ Điều Hướng</h1>
+            <p className="page-sub">Khám phá các vị trí mục tiêu, phân tích quỹ đạo phù hợp & quản lý JD doanh nghiệp</p>
+          </div>
+
+          <div className="career-nav-map-card">
+            <div className="map-header">
+              <div className="map-title-wrap">
+                <span className="pulse-dot green"></span>
+                <h3 className="map-title">BẢN ĐỒ QUỸ ĐẠO SỰ NGHIỆP VŨ TRỤ (STAR NAVIGATION MAP)</h3>
+              </div>
+              <span className="map-subtitle">Click vào các tọa độ Vị Trí (Nodes) để định vị mục tiêu & xem tỷ lệ khớp</span>
+            </div>
+
+            <div className="star-map-container" id="star-map-container">
+              <svg className="map-svg-overlay" viewBox="0 0 800 240" preserveAspectRatio="none">
+                <line x1="100" y1="120" x2="280" y2="60" stroke="rgba(0, 229, 255, 0.4)" strokeWidth="2" strokeDasharray="6 4" className="dash-anim"/>
+                <line x1="100" y1="120" x2="300" y2="180" stroke="rgba(124, 77, 255, 0.4)" strokeWidth="2" strokeDasharray="6 4" className="dash-anim"/>
+                <line x1="280" y1="60" x2="540" y2="70" stroke="rgba(0, 229, 255, 0.3)" strokeWidth="1.5"/>
+                <line x1="300" y1="180" x2="560" y2="170" stroke="rgba(255, 78, 154, 0.3)" strokeWidth="1.5"/>
+                <line x1="540" y1="70" x2="720" y2="120" stroke="rgba(55, 214, 122, 0.5)" strokeWidth="2"/>
+                <line x1="560" y1="170" x2="720" y2="120" stroke="rgba(55, 214, 122, 0.5)" strokeWidth="2"/>
+              </svg>
+
+              <div className="map-node node-origin">
+                <div className="node-pulse"></div>
+                <span className="node-icon">🧑‍🚀</span>
+                <span className="node-label">CURRENT PROFILE</span>
+              </div>
+
+              <div className="map-node node-job active" style={{ left: '34%', top: '22%' }} data-job="ai-eng">
+                <div className="node-badge">94% MATCH</div>
+                <span className="node-icon">🤖</span>
+                <span className="node-title">AI Engineer</span>
+              </div>
+
+              <div className="map-node node-job" style={{ left: '36%', top: '70%' }} data-job="fullstack">
+                <div className="node-badge">88% MATCH</div>
+                <span className="node-icon">💻</span>
+                <span className="node-title">Fullstack Lead</span>
+              </div>
+
+              <div className="map-node node-job" style={{ left: '66%', top: '28%' }} data-job="data-sci">
+                <div className="node-badge">82% MATCH</div>
+                <span className="node-icon">📊</span>
+                <span className="node-title">Data Scientist</span>
+              </div>
+
+              <div className="map-node node-job" style={{ left: '68%', top: '68%' }} data-job="product-mgr">
+                <div className="node-badge">76% MATCH</div>
+                <span className="node-icon">🎯</span>
+                <span className="node-title">Product Owner</span>
+              </div>
+
+              <div className="map-node node-target" style={{ left: '88%', top: '50%' }}>
+                <div className="node-star-glow"></div>
+                <span className="node-icon">🏆</span>
+                <span className="node-title">CHIEF AI ARCHITECT</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="jobs-layout">
+            <div className="jobs-tabs-bar">
+              <button id="page-btn-tab-sys" className="tab active">JD Mẫu Hệ Thống</button>
+              <button id="page-btn-tab-cust" className="tab">Dán JD Tùy Chỉnh</button>
+            </div>
+
+            <div id="page-section-sys-jds" className="jobs-panel">
+              <div id="page-jd-list-container" className="jd-cards-grid">
+                <p className="loading-text">Đang tải danh sách Job Description...</p>
+              </div>
+            </div>
+
+            <div id="page-section-cust-jd" className="jobs-panel" style={{ display: 'none' }}>
+              <form id="page-custom-jd-form" className="card-form">
+                <div className="form-group">
+                  <label className="form-label">Tên vị trí công việc</label>
+                  <input type="text" id="page-custom-jd-title" className="form-input" placeholder="Ví dụ: Senior Fullstack Developer" required />
+                </div>
+                <div className="form-row">
+                  <div className="form-group flex-1">
+                    <label className="form-label">Tên công ty</label>
+                    <input type="text" id="page-custom-jd-company" className="form-input" placeholder="Tech Global Corp" />
+                  </div>
+                  <div className="form-group flex-1">
+                    <label className="form-label">Địa điểm</label>
+                    <input type="text" id="page-custom-jd-location" className="form-input" placeholder="TP. Hồ Chí Minh / Hà Nội" />
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Nội dung Yêu cầu Công việc (Requirements Text)</label>
+                  <textarea id="page-custom-jd-requirements" className="form-input textarea-large" placeholder="Dán nội dung chi tiết mô tả công việc, yêu cầu kỹ năng vào đây..." required></textarea>
+                </div>
+                <button type="submit" className="btn-primary full-width">Lưu Job Description Tùy Chỉnh</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== 4. VIEW: PHỎNG VẤN STAR ===== */}
+      <section className="app-view" id="view-interview">
+        <div className="page-container">
+          <div className="page-header">
+            <div className="page-badge badge-purple">DECK GAMMA // SIMULATION CHAMBER</div>
+            <h1 className="page-title">🎙️ Phòng Phỏng Vấn Thử (STAR Rubric Chamber)</h1>
+            <p className="page-sub">Trợ lý AI đóng vai nhà tuyển dụng hỏi đáp chuyên sâu & tự động đánh giá theo mô hình STAR</p>
+          </div>
+
+          <div className="holo-interviewer-card">
+            <div className="holo-avatar-wrap">
+              <div className="holo-ring outer"></div>
+              <div className="holo-ring inner"></div>
+              <div className="holo-core-orb" id="holo-core-orb">
+                <span className="ai-symbol">🤖</span>
+              </div>
+              <div className="holo-waves" id="holo-waves">
+                <span></span><span></span><span></span><span></span><span></span>
+              </div>
+            </div>
+            <div className="holo-info">
+              <div className="holo-status-pill">
+                <span className="pulse-dot green"></span>
+                <span id="holo-ai-status">AI RECRUITER AGENT // ACTIVE & READY</span>
+              </div>
+              <h3 className="holo-ai-name">TRỢ LÝ PHỎNG VẤN VŨ TRỤ STAR RUBRIC</h3>
+              <p className="holo-ai-desc">Tự động tạo câu hỏi dựa trên kinh nghiệm CV & yêu cầu JD. Phân tích trực tiếp câu trả lời theo 4 chỉ số STAR (Situation, Task, Action, Result).</p>
+            </div>
+            <div className="audio-waveform-box" id="audio-waveform">
+              <div className="waveform-bar"></div>
+              <div className="waveform-bar"></div>
+              <div className="waveform-bar"></div>
+              <div className="waveform-bar"></div>
+              <div className="waveform-bar"></div>
+              <div className="waveform-bar"></div>
+              <div className="waveform-bar"></div>
+            </div>
+          </div>
+
+          <div className="interview-workspace">
+            <div id="page-interview-setup" className="interview-card">
+              <h3 className="card-section-title">Thiết Lập Phiên Phỏng Vấn Thử</h3>
+              <div className="form-row margin-bottom">
+                <div className="form-group flex-1">
+                  <label className="form-label">Chọn CV Phỏng Vấn:</label>
+                  <select id="page-interview-select-cv" className="form-input select-dark"></select>
+                </div>
+                <div className="form-group flex-1">
+                  <label className="form-label">Chọn JD Ứng Tuyển:</label>
+                  <select id="page-interview-select-jd" className="form-input select-dark"></select>
+                </div>
+              </div>
+              <button id="page-btn-start-interview" className="btn-primary full-width">Bắt Đầu Phiên Phỏng Vấn STAR</button>
+            </div>
+
+            <div id="page-interview-chat" className="interview-card chat-card" style={{ display: 'none' }}>
+              <div className="chat-header">
+                <span id="page-interview-progress-text" className="progress-info">Câu hỏi 1 / 5</span>
+                <span className="badge badge-ok">Đang phỏng vấn</span>
+              </div>
+
+              <div id="page-interview-chat-history" className="chat-history-box"></div>
+
+              <form id="page-interview-answer-form" className="chat-input-form">
+                <input type="text" id="page-interview-answer-input" className="form-input flex-1" placeholder="Nhập câu trả lời của bạn theo mô hình STAR..." required />
+                <button type="submit" className="btn-primary">Gửi Câu Trả Lời</button>
+              </form>
+            </div>
+
+            <div id="page-interview-report" className="interview-card report-card" style={{ display: 'none' }}>
+              <h3 className="report-title">📊 Báo Cáo Chấm Điểm Phỏng Vấn (STAR Rubric)</h3>
+              <div className="score-summary">
+                <span>Điểm Tổng Kết:</span>
+                <span id="page-report-total-score" className="badge badge-ok score-badge">85/100</span>
+              </div>
+
+              <div id="page-report-star-breakdown" className="star-grid"></div>
+
+              <div className="report-section">
+                <p className="report-label label-green">💪 Điểm Mạnh:</p>
+                <ul id="page-report-strengths-list" className="report-list"></ul>
+              </div>
+
+              <div className="report-section">
+                <p className="report-label label-orange">🛠️ Cần Cải Thiện:</p>
+                <ul id="page-report-improvements-list" className="report-list"></ul>
+              </div>
+
+              <div className="report-section">
+                <p className="report-label label-purple">🚀 Khuyên Luyện Tập:</p>
+                <ul id="page-report-recommendations-list" className="report-list"></ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== 5. VIEW: GAP ANALYSIS ===== */}
+      <section className="app-view" id="view-gap">
+        <div className="page-container">
+          <div className="page-header">
+            <div className="page-badge badge-pink">DECK DELTA // NAVIGATION DECK</div>
+            <h1 className="page-title">🎯 Phân Tích Match Score & Lộ Trình Nâng Cấp Kỹ Năng</h1>
+            <p className="page-sub">So khớp CV với JD mục tiêu & đề xuất tối ưu câu từ Chân Thật (Anti-Hallucination)</p>
+          </div>
+
+          <div className="trajectory-roadmap-card">
+            <div className="roadmap-header">
+              <span className="pulse-dot cyan"></span>
+              <h3 className="roadmap-title">QUỸ ĐẠO BỔ SUNG KỸ NĂNG MỤC TIÊU (CAREER MILESTONE ROADMAP)</h3>
+            </div>
+            <div className="trajectory-steps">
+              <div className="t-step step-done">
+                <div className="step-num">01</div>
+                <div className="step-content">
+                  <span className="step-label">Nền Tảng Đã Có</span>
+                  <span className="step-title">Python & Web Dev Fundamentals</span>
+                </div>
+              </div>
+              <div className="t-step step-current">
+                <div className="step-num">02</div>
+                <div className="step-content">
+                  <span className="step-label">Kỹ Năng Đang Bổ Sung</span>
+                  <span className="step-title">FastAPI Backend & Docker Deployment</span>
+                </div>
+              </div>
+              <div className="t-step step-next">
+                <div className="step-num">03</div>
+                <div className="step-content">
+                  <span className="step-label">Milestone Tiếp Theo</span>
+                  <span className="step-title">LangGraph Agent & System Architecture</span>
+                </div>
+              </div>
+              <div className="t-step step-target">
+                <div className="step-num">04</div>
+                <div className="step-content">
+                  <span className="step-label">Đích Đến Mục Tiêu</span>
+                  <span className="step-title">Senior AI & Fullstack Specialist</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="gap-workspace">
+            <div className="gap-card">
+              <div className="form-row margin-bottom">
+                <div className="form-group flex-1">
+                  <label className="form-label">Chọn CV:</label>
+                  <select id="page-gap-select-cv" className="form-input select-dark"></select>
+                </div>
+                <div className="form-group flex-1">
+                  <label className="form-label">Chọn JD Mục Tiêu:</label>
+                  <select id="page-gap-select-jd" className="form-input select-dark"></select>
+                </div>
+              </div>
+              <button id="page-btn-run-gap" className="btn-primary full-width">Chạy Phân Tích Khớp Hồ Sơ CV - JD</button>
+            </div>
+
+            <div id="page-gap-results-container" className="gap-results-card" style={{ display: 'none' }}>
+              <div className="score-header">
+                <span className="score-title">Tỷ Lệ Phù Hợp (Match Score):</span>
+                <span id="page-gap-match-score-badge" className="badge badge-ok match-score-badge">0%</span>
+              </div>
+
+              <div className="gap-result-block">
+                <p className="block-title title-green">✅ Kỹ năng đáp ứng tốt (Matching Skills):</p>
+                <div id="page-gap-matching-skills" className="tags-row"></div>
+              </div>
+
+              <div className="gap-result-block">
+                <p className="block-title title-red">⚠️ Kỹ năng còn thiếu (Missing Skills):</p>
+                <div id="page-gap-missing-skills" className="tags-row"></div>
+              </div>
+
+              <div className="gap-result-block">
+                <p className="block-title title-purple">💡 Đề xuất chỉnh sửa câu từ chuẩn ATS (Anti-Hallucination):</p>
+                <div id="page-gap-suggestions-list" className="suggestions-stack"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== 6. VIEW: MISSION ARCHIVE ===== */}
+      <section className="app-view" id="view-history">
+        <div className="page-container">
+          <div className="page-header">
+            <div className="page-badge badge-purple">DECK EPSILON // MISSION ARCHIVE VAULT</div>
+            <h1 className="page-title">📜 Kho Lưu Trữ Lịch Sử Nhiệm Vụ (Mission Archive)</h1>
+            <p className="page-sub">Xem lại tất cả các bản phân tích CV, phiên phỏng vấn thử STAR & báo cáo Gap Match đã thực hiện</p>
+          </div>
+
+          <div className="archive-workspace">
+            <div className="archive-filters">
+              <button className="archive-filter-btn active" data-filter="all">Tất cả nhiệm vụ</button>
+              <button className="archive-filter-btn" data-filter="cv">📄 Phân tích CV</button>
+              <button className="archive-filter-btn" data-filter="interview">🎙️ Phỏng vấn STAR</button>
+              <button className="archive-filter-btn" data-filter="gap">🎯 Gap Analysis</button>
+            </div>
+
+            <div id="archive-timeline-container" className="archive-grid">
+              <div className="archive-card" data-type="cv">
+                <div className="archive-card-header">
+                  <span className="archive-tag tag-cv">📄 CV SCANNER</span>
+                  <span className="archive-time">Hôm nay, 09:30</span>
+                </div>
+                <h3 className="archive-card-title">CV Software Engineer 2026</h3>
+                <p className="archive-card-sub">Trích xuất 14 Hard Skills • Đạt chuẩn ATS Anti-Hallucination</p>
+                <div className="archive-card-footer">
+                  <span className="badge badge-ok">SUCCESS // PARSED</span>
+                  <button className="archive-btn-view" id="btn-archive-view-cv">Xem Chi Tiết ➔</button>
+                </div>
+              </div>
+
+              <div className="archive-card" data-type="interview">
+                <div className="archive-card-header">
+                  <span className="archive-tag tag-interview">🎙️ STAR INTERVIEW</span>
+                  <span className="archive-time">Hôm qua, 15:45</span>
+                </div>
+                <h3 className="archive-card-title">Phiên Phỏng Vấn AI Engineer</h3>
+                <p className="archive-card-sub">Chấm điểm Rubric STAR: 85/100 • 5/5 Câu hỏi hoàn thành</p>
+                <div className="archive-card-footer">
+                  <span className="badge badge-ok">PASSED // 85 PTS</span>
+                  <button className="archive-btn-view" id="btn-archive-view-interview">Xem Báo Cáo ➔</button>
+                </div>
+              </div>
+
+              <div className="archive-card" data-type="gap">
+                <div className="archive-card-header">
+                  <span className="archive-tag tag-gap">🎯 GAP MATCH</span>
+                  <span className="archive-time">05/08/2026</span>
+                </div>
+                <h3 className="archive-card-title">So Khớp: CV vs Senior Fullstack JD</h3>
+                <p className="archive-card-sub">Tỷ lệ phù hợp: 92% • Thiếu 2 kỹ năng nâng cao (Docker, K8s)</p>
+                <div className="archive-card-footer">
+                  <span className="badge badge-ok">MATCH RATE: 92%</span>
+                  <button className="archive-btn-view" id="btn-archive-view-gap">Xem Lộ Trình ➔</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== 7. VIEW: CREW TERMINAL ===== */}
+      <section className="app-view" id="view-profile">
+        <div className="page-container">
+          <div className="page-header">
+            <div className="page-badge badge-cyan">DECK ZETA // CREW QUARTERS & IDENTITY TERMINAL</div>
+            <h1 className="page-title">🧑‍🚀 Bảng Điều Khiển Thuyền Viên (Crew Quarters)</h1>
+            <p className="page-sub">Quản lý hồ sơ cá nhân, cấu hình Trợ Lý AI Agent và theo dõi thông số nhiệm vụ</p>
+          </div>
+
+          <div className="profile-workspace">
+            <div className="crew-badge-card">
+              <div className="crew-avatar-wrap">
+                <div className="crew-avatar-glow"></div>
+                <svg width="64" height="64" viewBox="0 0 32 32" fill="none">
+                  <rect width="32" height="32" rx="10" fill="#1a1a4a"/>
+                  <circle cx="16" cy="12" r="6" fill="#00e5ff"/>
+                  <path d="M6 26c0-4 4-7 10-7s10 3 10 7" fill="#7c4dff"/>
+                </svg>
+              </div>
+              <h2 className="crew-name" id="crew-profile-name">Phi Công Vũ Trụ</h2>
+              <p className="crew-role-badge" id="crew-profile-role">CREW MEMBER // STUDENT</p>
+
+              <div className="crew-stats-grid">
+                <div className="crew-stat-box">
+                  <span className="stat-num">12</span>
+                  <span className="stat-lbl">Nhiệm Vụ</span>
+                </div>
+                <div className="crew-stat-box">
+                  <span className="stat-num">88%</span>
+                  <span className="stat-lbl">Match Avg</span>
+                </div>
+                <div className="crew-stat-box">
+                  <span className="stat-num">A+</span>
+                  <span className="stat-lbl">STAR Grade</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="profile-settings-card">
+              <h3 className="card-section-title">⚙️ Cấu Hình AI Persona & Hệ Thống Tàu</h3>
+
+              <div className="form-group margin-bottom">
+                <label className="form-label">Chọn Phong Cách Trợ Lý AI (AI Persona):</label>
+                <div className="persona-selector">
+                  <button className="persona-btn active" data-persona="mentor">
+                    <span className="persona-icon">🎓</span>
+                    <span className="persona-title">Friendly Mentor</span>
+                    <span className="persona-desc">Tư vấn nhẹ nhàng, hướng dẫn từng bước</span>
+                  </button>
+                  <button className="persona-btn" data-persona="recruiter">
+                    <span className="persona-icon">🤖</span>
+                    <span className="persona-title">Strict Recruiter</span>
+                    <span className="persona-desc">Đánh giá khắt khe chuẩn ATS quốc tế</span>
+                  </button>
+                  <button className="persona-btn" data-persona="techlead">
+                    <span className="persona-icon">⚡</span>
+                    <span className="persona-title">Technical Lead</span>
+                    <span className="persona-desc">Hỏi sâu kiến trúc, code quality & problem solving</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="form-group margin-bottom">
+                <label className="form-label">Vị trí mục tiêu của thuyền viên:</label>
+                <input type="text" className="form-input" id="profile-target-role" defaultValue="Fullstack AI Developer 2026" placeholder="Ví dụ: AI Engineer" />
+              </div>
+
+              <div className="form-row">
+                <button className="btn-primary flex-1" id="btn-save-profile">Lưu Cấu Hình Thuyền Viên</button>
+                <button className="btn-outline" id="btn-logout-crew">Đăng Xuất</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
 
       <div className="modal-overlay" id="modal-overlay" role="dialog">
         <div className="modal-card" id="modal-card">
