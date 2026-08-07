@@ -2,13 +2,25 @@ from fastapi import APIRouter, HTTPException
 
 from src.agents.graph import agent
 from src.models.schemas import ChatRequest, ChatResponse
+from src.api.v1.auth import router as auth_router
+from src.api.v1.cvs import router as cvs_router
+from src.api.v1.jds import router as jds_router
+from src.api.v1.analysis import router as analysis_router
+from src.api.v1.interviews import router as interviews_router
 
 router = APIRouter()
 
+# Include Sub-routers
+router.include_router(auth_router)
+router.include_router(cvs_router)
+router.include_router(jds_router)
+router.include_router(analysis_router)
+router.include_router(interviews_router)
 
-@router.post("/chat", response_model=ChatResponse)
+
+@router.post("/chat", response_model=ChatResponse, tags=["Legacy Agent"])
 async def chat(request: ChatRequest) -> ChatResponse:
-    """Chat với AI agent."""
+    """Chat với AI agent (Legacy endpoint)."""
     try:
         result = await agent.ainvoke({"query": request.message})
         return ChatResponse(
@@ -19,7 +31,7 @@ async def chat(request: ChatRequest) -> ChatResponse:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/status")
+@router.get("/status", tags=["System"])
 async def agent_status():
     """Kiểm tra trạng thái agent."""
-    return {"status": "ready", "agent": "LangGraph Agent v1.0"}
+    return {"status": "ready", "agent": "LangGraph Agent v1.0", "backend": "FastAPI + PostgreSQL"}

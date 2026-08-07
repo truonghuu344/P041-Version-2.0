@@ -22,6 +22,7 @@ sqlalchemy>=2.0.0               # ORM quản lý Database
 alembic>=1.14.0                 # DB Migration tool
 psycopg2-binary>=2.9.0          # Driver kết nối PostgreSQL
 asyncpg>=0.29.0                 # Async driver cho PostgreSQL (tùy chọn tối ưu tốc độ)
+aiosqlite>=0.20.0               # Async driver cho SQLite (dev fallback)
 redis>=5.0.0                    # Cache session & state cho LangGraph
 
 # ==========================================
@@ -54,3 +55,4 @@ httpx>=0.28.0                   # HTTP Client async
 ruff>=0.8.0                     # Linter & Formatter code
 pytest>=8.0.0                   # Unit testing
 pytest-asyncio>=0.24.0          # Async testing
+email-validator>=2.3.0         # Email validation   
