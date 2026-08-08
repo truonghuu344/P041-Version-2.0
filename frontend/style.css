@@ -1720,9 +1720,151 @@ html.light .dark-planets-container,
   backdrop-filter: blur(18px);
 }
 .jobs-tabs-bar { display: flex; gap: 10px; margin-bottom: 20px; }
+
 .jd-cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
 .card-form { background: rgba(255,255,255,0.02); padding: 18px; border-radius: 12px; border: 1px solid var(--border); }
 .textarea-large { height: 140px; resize: vertical; }
+.jd-create-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 44px minmax(0, 1fr);
+  align-items: stretch;
+  gap: 14px;
+}
+.jd-create-card {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(145deg, rgba(31, 42, 88, 0.88), rgba(12, 16, 48, 0.92));
+  border-color: rgba(113, 139, 255, 0.3);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+}
+.jd-upload-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: linear-gradient(90deg, #7c5cff, #20d9f6);
+}
+.jd-create-heading {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-bottom: 16px;
+}
+.jd-create-heading h3 { margin: 0 0 3px; color: var(--text); font-size: 15px; }
+.jd-create-heading p { margin: 0; color: var(--text-muted); font-size: 11px; line-height: 1.45; }
+.jd-create-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgba(59, 220, 255, 0.3);
+  border-radius: 11px;
+  background: rgba(32, 217, 246, 0.1);
+  font-size: 18px;
+}
+.jd-template-button {
+  width: 100%;
+  margin: 0 0 13px;
+  padding: 10px 12px;
+  border: 1px solid rgba(77, 226, 255, 0.42);
+  border-radius: 10px;
+  background: rgba(32, 217, 246, 0.08);
+  color: #67e8f9;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform .18s ease, background .18s ease, border-color .18s ease;
+}
+.jd-template-button:hover {
+  transform: translateY(-1px);
+  border-color: #67e8f9;
+  background: rgba(32, 217, 246, 0.14);
+}
+.field-note { color: var(--text-muted); font-size: 10px; font-weight: 500; }
+.jd-file-drop {
+  display: grid;
+  place-items: center;
+  min-height: 106px;
+  margin: 2px 0 13px;
+  padding: 14px;
+  border: 1.5px dashed rgba(113, 139, 255, 0.62);
+  border-radius: 12px;
+  background: rgba(89, 102, 210, 0.08);
+  color: var(--text);
+  text-align: center;
+  cursor: pointer;
+  transition: border-color .18s ease, background .18s ease, transform .18s ease;
+}
+.jd-file-drop:hover {
+  transform: translateY(-1px);
+  border-color: #20d9f6;
+  background: rgba(32, 217, 246, 0.09);
+}
+.jd-file-drop.compact { min-height: 86px; }
+.jd-file-drop-icon { font-size: 22px; }
+.jd-file-drop strong { margin: 3px 0; font-size: 12px; }
+.jd-file-drop span:last-child {
+  max-width: 100%;
+  color: var(--text-muted);
+  font-size: 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.visually-hidden-file {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.jd-create-or {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .08em;
+}
+.jd-create-or::before,
+.jd-create-or::after {
+  content: '';
+  width: 1px;
+  height: 34%;
+  background: linear-gradient(transparent, rgba(113, 139, 255, .5), transparent);
+}
+.jd-create-or { flex-direction: column; gap: 10px; }
+.jd-create-or span { padding: 6px 4px; border: 1px solid var(--border); border-radius: 999px; }
+.jd-modal-upload {
+  padding: 15px;
+  border: 1px solid rgba(113, 139, 255, .26);
+  border-radius: 13px;
+  background: rgba(42, 52, 112, .12);
+}
+.jd-section-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 17px 0;
+  color: var(--text-muted);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .08em;
+}
+.jd-section-divider::before,
+.jd-section-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+@media (max-width: 900px) {
+  .jd-create-grid { grid-template-columns: 1fr; }
+  .jd-create-or { flex-direction: row; }
+  .jd-create-or::before, .jd-create-or::after { width: auto; height: 1px; flex: 1; }
+}
 .flex-1 { flex: 1; }
 .form-row { display: flex; gap: 12px; }
 .margin-bottom { margin-bottom: 16px; }

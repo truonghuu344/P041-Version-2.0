@@ -162,6 +162,15 @@ class ApiClient {
     });
   }
 
+  static async uploadJD(file, title = '', company = '', location = '') {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (title) formData.append('title', title);
+    if (company) formData.append('company', company);
+    if (location) formData.append('location', location);
+    return await this.request('/jds/upload', { method: 'POST', body: formData });
+  }
+
   // --- Gap Analysis APIs ---
   static async runGapAnalysis(cvId, jdId) {
     return await this.request('/analysis/gap-analysis', {
@@ -962,6 +971,11 @@ function startAppLogic() {
     });
 
     currentViewName = targetViewName;
+
+    // Nova nằm ngoài các app-view và luôn khả dụng trên mọi trang/role.
+    const novaCompanion = document.getElementById('ai-companion');
+    const novaPanel = document.getElementById('ai-companion-chat');
+    if (novaCompanion && (!novaPanel || novaPanel.hidden)) novaCompanion.hidden = false;
 
     // Update Room Indicator HUD Label
     const indicatorLabel = document.getElementById('indicator-label');
@@ -2091,12 +2105,60 @@ function startAppLogic() {
   /* ============================================================
      💼 JOB DESCRIPTIONS PAGE LOGIC
   ============================================================ */
+  const JD_TEMPLATE_CONTENT = `MẪU MÔ TẢ CÔNG VIỆC (JOB DESCRIPTION)
+
+TÊN VỊ TRÍ:
+TÊN CÔNG TY:
+ĐỊA ĐIỂM / HÌNH THỨC LÀM VIỆC:
+
+1. MÔ TẢ CÔNG VIỆC
+- [Mô tả nhiệm vụ]
+
+2. TRÁCH NHIỆM CHÍNH
+- [Trách nhiệm chính]
+
+3. YÊU CẦU BẮT BUỘC
+- Kỹ năng chuyên môn:
+- Số năm kinh nghiệm:
+- Ngoại ngữ:
+
+4. KỸ NĂNG ƯU TIÊN
+- [Kỹ năng ưu tiên]
+
+5. QUYỀN LỢI / CHẾ ĐỘ
+- [Quyền lợi]
+`;
+
+  function downloadJDTemplate() {
+    const blob = new Blob([JD_TEMPLATE_CONTENT], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = 'mau-job-description.txt';
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+    showToast('✅ Đã tải mẫu JD. Hãy điền nội dung rồi tải file lên.', 'success');
+  }
+
+  function bindJDFileName(input, label) {
+    input?.addEventListener('change', () => {
+      label.textContent = input.files?.[0]?.name || 'PDF, DOCX hoặc TXT';
+    });
+  }
+
   const pageJdListContainer = document.getElementById('page-jd-list-container');
   const pageBtnTabSys = document.getElementById('page-btn-tab-sys');
   const pageBtnTabCust = document.getElementById('page-btn-tab-cust');
   const pageSecSysJds = document.getElementById('page-section-sys-jds');
   const pageSecCustJd = document.getElementById('page-section-cust-jd');
   const pageCustomJdForm = document.getElementById('page-custom-jd-form');
+  const pageUploadJdForm = document.getElementById('page-upload-jd-form');
+  const pageUploadJdFile = document.getElementById('page-upload-jd-file');
+
+  document.getElementById('page-download-jd-template')?.addEventListener('click', downloadJDTemplate);
+  bindJDFileName(pageUploadJdFile, document.getElementById('page-upload-jd-file-name'));
 
   if (pageBtnTabSys) {
     pageBtnTabSys.addEventListener('click', () => {
@@ -2204,6 +2266,38 @@ function startAppLogic() {
       if (shell === exceptShell) return;
       shell.classList.remove('is-open');
       shell.querySelector('.gap-select-trigger')?.setAttribute('aria-expanded', 'false');
+    });
+  }
+
+  if (pageUploadJdForm) {
+    pageUploadJdForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const file = pageUploadJdFile?.files?.[0];
+      if (!file) {
+        showToast('Vui lòng chọn file JD dạng PDF, DOCX hoặc TXT.', 'warning');
+        return;
+      }
+      const submitButton = pageUploadJdForm.querySelector('button[type="submit"]');
+      try {
+        submitButton.disabled = true;
+        submitButton.textContent = 'Đang trích xuất nội dung JD...';
+        await ApiClient.uploadJD(
+          file,
+          document.getElementById('page-upload-jd-title').value.trim(),
+          document.getElementById('page-upload-jd-company').value.trim(),
+          document.getElementById('page-upload-jd-location').value.trim(),
+        );
+        showToast('🎉 Đã tải lên và lưu Job Description!', 'success');
+        pageUploadJdForm.reset();
+        document.getElementById('page-upload-jd-file-name').textContent = 'PDF, DOCX hoặc TXT';
+        pageBtnTabSys?.click();
+        await loadPageJDList();
+      } catch (err) {
+        showToast(`❌ Lỗi tải JD: ${err.message}`, 'error');
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = 'Tải lên & lưu JD';
+      }
     });
   }
 
@@ -2578,12 +2672,89 @@ function startAppLogic() {
   const userNameEl = document.getElementById('user-name');
   const userRoleEl = document.getElementById('user-role-display');
 
+  function applyRoleAccess(user) {
+    document.body.classList.remove('role-enterprise');
+    ['nav-dashboard', 'nav-cv', 'nav-interview', 'nav-gap', 'nav-admin'].forEach(id => {
+      const element = document.getElementById(id);
+      if (element) element.hidden = false;
+    });
+    const jobsNavText = document.querySelector('#nav-jobs .nav-text');
+    if (jobsNavText) {
+      const currentLang = localStorage.getItem('career_copilot_lang') || 'vi';
+      const defaultLabel = (TRANSLATIONS[currentLang] || TRANSLATIONS.vi)['nav-jobs'] || 'Thư viện Jobs';
+      jobsNavText.textContent = defaultLabel;
+    }
+
+    const jobsTitle = document.querySelector('#view-jobs .page-title');
+    const jobsSubtitle = document.querySelector('#view-jobs .page-sub');
+    if (jobsTitle) {
+      jobsTitle.textContent = '💼 Thư Viện Job Descriptions & Bản Đồ Điều Hướng';
+    }
+    if (jobsSubtitle) {
+      jobsSubtitle.textContent = 'Khám phá các vị trí mục tiêu, phân tích quỹ đạo phù hợp & quản lý JD doanh nghiệp';
+    }
+
+    const companion = document.getElementById('ai-companion');
+    const companionPanel = document.getElementById('ai-companion-chat');
+    if (companion && (!companionPanel || companionPanel.hidden)) companion.hidden = false;
+  }
+
+  function resetUIAfterLogout() {
+    document.querySelectorAll('form').forEach(form => form.reset());
+    document.querySelectorAll('input, textarea').forEach(field => {
+      if (field.type === 'checkbox' || field.type === 'radio') field.checked = false;
+      else field.value = '';
+    });
+    document.querySelectorAll('select').forEach(select => {
+      select.selectedIndex = 0;
+    });
+    document.querySelectorAll('.modal-overlay.open').forEach(modal => modal.classList.remove('open'));
+    const selectedFileBadge = document.getElementById('selected-file-name');
+    if (selectedFileBadge) {
+      selectedFileBadge.textContent = '';
+      selectedFileBadge.style.display = 'none';
+    }
+    document.getElementById('page-gap-results-container')?.style.setProperty('display', 'none');
+    document.getElementById('cv-detail-inspector')?.style.setProperty('display', 'none');
+    document.getElementById('page-interview-chat')?.style.setProperty('display', 'none');
+    document.getElementById('page-interview-report')?.style.setProperty('display', 'none');
+    document.getElementById('page-interview-setup')?.style.setProperty('display', 'block');
+    [
+      'spaceship-cv-list',
+      'cv-list-container',
+      'page-jd-list-container',
+      'page-interview-chat-history',
+      'admin-ai-log-list',
+      'inspector-personal-info',
+      'inspector-skills-cloud',
+      'inspector-soft-skills-cloud',
+      'inspector-raw-preview',
+      'inspector-evidence-records',
+      'inspector-missing-info',
+    ].forEach(id => {
+      const container = document.getElementById(id);
+      if (container) container.innerHTML = '';
+    });
+    localStorage.removeItem('crew_target_role');
+    adminAILogsLoaded = false;
+    window.dispatchEvent(new Event('career:session-cleared'));
+  }
+
+  function performLogout({ notify = true } = {}) {
+    ApiClient.logout();
+    resetUIAfterLogout();
+    if (notify) showToast('Đã đăng xuất tài khoản', 'info');
+    checkUserSession();
+    switchView('dashboard');
+  }
+
   function checkUserSession() {
     const user = ApiClient.getUser();
     const token = ApiClient.getToken();
     const navAdmin = document.getElementById('nav-admin');
 
     if (user && token) {
+      applyRoleAccess(user);
       if (userNameEl) userNameEl.textContent = user.full_name || user.email;
       if (userRoleEl) userRoleEl.textContent = `Vai trò: ${user.role.toUpperCase()}`;
       if (navAdmin) {
@@ -2601,13 +2772,11 @@ function startAppLogic() {
           </div>
         `;
         document.getElementById('btn-logout').addEventListener('click', () => {
-          ApiClient.logout();
-          showToast('Đã đăng xuất tài khoản', 'info');
-          checkUserSession();
-          if (currentViewName === 'admin') switchView('dashboard');
+          performLogout();
         });
       }
     } else {
+      applyRoleAccess(null);
       if (userNameEl) userNameEl.textContent = 'Chưa đăng nhập';
       if (userRoleEl) userRoleEl.textContent = 'Hệ thống Trợ Lý Nghề Nghiệp X';
       if (navAdmin) navAdmin.classList.remove('visible');
@@ -3014,8 +3183,7 @@ function startAppLogic() {
 
   if (ApiClient.getToken()) {
     ApiClient.getMe().then(() => checkUserSession()).catch(() => {
-      ApiClient.logout();
-      checkUserSession();
+      performLogout({ notify: false });
     });
   } else {
     checkUserSession();
@@ -3195,6 +3363,11 @@ function startAppLogic() {
   const secSysJd = document.getElementById('section-system-jds');
   const secCustJd = document.getElementById('section-custom-jd');
   const customJdForm = document.getElementById('custom-jd-form');
+  const uploadJdForm = document.getElementById('upload-jd-form');
+  const uploadJdFile = document.getElementById('upload-jd-file');
+
+  document.getElementById('download-jd-template')?.addEventListener('click', downloadJDTemplate);
+  bindJDFileName(uploadJdFile, document.getElementById('upload-jd-file-name'));
 
   function openJDModal() {
     if (!ApiClient.getToken()) {
@@ -3265,6 +3438,38 @@ function startAppLogic() {
         loadJDList();
       } catch (err) {
         showToast(`❌ Lỗi tạo JD: ${err.message}`, 'error');
+      }
+    });
+  }
+
+  if (uploadJdForm) {
+    uploadJdForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const file = uploadJdFile?.files?.[0];
+      if (!file) {
+        showToast('Vui lòng chọn file JD dạng PDF, DOCX hoặc TXT.', 'warning');
+        return;
+      }
+      const submitButton = uploadJdForm.querySelector('button[type="submit"]');
+      try {
+        submitButton.disabled = true;
+        submitButton.textContent = 'Đang trích xuất nội dung JD...';
+        await ApiClient.uploadJD(
+          file,
+          document.getElementById('upload-jd-title').value.trim(),
+          document.getElementById('upload-jd-company').value.trim(),
+          document.getElementById('upload-jd-location').value.trim(),
+        );
+        showToast('🎉 Đã tải lên và lưu Job Description!', 'success');
+        uploadJdForm.reset();
+        document.getElementById('upload-jd-file-name').textContent = 'PDF, DOCX hoặc TXT';
+        btnTabSysJd?.click();
+        await loadJDList();
+      } catch (err) {
+        showToast(`❌ Lỗi tải JD: ${err.message}`, 'error');
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = 'Tải lên & lưu JD';
       }
     });
   }
@@ -3762,6 +3967,13 @@ function startAppLogic() {
       }
     });
 
+    window.addEventListener('career:session-cleared', () => {
+      input.value = '';
+      input.style.height = 'auto';
+      resetConversation();
+      toggleChat(false);
+    });
+
     form.addEventListener('submit', async event => {
       event.preventDefault();
       const text = input.value.trim();
@@ -3799,10 +4011,7 @@ function startAppLogic() {
       } catch (err) {
         typing.remove();
         if (err.status === 401) {
-          ApiClient.logout();
-          currentConversationId = null;
-          conversationHistory = [];
-          checkUserSession();
+          performLogout({ notify: false });
           appendChatMessage('assistant', 'Phiên đăng nhập đã hết hạn. Bạn hãy đăng nhập lại rồi gửi câu hỏi thời tiết.');
           openAuthModal();
           return;

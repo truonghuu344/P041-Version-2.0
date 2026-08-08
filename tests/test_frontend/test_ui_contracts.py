@@ -60,3 +60,37 @@ def test_admin_ai_log_view_is_admin_portal_contract():
     assert "ApiClient.listAILogs" in APP_JS
     assert "ApiClient.getAILogStats" in APP_JS
     assert ".ai-log-card" in STYLE_CSS
+
+
+def test_enterprise_role_keeps_all_student_features_visible():
+    assert "function applyRoleAccess(user)" in APP_JS
+    assert "user?.role === 'enterprise'" not in APP_JS
+    assert "targetViewName !== 'jobs'" not in APP_JS
+    assert "body.role-enterprise .ai-companion-chat" not in STYLE_CSS
+
+
+def test_enterprise_jd_supports_template_file_or_manual_text():
+    assert 'id="page-download-jd-template"' in PAGE_JS
+    assert 'id="page-upload-jd-form"' in PAGE_JS
+    assert 'accept=".pdf,.docx,.txt"' in PAGE_JS
+    assert 'id="page-custom-jd-form"' in PAGE_JS
+    assert "ApiClient.uploadJD" in APP_JS
+    assert "JD_TEMPLATE_CONTENT" in APP_JS
+    assert ".jd-create-grid" in STYLE_CSS
+
+
+def test_nova_is_global_and_preserved_when_switching_views():
+    assert 'id="ai-companion"' in PAGE_JS
+    assert 'id="ai-companion-chat"' in PAGE_JS
+    assert "Nova nằm ngoài các app-view và luôn khả dụng trên mọi trang/role" in APP_JS
+    assert "novaCompanion.hidden = false" in APP_JS
+    assert ".ai-companion-chat" in STYLE_CSS
+    assert "position: fixed" in STYLE_CSS
+
+
+def test_logout_clears_forms_text_fields_and_session_ui():
+    assert "function resetUIAfterLogout()" in APP_JS
+    assert "document.querySelectorAll('form').forEach(form => form.reset())" in APP_JS
+    assert "document.querySelectorAll('input, textarea')" in APP_JS
+    assert "window.dispatchEvent(new Event('career:session-cleared'))" in APP_JS
+    assert "performLogout();" in APP_JS

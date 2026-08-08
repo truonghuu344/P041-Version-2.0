@@ -1,10 +1,10 @@
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.core.email_identity import canonicalize_email, find_user_by_email
 from src.core.security import create_access_token, get_current_user, get_password_hash, verify_password
 from src.db.database import get_db
 from src.db.models import User
@@ -16,8 +16,7 @@ logger = logging.getLogger(__name__)
 
 async def _find_user_by_email(db: AsyncSession, email: str) -> User | None:
     try:
-        result = await db.execute(select(User).where(User.email == email.lower()))
-        return result.scalar_one_or_none()
+        return await find_user_by_email(db, email)
     except SQLAlchemyError as exc:
         logger.exception("Authentication database query failed")
         raise HTTPException(
@@ -42,7 +41,7 @@ async def register_user(
 
     # Khởi tạo user mới
     new_user = User(
-        email=payload.email.lower(),
+        email=canonicalize_email(payload.email),
         hashed_password=get_password_hash(payload.password),
         full_name=payload.full_name,
         role=payload.role if payload.role in ["student", "counselor", "enterprise"] else "student",
@@ -51,6 +50,12 @@ async def register_user(
     try:
         await db.commit()
         await db.refresh(new_user)
+    except IntegrityError as exc:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email này đã được đăng ký trong hệ thống",
+        ) from exc
     except SQLAlchemyError as exc:
         await db.rollback()
         logger.exception("User registration database write failed")

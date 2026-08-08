@@ -33,6 +33,40 @@ async def test_register_normalizes_email_and_rejects_duplicate(client):
 
 
 @pytest.mark.asyncio
+async def test_gmail_dot_plus_and_googlemail_aliases_cannot_create_duplicate_accounts(client):
+    first = await client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": "first.last+campaign@Gmail.com",
+            "password": "Password123!",
+            "full_name": "Gmail User",
+            "role": "student",
+        },
+    )
+    assert first.status_code == 201
+    assert first.json()["email"] == "firstlast@gmail.com"
+
+    for alias in ("first.last@gmail.com", "firstlast@googlemail.com", "FIRSTLAST@gmail.com"):
+        duplicate = await client.post(
+            "/api/v1/auth/register",
+            json={
+                "email": alias,
+                "password": "Password123!",
+                "full_name": "Duplicate Gmail User",
+                "role": "enterprise",
+            },
+        )
+        assert duplicate.status_code == 400
+
+    login = await client.post(
+        "/api/v1/auth/login",
+        json={"email": "first.last+another-tag@gmail.com", "password": "Password123!"},
+    )
+    assert login.status_code == 200
+    assert login.json()["user"]["email"] == "firstlast@gmail.com"
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     ("payload", "missing_field"),
     [
@@ -128,3 +162,21 @@ async def test_admin_can_manage_regular_user_but_cannot_delete_self(client):
 
     delete_self = await client.delete(f"/api/v1/admin/users/{admin['id']}", headers=admin_headers)
     assert delete_self.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_admin_cannot_create_duplicate_gmail_alias(client):
+    _admin, admin_headers = await create_admin(client)
+    await register_and_login(client, email="company.recruiter@gmail.com")
+
+    response = await client.post(
+        "/api/v1/admin/users",
+        headers=admin_headers,
+        json={
+            "email": "companyrecruiter+hr@googlemail.com",
+            "password": "Password123!",
+            "full_name": "Duplicate Recruiter",
+            "role": "enterprise",
+        },
+    )
+    assert response.status_code == 400

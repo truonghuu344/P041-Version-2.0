@@ -144,6 +144,15 @@ export class ApiClient {
     });
   }
 
+  static async uploadJD(file, title = '', company = '', location = '') {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (title) formData.append('title', title);
+    if (company) formData.append('company', company);
+    if (location) formData.append('location', location);
+    return await this.request('/jds/upload', { method: 'POST', body: formData });
+  }
+
   // --- Gap Analysis APIs ---
   static async runGapAnalysis(cvId, jdId) {
     return await this.request('/analysis/gap-analysis', {

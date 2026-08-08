@@ -54,6 +54,18 @@ async def test_custom_jd_validation_rejects_short_content(client):
 
 
 @pytest.mark.asyncio
+async def test_jd_upload_rejects_unsupported_file(client):
+    _user, headers = await register_and_login(client, email="jd-upload-invalid@example.com")
+    response = await client.post(
+        "/api/v1/jds/upload",
+        headers=headers,
+        files={"file": ("job.exe", b"not a job description", "application/octet-stream")},
+    )
+    assert response.status_code == 400
+    assert "PDF, DOCX hoặc TXT" in response.json()["detail"]
+
+
+@pytest.mark.asyncio
 async def test_user_cannot_list_or_read_another_users_private_jd(client):
     await register_and_login(client, email="private-jd-owner@example.com")
     _other, other_headers = await register_and_login(client, email="private-jd-other@example.com")

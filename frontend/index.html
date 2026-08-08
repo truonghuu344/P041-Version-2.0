@@ -815,27 +815,41 @@
           </div>
 
           <div id="page-section-cust-jd" class="jobs-panel" style="display:none;">
-            <form id="page-custom-jd-form" class="card-form">
-              <div class="form-group">
-                <label class="form-label">Tên vị trí công việc</label>
-                <input type="text" id="page-custom-jd-title" class="form-input" placeholder="Ví dụ: Senior Fullstack Developer" required />
-              </div>
-              <div class="form-row">
-                <div class="form-group flex-1">
-                  <label class="form-label">Tên công ty</label>
-                  <input type="text" id="page-custom-jd-company" class="form-input" placeholder="Tech Global Corp" />
+            <div class="jd-create-grid">
+              <section class="card-form jd-create-card jd-upload-card">
+                <div class="jd-create-heading">
+                  <span class="jd-create-icon">📤</span>
+                  <div><h3>Tải file JD theo mẫu</h3><p>Hỗ trợ PDF, DOCX hoặc TXT, tối đa 5 MB.</p></div>
                 </div>
-                <div class="form-group flex-1">
-                  <label class="form-label">Địa điểm</label>
-                  <input type="text" id="page-custom-jd-location" class="form-input" placeholder="TP. Hồ Chí Minh / Hà Nội" />
-                </div>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Nội dung Yêu cầu Công việc (Requirements Text)</label>
-                <textarea id="page-custom-jd-requirements" class="form-input textarea-large" placeholder="Dán nội dung chi tiết mô tả công việc, yêu cầu kỹ năng vào đây..." required></textarea>
-              </div>
-              <button type="submit" class="btn-primary full-width">Lưu Job Description Tùy Chỉnh</button>
-            </form>
+                <button type="button" id="page-download-jd-template" class="jd-template-button">⬇ Tải mẫu JD (.txt)</button>
+                <form id="page-upload-jd-form">
+                  <div class="form-group">
+                    <label class="form-label">Tên vị trí <span class="field-note">(có thể để trống)</span></label>
+                    <input type="text" id="page-upload-jd-title" class="form-input" placeholder="Tự lấy theo tên file nếu để trống" />
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group flex-1"><label class="form-label">Công ty</label><input type="text" id="page-upload-jd-company" class="form-input" placeholder="Tên doanh nghiệp" /></div>
+                    <div class="form-group flex-1"><label class="form-label">Địa điểm</label><input type="text" id="page-upload-jd-location" class="form-input" placeholder="Hà Nội / Remote" /></div>
+                  </div>
+                  <label class="jd-file-drop" for="page-upload-jd-file"><span class="jd-file-drop-icon">📄</span><strong>Chọn file JD đã điền</strong><span id="page-upload-jd-file-name">PDF, DOCX hoặc TXT</span></label>
+                  <input type="file" id="page-upload-jd-file" class="visually-hidden-file" accept=".pdf,.docx,.txt" required />
+                  <button type="submit" class="btn-primary full-width">Tải lên &amp; lưu JD</button>
+                </form>
+              </section>
+              <div class="jd-create-or" aria-hidden="true"><span>HOẶC</span></div>
+              <section class="card-form jd-create-card">
+                <div class="jd-create-heading"><span class="jd-create-icon">✍️</span><div><h3>Tự điền nội dung JD</h3><p>Nhập hoặc dán mô tả công việc trực tiếp.</p></div></div>
+                <form id="page-custom-jd-form">
+                  <div class="form-group"><label class="form-label">Tên vị trí công việc</label><input type="text" id="page-custom-jd-title" class="form-input" placeholder="Ví dụ: Senior Fullstack Developer" required /></div>
+                  <div class="form-row">
+                    <div class="form-group flex-1"><label class="form-label">Tên công ty</label><input type="text" id="page-custom-jd-company" class="form-input" placeholder="Tech Global Corp" /></div>
+                    <div class="form-group flex-1"><label class="form-label">Địa điểm</label><input type="text" id="page-custom-jd-location" class="form-input" placeholder="TP. Hồ Chí Minh / Hà Nội" /></div>
+                  </div>
+                  <div class="form-group"><label class="form-label">Nội dung yêu cầu công việc</label><textarea id="page-custom-jd-requirements" class="form-input textarea-large" placeholder="Dán nội dung chi tiết mô tả công việc, yêu cầu kỹ năng vào đây..." required></textarea></div>
+                  <button type="submit" class="btn-primary full-width">Lưu JD từ nội dung</button>
+                </form>
+              </section>
+            </div>
           </div>
         </div>
       </div>
@@ -1414,6 +1428,21 @@
       </div>
 
       <div id="section-custom-jd" style="display:none;">
+        <div class="jd-modal-upload">
+          <div class="jd-create-heading"><span class="jd-create-icon">📤</span><div><h3>Tải file JD theo mẫu</h3><p>PDF, DOCX hoặc TXT — tối đa 5 MB.</p></div></div>
+          <button type="button" id="download-jd-template" class="jd-template-button">⬇ Tải mẫu JD (.txt)</button>
+          <form id="upload-jd-form">
+            <div style="display:flex;gap:10px;">
+              <div class="form-group" style="flex:1;"><label class="form-label">Tên vị trí <span class="field-note">(tùy chọn)</span></label><input type="text" id="upload-jd-title" class="form-input" placeholder="Tự lấy từ tên file" /></div>
+              <div class="form-group" style="flex:1;"><label class="form-label">Tên công ty</label><input type="text" id="upload-jd-company" class="form-input" placeholder="Tech Company" /></div>
+            </div>
+            <div class="form-group"><label class="form-label">Địa điểm</label><input type="text" id="upload-jd-location" class="form-input" placeholder="Hà Nội / Remote" /></div>
+            <label class="jd-file-drop compact" for="upload-jd-file"><span class="jd-file-drop-icon">📄</span><strong>Chọn file JD</strong><span id="upload-jd-file-name">PDF, DOCX hoặc TXT</span></label>
+            <input type="file" id="upload-jd-file" class="visually-hidden-file" accept=".pdf,.docx,.txt" required />
+            <button type="submit" class="btn-primary" style="width:100%;">Tải lên &amp; lưu JD</button>
+          </form>
+        </div>
+        <div class="jd-section-divider"><span>HOẶC TỰ ĐIỀN NỘI DUNG</span></div>
         <form id="custom-jd-form">
           <div class="form-group">
             <label class="form-label">Tên vị trí công việc</label>

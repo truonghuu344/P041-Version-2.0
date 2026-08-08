@@ -21,6 +21,7 @@ npm run build
 | AUTH-03 | Validation | Email sai, mật khẩu ngắn, tên quá ngắn | HTTP 422 | `test_auth_security.py` |
 | AUTH-04 | Đăng nhập | Sai mật khẩu hoặc email không tồn tại | Cùng HTTP 401 và cùng thông báo | `test_auth_security.py` |
 | AUTH-05 | JWT | Thiếu token, token sai, token hết hạn | HTTP 401 | `test_auth_security.py` |
+| AUTH-06 | Gmail | Dấu chấm, `+tag`, `googlemail.com` trỏ cùng hộp thư | Chỉ tạo được một tài khoản | `test_auth_security.py` |
 | ADMIN-01 | Phân quyền | Student gọi API Admin | HTTP 403 | `test_auth_security.py` |
 | ADMIN-02 | Quản trị user | Admin tạo, sửa và xóa user thường | Thành công | `test_auth_security.py` |
 | ADMIN-03 | Admin duy nhất | Tạo/promote/demote/xóa Admin | Bị từ chối, DB chỉ có một Admin | `test_backend_full.py` |
@@ -42,6 +43,10 @@ npm run build
 | JD-03 | Validation | Tiêu đề/nội dung quá ngắn | HTTP 422 | `test_job_descriptions.py` |
 | JD-04 | IDOR | User đọc JD cá nhân của người khác | HTTP 404 | `test_job_descriptions.py` |
 | JD-05 | JD hệ thống | User bất kỳ đọc JD hệ thống | Thành công | `test_job_descriptions.py` |
+| JD-06 | Upload file | File không thuộc PDF/DOCX/TXT | HTTP 400 với thông báo định dạng hợp lệ | `test_job_descriptions.py` |
+| ROLE-01 | Enterprise | Upload JD tùy chỉnh | HTTP 201 | `test_enterprise_access.py` |
+| ROLE-02 | Enterprise | Dùng CV/Gap/STAR/Nova như sinh viên | Các workflow hoạt động bình thường | `test_enterprise_access.py` |
+| ROLE-03 | Enterprise | Upload file JD theo mẫu | Trích xuất nội dung, tự lấy tên file và lưu JD cá nhân | `test_enterprise_access.py` |
 | GAP-01 | Gap Analysis | CV và JD hợp lệ | Lưu kết quả, trả đủ đề xuất và lịch sử | `test_career_workflows.py` |
 | GAP-02 | IDOR | CV/JD cá nhân thuộc user khác | HTTP 404, agent không chạy | `test_career_workflows.py` |
 | GAP-03 | Lịch sử | User khác xem history | Danh sách rỗng | `test_career_workflows.py` |
@@ -69,6 +74,9 @@ npm run build
 | UI-03 | Gap dropdown | Dropdown CV/JD và nút chạy | ID, handler và CSS contract tồn tại | `test_ui_contracts.py` |
 | UI-04 | Nova history | Mở lại/xóa hội thoại cũ | Gọi đúng persistent history API | `test_ui_contracts.py` |
 | UI-05 | Admin AI log | Mở tab log, tìm kiếm và lọc | Hiển thị đúng dữ liệu audit dành riêng Admin | `test_ui_contracts.py` |
+| UI-06 | Enterprise | Đăng nhập role doanh nghiệp | Hiện đầy đủ chức năng như sinh viên và vẫn có Upload JD | `test_ui_contracts.py` |
+| UI-08 | Nova toàn cục | Chuyển Dashboard/CV/Jobs/STAR/Gap/Admin | Widget hoặc cửa sổ Nova vẫn hiển thị | `test_ui_contracts.py` |
+| UI-07 | Logout | Nhập dữ liệu vào form rồi đăng xuất | Input, textarea, file và dữ liệu phiên được xóa | `test_ui_contracts.py` |
 
 ## Test UI thủ công trước khi release
 

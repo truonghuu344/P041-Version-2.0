@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.core.email_identity import canonicalize_email, find_user_by_email
 from src.core.security import get_password_hash, require_role
 from src.db.database import get_db
 from src.db.models import AIAuditLog, User
@@ -139,9 +140,7 @@ async def create_user_by_admin(
     admin_user: User = Depends(require_role(["admin"])),
 ) -> UserOut:
     """[ADMIN ONLY] Thêm Student, Counselor hoặc Enterprise; không thể tạo Admin thứ hai."""
-    stmt = select(User).where(User.email == payload.email.lower())
-    result = await db.execute(stmt)
-    existing_user = result.scalar_one_or_none()
+    existing_user = await find_user_by_email(db, payload.email)
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -151,7 +150,7 @@ async def create_user_by_admin(
     role = _managed_role(payload.role)
 
     new_user = User(
-        email=payload.email.lower(),
+        email=canonicalize_email(payload.email),
         hashed_password=get_password_hash(payload.password),
         full_name=payload.full_name,
         role=role,
@@ -180,16 +179,14 @@ async def update_user_by_admin(
             detail="Không tìm thấy người dùng",
         )
 
-    if payload.email and payload.email.lower() != user.email:
+    if payload.email and canonicalize_email(payload.email) != user.email:
         # Check if new email is taken
-        stmt_check = select(User).where(User.email == payload.email.lower(), User.id != user_id)
-        res_check = await db.execute(stmt_check)
-        if res_check.scalar_one_or_none():
+        if await find_user_by_email(db, payload.email, exclude_user_id=user_id):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Email mới đã được sử dụng bởi tài khoản khác",
             )
-        user.email = payload.email.lower()
+        user.email = canonicalize_email(payload.email)
 
     if payload.full_name:
         user.full_name = payload.full_name.strip()
