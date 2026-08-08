@@ -1,7 +1,7 @@
-import sys
-import os
 import json
-from typing import List, Dict, Any, Tuple
+import os
+import sys
+from typing import Any
 
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
@@ -16,12 +16,12 @@ class ATSMatcher:
 
     def _load_jds(self):
         if os.path.exists(self.jds_path):
-            with open(self.jds_path, "r", encoding="utf-8") as f:
+            with open(self.jds_path, encoding="utf-8") as f:
                 records = json.load(f)
                 for r in records:
                     self.jds_cache[r.get("job_id")] = r
 
-    def calculate_ats_score(self, cv: Dict[str, Any], jd: Dict[str, Any]) -> Dict[str, Any]:
+    def calculate_ats_score(self, cv: dict[str, Any], jd: dict[str, Any]) -> dict[str, Any]:
         """Tính điểm ATS Score (0 - 100%) giữa 1 CV giả lập và 1 JD tuyển dụng"""
         cv_skills = set([s.lower() for s in cv.get("skills", [])])
         must_skills = set([s.lower() for s in jd.get("must_have_skills", [])])
@@ -96,10 +96,10 @@ class ATSMatcher:
         }
 
 if __name__ == "__main__":
-    with open("./data/eval/simulated_cvs.json", "r", encoding="utf-8") as f:
+    with open("./data/eval/simulated_cvs.json", encoding="utf-8") as f:
         cvs = json.load(f)
 
-    with open("./data/clean/jds_clean.json", "r", encoding="utf-8") as f:
+    with open("./data/clean/jds_clean.json", encoding="utf-8") as f:
         jds = json.load(f)
 
     matcher = ATSMatcher()

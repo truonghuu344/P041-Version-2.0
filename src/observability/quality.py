@@ -1,14 +1,15 @@
-import sys
-import os
 import json
+import os
+import sys
+from typing import Any
+
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from typing import List, Dict, Any, Union
 
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
 
-def calculate_completeness(records: List[Dict[str, Any]], required_fields: List[str]) -> float:
+def calculate_completeness(records: list[dict[str, Any]], required_fields: list[str]) -> float:
     """Tính tỷ lệ điền đầy đủ (Completeness Rate) của dữ liệu sạch"""
     if not records:
         return 0.0
@@ -24,7 +25,7 @@ def calculate_completeness(records: List[Dict[str, Any]], required_fields: List[
 
     return round((valid_checks / total_checks) * 100.0, 2)
 
-def calculate_uniqueness(records: List[Dict[str, Any]], key_field: str = "job_id") -> float:
+def calculate_uniqueness(records: list[dict[str, Any]], key_field: str = "job_id") -> float:
     """Tính tỷ lệ duy nhất không trùng lặp (Uniqueness Rate)"""
     if not records:
         return 0.0
@@ -43,14 +44,14 @@ def calculate_uniqueness(records: List[Dict[str, Any]], key_field: str = "job_id
 def run_data_quality_checks(
     db_path: str = "./data/app.db",
     cvs_clean_path: str = "./data/clean/cvs_clean.json"
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Chạy toàn bộ các hàm kiểm tra Data Quality cho JDs và CVs"""
     required_jd_fields = [
         "job_id", "job_title", "company_name", "domain_category",
         "location", "salary_range", "experience_required", "embedding_text"
     ]
 
-    PG_CONFIG = {
+    pg_config = {
         "host": "localhost",
         "port": 5432,
         "user": "ats_user",
@@ -60,7 +61,7 @@ def run_data_quality_checks(
 
     jd_records = []
     try:
-        conn = psycopg2.connect(**PG_CONFIG)
+        conn = psycopg2.connect(**pg_config)
         cursor = conn.cursor(cursor_factory=RealDictCursor)
         cursor.execute("SELECT * FROM mart_jds_final")
         rows = cursor.fetchall()
@@ -71,7 +72,7 @@ def run_data_quality_checks(
 
     cv_records = []
     if os.path.exists(cvs_clean_path):
-        with open(cvs_clean_path, "r", encoding="utf-8") as f:
+        with open(cvs_clean_path, encoding="utf-8") as f:
             cv_records = json.load(f)
 
     jd_completeness = calculate_completeness(jd_records, required_jd_fields)

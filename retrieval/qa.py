@@ -1,14 +1,12 @@
 import sys
-import os
-import json
-from typing import List, Dict, Any, Optional
+from typing import Any
 
 try:
-    from retrieval.retriever import HybridRetriever
     from retrieval.llm import LLMClient
+    from retrieval.retriever import HybridRetriever
 except ModuleNotFoundError:
-    from retriever import HybridRetriever
     from llm import LLMClient
+    from retriever import HybridRetriever
 
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
@@ -21,10 +19,10 @@ class QAPipeline:
         self.retriever = HybridRetriever(collection_name=collection_name)
         self.llm_client = LLMClient()
 
-    def answer_question(self, question: str, top_k: int = 3) -> Dict[str, Any]:
+    def answer_question(self, question: str, top_k: int = 3) -> dict[str, Any]:
         """Truy xuất context tương đồng nhất qua Hybrid Search và gọi LLM sinh câu trả lời"""
         print(f"\n❓ [Phase 2 Hybrid Q&A] Đang xử lý câu hỏi: '{question}'...")
-        
+
         # 1. Hybrid Search (Dense 384D + Sparse BM25 + RRF Reranking)
         retrieved_docs = self.retriever.hybrid_search(
             query=question,
@@ -50,7 +48,7 @@ class QAPipeline:
             "retrieved_documents": retrieved_docs,
             "confidence_score": top_score
         }
-        
+
         print(f"✅ Trả lời Phase 2 thành công (Hybrid Score: {top_score})!")
         return result
 
