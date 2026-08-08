@@ -1,6 +1,8 @@
 import sys
 import os
 import json
+import psycopg2
+from psycopg2.extras import RealDictCursor
 from typing import List, Dict, Any, Union
 
 if hasattr(sys.stdout, 'reconfigure'):
@@ -39,19 +41,33 @@ def calculate_uniqueness(records: List[Dict[str, Any]], key_field: str = "job_id
     return round((unique_count / len(records)) * 100.0, 2)
 
 def run_data_quality_checks(
-    jds_clean_path: str = "./data/clean/jds_clean.json",
+    db_path: str = "./data/app.db",
     cvs_clean_path: str = "./data/clean/cvs_clean.json"
 ) -> Dict[str, Any]:
     """Chạy toàn bộ các hàm kiểm tra Data Quality cho JDs và CVs"""
     required_jd_fields = [
         "job_id", "job_title", "company_name", "domain_category",
-        "location", "salary_range", "experience_required", "must_have", "embedding_text"
+        "location", "salary_range", "experience_required", "embedding_text"
     ]
 
+    PG_CONFIG = {
+        "host": "localhost",
+        "port": 5432,
+        "user": "ats_user",
+        "password": "ats_password",
+        "dbname": "ats_db"
+    }
+
     jd_records = []
-    if os.path.exists(jds_clean_path):
-        with open(jds_clean_path, "r", encoding="utf-8") as f:
-            jd_records = json.load(f)
+    try:
+        conn = psycopg2.connect(**PG_CONFIG)
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        cursor.execute("SELECT * FROM mart_jds_final")
+        rows = cursor.fetchall()
+        jd_records = [dict(row) for row in rows]
+        conn.close()
+    except Exception as e:
+        print(f"Lỗi đọc DB: {e}")
 
     cv_records = []
     if os.path.exists(cvs_clean_path):
