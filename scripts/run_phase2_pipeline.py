@@ -12,6 +12,8 @@ if hasattr(sys.stdout, 'reconfigure'):
 
 # Import Phase 2 modules
 from ingestion.cleaner_jds import run_cleaning_pipeline as run_jd_cleaning_pipeline
+from ingestion.load_stg import load_stg_jds
+from ingestion.elt_transform import run_elt_transform
 from retrieval.index import VectorIndexManager
 from retrieval.retriever import HybridRetriever
 from retrieval.agent import RAGAgent
@@ -65,12 +67,18 @@ def run_phase2_pipeline():
     print("🚀 BẮT ĐẦU THỰC THI PHASE 2 PIPELINE (HYBRID SEARCH & RERANKING)")
     print("================================================================\n")
 
-    # 1. Clean Data
+    # 1. Clean Data (ETL)
     run_jd_cleaning_pipeline()
 
-    # 2. Vector Store Indexing
+    # 2. Load to Staging (ELT - Load)
+    load_stg_jds()
+    
+    # 3. Transform in DB (ELT - Transform)
+    run_elt_transform()
+
+    # 4. Vector Store Indexing
     indexer = VectorIndexManager()
-    manifest = indexer.build_jd_index(clean_json_path="./data/clean/jds_clean.json", collection_name="jds_collection")
+    manifest = indexer.build_jd_index(db_path="./data/app.db", collection_name="jds_collection")
 
     # 3. Testset Verification
     eval_json_path = "./data/eval/eval_dataset.json"
@@ -140,7 +148,7 @@ def run_phase2_pipeline():
     print(f"   - Average LLM Judge Score: {avg_judge_score} / 5.0 🌟")
 
     # 5. Data Quality Checks
-    quality_summary = run_data_quality_checks(jds_clean_path="./data/clean/jds_clean.json")
+    quality_summary = run_data_quality_checks(db_path="./data/app.db")
 
     # 6. Export Reports
     os.makedirs(os.path.dirname(PHASE2_REPORT_MD), exist_ok=True)
