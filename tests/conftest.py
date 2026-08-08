@@ -25,6 +25,12 @@ TestingSessionLocal = async_sessionmaker(
     autoflush=False,
 )
 
+
+@pytest_asyncio.fixture(scope="session", autouse=True)
+async def dispose_test_database_engine():
+    yield
+    await test_engine.dispose()
+
 @pytest_asyncio.fixture(scope="function", autouse=True)
 async def setup_database():
     """Tự động tạo bảng sạch trước mỗi test case và dọn dẹp sau khi test xong."""

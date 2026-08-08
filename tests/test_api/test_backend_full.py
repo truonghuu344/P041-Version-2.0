@@ -126,6 +126,11 @@ async def test_two_ai_agent_workflows_match_frontend_contract(client, monkeypatc
     assert set(gap["hard_skills_matching"]) == {"Python", "FastAPI", "REST API"}
     assert set(gap["hard_skills_missing"]) == {"PostgreSQL", "Docker"}
     assert gap["suggestions"]
+    assert gap["priority_actions"]
+    assert gap["learning_recommendations"]
+    assert gap["certification_recommendations"]
+    assert gap["project_recommendations"]
+    assert gap["cv_section_recommendations"]
 
     start_response = await client.post(
         "/api/v1/interviews/start",

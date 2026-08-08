@@ -41,6 +41,14 @@ async def test_gap_analysis_agent_uses_cv_evidence_and_blocks_missing_skills(dis
     assert set(result["hard_skills_matching"]) == {"Python", "FastAPI"}
     assert set(result["hard_skills_missing"]) == {"Docker", "PostgreSQL"}
     assert 0 <= result["match_score"] <= 100
+    assert result["executive_summary"]
+    assert {item["gap"] for item in result["priority_actions"]} >= {"Docker", "PostgreSQL"}
+    assert {item["skill"] for item in result["learning_recommendations"]} == {"Docker", "PostgreSQL"}
+    assert result["certification_recommendations"]
+    assert result["project_recommendations"]
+    assert result["project_recommendations"][0]["status"] == "recommended_not_completed"
+    assert result["project_recommendations"][0]["cv_bullet_template"].startswith("Sau khi hoàn thành:")
+    assert result["cv_section_recommendations"]
     for suggestion in result["suggestions"]:
         assert suggestion["original_text"].casefold() in cv_text.casefold()
         assert "docker" not in suggestion["suggested_improvement"].casefold()

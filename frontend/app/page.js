@@ -1017,6 +1017,8 @@ export default function Page() {
                 <span id="page-gap-match-score-badge" className="badge badge-ok match-score-badge">0%</span>
               </div>
 
+              <div id="page-gap-executive-summary" className="gap-executive-summary"></div>
+
               <div className="gap-result-block">
                 <p className="block-title title-green">✅ Kỹ năng đáp ứng tốt (Matching Skills):</p>
                 <div id="page-gap-matching-skills" className="tags-row"></div>
@@ -1025,6 +1027,31 @@ export default function Page() {
               <div className="gap-result-block">
                 <p className="block-title title-red">⚠️ Kỹ năng còn thiếu (Missing Skills):</p>
                 <div id="page-gap-missing-skills" className="tags-row"></div>
+              </div>
+
+              <div className="gap-result-block">
+                <p className="block-title title-red">🚀 Việc cần ưu tiên để đáp ứng JD:</p>
+                <div id="page-gap-priority-actions" className="gap-plan-grid"></div>
+              </div>
+
+              <div className="gap-result-block">
+                <p className="block-title title-green">📚 Nên học thêm gì:</p>
+                <div id="page-gap-learning-list" className="gap-plan-grid"></div>
+              </div>
+
+              <div className="gap-result-block">
+                <p className="block-title title-purple">🎓 Chứng chỉ liên quan nên cân nhắc:</p>
+                <div id="page-gap-certifications-list" className="gap-plan-grid"></div>
+              </div>
+
+              <div className="gap-result-block">
+                <p className="block-title title-purple">🛠️ Dự án portfolio nên thực hiện:</p>
+                <div id="page-gap-projects-list" className="gap-plan-grid"></div>
+              </div>
+
+              <div className="gap-result-block">
+                <p className="block-title title-green">📝 Các phần CV cần bổ sung:</p>
+                <div id="page-gap-cv-sections-list" className="gap-plan-grid"></div>
               </div>
 
               <div className="gap-result-block">

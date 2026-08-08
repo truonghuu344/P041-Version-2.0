@@ -1981,18 +1981,65 @@ function startAppLogic() {
         document.getElementById('page-gap-match-score-badge').textContent = `${res.match_score.toFixed(1)}%`;
 
         document.getElementById('page-gap-matching-skills').innerHTML = (res.hard_skills_matching || []).map(
-          s => `<span class="badge badge-ok">${s}</span>`
+          s => `<span class="badge badge-ok">${escapeHtml(s)}</span>`
         ).join('') || `<span style="font-size:11px;color:var(--text-muted);">Không có dữ liệu</span>`;
 
         document.getElementById('page-gap-missing-skills').innerHTML = (res.hard_skills_missing || []).map(
-          s => `<span class="badge badge-need">${s}</span>`
+          s => `<span class="badge badge-need">${escapeHtml(s)}</span>`
         ).join('') || `<span style="font-size:11px;color:var(--text-muted);">Không có dữ liệu</span>`;
+
+        document.getElementById('page-gap-executive-summary').textContent = res.executive_summary || '';
+
+        document.getElementById('page-gap-priority-actions').innerHTML = (res.priority_actions || []).map(item => `
+          <article class="gap-plan-item priority-item">
+            <span class="gap-priority-number">${escapeHtml(item.priority)}</span>
+            <div><h5>${escapeHtml(item.gap)}</h5><p>${escapeHtml(item.why_it_matters)}</p><strong>${escapeHtml(item.action)}</strong></div>
+          </article>
+        `).join('') || '<p class="gap-empty">Không có khoảng cách ưu tiên.</p>';
+
+        document.getElementById('page-gap-learning-list').innerHTML = (res.learning_recommendations || []).map(item => `
+          <article class="gap-plan-item">
+            <h5>${escapeHtml(item.skill)}</h5>
+            <p>${escapeHtml(item.learning_goal)}</p>
+            <div class="gap-mini-tags">${(item.topics || []).map(topic => `<span>${escapeHtml(topic)}</span>`).join('')}</div>
+            <strong>Bài thực hành: ${escapeHtml(item.practice)}</strong>
+          </article>
+        `).join('') || '<p class="gap-empty">Chưa có đề xuất học tập bổ sung.</p>';
+
+        document.getElementById('page-gap-certifications-list').innerHTML = (res.certification_recommendations || []).map(item => `
+          <article class="gap-plan-item certificate-item">
+            <span class="gap-card-kicker">${escapeHtml(item.level)} · ${escapeHtml(item.provider)}</span>
+            <h5>${escapeHtml(item.name)}</h5>
+            <p>${escapeHtml(item.reason)}</p>
+            <div class="gap-mini-tags">${(item.related_skills || []).map(skill => `<span>${escapeHtml(skill)}</span>`).join('')}</div>
+            <small>${escapeHtml(item.verification_note)}</small>
+          </article>
+        `).join('') || '<p class="gap-empty">JD này chưa có chứng chỉ bắt buộc hoặc phù hợp rõ ràng.</p>';
+
+        document.getElementById('page-gap-projects-list').innerHTML = (res.project_recommendations || []).map(item => `
+          <article class="gap-plan-item project-item">
+            <span class="gap-card-kicker">ĐỀ XUẤT · CHƯA HOÀN THÀNH</span>
+            <h5>${escapeHtml(item.title)}</h5>
+            <p>${escapeHtml(item.objective)}</p>
+            <div class="gap-mini-tags">${(item.skills || []).map(skill => `<span>${escapeHtml(skill)}</span>`).join('')}</div>
+            <ul>${(item.deliverables || []).map(value => `<li>${escapeHtml(value)}</li>`).join('')}</ul>
+            <div class="gap-bullet-template">${escapeHtml(item.cv_bullet_template)}</div>
+          </article>
+        `).join('') || '<p class="gap-empty">Chưa cần thêm dự án mới; hãy tăng số liệu cho dự án hiện có.</p>';
+
+        document.getElementById('page-gap-cv-sections-list').innerHTML = (res.cv_section_recommendations || []).map(item => `
+          <article class="gap-plan-item compact-item">
+            <h5>${escapeHtml(item.section)}</h5>
+            <p><strong>Vấn đề:</strong> ${escapeHtml(item.issue)}</p>
+            <p><strong>Nên sửa:</strong> ${escapeHtml(item.recommendation)}</p>
+          </article>
+        `).join('') || '<p class="gap-empty">Không có mục CV cần bổ sung.</p>';
 
         document.getElementById('page-gap-suggestions-list').innerHTML = (res.suggestions || []).map(s => `
           <div style="background:rgba(255,255,255,0.03);padding:8px 10px;border-radius:6px;border-left:3px solid #b084fc;">
-            <p style="font-size:11px;color:var(--text-muted);margin:0 0 2px 0;"><strong>Gốc:</strong> ${s.original_text}</p>
-            <p style="font-size:12px;color:#00e676;margin:0 0 2px 0;"><strong>Tối ưu:</strong> ${s.suggested_improvement}</p>
-            <p style="font-size:10px;color:var(--text-dim);margin:0;"><em>${s.reason}</em></p>
+            <p style="font-size:11px;color:var(--text-muted);margin:0 0 2px 0;"><strong>Gốc:</strong> ${escapeHtml(s.original_text)}</p>
+            <p style="font-size:12px;color:#00e676;margin:0 0 2px 0;"><strong>Tối ưu:</strong> ${escapeHtml(s.suggested_improvement)}</p>
+            <p style="font-size:10px;color:var(--text-dim);margin:0;"><em>${escapeHtml(s.reason)}</em></p>
           </div>
         `).join('') || `<p style="font-size:11px;color:var(--text-muted);">CV của bạn đã tối ưu rất tốt!</p>`;
 

@@ -1,6 +1,7 @@
 from datetime import datetime
-from typing import Optional, List, Dict, Any
-from pydantic import BaseModel, EmailStr, Field, ConfigDict
+from typing import Any
+
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
 # --- Auth Schemas ---
@@ -12,10 +13,10 @@ class UserRegister(BaseModel):
 
 
 class UserUpdate(BaseModel):
-    full_name: Optional[str] = None
-    email: Optional[str] = None
-    role: Optional[str] = None
-    password: Optional[str] = None
+    full_name: str | None = None
+    email: str | None = None
+    role: str | None = None
+    password: str | None = None
 
 
 class UserLogin(BaseModel):
@@ -41,11 +42,11 @@ class Token(BaseModel):
 
 # --- CV Schemas ---
 class CVParsedData(BaseModel):
-    summary: Optional[str] = ""
-    education: List[Dict[str, Any]] = []
-    experience: List[Dict[str, Any]] = []
-    skills: List[str] = []
-    projects: List[Dict[str, Any]] = []
+    summary: str | None = ""
+    education: list[dict[str, Any]] = []
+    experience: list[dict[str, Any]] = []
+    skills: list[str] = []
+    projects: list[dict[str, Any]] = []
 
 
 class CVOut(BaseModel):
@@ -54,17 +55,17 @@ class CVOut(BaseModel):
     id: str
     user_id: str
     title: str
-    file_path: Optional[str] = None
-    raw_text: Optional[str] = None
-    parsed_json: Optional[Dict[str, Any]] = None
+    file_path: str | None = None
+    raw_text: str | None = None
+    parsed_json: dict[str, Any] | None = None
     created_at: datetime
 
 
 # --- Job Description Schemas ---
 class JDCreate(BaseModel):
     title: str = Field(..., min_length=2, description="Tên vị trí công việc")
-    company: Optional[str] = None
-    location: Optional[str] = None
+    company: str | None = None
+    location: str | None = None
     requirements_text: str = Field(..., min_length=10, description="Mô tả chi tiết JD")
 
 
@@ -73,10 +74,10 @@ class JDOut(BaseModel):
 
     id: str
     title: str
-    company: Optional[str] = None
-    location: Optional[str] = None
+    company: str | None = None
+    location: str | None = None
     requirements_text: str
-    normalized_json: Optional[Dict[str, Any]] = None
+    normalized_json: dict[str, Any] | None = None
     is_system: bool
     created_at: datetime
 
@@ -90,8 +91,46 @@ class GapAnalysisRequest(BaseModel):
 class CVOptimizationSuggestion(BaseModel):
     original_text: str
     suggested_improvement: str
-    action_verb: Optional[str] = None
+    action_verb: str | None = None
     reason: str
+
+
+class GapPriorityAction(BaseModel):
+    priority: int
+    gap: str
+    why_it_matters: str
+    action: str
+
+
+class LearningRecommendation(BaseModel):
+    skill: str
+    learning_goal: str
+    topics: list[str] = []
+    practice: str
+
+
+class CertificationRecommendation(BaseModel):
+    name: str
+    provider: str
+    related_skills: list[str] = []
+    level: str
+    reason: str
+    verification_note: str
+
+
+class ProjectRecommendation(BaseModel):
+    title: str
+    objective: str
+    skills: list[str] = []
+    deliverables: list[str] = []
+    cv_bullet_template: str
+    status: str = "recommended_not_completed"
+
+
+class CVSectionRecommendation(BaseModel):
+    section: str
+    issue: str
+    recommendation: str
 
 
 class GapAnalysisResponse(BaseModel):
@@ -101,10 +140,17 @@ class GapAnalysisResponse(BaseModel):
     cv_id: str
     jd_id: str
     match_score: float
-    hard_skills_matching: List[str] = []
-    hard_skills_missing: List[str] = []
-    soft_skills_gap: List[str] = []
-    suggestions: List[CVOptimizationSuggestion] = []
+    hard_skills_matching: list[str] = []
+    hard_skills_missing: list[str] = []
+    soft_skills_gap: list[str] = []
+    suggestions: list[CVOptimizationSuggestion] = []
+    executive_summary: str = ""
+    priority_actions: list[GapPriorityAction] = []
+    learning_recommendations: list[LearningRecommendation] = []
+    certification_recommendations: list[CertificationRecommendation] = []
+    project_recommendations: list[ProjectRecommendation] = []
+    cv_section_recommendations: list[CVSectionRecommendation] = []
+    score_breakdown: dict[str, float] = {}
     created_at: datetime
 
 
@@ -119,7 +165,7 @@ class InterviewQuestionOut(BaseModel):
     session_id: str
     question_index: int
     question_text: str
-    follow_up_question: Optional[str] = None
+    follow_up_question: str | None = None
     is_last_question: bool = False
 
 
@@ -133,10 +179,10 @@ class InterviewReportOut(BaseModel):
     id: str
     session_id: str
     total_score: float
-    star_scores: Dict[str, float]  # Situation, Task, Action, Result
-    strengths: List[str] = []
-    improvements: List[str] = []
-    recommendations: List[str] = []
+    star_scores: dict[str, float]  # Situation, Task, Action, Result
+    strengths: list[str] = []
+    improvements: list[str] = []
+    recommendations: list[str] = []
     created_at: datetime
 
 

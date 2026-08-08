@@ -1,11 +1,11 @@
-from typing import List
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 
-from src.db.database import get_db
-from src.db.models import User, CV, JobDescription, CVAnalysis
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.core.security import get_current_user
+from src.db.database import get_db
+from src.db.models import CV, CVAnalysis, JobDescription, User
 from src.models.schemas import GapAnalysisRequest, GapAnalysisResponse
 from src.services.gap_analysis_service import perform_cv_jd_gap_analysis
 
@@ -57,6 +57,13 @@ async def analyze_cv_jd_gap(
             "hard_skills_matching": analysis_result.get("hard_skills_matching", []),
             "hard_skills_missing": analysis_result.get("hard_skills_missing", []),
             "soft_skills_gap": analysis_result.get("soft_skills_gap", []),
+            "executive_summary": analysis_result.get("executive_summary", ""),
+            "priority_actions": analysis_result.get("priority_actions", []),
+            "learning_recommendations": analysis_result.get("learning_recommendations", []),
+            "certification_recommendations": analysis_result.get("certification_recommendations", []),
+            "project_recommendations": analysis_result.get("project_recommendations", []),
+            "cv_section_recommendations": analysis_result.get("cv_section_recommendations", []),
+            "score_breakdown": analysis_result.get("score_breakdown", {}),
         },
         optimized_suggestions_json=analysis_result.get("suggestions", []),
     )
@@ -73,15 +80,22 @@ async def analyze_cv_jd_gap(
         hard_skills_missing=analysis_result.get("hard_skills_missing", []),
         soft_skills_gap=analysis_result.get("soft_skills_gap", []),
         suggestions=analysis_result.get("suggestions", []),
+        executive_summary=analysis_result.get("executive_summary", ""),
+        priority_actions=analysis_result.get("priority_actions", []),
+        learning_recommendations=analysis_result.get("learning_recommendations", []),
+        certification_recommendations=analysis_result.get("certification_recommendations", []),
+        project_recommendations=analysis_result.get("project_recommendations", []),
+        cv_section_recommendations=analysis_result.get("cv_section_recommendations", []),
+        score_breakdown=analysis_result.get("score_breakdown", {}),
         created_at=new_analysis.created_at,
     )
 
 
-@router.get("/history", response_model=List[GapAnalysisResponse])
+@router.get("/history", response_model=list[GapAnalysisResponse])
 async def get_analysis_history(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> List[GapAnalysisResponse]:
+) -> list[GapAnalysisResponse]:
     """Xem lại lịch sử các lượt phân tích Gap Analysis của người dùng."""
     stmt = select(CVAnalysis).where(CVAnalysis.user_id == current_user.id).order_by(CVAnalysis.created_at.desc())
     result = await db.execute(stmt)
@@ -100,6 +114,13 @@ async def get_analysis_history(
                 hard_skills_missing=gap_data.get("hard_skills_missing", []),
                 soft_skills_gap=gap_data.get("soft_skills_gap", []),
                 suggestions=item.optimized_suggestions_json or [],
+                executive_summary=gap_data.get("executive_summary", ""),
+                priority_actions=gap_data.get("priority_actions", []),
+                learning_recommendations=gap_data.get("learning_recommendations", []),
+                certification_recommendations=gap_data.get("certification_recommendations", []),
+                project_recommendations=gap_data.get("project_recommendations", []),
+                cv_section_recommendations=gap_data.get("cv_section_recommendations", []),
+                score_breakdown=gap_data.get("score_breakdown", {}),
                 created_at=item.created_at,
             )
         )
