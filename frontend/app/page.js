@@ -677,6 +677,18 @@ export default function Page() {
                   </div>
                 </div>
 
+                <div id="cv-bulk-toolbar" className="cv-bulk-toolbar" hidden>
+                  <label className="cv-select-all">
+                    <input type="checkbox" id="cv-select-all" />
+                    <span className="cv-checkbox-visual" aria-hidden="true"></span>
+                    <span>Chọn tất cả</span>
+                  </label>
+                  <span id="cv-selected-count" className="cv-selected-count">Chưa chọn CV</span>
+                  <button type="button" id="btn-delete-selected-cvs" className="cv-bulk-delete" disabled>
+                    <span aria-hidden="true">🗑</span> Xóa đã chọn
+                  </button>
+                </div>
+
                 <div id="cv-page-list-container" className="cv-manifest-list">
                   <div className="empty-manifest">
                     <p>Đang tải dữ liệu CV từ kho dữ liệu tàu vũ trụ...</p>
@@ -1576,6 +1588,60 @@ export default function Page() {
         </div>
       </div>
 
+      {/* ═══ Fixed Gemini Career Chatbot ═══ */}
+      <div id="ai-companion" className="ai-companion" aria-label="Chatbot AI Nova">
+        <div id="ai-companion-hint" className="ai-companion-hint">Bấm để chat với Nova ✨</div>
+        <button
+          type="button"
+          id="ai-companion-avatar"
+          className="ai-companion-avatar"
+          aria-label="Mở chat với trợ lý AI Nova"
+          aria-expanded="false"
+          aria-controls="ai-companion-chat"
+        >
+          <img
+            id="ai-companion-source"
+            className="ai-companion-source"
+            src="/assistant/idle-rotations-8dir.gif"
+            alt=""
+            draggable={false}
+          />
+          <canvas id="ai-companion-canvas" className="ai-companion-canvas" width="64" height="64" aria-hidden="true"></canvas>
+          <span id="ai-companion-status-dot" className="ai-companion-status-dot" aria-hidden="true"></span>
+        </button>
+      </div>
+
+      <aside id="ai-companion-chat" className="ai-companion-chat" aria-hidden="true" hidden>
+        <header className="ai-chat-header">
+          <div className="ai-chat-identity">
+            <span className="ai-chat-orb" aria-hidden="true">✦</span>
+            <div>
+              <strong>Nova · Career Agent</strong>
+              <span id="ai-companion-status-text">Đang kiểm tra Gemini…</span>
+            </div>
+          </div>
+          <button type="button" id="ai-companion-close" className="ai-chat-close" aria-label="Đóng cửa sổ chat">×</button>
+        </header>
+        <div id="ai-companion-messages" className="ai-chat-messages" aria-live="polite">
+          <div className="ai-chat-message assistant">
+            <span className="ai-chat-message-name">Nova</span>
+            <p>Chào bạn! Mình có thể hỗ trợ CV, Gap Analysis và luyện phỏng vấn STAR. Bạn muốn bắt đầu từ đâu?</p>
+          </div>
+        </div>
+        <div className="ai-chat-quick-prompts" aria-label="Câu hỏi gợi ý">
+          <button type="button" data-assistant-prompt="Tôi nên cải thiện CV từ đâu?">Cải thiện CV</button>
+          <button type="button" data-assistant-prompt="Hãy hướng dẫn tôi phân tích khoảng cách với JD.">So khớp JD</button>
+          <button type="button" data-assistant-prompt="Hãy giúp tôi luyện phỏng vấn STAR.">Luyện STAR</button>
+        </div>
+        <form id="ai-companion-form" className="ai-chat-form">
+          <textarea id="ai-companion-input" rows="1" maxLength="4000" placeholder="Nhắn cho Nova…" aria-label="Tin nhắn gửi trợ lý AI"></textarea>
+          <button type="submit" id="ai-companion-send" aria-label="Gửi tin nhắn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/></svg>
+          </button>
+        </form>
+        <p className="ai-chat-privacy">Nova chỉ gửi nội dung bạn nhập và metadata hồ sơ tối thiểu tới Gemini.</p>
+      </aside>
+
       {/* ═══ Delete Confirmation Modal ═══ */}
       <div className="modal-overlay" id="modal-delete-confirm-overlay">
         <div className="modal-card delete-confirm-card">
@@ -1588,9 +1654,9 @@ export default function Page() {
               <line x1="14" y1="11" x2="14" y2="17"/>
             </svg>
           </div>
-          <h3 className="delete-confirm-title">Xác Nhận Xóa Người Dùng</h3>
+          <h3 className="delete-confirm-title" id="delete-confirm-title">Xác Nhận Xóa Người Dùng</h3>
           <p className="delete-confirm-desc" id="delete-confirm-desc">Bạn có chắc chắn muốn xóa người dùng này?</p>
-          <p className="delete-confirm-warning">⚠️ Thao tác này không thể hoàn tác.</p>
+          <p className="delete-confirm-warning" id="delete-confirm-warning">⚠️ Thao tác này không thể hoàn tác.</p>
           <div className="delete-confirm-actions">
             <button className="delete-confirm-btn-cancel" id="delete-confirm-cancel">Hủy bỏ</button>
             <button className="delete-confirm-btn-delete" id="delete-confirm-ok">Xóa Người Dùng</button>

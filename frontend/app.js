@@ -46,12 +46,16 @@ class ApiClient {
     const config = { ...options, headers };
 
     try {
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+      const requestUrl = /^https?:\/\//i.test(endpoint) ? endpoint : `${API_BASE_URL}${endpoint}`;
+      const response = await fetch(requestUrl, config);
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
         const errorMsg = data.detail || data.message || `Lỗi HTTP ${response.status}`;
-        throw new Error(errorMsg);
+        const requestError = new Error(errorMsg);
+        requestError.status = response.status;
+        requestError.payload = data;
+        throw requestError;
       }
 
       return data;
@@ -117,6 +121,30 @@ class ApiClient {
     return await this.request(`/cvs/${cvId}/analyze`, { method: 'POST', body: formData });
   }
 
+  static async deleteCV(cvId) {
+    return await this.request(`/cvs/${cvId}`, { method: 'DELETE' });
+  }
+
+  static async bulkDeleteCVs(cvIds) {
+    const uniqueCVIds = [...new Set(cvIds)].filter(Boolean);
+    try {
+      return await this.request('/cvs/bulk-delete', {
+        method: 'POST',
+        body: JSON.stringify({ cv_ids: uniqueCVIds }),
+      });
+    } catch (err) {
+      // Tương thích với tiến trình backend cũ chưa được restart sau khi thêm
+      // endpoint bulk-delete: dùng API xóa đơn đã có thay vì làm hỏng toàn bộ thao tác.
+      if (![404, 405].includes(err.status)) throw err;
+      const deletedIds = [];
+      for (const cvId of uniqueCVIds) {
+        await this.deleteCV(cvId);
+        deletedIds.push(cvId);
+      }
+      return { deleted_ids: deletedIds, deleted_count: deletedIds.length };
+    }
+  }
+
   // --- JD APIs ---
   static async listJDs() {
     return await this.request('/jds');
@@ -159,6 +187,42 @@ class ApiClient {
 
   static async getInterviewReport(sessionId) {
     return await this.request(`/interviews/${sessionId}/report`);
+  }
+
+  // --- Draggable Career Assistant Agent ---
+  static getAssistantFallbackUrl(endpoint) {
+    const configuredBase = window.__NOVA_API_BASE_URL__;
+    if (configuredBase) return `${configuredBase.replace(/\/$/, '')}${endpoint}`;
+    if (['localhost', '127.0.0.1'].includes(window.location.hostname)) {
+      return `http://127.0.0.1:8001/api/v1${endpoint}`;
+    }
+    return '';
+  }
+
+  static async requestAssistant(endpoint, options = {}) {
+    const localNovaUrl = this.getAssistantFallbackUrl(endpoint);
+    if (localNovaUrl) {
+      try {
+        return await this.request(localNovaUrl, options);
+      } catch (err) {
+        // Nếu Nova local phản hồi lỗi nghiệp vụ/xác thực thì giữ nguyên lỗi đó.
+        // Chỉ quay về same-origin khi cổng local chưa chạy hoặc chưa có endpoint.
+        if (err.status && ![404, 405].includes(err.status)) throw err;
+      }
+    }
+    return await this.request(endpoint, options);
+  }
+
+  static async getAssistantStatus() {
+    return await this.requestAssistant('/assistant/status');
+  }
+
+  static async chatWithAssistant(message, history = [], currentPage = 'dashboard') {
+    const options = {
+      method: 'POST',
+      body: JSON.stringify({ message, history, current_page: currentPage }),
+    };
+    return await this.requestAssistant('/assistant/chat', options);
   }
 
   // --- Admin APIs ---
@@ -1622,6 +1686,10 @@ function startAppLogic() {
   const cvDropzone = document.getElementById('cv-dropzone');
   const selectedFileNameEl = document.getElementById('selected-file-name');
   const cvPageListContainer = document.getElementById('cv-page-list-container');
+  const cvBulkToolbar = document.getElementById('cv-bulk-toolbar');
+  const cvSelectAll = document.getElementById('cv-select-all');
+  const cvSelectedCount = document.getElementById('cv-selected-count');
+  const btnDeleteSelectedCVs = document.getElementById('btn-delete-selected-cvs');
   const cvUseLLM = document.getElementById('cv-use-llm');
   const cvAgentProgress = document.getElementById('cv-agent-progress');
 
@@ -1629,6 +1697,22 @@ function startAppLogic() {
   const btnCloseInspector = document.getElementById('btn-close-cv-detail');
   let loadedCVs = [];
   let inspectedCV = null;
+  let selectedCVIds = new Set();
+
+  function updateCVBulkSelectionUI() {
+    const selectedCount = selectedCVIds.size;
+    if (cvSelectedCount) {
+      cvSelectedCount.textContent = selectedCount ? `Đã chọn ${selectedCount} CV` : 'Chưa chọn CV';
+    }
+    if (btnDeleteSelectedCVs) btnDeleteSelectedCVs.disabled = selectedCount === 0;
+    if (cvSelectAll) {
+      cvSelectAll.checked = loadedCVs.length > 0 && selectedCount === loadedCVs.length;
+      cvSelectAll.indeterminate = selectedCount > 0 && selectedCount < loadedCVs.length;
+    }
+    cvPageListContainer?.querySelectorAll('.cv-manifest-item').forEach(item => {
+      item.classList.toggle('is-selected', selectedCVIds.has(item.dataset.cvId));
+    });
+  }
 
   function setAgentProgress(activeStep = '') {
     if (!cvAgentProgress) return;
@@ -1736,6 +1820,8 @@ function startAppLogic() {
   async function loadSpaceshipCVList() {
     if (!cvPageListContainer) return;
     if (!ApiClient.getToken()) {
+      selectedCVIds.clear();
+      if (cvBulkToolbar) cvBulkToolbar.hidden = true;
       cvPageListContainer.innerHTML = `<div class="empty-manifest"><p>⚠️ Vui lòng đăng nhập để xem danh sách CV đã lưu</p></div>`;
       return;
     }
@@ -1743,31 +1829,130 @@ function startAppLogic() {
     try {
       loadedCVs = await ApiClient.listCVs();
       if (!loadedCVs || loadedCVs.length === 0) {
+        selectedCVIds.clear();
+        if (cvBulkToolbar) cvBulkToolbar.hidden = true;
         cvPageListContainer.innerHTML = `<div class="empty-manifest"><p>Chưa có bản CV nào trong kho dữ liệu. Hãy quét CV đầu tiên ở trạm bên trái!</p></div>`;
         return;
       }
 
+      const availableIds = new Set(loadedCVs.map(cv => cv.id));
+      selectedCVIds = new Set([...selectedCVIds].filter(id => availableIds.has(id)));
+      if (cvBulkToolbar) cvBulkToolbar.hidden = false;
+
       cvPageListContainer.innerHTML = loadedCVs.map((cv, idx) => `
-        <div class="cv-manifest-item">
-          <div>
+        <div class="cv-manifest-item" data-cv-id="${escapeHtml(cv.id)}">
+          <label class="cv-row-checkbox" aria-label="Chọn ${escapeHtml(cv.title || 'CV Hồ sơ')}">
+            <input type="checkbox" data-cv-select-id="${escapeHtml(cv.id)}" ${selectedCVIds.has(cv.id) ? 'checked' : ''}>
+            <span class="cv-checkbox-visual" aria-hidden="true"></span>
+          </label>
+          <div class="cv-item-copy">
             <p class="cv-item-title">📄 ${escapeHtml(cv.title || 'CV Hồ sơ')}</p>
             <p class="cv-item-date">Ngày tạo: ${new Date(cv.created_at).toLocaleDateString('vi-VN')} | Standard ATS</p>
           </div>
           <div class="cv-item-actions">
-            <button class="btn-ship-sm view" onclick="window.inspectCVByIndex(${idx})">Inspect AI</button>
+            <button class="btn-ship-sm view" type="button" data-cv-inspect-index="${idx}">Inspect AI</button>
+            <button class="btn-ship-sm delete" type="button" data-cv-delete-id="${escapeHtml(cv.id)}" aria-label="Xóa ${escapeHtml(cv.title || 'CV Hồ sơ')}">
+              <span aria-hidden="true">🗑</span> Xóa
+            </button>
           </div>
         </div>
       `).join('');
+      updateCVBulkSelectionUI();
     } catch (err) {
       cvPageListContainer.innerHTML = `<div class="empty-manifest"><p style="color:#ef4444;">Không thể kết nối kho dữ liệu CV: ${err.message}</p></div>`;
     }
   }
 
-  window.inspectCVByIndex = function(index) {
-    if (loadedCVs && loadedCVs[index]) {
-      inspectCVDetail(loadedCVs[index]);
+  if (cvPageListContainer) {
+    cvPageListContainer.addEventListener('change', event => {
+      const checkbox = event.target.closest('[data-cv-select-id]');
+      if (!checkbox) return;
+      if (checkbox.checked) selectedCVIds.add(checkbox.dataset.cvSelectId);
+      else selectedCVIds.delete(checkbox.dataset.cvSelectId);
+      updateCVBulkSelectionUI();
+    });
+
+    cvPageListContainer.addEventListener('click', async event => {
+      const inspectButton = event.target.closest('[data-cv-inspect-index]');
+      if (inspectButton) {
+        const cv = loadedCVs[Number(inspectButton.dataset.cvInspectIndex)];
+        if (cv) inspectCVDetail(cv);
+        return;
+      }
+
+      const deleteButton = event.target.closest('[data-cv-delete-id]');
+      if (!deleteButton) return;
+      const cv = loadedCVs.find(item => item.id === deleteButton.dataset.cvDeleteId);
+      if (!cv) return;
+
+      const confirmed = await showDeleteConfirm({
+        title: 'Xác Nhận Xóa CV',
+        description: `Bạn có chắc chắn muốn xóa CV <strong style="color:#fff;">"${escapeHtml(cv.title || 'CV Hồ sơ')}"</strong>?`,
+        confirmLabel: 'Xóa CV',
+        warning: '⚠️ File CV và toàn bộ kết quả phân tích liên quan sẽ bị xóa vĩnh viễn.',
+      });
+      if (!confirmed) return;
+
+      try {
+        deleteButton.disabled = true;
+        deleteButton.classList.add('is-loading');
+        await ApiClient.deleteCV(cv.id);
+        selectedCVIds.delete(cv.id);
+        if (inspectedCV?.id === cv.id) {
+          inspectedCV = null;
+          if (inspectorDeck) inspectorDeck.style.display = 'none';
+        }
+        await loadSpaceshipCVList();
+        await populatePageGapOptions();
+        showToast(`🗑️ Đã xóa CV ${cv.title || 'CV Hồ sơ'}`, 'success');
+      } catch (err) {
+        deleteButton.disabled = false;
+        deleteButton.classList.remove('is-loading');
+        showToast(`❌ Không thể xóa CV: ${err.message}`, 'error');
+      }
+    });
+  }
+
+  cvSelectAll?.addEventListener('change', () => {
+    selectedCVIds = cvSelectAll.checked ? new Set(loadedCVs.map(cv => cv.id)) : new Set();
+    cvPageListContainer?.querySelectorAll('[data-cv-select-id]').forEach(checkbox => {
+      checkbox.checked = cvSelectAll.checked;
+    });
+    updateCVBulkSelectionUI();
+  });
+
+  btnDeleteSelectedCVs?.addEventListener('click', async () => {
+    const selectedCVs = loadedCVs.filter(cv => selectedCVIds.has(cv.id));
+    if (!selectedCVs.length) return;
+    const preview = selectedCVs.slice(0, 3).map(cv => escapeHtml(cv.title || 'CV Hồ sơ')).join(', ');
+    const remaining = selectedCVs.length > 3 ? ` và ${selectedCVs.length - 3} CV khác` : '';
+    const confirmed = await showDeleteConfirm({
+      title: `Xác Nhận Xóa ${selectedCVs.length} CV`,
+      description: `Bạn đang xóa <strong style="color:#fff;">${selectedCVs.length} CV</strong>: ${preview}${remaining}.`,
+      confirmLabel: `Xóa ${selectedCVs.length} CV`,
+      warning: '⚠️ File CV và toàn bộ kết quả phân tích liên quan sẽ bị xóa vĩnh viễn.',
+    });
+    if (!confirmed) return;
+
+    try {
+      btnDeleteSelectedCVs.disabled = true;
+      btnDeleteSelectedCVs.classList.add('is-loading');
+      const result = await ApiClient.bulkDeleteCVs(selectedCVs.map(cv => cv.id));
+      if (inspectedCV && selectedCVIds.has(inspectedCV.id)) {
+        inspectedCV = null;
+        if (inspectorDeck) inspectorDeck.style.display = 'none';
+      }
+      selectedCVIds.clear();
+      await loadSpaceshipCVList();
+      await populatePageGapOptions();
+      showToast(`🗑️ Đã xóa ${result.deleted_count || selectedCVs.length} CV`, 'success');
+    } catch (err) {
+      showToast(`❌ Không thể xóa các CV đã chọn: ${err.message}`, 'error');
+    } finally {
+      btnDeleteSelectedCVs.classList.remove('is-loading');
+      updateCVBulkSelectionUI();
     }
-  };
+  });
 
   function inspectCVDetail(cv) {
     if (!inspectorDeck) return;
@@ -2635,17 +2820,20 @@ function startAppLogic() {
 
   // ── Custom Delete Confirmation Modal ──
   const deleteConfirmOverlay = document.getElementById('modal-delete-confirm-overlay');
+  const deleteConfirmTitle = document.getElementById('delete-confirm-title');
   const deleteConfirmDesc = document.getElementById('delete-confirm-desc');
+  const deleteConfirmWarning = document.getElementById('delete-confirm-warning');
   const deleteConfirmCancel = document.getElementById('delete-confirm-cancel');
   const deleteConfirmOk = document.getElementById('delete-confirm-ok');
   let pendingDeleteResolve = null;
 
-  function showDeleteConfirm(userName, userEmail) {
+  function showDeleteConfirm({ title, description, confirmLabel, warning }) {
     return new Promise((resolve) => {
       pendingDeleteResolve = resolve;
-      if (deleteConfirmDesc) {
-        deleteConfirmDesc.innerHTML = `Bạn có chắc chắn muốn xóa người dùng <strong style="color:#fff;">"${userName}"</strong> <span style="color:rgba(255,255,255,0.5);">(${userEmail})</span>?`;
-      }
+      if (deleteConfirmTitle) deleteConfirmTitle.textContent = title;
+      if (deleteConfirmDesc) deleteConfirmDesc.innerHTML = description;
+      if (deleteConfirmWarning) deleteConfirmWarning.textContent = warning;
+      if (deleteConfirmOk) deleteConfirmOk.textContent = confirmLabel;
       if (deleteConfirmOverlay) deleteConfirmOverlay.classList.add('open');
     });
   }
@@ -2677,7 +2865,12 @@ function startAppLogic() {
       return;
     }
 
-    const confirmed = await showDeleteConfirm(user.full_name || 'Không tên', user.email);
+    const confirmed = await showDeleteConfirm({
+      title: 'Xác Nhận Xóa Người Dùng',
+      description: `Bạn có chắc chắn muốn xóa người dùng <strong style="color:#fff;">"${escapeHtml(user.full_name || 'Không tên')}"</strong> <span style="color:rgba(255,255,255,0.5);">(${escapeHtml(user.email)})</span>?`,
+      confirmLabel: 'Xóa Người Dùng',
+      warning: '⚠️ Thao tác này không thể hoàn tác.',
+    });
     if (!confirmed) return;
 
     try {
@@ -3194,6 +3387,241 @@ function startAppLogic() {
       showToast(`Không thể tải báo cáo: ${err.message}`, 'error');
     }
   }
+
+  /* ============================================================
+     🧑‍🚀 NOVA — FIXED GEMINI CAREER CHATBOT
+  ============================================================ */
+  function initAICompanion() {
+    const companion = document.getElementById('ai-companion');
+    const avatar = document.getElementById('ai-companion-avatar');
+    const sourceImage = document.getElementById('ai-companion-source');
+    const spriteCanvas = document.getElementById('ai-companion-canvas');
+    const hint = document.getElementById('ai-companion-hint');
+    const panel = document.getElementById('ai-companion-chat');
+    const closeButton = document.getElementById('ai-companion-close');
+    const statusText = document.getElementById('ai-companion-status-text');
+    const messagesElement = document.getElementById('ai-companion-messages');
+    const form = document.getElementById('ai-companion-form');
+    const input = document.getElementById('ai-companion-input');
+    const sendButton = document.getElementById('ai-companion-send');
+    if (!companion || !avatar || !panel || !messagesElement || !form || !input) return;
+
+    let isOpen = false;
+    let conversationHistory = [];
+
+    function restoreCompanionPosition() {
+      localStorage.removeItem('nova_companion_position');
+      companion.style.removeProperty('left');
+      companion.style.removeProperty('top');
+      companion.style.removeProperty('right');
+      companion.style.removeProperty('bottom');
+    }
+
+    function placeChatPanel() {
+      if (!isOpen) return;
+      const edge = window.innerWidth < 560 ? 10 : 24;
+      panel.style.left = 'auto';
+      panel.style.top = 'auto';
+      panel.style.right = `${edge}px`;
+      panel.style.bottom = `${edge}px`;
+    }
+
+    function toggleChat(forceOpen) {
+      isOpen = typeof forceOpen === 'boolean' ? forceOpen : !isOpen;
+      panel.hidden = !isOpen;
+      panel.setAttribute('aria-hidden', String(!isOpen));
+      avatar.setAttribute('aria-expanded', String(isOpen));
+      companion.classList.toggle('chat-open', isOpen);
+      hint?.classList.add('is-hidden');
+      companion.hidden = isOpen;
+      if (isOpen) {
+        requestAnimationFrame(() => {
+          placeChatPanel();
+          input.focus();
+        });
+      }
+    }
+
+    function appendChatMessage(role, text, actions = []) {
+      const message = document.createElement('div');
+      message.className = `ai-chat-message ${role}`;
+      const name = document.createElement('span');
+      name.className = 'ai-chat-message-name';
+      name.textContent = role === 'assistant' ? 'Nova' : 'Bạn';
+      const paragraph = document.createElement('p');
+      paragraph.textContent = text;
+      message.append(name, paragraph);
+
+      if (role === 'assistant' && actions.length) {
+        const actionList = document.createElement('div');
+        actionList.className = 'ai-chat-actions';
+        actions.forEach(action => {
+          if (!ALL_VIEWS.includes(action.page)) return;
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.dataset.assistantTarget = action.page;
+          button.textContent = action.label;
+          actionList.appendChild(button);
+        });
+        message.appendChild(actionList);
+      }
+      messagesElement.appendChild(message);
+      messagesElement.scrollTop = messagesElement.scrollHeight;
+      return message;
+    }
+
+    function appendTypingIndicator() {
+      const message = document.createElement('div');
+      message.className = 'ai-chat-message assistant';
+      message.dataset.typing = 'true';
+      message.innerHTML = '<span class="ai-chat-message-name">Nova</span><span class="ai-chat-typing"><i></i><i></i><i></i></span>';
+      messagesElement.appendChild(message);
+      messagesElement.scrollTop = messagesElement.scrollHeight;
+      return message;
+    }
+
+    async function loadAssistantStatus() {
+      try {
+        const status = await ApiClient.getAssistantStatus();
+        companion.classList.toggle('is-online', Boolean(status.configured));
+        if (statusText) {
+          statusText.textContent = status.configured
+            ? `${status.weather_configured ? 'Gemini + Weather online' : 'Gemini online'} · ${status.model}`
+            : 'Thiếu GEMINI_API_KEY';
+        }
+      } catch (_err) {
+        companion.classList.remove('is-online');
+        if (statusText) statusText.textContent = 'Backend agent chưa sẵn sàng';
+      }
+    }
+
+    avatar.addEventListener('pointerdown', event => {
+      if (event.button !== 0 && event.pointerType === 'mouse') return;
+      toggleChat(true);
+      event.preventDefault();
+    });
+
+    avatar.addEventListener('click', event => {
+      if (event.detail === 0) toggleChat(true);
+    });
+    closeButton?.addEventListener('click', () => toggleChat(false));
+
+    form.addEventListener('submit', async event => {
+      event.preventDefault();
+      const text = input.value.trim();
+      if (!text || sendButton?.disabled) return;
+      if (!ApiClient.getToken()) {
+        appendChatMessage('assistant', 'Bạn cần đăng nhập để Nova có thể sử dụng hồ sơ và bảo vệ phiên chat.');
+        openAuthModal();
+        return;
+      }
+
+      const previousHistory = conversationHistory.slice(-10);
+      appendChatMessage('user', text);
+      conversationHistory.push({ role: 'user', content: text });
+      input.value = '';
+      input.style.height = 'auto';
+      if (sendButton) sendButton.disabled = true;
+      const typing = appendTypingIndicator();
+      try {
+        const result = await ApiClient.chatWithAssistant(text, previousHistory, currentViewName);
+        typing.remove();
+        appendChatMessage('assistant', result.response, result.suggested_actions || []);
+        conversationHistory.push({ role: 'assistant', content: result.response });
+        companion.classList.toggle('is-online', Boolean(result.llm_succeeded));
+        if (statusText) {
+          statusText.textContent = result.llm_succeeded
+            ? `Gemini online · ${result.model}`
+            : 'Gemini chưa phản hồi';
+        }
+      } catch (err) {
+        typing.remove();
+        if (err.status === 401) {
+          ApiClient.logout();
+          checkUserSession();
+          appendChatMessage('assistant', 'Phiên đăng nhập đã hết hạn. Bạn hãy đăng nhập lại rồi gửi câu hỏi thời tiết.');
+          openAuthModal();
+          return;
+        }
+        const message = err.status === 404
+          ? 'Nova backend chưa sẵn sàng. Vui lòng thử lại sau ít phút.'
+          : `Mình chưa thể trả lời: ${err.message}`;
+        appendChatMessage('assistant', message);
+      } finally {
+        if (sendButton) sendButton.disabled = false;
+        input.focus();
+      }
+    });
+
+    input.addEventListener('keydown', event => {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        form.requestSubmit();
+      }
+    });
+    input.addEventListener('input', () => {
+      input.style.height = 'auto';
+      input.style.height = `${Math.min(input.scrollHeight, 100)}px`;
+    });
+
+    panel.addEventListener('click', event => {
+      const promptButton = event.target.closest('[data-assistant-prompt]');
+      if (promptButton) {
+        input.value = promptButton.dataset.assistantPrompt;
+        form.requestSubmit();
+        return;
+      }
+      const actionButton = event.target.closest('[data-assistant-target]');
+      if (actionButton && ALL_VIEWS.includes(actionButton.dataset.assistantTarget)) {
+        switchView(actionButton.dataset.assistantTarget);
+        toggleChat(false);
+      }
+    });
+
+    window.addEventListener('resize', () => {
+      placeChatPanel();
+    });
+
+    if (sourceImage && spriteCanvas) {
+      const spriteContext = spriteCanvas.getContext('2d', { willReadFrequently: true });
+      let lastSpriteFrame = 0;
+      function renderSprite(timestamp) {
+        if (spriteContext && sourceImage.complete && sourceImage.naturalWidth && timestamp - lastSpriteFrame > 70) {
+          lastSpriteFrame = timestamp;
+          try {
+            spriteContext.clearRect(0, 0, 64, 64);
+            spriteContext.imageSmoothingEnabled = false;
+            spriteContext.drawImage(sourceImage, 0, 0, 64, 64);
+            const frame = spriteContext.getImageData(0, 0, 64, 64);
+            for (let index = 0; index < frame.data.length; index += 4) {
+              const red = frame.data[index];
+              const green = frame.data[index + 1];
+              const blue = frame.data[index + 2];
+              if (green > 105 && green > red * 1.35 && green > blue * 1.28) {
+                frame.data[index + 3] = 0;
+              }
+            }
+            spriteContext.putImageData(frame, 0, 0);
+          } catch (_err) {
+            spriteCanvas.classList.add('is-hidden');
+            sourceImage.classList.add('is-fallback');
+          }
+        }
+        requestAnimationFrame(renderSprite);
+      }
+      requestAnimationFrame(renderSprite);
+      sourceImage.addEventListener('error', () => {
+        spriteCanvas.classList.add('is-hidden');
+        sourceImage.classList.add('is-fallback');
+      });
+    }
+
+    restoreCompanionPosition();
+    loadAssistantStatus();
+    window.setTimeout(() => hint?.classList.add('is-hidden'), 6500);
+  }
+
+  initAICompanion();
 
   console.log('🚀 Career Copilot X – Space canvas & Deep space background active!');
 }

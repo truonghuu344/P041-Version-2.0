@@ -158,6 +158,111 @@ async def test_system_allows_exactly_one_immutable_admin(client):
 
 
 @pytest.mark.asyncio
+async def test_delete_cv_removes_database_record_and_uploaded_file(client, tmp_path, monkeypatch):
+    await client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": "delete-cv@example.com",
+            "password": "Password123!",
+            "full_name": "Delete CV User",
+            "role": "student",
+        },
+    )
+    login = await client.post(
+        "/api/v1/auth/login",
+        json={"email": "delete-cv@example.com", "password": "Password123!"},
+    )
+    headers = {"Authorization": f"Bearer {login.json()['access_token']}"}
+
+    uploaded_file = tmp_path / "delete-me.pdf"
+    uploaded_file.write_bytes(b"temporary cv")
+    monkeypatch.setattr("src.api.v1.cvs.UPLOAD_DIR", str(tmp_path))
+
+    async with TestingSessionLocal() as session:
+        user = (
+            await session.execute(select(User).where(User.email == "delete-cv@example.com"))
+        ).scalar_one()
+        cv = CV(
+            user_id=user.id,
+            title="CV cần xóa",
+            file_path=str(uploaded_file),
+            raw_text="Temporary CV text",
+            parsed_json={},
+        )
+        session.add(cv)
+        await session.commit()
+        await session.refresh(cv)
+        cv_id = cv.id
+
+    response = await client.delete(f"/api/v1/cvs/{cv_id}", headers=headers)
+
+    assert response.status_code == 204
+    assert not uploaded_file.exists()
+    async with TestingSessionLocal() as session:
+        assert await session.get(CV, cv_id) is None
+
+
+@pytest.mark.asyncio
+async def test_bulk_delete_cvs_removes_selected_records_and_files(client, tmp_path, monkeypatch):
+    await client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": "bulk-delete-cv@example.com",
+            "password": "Password123!",
+            "full_name": "Bulk Delete CV User",
+            "role": "student",
+        },
+    )
+    login = await client.post(
+        "/api/v1/auth/login",
+        json={"email": "bulk-delete-cv@example.com", "password": "Password123!"},
+    )
+    headers = {"Authorization": f"Bearer {login.json()['access_token']}"}
+    monkeypatch.setattr("src.api.v1.cvs.UPLOAD_DIR", str(tmp_path))
+
+    uploaded_files = [tmp_path / f"cv-{index}.pdf" for index in range(3)]
+    for uploaded_file in uploaded_files:
+        uploaded_file.write_bytes(b"temporary cv")
+
+    async with TestingSessionLocal() as session:
+        user = (
+            await session.execute(select(User).where(User.email == "bulk-delete-cv@example.com"))
+        ).scalar_one()
+        cvs = [
+            CV(
+                user_id=user.id,
+                title=f"CV {index}",
+                file_path=str(uploaded_file),
+                raw_text="Temporary CV text",
+                parsed_json={},
+            )
+            for index, uploaded_file in enumerate(uploaded_files)
+        ]
+        session.add_all(cvs)
+        await session.commit()
+        for cv in cvs:
+            await session.refresh(cv)
+        cv_ids = [cv.id for cv in cvs]
+
+    response = await client.post(
+        "/api/v1/cvs/bulk-delete",
+        headers=headers,
+        json={"cv_ids": [cv_ids[0], cv_ids[1], cv_ids[0]]},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["deleted_count"] == 2
+    assert set(response.json()["deleted_ids"]) == {cv_ids[0], cv_ids[1]}
+    assert not uploaded_files[0].exists()
+    assert not uploaded_files[1].exists()
+    assert uploaded_files[2].exists()
+    async with TestingSessionLocal() as session:
+        assert await session.get(CV, cv_ids[0]) is None
+        assert await session.get(CV, cv_ids[1]) is None
+        assert await session.get(CV, cv_ids[2]) is not None
+
+
+@pytest.mark.asyncio
 async def test_two_ai_agent_workflows_match_frontend_contract(client, monkeypatch):
     fallback_settings = SimpleNamespace(google_genai_api_key="", model_name="gemini-3.5-flash")
     monkeypatch.setattr("src.agents.nodes.gap_analysis_nodes.get_settings", lambda: fallback_settings)

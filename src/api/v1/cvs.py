@@ -10,7 +10,7 @@ from src.config import get_settings
 from src.core.security import get_current_user
 from src.db.database import get_db
 from src.db.models import CV, User
-from src.models.schemas import CVOut
+from src.models.schemas import CVBulkDeleteRequest, CVBulkDeleteResponse, CVOut
 from src.services.cv_parser import extract_text_from_docx, extract_text_from_pdf, parse_cv_to_structured_json
 
 router = APIRouter(prefix="/cvs", tags=["CV Management"])
@@ -18,6 +18,22 @@ logger = logging.getLogger(__name__)
 
 UPLOAD_DIR = "./data/uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+
+def _remove_uploaded_file(saved_filepath: str | None) -> None:
+    if not saved_filepath:
+        return
+    upload_root = os.path.abspath(UPLOAD_DIR)
+    resolved_path = os.path.abspath(saved_filepath)
+    try:
+        if os.path.commonpath([upload_root, resolved_path]) == upload_root:
+            os.remove(resolved_path)
+        else:
+            logger.warning("Bỏ qua đường dẫn CV nằm ngoài upload directory: %s", resolved_path)
+    except FileNotFoundError:
+        logger.info("File CV đã không còn trên filesystem: %s", resolved_path)
+    except (OSError, ValueError):
+        logger.warning("Không thể xóa file CV khỏi filesystem: %s", resolved_path, exc_info=True)
 
 
 @router.post("/upload", response_model=CVOut, status_code=status.HTTP_201_CREATED)
@@ -109,6 +125,32 @@ async def list_user_cvs(
     return result.scalars().all()
 
 
+@router.post("/bulk-delete", response_model=CVBulkDeleteResponse)
+async def bulk_delete_cvs(
+    payload: CVBulkDeleteRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> CVBulkDeleteResponse:
+    """Xóa nhiều CV thuộc người dùng hiện tại trong cùng một transaction."""
+    requested_ids = list(dict.fromkeys(payload.cv_ids))
+    result = await db.execute(
+        select(CV).where(CV.user_id == current_user.id, CV.id.in_(requested_ids))
+    )
+    cvs = result.scalars().all()
+    if not cvs:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Không tìm thấy CV hợp lệ để xóa")
+
+    deleted_ids = [cv.id for cv in cvs]
+    saved_filepaths = [cv.file_path for cv in cvs]
+    for cv in cvs:
+        await db.delete(cv)
+    await db.commit()
+
+    for saved_filepath in saved_filepaths:
+        _remove_uploaded_file(saved_filepath)
+    return CVBulkDeleteResponse(deleted_ids=deleted_ids, deleted_count=len(deleted_ids))
+
+
 @router.get("/agent/status")
 async def get_cv_agent_status(
     current_user: User = Depends(get_current_user),
@@ -191,5 +233,8 @@ async def delete_cv(
             detail="Không tìm thấy CV để xóa",
         )
 
+    saved_filepath = cv.file_path
     await db.delete(cv)
     await db.commit()
+
+    _remove_uploaded_file(saved_filepath)

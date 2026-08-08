@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
@@ -154,6 +154,15 @@ class GapAnalysisResponse(BaseModel):
     created_at: datetime
 
 
+class CVBulkDeleteRequest(BaseModel):
+    cv_ids: list[str] = Field(..., min_length=1, max_length=100)
+
+
+class CVBulkDeleteResponse(BaseModel):
+    deleted_ids: list[str]
+    deleted_count: int
+
+
 # --- Mock Interview Schemas ---
 class InterviewStartRequest(BaseModel):
     cv_id: str
@@ -194,3 +203,35 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     response: str = Field(..., description="Phản hồi từ agent")
     analysis: str = Field(default="", description="Phân tích nội bộ")
+
+
+class AssistantChatMessage(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str = Field(..., min_length=1, max_length=4000)
+
+
+class AssistantChatRequest(BaseModel):
+    message: str = Field(..., min_length=1, max_length=4000)
+    history: list[AssistantChatMessage] = Field(default_factory=list, max_length=12)
+    current_page: str = Field(default="dashboard", max_length=50)
+
+
+class AssistantAction(BaseModel):
+    label: str
+    page: str
+
+
+class AssistantChatResponse(BaseModel):
+    response: str
+    provider: str = "google_gemini"
+    model: str
+    llm_succeeded: bool
+    suggested_actions: list[AssistantAction] = Field(default_factory=list)
+
+
+class AssistantStatusResponse(BaseModel):
+    agent_name: str
+    provider: str
+    model: str
+    configured: bool
+    weather_configured: bool = False

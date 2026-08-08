@@ -73,3 +73,20 @@ class CVParserAgentState(TypedDict, total=False):
     trace: list[dict[str, Any]]
     started_at: float
     error: str
+
+
+class CareerAssistantState(TypedDict, total=False):
+    """State cho trợ lý nghề nghiệp hội thoại chạy bằng Gemini."""
+
+    message: str
+    history: list[dict[str, str]]
+    user_context: dict[str, Any]
+    intent: str
+    suggested_actions: list[dict[str, str]]
+    weather_context: dict[str, Any]
+    tools_used: list[str]
+    response: str
+    provider: str
+    model: str
+    llm_succeeded: bool
+    error: str

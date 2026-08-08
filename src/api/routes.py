@@ -3,6 +3,7 @@ from fastapi import APIRouter, HTTPException
 from src.agents.graph import agent
 from src.api.v1.admin import router as admin_router
 from src.api.v1.analysis import router as analysis_router
+from src.api.v1.assistant import router as assistant_router
 from src.api.v1.auth import router as auth_router
 from src.api.v1.cvs import router as cvs_router
 from src.api.v1.interviews import router as interviews_router
@@ -18,6 +19,7 @@ router.include_router(jds_router)
 router.include_router(analysis_router)
 router.include_router(interviews_router)
 router.include_router(admin_router)
+router.include_router(assistant_router)
 
 
 @router.post("/chat", response_model=ChatResponse, tags=["Legacy Agent"])

@@ -670,6 +670,18 @@
                 </div>
               </div>
 
+              <div id="cv-bulk-toolbar" class="cv-bulk-toolbar" hidden>
+                <label class="cv-select-all">
+                  <input type="checkbox" id="cv-select-all">
+                  <span class="cv-checkbox-visual" aria-hidden="true"></span>
+                  <span>Chọn tất cả</span>
+                </label>
+                <span id="cv-selected-count" class="cv-selected-count">Chưa chọn CV</span>
+                <button type="button" id="btn-delete-selected-cvs" class="cv-bulk-delete" disabled>
+                  <span aria-hidden="true">🗑</span> Xóa đã chọn
+                </button>
+              </div>
+
               <!-- List of Uploaded CVs -->
               <div id="cv-page-list-container" class="cv-manifest-list">
                 <div class="empty-manifest">
@@ -1596,6 +1608,41 @@
     </div>
   </div>
 
+  <!-- ═══ Fixed Gemini Career Chatbot ═══ -->
+  <div id="ai-companion" class="ai-companion" aria-label="Chatbot AI Nova">
+    <div id="ai-companion-hint" class="ai-companion-hint">Bấm để chat với Nova ✨</div>
+    <button type="button" id="ai-companion-avatar" class="ai-companion-avatar" aria-label="Mở chat với trợ lý AI Nova" aria-expanded="false" aria-controls="ai-companion-chat">
+      <img id="ai-companion-source" class="ai-companion-source" src="assistant/idle-rotations-8dir.gif" alt="" draggable="false" />
+      <canvas id="ai-companion-canvas" class="ai-companion-canvas" width="64" height="64" aria-hidden="true"></canvas>
+      <span id="ai-companion-status-dot" class="ai-companion-status-dot" aria-hidden="true"></span>
+    </button>
+  </div>
+
+  <aside id="ai-companion-chat" class="ai-companion-chat" aria-hidden="true" hidden>
+    <header class="ai-chat-header">
+      <div class="ai-chat-identity">
+        <span class="ai-chat-orb" aria-hidden="true">✦</span>
+        <div><strong>Nova · Career Agent</strong><span id="ai-companion-status-text">Đang kiểm tra Gemini…</span></div>
+      </div>
+      <button type="button" id="ai-companion-close" class="ai-chat-close" aria-label="Đóng cửa sổ chat">×</button>
+    </header>
+    <div id="ai-companion-messages" class="ai-chat-messages" aria-live="polite">
+      <div class="ai-chat-message assistant"><span class="ai-chat-message-name">Nova</span><p>Chào bạn! Mình có thể hỗ trợ CV, Gap Analysis và luyện phỏng vấn STAR. Bạn muốn bắt đầu từ đâu?</p></div>
+    </div>
+    <div class="ai-chat-quick-prompts" aria-label="Câu hỏi gợi ý">
+      <button type="button" data-assistant-prompt="Tôi nên cải thiện CV từ đâu?">Cải thiện CV</button>
+      <button type="button" data-assistant-prompt="Hãy hướng dẫn tôi phân tích khoảng cách với JD.">So khớp JD</button>
+      <button type="button" data-assistant-prompt="Hãy giúp tôi luyện phỏng vấn STAR.">Luyện STAR</button>
+    </div>
+    <form id="ai-companion-form" class="ai-chat-form">
+      <textarea id="ai-companion-input" rows="1" maxlength="4000" placeholder="Nhắn cho Nova…" aria-label="Tin nhắn gửi trợ lý AI"></textarea>
+      <button type="submit" id="ai-companion-send" aria-label="Gửi tin nhắn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/></svg>
+      </button>
+    </form>
+    <p class="ai-chat-privacy">Nova chỉ gửi nội dung bạn nhập và metadata hồ sơ tối thiểu tới Gemini.</p>
+  </aside>
+
   <!-- ═══ Delete Confirmation Modal ═══ -->
   <div class="modal-overlay" id="modal-delete-confirm-overlay">
     <div class="modal-card delete-confirm-card">
@@ -1608,9 +1655,9 @@
           <line x1="14" y1="11" x2="14" y2="17"/>
         </svg>
       </div>
-      <h3 class="delete-confirm-title">Xác Nhận Xóa Người Dùng</h3>
+      <h3 class="delete-confirm-title" id="delete-confirm-title">Xác Nhận Xóa Người Dùng</h3>
       <p class="delete-confirm-desc" id="delete-confirm-desc">Bạn có chắc chắn muốn xóa người dùng này?</p>
-      <p class="delete-confirm-warning">⚠️ Thao tác này không thể hoàn tác.</p>
+      <p class="delete-confirm-warning" id="delete-confirm-warning">⚠️ Thao tác này không thể hoàn tác.</p>
       <div class="delete-confirm-actions">
         <button class="delete-confirm-btn-cancel" id="delete-confirm-cancel">Hủy bỏ</button>
         <button class="delete-confirm-btn-delete" id="delete-confirm-ok">Xóa Người Dùng</button>
