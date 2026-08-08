@@ -1,23 +1,23 @@
-from datetime import datetime, timezone
-from typing import List
+from datetime import UTC, datetime
+
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from src.db.database import get_db
-from src.db.models import User, CV, JobDescription, InterviewSession, InterviewQuestion, InterviewReport
 from src.core.security import get_current_user
+from src.db.database import get_db
+from src.db.models import CV, InterviewQuestion, InterviewReport, InterviewSession, JobDescription, User
 from src.models.schemas import (
-    InterviewStartRequest,
-    InterviewQuestionOut,
     AnswerSubmitRequest,
+    InterviewQuestionOut,
     InterviewReportOut,
+    InterviewStartRequest,
 )
 from src.services.interview_service import (
-    generate_interview_questions,
     evaluate_answer_and_check_followup,
     generate_final_star_report,
+    generate_interview_questions,
 )
 
 router = APIRouter(prefix="/interviews", tags=["Mock Interview Engine"])
@@ -88,7 +88,8 @@ async def start_interview_session(
         question_index=0,
         question_text=question_texts[0],
         follow_up_question=None,
-        is_last_question=(len(question_texts) == 1),
+        # Frontend dùng cờ này như `session_completed`, không phải "đây là câu cuối".
+        is_last_question=False,
     )
 
 
@@ -104,7 +105,11 @@ async def submit_interview_answer(
     stmt_session = (
         select(InterviewSession)
         .where(InterviewSession.id == session_id, InterviewSession.user_id == current_user.id)
-        .options(selectinload(InterviewSession.questions), selectinload(InterviewSession.cv), selectinload(InterviewSession.jd))
+        .options(
+            selectinload(InterviewSession.questions),
+            selectinload(InterviewSession.cv),
+            selectinload(InterviewSession.jd),
+        )
     )
     res_session = await db.execute(stmt_session)
     session = res_session.scalar_one_or_none()
@@ -137,6 +142,14 @@ async def submit_interview_answer(
     # If currently answering follow up question
     if current_q.follow_up_question and not current_q.follow_up_answer:
         current_q.follow_up_answer = payload.user_answer.strip()
+        # Chấm lại trên toàn bộ câu trả lời sau khi ứng viên đã bổ sung ý còn thiếu.
+        combined_answer = f"{current_q.user_answer or ''}\nBổ sung: {current_q.follow_up_answer}".strip()
+        followup_evaluation = await evaluate_answer_and_check_followup(
+            question_text=current_q.question_text,
+            user_answer=combined_answer,
+            cv_text=session.cv.raw_text or "",
+        )
+        current_q.star_score_json = followup_evaluation.get("star_score", current_q.star_score_json or {})
         # Advance to next question
         session.current_question_index += 1
     else:
@@ -166,18 +179,20 @@ async def submit_interview_answer(
     # Check if session is completed
     if session.current_question_index >= session.total_questions:
         session.status = "completed"
-        session.completed_at = datetime.now(timezone.utc)
+        session.completed_at = datetime.now(UTC)
 
         # Generate STAR Report
         history_list = []
         for q in questions:
-            history_list.append({
-                "question": q.question_text,
-                "answer": q.user_answer,
-                "follow_up": q.follow_up_question,
-                "follow_up_answer": q.follow_up_answer,
-                "score": q.star_score_json,
-            })
+            history_list.append(
+                {
+                    "question": q.question_text,
+                    "answer": q.user_answer,
+                    "follow_up": q.follow_up_question,
+                    "follow_up_answer": q.follow_up_answer,
+                    "score": q.star_score_json,
+                }
+            )
 
         report_data = await generate_final_star_report(
             qa_history=history_list,
@@ -210,7 +225,7 @@ async def submit_interview_answer(
         question_index=session.current_question_index,
         question_text=next_q.question_text,
         follow_up_question=None,
-        is_last_question=(session.current_question_index == session.total_questions - 1),
+        is_last_question=False,
     )
 
 

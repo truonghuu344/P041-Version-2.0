@@ -3,7 +3,8 @@
    API Client tích hợp kết nối FastAPI Backend
    ============================================================ */
 
-const API_BASE_URL = 'http://localhost:8000/api/v1';
+const API_BASE_URL =
+  (typeof window !== 'undefined' && window.__CAREER_API_BASE_URL__) || '/api/v1';
 
 export class ApiClient {
   static getToken() {
@@ -57,6 +58,9 @@ export class ApiClient {
       return data;
     } catch (err) {
       console.error(`API Error [${endpoint}]:`, err);
+      if (err instanceof TypeError && /failed to fetch/i.test(err.message)) {
+        throw new Error('Không thể kết nối máy chủ xử lý CV. Hãy kiểm tra FastAPI đang chạy ở cổng 8000.');
+      }
       throw err;
     }
   }
@@ -93,10 +97,11 @@ export class ApiClient {
   }
 
   // --- CV APIs ---
-  static async uploadCV(file, title = '') {
+  static async uploadCV(file, title = '', useLLM = false) {
     const formData = new FormData();
     formData.append('file', file);
     if (title) formData.append('title', title);
+    formData.append('use_llm', String(Boolean(useLLM)));
 
     return await this.request('/cvs/upload', {
       method: 'POST',
@@ -110,6 +115,16 @@ export class ApiClient {
 
   static async getCVDetail(cvId) {
     return await this.request(`/cvs/${cvId}`);
+  }
+
+  static async getCVAgentStatus() {
+    return await this.request('/cvs/agent/status');
+  }
+
+  static async reanalyzeCV(cvId, useLLM = true) {
+    const formData = new FormData();
+    formData.append('use_llm', String(Boolean(useLLM)));
+    return await this.request(`/cvs/${cvId}/analyze`, { method: 'POST', body: formData });
   }
 
   // --- JD APIs ---

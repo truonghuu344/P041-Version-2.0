@@ -586,7 +586,7 @@ export default function Page() {
               <h1 className="vessel-title">TRẠM TẢI LÊN & QUẢN LÝ HỒ SƠ CV VŨ TRỤ</h1>
               <div className="vessel-status-pills">
                 <span className="status-pill"><i className="pill-dot green"></i> SYSTEM ONLINE</span>
-                <span className="status-pill"><i className="pill-dot cyan"></i> AI PARSER READY</span>
+                <span className="status-pill" id="cv-agent-runtime-status"><i className="pill-dot cyan"></i> ĐANG KIỂM TRA AI</span>
                 <span className="status-pill"><i className="pill-dot purple"></i> ATS VERIFIED</span>
               </div>
             </div>
@@ -627,6 +627,23 @@ export default function Page() {
                       <input type="file" id="cv-page-file-input" accept=".pdf,.docx" style={{ display: 'none' }} />
                       <span id="selected-file-name" className="selected-file-badge" style={{ display: 'none' }}></span>
                     </div>
+                  </div>
+
+                  <label className="llm-consent-card" htmlFor="cv-use-llm">
+                    <input type="checkbox" id="cv-use-llm" />
+                    <span className="llm-consent-copy">
+                      <strong>Dùng OpenAI để phân tích chuyên sâu</strong>
+                      <small>CV sẽ được gửi tới <span id="cv-agent-model">LLM đã cấu hình</span> cho lần phân tích này. Bỏ chọn để chỉ xử lý cục bộ.</small>
+                    </span>
+                    <span className="llm-consent-badge">TÙY CHỌN</span>
+                  </label>
+
+                  <div id="cv-agent-progress" className="agent-progress" hidden>
+                    <span data-agent-step="upload">1. Tải file</span>
+                    <span data-agent-step="extract">2. Trích text</span>
+                    <span data-agent-step="llm">3. Gọi LLM</span>
+                    <span data-agent-step="guardrail">4. Kiểm chứng</span>
+                    <span data-agent-step="save">5. Lưu hồ sơ</span>
                   </div>
 
                   <button type="submit" className="ship-btn-primary" id="btn-page-do-upload">
@@ -674,6 +691,13 @@ export default function Page() {
                   <h4 id="inspector-cv-title" className="inspector-title">CV Software Engineer</h4>
                   <p id="inspector-cv-meta" className="inspector-meta">Tạo lúc: --/--/---- | Trạng thái: Ready</p>
 
+                  <div className="agent-runtime-panel">
+                    <div><span>Agent runtime</span><strong id="inspector-agent-runtime">Chưa có dữ liệu</strong></div>
+                    <div><span>Mô hình</span><strong id="inspector-agent-model">—</strong></div>
+                    <div><span>ATS quality</span><strong id="inspector-ats-score">—</strong></div>
+                    <div><span>Guardrail</span><strong id="inspector-guardrail">—</strong></div>
+                  </div>
+
                   <div className="inspector-body">
                     <div className="inspector-section">
                       <p className="section-label">📌 THÔNG TIN TRÍCH XUẤT</p>
@@ -681,8 +705,13 @@ export default function Page() {
                     </div>
 
                     <div className="inspector-section">
-                      <p className="section-label">⚡ BỘ KỸ NĂNG PARSED (SKILLS TAG CLOUD)</p>
+                      <p className="section-label">⚡ HARD SKILLS</p>
                       <div id="inspector-skills-cloud" className="skills-cloud"></div>
+                    </div>
+
+                    <div className="inspector-section">
+                      <p className="section-label">🤝 SOFT SKILLS</p>
+                      <div id="inspector-soft-skills-cloud" className="skills-cloud"></div>
                     </div>
 
                     <div className="inspector-section">
@@ -690,7 +719,20 @@ export default function Page() {
                       <div id="inspector-raw-preview" className="content-preview-box"></div>
                     </div>
 
+                    <div className="inspector-section">
+                      <p className="section-label">📚 HỌC VẤN · KINH NGHIỆM · DỰ ÁN</p>
+                      <div id="inspector-evidence-records" className="evidence-records"></div>
+                    </div>
+
+                    <div className="inspector-section" id="inspector-missing-section">
+                      <p className="section-label">⚠️ THÔNG TIN CẦN BỔ SUNG</p>
+                      <div id="inspector-missing-info" className="missing-info"></div>
+                    </div>
+
                     <div className="inspector-actions">
+                      <button id="btn-inspector-reanalyze" className="ship-btn-secondary">
+                        ✨ Phân tích lại bằng LLM
+                      </button>
                       <button id="btn-inspector-gap" className="ship-btn-accent">
                         🎯 So khớp với JD (Gap Analysis)
                       </button>

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TypedDict, Optional, List, Dict, Any
+from typing import Any, Literal, TypedDict
 
 
 class AgentState(TypedDict, total=False):
@@ -8,19 +8,68 @@ class AgentState(TypedDict, total=False):
 
     user_id: str
     cv_raw_text: str
-    cv_parsed_json: Dict[str, Any]
+    cv_parsed_json: dict[str, Any]
     selected_jd_id: str
     jd_text: str
     match_score: float
-    gap_analysis_result: Dict[str, Any]
-    optimized_cv_suggestions: List[Dict[str, Any]]
-    interview_questions: List[str]
+    gap_analysis_result: dict[str, Any]
+    optimized_cv_suggestions: list[dict[str, Any]]
+    interview_questions: list[str]
     current_question_index: int
-    chat_history: List[Dict[str, Any]]
-    star_scores: Dict[str, float]
-    final_report: Dict[str, Any]
+    chat_history: list[dict[str, Any]]
+    star_scores: dict[str, float]
+    final_report: dict[str, Any]
     query: str
     response: str
     analysis: str
     error: str
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
+
+
+class GapAnalysisState(TypedDict, total=False):
+    """State của CV Gap Analysis Agent."""
+
+    cv_raw_text: str
+    cv_parsed_json: dict[str, Any]
+    jd_title: str
+    jd_requirements: str
+    evidence: dict[str, Any]
+    draft_result: dict[str, Any]
+    gap_analysis_result: dict[str, Any]
+    error: str
+
+
+class InterviewAgentState(TypedDict, total=False):
+    """State dùng chung cho các workflow của Mock Interview Agent."""
+
+    operation: Literal["start", "evaluate", "report"]
+    cv_text: str
+    jd_title: str
+    jd_requirements: str
+    num_questions: int
+    question_text: str
+    user_answer: str
+    qa_history: list[dict[str, Any]]
+    interview_questions: list[str]
+    answer_evaluation: dict[str, Any]
+    final_report: dict[str, Any]
+    error: str
+
+
+class CVParserAgentState(TypedDict, total=False):
+    """State của CV Parsing Agent theo luồng AI_PARSE trong User Flow."""
+
+    cv_raw_text: str
+    local_extraction: dict[str, Any]
+    llm_extraction: dict[str, Any]
+    verified_extraction: dict[str, Any]
+    final_result: dict[str, Any]
+    llm_requested: bool
+    llm_called: bool
+    llm_succeeded: bool
+    llm_error: str
+    provider: str
+    model: str
+    trace: list[dict[str, Any]]
+    started_at: float
+    error: str

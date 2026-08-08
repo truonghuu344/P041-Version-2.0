@@ -1,13 +1,29 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+import logging
 
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import select
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.core.security import create_access_token, get_current_user, get_password_hash, verify_password
 from src.db.database import get_db
 from src.db.models import User
-from src.core.security import get_password_hash, verify_password, create_access_token, get_current_user
-from src.models.schemas import UserRegister, UserLogin, Token, UserOut
+from src.models.schemas import Token, UserLogin, UserOut, UserRegister
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
+logger = logging.getLogger(__name__)
+
+
+async def _find_user_by_email(db: AsyncSession, email: str) -> User | None:
+    try:
+        result = await db.execute(select(User).where(User.email == email.lower()))
+        return result.scalar_one_or_none()
+    except SQLAlchemyError as exc:
+        logger.exception("Authentication database query failed")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Cơ sở dữ liệu chưa sẵn sàng. Vui lòng thử lại sau ít phút.",
+        ) from exc
 
 
 @router.post("/register", response_model=UserOut, status_code=status.HTTP_201_CREATED)
@@ -17,9 +33,7 @@ async def register_user(
 ) -> UserOut:
     """Đăng ký tài khoản người dùng mới (Sinh viên, Cố vấn, Doanh nghiệp)."""
     # Kiểm tra email đã tồn tại chưa
-    stmt = select(User).where(User.email == payload.email.lower())
-    result = await db.execute(stmt)
-    existing_user = result.scalar_one_or_none()
+    existing_user = await _find_user_by_email(db, payload.email)
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -34,8 +48,16 @@ async def register_user(
         role=payload.role if payload.role in ["student", "counselor", "enterprise"] else "student",
     )
     db.add(new_user)
-    await db.commit()
-    await db.refresh(new_user)
+    try:
+        await db.commit()
+        await db.refresh(new_user)
+    except SQLAlchemyError as exc:
+        await db.rollback()
+        logger.exception("User registration database write failed")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Không thể lưu tài khoản do cơ sở dữ liệu chưa sẵn sàng.",
+        ) from exc
     return new_user
 
 
@@ -45,9 +67,7 @@ async def login_user(
     db: AsyncSession = Depends(get_db),
 ) -> Token:
     """Đăng nhập bằng Email và Password, nhận JWT Token."""
-    stmt = select(User).where(User.email == payload.email.lower())
-    result = await db.execute(stmt)
-    user = result.scalar_one_or_none()
+    user = await _find_user_by_email(db, payload.email)
 
     if not user or not verify_password(payload.password, user.hashed_password):
         raise HTTPException(

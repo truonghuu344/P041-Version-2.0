@@ -1,7 +1,8 @@
-import os
 import logging
-from typing import AsyncGenerator
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
+import os
+from collections.abc import AsyncGenerator
+
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.pool import NullPool
 
@@ -52,6 +53,10 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 async def init_db() -> None:
     """Tự động khởi tạo cấu trúc bảng trong Database & seed tài khoản Admin."""
     try:
+        # Import models trước create_all để Base.metadata luôn có đủ bảng, kể cả
+        # khi init_db được gọi độc lập ngoài luồng import API router.
+        from src.db.models import User
+
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
         logger.info("Database tables initialized successfully.")
@@ -59,7 +64,7 @@ async def init_db() -> None:
         # Seed default admin user admin@cva.com / admin123
         async with AsyncSessionLocal() as session:
             from sqlalchemy import select
-            from src.db.models import User
+
             from src.core.security import get_password_hash
 
             admin_email = "admin@cva.com"
@@ -77,5 +82,6 @@ async def init_db() -> None:
                 session.add(admin_user)
                 await session.commit()
                 logger.info("Default Admin user (admin@cva.com) seeded successfully.")
-    except Exception as e:
-        logger.error(f"Database initialization error: {e}")
+    except Exception:
+        logger.exception("Database initialization failed; application startup aborted")
+        raise

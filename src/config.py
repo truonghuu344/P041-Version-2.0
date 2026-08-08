@@ -29,6 +29,9 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
     model_name: str = "gpt-4o-mini"
     llm_temperature: float = Field(default=0.7, ge=0.0, le=2.0)
+    llm_timeout_seconds: float = Field(default=45, ge=5, le=120)
+    llm_max_retries: int = Field(default=1, ge=0, le=3)
+    cv_parser_mode: Literal["local", "openai"] = "local"
 
     # Database
     database_url: str = "postgresql+asyncpg://postgres:postgrespassword@localhost:5432/career_assistant_db"

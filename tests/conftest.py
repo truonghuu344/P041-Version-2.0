@@ -1,28 +1,19 @@
-import pytest
+from collections.abc import AsyncGenerator
+
 import pytest_asyncio
-from typing import AsyncGenerator
-from httpx import AsyncClient, ASGITransport
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from sqlalchemy.pool import NullPool
+from httpx import ASGITransport, AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.pool import StaticPool
 
 # Import app và các thành phần liên quan từ dự án của bạn
-from src.main import app
 from src.db.database import Base, get_db
-from src.config import get_settings
+from src.main import app
 
-settings = get_settings()
-
-# Tự động chuyển đổi chuỗi kết nối sang async driver nếu cần
-db_url = settings.database_url
-if db_url.startswith("postgresql://"):
-    db_url = db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
-elif db_url.startswith("sqlite://"):
-    db_url = db_url.replace("sqlite://", "sqlite+aiosqlite://", 1)
-
-# Sử dụng NullPool để đóng/mở connection tức thì, tránh đụng độ asyncpg
+# Tuyệt đối không dùng DATABASE_URL của development/production trong test.
+# SQLite in-memory cô lập hoàn toàn nên drop_all không thể xóa dữ liệu người dùng.
 test_engine = create_async_engine(
-    db_url,
-    poolclass=NullPool,
+    "sqlite+aiosqlite://",
+    poolclass=StaticPool,
     echo=False,
 )
 

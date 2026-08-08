@@ -4,7 +4,9 @@
    FastAPI Backend Integration (PostgreSQL)
    ============================================================ */
 
-const API_BASE_URL = 'http://localhost:8000/api/v1';
+// Gọi cùng origin; Next.js sẽ proxy sang FastAPI. Cách này tránh lỗi CORS khi
+// người dùng mở UI bằng localhost, 127.0.0.1 hoặc một hostname triển khai khác.
+const API_BASE_URL = window.__CAREER_API_BASE_URL__ || '/api/v1';
 
 class ApiClient {
   static getToken() {
@@ -55,6 +57,9 @@ class ApiClient {
       return data;
     } catch (err) {
       console.error(`API Error [${endpoint}]:`, err);
+      if (err instanceof TypeError && /failed to fetch/i.test(err.message)) {
+        throw new Error('Không thể kết nối máy chủ xử lý CV. Hãy kiểm tra FastAPI đang chạy ở cổng 8000.');
+      }
       throw err;
     }
   }
@@ -86,10 +91,11 @@ class ApiClient {
   }
 
   // --- CV APIs ---
-  static async uploadCV(file, title = '') {
+  static async uploadCV(file, title = '', useLLM = false) {
     const formData = new FormData();
     formData.append('file', file);
     if (title) formData.append('title', title);
+    formData.append('use_llm', String(Boolean(useLLM)));
 
     return await this.request('/cvs/upload', {
       method: 'POST',
@@ -99,6 +105,16 @@ class ApiClient {
 
   static async listCVs() {
     return await this.request('/cvs');
+  }
+
+  static async getCVAgentStatus() {
+    return await this.request('/cvs/agent/status');
+  }
+
+  static async reanalyzeCV(cvId, useLLM = true) {
+    const formData = new FormData();
+    formData.append('use_llm', String(Boolean(useLLM)));
+    return await this.request(`/cvs/${cvId}/analyze`, { method: 'POST', body: formData });
   }
 
   // --- JD APIs ---
@@ -772,6 +788,12 @@ function initSpaceCanvas() {
 function startAppLogic() {
   initSpaceCanvas();
 
+  function escapeHtml(value = '') {
+    const node = document.createElement('div');
+    node.textContent = String(value);
+    return node.innerHTML;
+  }
+
   /* ── Toast Notification Helper ── */
   function showToast(msg, type = 'info') {
     const old = document.querySelector('.toast');
@@ -858,6 +880,7 @@ function startAppLogic() {
     // Trigger page-specific data loading & widget setup
     if (targetViewName === 'cv') {
       loadSpaceshipCVList();
+      loadCVAgentStatus();
     } else if (targetViewName === 'jobs') {
       loadPageJDList();
       initStarMapNodes();
@@ -1599,10 +1622,38 @@ function startAppLogic() {
   const cvDropzone = document.getElementById('cv-dropzone');
   const selectedFileNameEl = document.getElementById('selected-file-name');
   const cvPageListContainer = document.getElementById('cv-page-list-container');
+  const cvUseLLM = document.getElementById('cv-use-llm');
+  const cvAgentProgress = document.getElementById('cv-agent-progress');
 
   const inspectorDeck = document.getElementById('cv-detail-inspector');
   const btnCloseInspector = document.getElementById('btn-close-cv-detail');
   let loadedCVs = [];
+  let inspectedCV = null;
+
+  function setAgentProgress(activeStep = '') {
+    if (!cvAgentProgress) return;
+    cvAgentProgress.hidden = !activeStep;
+    const order = ['upload', 'extract', 'llm', 'guardrail', 'save'];
+    const activeIndex = order.indexOf(activeStep);
+    cvAgentProgress.querySelectorAll('[data-agent-step]').forEach((element, index) => {
+      element.classList.toggle('active', index === activeIndex);
+      element.classList.toggle('done', index < activeIndex);
+    });
+  }
+
+  async function loadCVAgentStatus() {
+    const statusEl = document.getElementById('cv-agent-runtime-status');
+    const modelEl = document.getElementById('cv-agent-model');
+    if (!statusEl || !ApiClient.getToken()) return;
+    try {
+      const status = await ApiClient.getCVAgentStatus();
+      statusEl.innerHTML = `<i class="pill-dot ${status.configured ? 'green' : 'purple'}"></i> ${status.configured ? 'AI AGENT READY' : 'LOCAL READY · THIẾU API KEY'}`;
+      if (modelEl) modelEl.textContent = `${status.provider}/${status.model}`;
+      if (cvUseLLM) cvUseLLM.disabled = !status.configured;
+    } catch (err) {
+      statusEl.innerHTML = '<i class="pill-dot purple"></i> KHÔNG ĐỌC ĐƯỢC AI STATUS';
+    }
+  }
 
   // Dropzone drag & drop handlers
   if (cvDropzone) {
@@ -1650,16 +1701,33 @@ function startAppLogic() {
         return;
       }
 
+      const submitButton = document.getElementById('btn-page-do-upload');
+      const useLLM = Boolean(cvUseLLM?.checked);
       try {
-        showToast('🚀 AI Core đang quét & parse CV...', 'info');
-        const res = await ApiClient.uploadCV(cvPageFileInput.files[0], cvPageTitleInput.value.trim());
-        showToast('🎉 Tải lên & trích xuất CV thành công!', 'success');
+        if (submitButton) submitButton.disabled = true;
+        setAgentProgress('upload');
+        showToast(useLLM ? '🤖 CV Agent đang gọi LLM và kiểm chứng dữ liệu...' : '🔒 Đang parse CV cục bộ...', 'info');
+        setAgentProgress(useLLM ? 'llm' : 'extract');
+        const res = await ApiClient.uploadCV(
+          cvPageFileInput.files[0],
+          cvPageTitleInput.value.trim(),
+          useLLM,
+        );
+        setAgentProgress('save');
+        const llmSucceeded = Boolean(res?.parsed_json?.agent_metadata?.llm_succeeded);
+        showToast(
+          llmSucceeded ? '🎉 LLM Agent đã phân tích và guardrail đã kiểm chứng!' : '✅ CV đã parse an toàn; xem trạng thái agent trong Inspector.',
+          'success',
+        );
         cvPageForm.reset();
         if (selectedFileNameEl) selectedFileNameEl.style.display = 'none';
-        loadSpaceshipCVList();
-        if (res && res.cv) inspectCVDetail(res.cv);
+        await loadSpaceshipCVList();
+        if (res?.id) inspectCVDetail(res);
       } catch (err) {
         showToast(`❌ Lỗi upload CV: ${err.message}`, 'error');
+      } finally {
+        if (submitButton) submitButton.disabled = false;
+        window.setTimeout(() => setAgentProgress(''), 800);
       }
     });
   }
@@ -1682,7 +1750,7 @@ function startAppLogic() {
       cvPageListContainer.innerHTML = loadedCVs.map((cv, idx) => `
         <div class="cv-manifest-item">
           <div>
-            <p class="cv-item-title">📄 ${cv.title || 'CV Hồ sơ'}</p>
+            <p class="cv-item-title">📄 ${escapeHtml(cv.title || 'CV Hồ sơ')}</p>
             <p class="cv-item-date">Ngày tạo: ${new Date(cv.created_at).toLocaleDateString('vi-VN')} | Standard ATS</p>
           </div>
           <div class="cv-item-actions">
@@ -1703,32 +1771,98 @@ function startAppLogic() {
 
   function inspectCVDetail(cv) {
     if (!inspectorDeck) return;
+    inspectedCV = cv;
     inspectorDeck.style.display = 'block';
 
     document.getElementById('inspector-cv-title').textContent = cv.title || 'CV Hồ sơ';
     document.getElementById('inspector-cv-meta').textContent = `Ngày quét: ${new Date(cv.created_at).toLocaleDateString('vi-VN')} | ID: ${cv.id}`;
 
-    const parsed = cv.parsed_data || {};
+    const parsed = cv.parsed_json || {};
     const personal = parsed.personal_info || {};
-    const skills = parsed.hard_skills || parsed.skills || ['Python', 'FastAPI', 'React', 'JavaScript', 'Git', 'PostgreSQL', 'ATS Optimization'];
+    const hardSkills = Array.isArray(parsed.hard_skills) ? parsed.hard_skills : (parsed.skills || []);
+    const softSkills = Array.isArray(parsed.soft_skills) ? parsed.soft_skills : [];
+    const metadata = parsed.agent_metadata || {};
+    const atsQuality = parsed.ats_quality || {};
+    const guardrail = parsed.guardrail || {};
 
     document.getElementById('inspector-personal-info').innerHTML = `
-      <p style="margin:2px 0;"><strong>Họ tên:</strong> ${personal.full_name || 'Đã trích xuất từ CV'}</p>
-      <p style="margin:2px 0;"><strong>Email:</strong> ${personal.email || 'N/A'}</p>
-      <p style="margin:2px 0;"><strong>Điện thoại:</strong> ${personal.phone || 'N/A'}</p>
+      <p style="margin:2px 0;"><strong>Họ tên:</strong> ${escapeHtml(personal.full_name || 'Chưa xác định')}</p>
+      <p style="margin:2px 0;"><strong>Email:</strong> ${escapeHtml(personal.email || 'Chưa có')}</p>
+      <p style="margin:2px 0;"><strong>Điện thoại:</strong> ${escapeHtml(personal.phone || 'Chưa có')}</p>
+      <p style="margin:2px 0;"><strong>Địa điểm:</strong> ${escapeHtml(personal.location || 'Chưa có')}</p>
     `;
 
-    document.getElementById('inspector-skills-cloud').innerHTML = skills.map(s => `
-      <span class="skill-tag-ship">⚡ ${s}</span>
-    `).join('');
+    const renderSkills = skills => skills.length
+      ? skills.map(skill => `<span class="skill-tag-ship">${escapeHtml(skill)}</span>`).join('')
+      : '<span class="inspector-meta">Không tìm thấy kỹ năng có bằng chứng trong CV.</span>';
+    document.getElementById('inspector-skills-cloud').innerHTML = renderSkills(hardSkills);
+    document.getElementById('inspector-soft-skills-cloud').innerHTML = renderSkills(softSkills);
 
-    document.getElementById('inspector-raw-preview').textContent = parsed.summary || cv.raw_text?.slice(0, 300) || 'Nội dung CV đã được AI phân tích cấu trúc và mã hóa thành công.';
+    document.getElementById('inspector-agent-runtime').textContent = metadata.llm_succeeded
+      ? 'LLM đã gọi thành công'
+      : metadata.fallback_used ? 'Local fallback' : 'Dữ liệu cũ';
+    document.getElementById('inspector-agent-model').textContent = metadata.model || 'Local parser';
+    document.getElementById('inspector-ats-score').textContent = Number.isFinite(Number(atsQuality.score))
+      ? `${Math.round(Number(atsQuality.score))}/100`
+      : 'Chưa chấm';
+    document.getElementById('inspector-guardrail').textContent = guardrail.status === 'passed'
+      ? `Đạt · loại ${guardrail.rejected_unverified_claims || 0} claim`
+      : 'Chưa có';
+
+    document.getElementById('inspector-raw-preview').textContent = parsed.summary || 'CV chưa có phần tóm tắt được kiểm chứng.';
+
+    const recordGroups = [
+      ['Học vấn', parsed.education],
+      ['Kinh nghiệm', parsed.experience],
+      ['Dự án', parsed.projects],
+      ['Chứng chỉ', parsed.certifications],
+    ];
+    document.getElementById('inspector-evidence-records').innerHTML = recordGroups
+      .filter(([, records]) => Array.isArray(records) && records.length)
+      .map(([label, records]) => `<div class="evidence-group"><h6>${label}</h6>${records.map(record => {
+        const description = record.description || record.details || record.title || '';
+        const period = record.period ? ` · ${record.period}` : '';
+        return `<p><strong>${escapeHtml(record.title || label)}</strong>${escapeHtml(period)}<br>${escapeHtml(description)}</p>`;
+      }).join('')}</div>`).join('') || '<div class="inspector-meta">Chưa có bản ghi có bằng chứng.</div>';
+
+    const missing = Array.isArray(parsed.missing_information) ? parsed.missing_information : [];
+    document.getElementById('inspector-missing-info').innerHTML = missing.length
+      ? missing.map(item => `<span class="missing-chip">${escapeHtml(item)}</span>`).join('')
+      : '<span class="missing-clear">Không phát hiện mục bắt buộc bị thiếu</span>';
   }
 
   if (btnCloseInspector) {
     btnCloseInspector.addEventListener('click', () => {
       if (inspectorDeck) inspectorDeck.style.display = 'none';
     });
+  }
+
+  document.getElementById('btn-inspector-reanalyze')?.addEventListener('click', async () => {
+    if (!inspectedCV?.id) return;
+    const approved = window.confirm('CV chứa dữ liệu cá nhân và sẽ được gửi tới OpenAI để phân tích. Bạn có đồng ý cho lần chạy này không?');
+    if (!approved) return;
+    const button = document.getElementById('btn-inspector-reanalyze');
+    try {
+      button.disabled = true;
+      button.textContent = '⏳ Agent đang phân tích...';
+      showToast('🤖 Đang gọi LLM và kiểm chứng từng claim...', 'info');
+      const updated = await ApiClient.reanalyzeCV(inspectedCV.id, true);
+      inspectCVDetail(updated);
+      await loadSpaceshipCVList();
+      showToast(metadataMessage(updated), updated?.parsed_json?.agent_metadata?.llm_succeeded ? 'success' : 'warning');
+    } catch (err) {
+      showToast(`❌ Không thể phân tích lại: ${err.message}`, 'error');
+    } finally {
+      button.disabled = false;
+      button.textContent = '✨ Phân tích lại bằng LLM';
+    }
+  });
+
+  function metadataMessage(cv) {
+    const meta = cv?.parsed_json?.agent_metadata || {};
+    return meta.llm_succeeded
+      ? `LLM ${meta.model || ''} đã trả kết quả có cấu trúc.`
+      : `LLM chưa thành công; agent dùng local fallback. ${meta.llm_error || ''}`;
   }
 
   document.getElementById('btn-inspector-gap')?.addEventListener('click', () => {
