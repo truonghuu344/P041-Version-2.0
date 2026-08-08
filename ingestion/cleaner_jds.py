@@ -257,7 +257,7 @@ def recover_company_from_html(job_id: str, title: str) -> Optional[str]:
 
 def run_cleaning_pipeline():
     input_file = "./data/raw/jds/raw_jds.json"
-    output_file = "./data/clean/jds_clean.json"
+    output_file = "./data/clean/jds_stg.json"
 
     if not os.path.exists(input_file):
         print(f"❌ Không tìm thấy file thô: {input_file}. Vui lòng chạy crawler trước!")
@@ -292,7 +292,9 @@ def run_cleaning_pipeline():
         
         # 4. Phân loại Domain & Metadata bổ sung
         domain = normalize_domain(title, clean_desc)
-        job_level = infer_job_level(title, clean_desc)
+        
+        # Bỏ infer_job_level bằng Python để SQL xử lý (ELT)
+        job_level = "To Be Evaluated"
         emp_type = infer_employment_type(clean_desc, extracted_sections.get("employment_type"))
         remote_type = infer_remote_type(clean_desc)
         education = infer_education(clean_desc)
