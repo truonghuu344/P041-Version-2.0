@@ -1,6 +1,7 @@
 import sys
 import os
 import json
+import psycopg2
 import numpy as np
 from datetime import datetime
 from typing import List, Dict, Any, Optional
@@ -13,95 +14,90 @@ except ModuleNotFoundError:
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
 
-CHROMA_DB_DIR = "./chroma_db"
-MANIFEST_PATH = os.path.join(CHROMA_DB_DIR, "manifest.json")
+PG_CONFIG = {
+    "host": "localhost",
+    "port": 5432,
+    "user": "ats_user",
+    "password": "ats_password",
+    "dbname": "ats_db"
+}
+
+MANIFEST_PATH = "./data/postgres_manifest.json"
 
 class VectorIndexManager:
-    """Tạo & Quản lý Cơ sở dữ liệu Vector ChromaDB cho tập dữ liệu JD (Job Descriptions)"""
+    """Tạo & Quản lý Vector Embeddings bằng PostgreSQL (pgvector)"""
 
-    def __init__(self, chroma_dir: str = CHROMA_DB_DIR):
-        self.chroma_dir = chroma_dir
-        os.makedirs(self.chroma_dir, exist_ok=True)
+    def __init__(self):
         self.embedder = EmbeddingManager()
-        self.client = None
-        self._is_chroma_available = False
-        self._init_chroma()
-
-    def _init_chroma(self):
-        try:
-            import chromadb
-            print(f"🔄 Đang kết nối ChromaDB Persistent Client tại: {self.chroma_dir}")
-            self.client = chromadb.PersistentClient(path=self.chroma_dir)
-            self._is_chroma_available = True
-            print("✅ Kết nối ChromaDB thành công!")
-        except Exception as e:
-            print(f"⚠️ Chưa thể khởi tạo ChromaDB Native Client ({e}). Sử dụng cơ sở dữ liệu Vector Store dạng JSON fallback.")
-            self._is_chroma_available = False
 
     def build_jd_index(
         self,
-        clean_json_path: str = "./data/clean/jds_clean.json",
+        db_path: str = "./data/app.db",
         collection_name: str = "jds_collection"
     ) -> Dict[str, Any]:
-        """Nạp dữ liệu Job Descriptions (JD) đã làm sạch vào ChromaDB và tạo manifest.json"""
-        if not os.path.exists(clean_json_path):
-            print(f"❌ Không tìm thấy file dữ liệu JD sạch: {clean_json_path}")
+        """Tạo Vector Embeddings (JD) và cập nhật trực tiếp vào cột embedding của bảng mart_jds_final trong PostgreSQL"""
+        
+        try:
+            conn = psycopg2.connect(**PG_CONFIG)
+        except Exception as e:
+            print(f"❌ Không thể kết nối PostgreSQL: {e}")
+            return {}
+            
+        from psycopg2.extras import RealDictCursor
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        
+        try:
+            cursor.execute("SELECT job_id, embedding_text FROM mart_jds_final WHERE embedding_text IS NOT NULL")
+            rows = cursor.fetchall()
+        except Exception as e:
+            print(f"Lỗi truy vấn Data Mart: {e}")
+            conn.close()
             return {}
 
-        with open(clean_json_path, "r", encoding="utf-8") as f:
-            records = json.load(f)
-
-        if not records:
-            print("⚠️ Dữ liệu JD rỗng.")
+        if not rows:
+            print("⚠️ Dữ liệu Data Mart rỗng.")
             return {}
 
         documents = []
         metadatas = []
         ids = []
 
-        for item in records:
-            job_id = item.get("job_id") or f"JD-{len(ids)+1:03d}"
-            text = item.get("embedding_text") or f"Job Title: {item.get('job_title')} | Company: {item.get('company_name')} | Must Have Skills: {', '.join(item.get('must_have_skills', []))}"
+        for row in rows:
+            job_id = row["job_id"]
+            text = row["embedding_text"]
             
             documents.append(text)
             ids.append(job_id)
-            metadatas.append({
-                "job_id": job_id,
-                "job_title": item.get("job_title", ""),
-                "company_name": item.get("company_name", ""),
-                "domain_category": item.get("domain_category", ""),
-                "job_level": item.get("job_level", ""),
-                "salary_range": item.get("salary_range", ""),
-                "experience_required": item.get("experience_required", ""),
-                "location": ", ".join(item.get("location", [])),
-                "source": item.get("source", "JD")
-            })
 
         print(f"🔄 Đang tạo Vector Embeddings (384D) cho {len(documents)} bản ghi JD tuyển dụng...")
         embeddings = self.embedder.embed_documents(documents)
 
-        if self._is_chroma_available and self.client:
-            collection = self.client.get_or_create_collection(
-                name=collection_name,
-                metadata={"hnsw:space": "cosine"}
-            )
-            # Upsert into ChromaDB
-            collection.upsert(
-                documents=documents,
-                embeddings=embeddings,
-                metadatas=metadatas,
-                ids=ids
-            )
-            print(f"✅ Đã nạp thành công {len(ids)} JD tuyển dụng vào ChromaDB collection '{collection_name}'!")
-        else:
-            # Persistent JSON fallback vector store
-            fallback_store_path = os.path.join(self.chroma_dir, f"{collection_name}_fallback.json")
-            fallback_data = [
-                {"id": ids[i], "document": documents[i], "metadata": metadatas[i], "embedding": embeddings[i]}
-                for i in range(len(ids))
-            ]
-            with open(fallback_store_path, "w", encoding="utf-8") as f:
-                json.dump(fallback_data, f, ensure_ascii=False, indent=2)
+        # Update embeddings directly into PostgreSQL
+        from pgvector.psycopg2 import register_vector
+        register_vector(conn)
+        
+        print("🔄 Đang cập nhật Vector Embeddings vào bảng mart_jds_final...")
+        
+        update_count = 0
+        for i in range(len(ids)):
+            try:
+                cursor.execute(
+                    "UPDATE mart_jds_final SET embedding = %s WHERE job_id = %s",
+                    (embeddings[i], ids[i])
+                )
+                update_count += 1
+            except Exception as e:
+                print(f"Lỗi khi update vector cho {ids[i]}: {e}")
+                
+        # Create HNSW index for fast vector search
+        try:
+            cursor.execute("CREATE INDEX IF NOT EXISTS hnsw_idx_jds ON mart_jds_final USING hnsw (embedding vector_cosine_ops)")
+        except Exception as e:
+            print(f"Lỗi khi tạo index HNSW: {e}")
+            
+        conn.commit()
+        conn.close()
+        print(f"✅ Đã nạp thành công {update_count} Vector vào PostgreSQL!")
 
         # Lưu file manifest cấu hình
         manifest = {
@@ -111,7 +107,7 @@ class VectorIndexManager:
             "total_documents": len(ids),
             "embedding_model": self.embedder.model_name,
             "vector_dimension": self.embedder.dimension,
-            "storage_path": self.chroma_dir,
+            "storage_path": "PostgreSQL:ats_db",
             "status": "READY"
         }
         with open(MANIFEST_PATH, "w", encoding="utf-8") as f:
@@ -126,62 +122,68 @@ class VectorIndexManager:
         k: int = 3,
         collection_name: str = "jds_collection"
     ) -> List[Dict[str, Any]]:
-        """Truy xuất TOP-K JD tuyển dụng tương đồng nhất từ ChromaDB"""
+        """Truy xuất TOP-K JD tuyển dụng tương đồng nhất từ PostgreSQL bằng Vector Cosine Similarity"""
         if not query:
             return []
 
         query_vec = self.embedder.embed_text(query)
 
-        if self._is_chroma_available and self.client:
-            try:
-                collection = self.client.get_collection(name=collection_name)
-                res = collection.query(
-                    query_embeddings=[query_vec],
-                    n_results=k,
-                    include=["documents", "metadatas", "distances"]
-                )
-                results = []
-                if res and "ids" in res and res["ids"]:
-                    for i in range(len(res["ids"][0])):
-                        dist = res["distances"][0][i] if "distances" in res else 0.0
-                        score = round(1.0 - dist, 4) if dist <= 1.0 else round(1.0 / (1.0 + dist), 4)
-                        results.append({
-                            "id": res["ids"][0][i],
-                            "document": res["documents"][0][i],
-                            "metadata": res["metadatas"][0][i],
-                            "similarity_score": score
-                        })
-                return results
-            except Exception as e:
-                print(f"⚠️ Lỗi ChromaDB Query ({e}). Chuyển sang fallback Cosine Similarity.")
-
-        # Fallback Vector Search
-        fallback_store_path = os.path.join(self.chroma_dir, f"{collection_name}_fallback.json")
-        if not os.path.exists(fallback_store_path):
+        try:
+            conn = psycopg2.connect(**PG_CONFIG)
+            from psycopg2.extras import RealDictCursor
+            from pgvector.psycopg2 import register_vector
+            
+            register_vector(conn)
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
+            
+            # Use <=> for Cosine distance in pgvector
+            cursor.execute("""
+                SELECT 
+                    job_id AS id,
+                    embedding_text AS document,
+                    job_title,
+                    company_name,
+                    domain_category,
+                    job_level,
+                    location,
+                    salary_range,
+                    experience_required,
+                    source,
+                    1 - (embedding <=> %s) AS similarity_score
+                FROM mart_jds_final
+                WHERE embedding IS NOT NULL
+                ORDER BY embedding <=> %s
+                LIMIT %s
+            """, (query_vec, query_vec, k))
+            
+            rows = cursor.fetchall()
+            conn.close()
+            
+            results = []
+            for row in rows:
+                meta = {
+                    "job_id": row["id"],
+                    "job_title": row["job_title"] or "",
+                    "company_name": row["company_name"] or "",
+                    "domain_category": row["domain_category"] or "",
+                    "job_level": row["job_level"] or "",
+                    "salary_range": row["salary_range"] or "",
+                    "experience_required": row["experience_required"] or "",
+                    "location": row["location"] or "",
+                    "source": row["source"] or "JD"
+                }
+                
+                results.append({
+                    "id": row["id"],
+                    "document": row["document"],
+                    "metadata": meta,
+                    "similarity_score": round(row["similarity_score"], 4)
+                })
+            
+            return results
+        except Exception as e:
+            print(f"⚠️ Lỗi PostgreSQL Vector Query ({e}).")
             return []
-
-        with open(fallback_store_path, "r", encoding="utf-8") as f:
-            store_data = json.load(f)
-
-        q_arr = np.array(query_vec, dtype=np.float32)
-        q_norm = np.linalg.norm(q_arr)
-
-        scored = []
-        for item in store_data:
-            doc_arr = np.array(item["embedding"], dtype=np.float32)
-            doc_norm = np.linalg.norm(doc_arr)
-            score = 0.0
-            if q_norm > 1e-6 and doc_norm > 1e-6:
-                score = float(np.dot(q_arr, doc_arr) / (q_norm * doc_norm))
-            scored.append({
-                "id": item["id"],
-                "document": item["document"],
-                "metadata": item["metadata"],
-                "similarity_score": round(score, 4)
-            })
-
-        scored.sort(key=lambda x: x["similarity_score"], reverse=True)
-        return scored[:k]
 
 if __name__ == "__main__":
     indexer = VectorIndexManager()
