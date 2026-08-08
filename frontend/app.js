@@ -144,6 +144,31 @@ class ApiClient {
   static async getInterviewReport(sessionId) {
     return await this.request(`/interviews/${sessionId}/report`);
   }
+
+  // --- Admin APIs ---
+  static async listAllUsers() {
+    return await this.request('/admin/users');
+  }
+
+  static async createUserByAdmin(email, password, fullName, role) {
+    return await this.request('/admin/users', {
+      method: 'POST',
+      body: JSON.stringify({ email, password, full_name: fullName, role }),
+    });
+  }
+
+  static async updateUserByAdmin(userId, payload) {
+    return await this.request(`/admin/users/${userId}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  static async deleteUserByAdmin(userId) {
+    return await this.request(`/admin/users/${userId}`, {
+      method: 'DELETE',
+    });
+  }
 }
 
 
@@ -768,7 +793,7 @@ function startAppLogic() {
   /* ============================================================
      🚀 ROUTER & SPACESHIP SINGLE PAGE VIEW SWITCHER
   ============================================================ */
-  const ALL_VIEWS = ['dashboard', 'cv', 'jobs', 'interview', 'gap', 'history', 'profile'];
+  const ALL_VIEWS = ['dashboard', 'cv', 'jobs', 'interview', 'gap', 'history', 'profile', 'admin'];
   let currentViewName = 'dashboard';
 
   const roomTitles = {
@@ -778,13 +803,14 @@ function startAppLogic() {
     interview: 'DECK GAMMA // SIMULATION CHAMBER',
     gap: 'DECK DELTA // NAVIGATION DECK',
     history: 'DECK EPSILON // MISSION ARCHIVE',
-    profile: 'DECK ZETA // CREW TERMINAL'
+    profile: 'DECK ZETA // CREW TERMINAL',
+    admin: 'DECK OMEGA // ADMIN PORTAL'
   };
 
   function switchView(targetViewName) {
     if (!ALL_VIEWS.includes(targetViewName)) targetViewName = 'dashboard';
 
-    const VIEW_ORDER = ['dashboard', 'cv', 'jobs', 'interview', 'gap', 'history', 'profile'];
+    const VIEW_ORDER = ['dashboard', 'cv', 'jobs', 'interview', 'gap', 'history', 'profile', 'admin'];
     const currentIndex = VIEW_ORDER.indexOf(currentViewName);
     const targetIndex = VIEW_ORDER.indexOf(targetViewName);
     const direction = targetIndex >= currentIndex ? 'right' : 'left';
@@ -840,6 +866,8 @@ function startAppLogic() {
       startAudioWaveformAnim();
     } else if (targetViewName === 'gap') {
       populatePageGapOptions();
+    } else if (targetViewName === 'admin') {
+      loadAdminUsersList();
     }
   }
 
@@ -1507,6 +1535,11 @@ function startAppLogic() {
     switchView('profile');
   });
 
+  document.getElementById('nav-admin')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    switchView('admin');
+  });
+
   // Archive Filter Handlers
   document.querySelectorAll('.archive-filter-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -2000,10 +2033,18 @@ function startAppLogic() {
   function checkUserSession() {
     const user = ApiClient.getUser();
     const token = ApiClient.getToken();
+    const navAdmin = document.getElementById('nav-admin');
 
     if (user && token) {
       if (userNameEl) userNameEl.textContent = user.full_name || user.email;
       if (userRoleEl) userRoleEl.textContent = `Vai trò: ${user.role.toUpperCase()}`;
+      if (navAdmin) {
+        if (user.role === 'admin') {
+          navAdmin.classList.add('visible');
+        } else {
+          navAdmin.classList.remove('visible');
+        }
+      }
       if (authContainer) {
         authContainer.innerHTML = `
           <div style="display:flex;align-items:center;gap:10px;">
@@ -2015,15 +2056,287 @@ function startAppLogic() {
           ApiClient.logout();
           showToast('Đã đăng xuất tài khoản', 'info');
           checkUserSession();
+          if (currentViewName === 'admin') switchView('dashboard');
         });
       }
     } else {
       if (userNameEl) userNameEl.textContent = 'Chưa đăng nhập';
       if (userRoleEl) userRoleEl.textContent = 'Hệ thống Trợ Lý Nghề Nghiệp X';
+      if (navAdmin) navAdmin.classList.remove('visible');
       if (authContainer) {
         authContainer.innerHTML = `<button class="btn-login" id="btn-login">Đăng nhập</button>`;
         document.getElementById('btn-login').addEventListener('click', openAuthModal);
       }
+    }
+  }
+
+  /* ============================================================
+     👑 ADMIN MANAGEMENT PORTAL LOGIC
+  ============================================================ */
+  let adminUsersData = [];
+
+  async function loadAdminUsersList() {
+    const tbody = document.getElementById('admin-users-tbody');
+    const user = ApiClient.getUser();
+
+    if (!user || user.role !== 'admin') {
+      showToast('❌ Bạn không có quyền truy cập Trang Quản Trị Admin', 'error');
+      switchView('dashboard');
+      return;
+    }
+
+    if (tbody) {
+      tbody.innerHTML = `<tr><td colSpan="5" style="text-align:center;padding:30px;">⏳ Đang tải danh sách người dùng từ Server...</td></tr>`;
+    }
+
+    try {
+      adminUsersData = await ApiClient.listAllUsers();
+      renderAdminUsersTable(adminUsersData);
+      updateAdminStats(adminUsersData);
+    } catch (err) {
+      if (tbody) {
+        tbody.innerHTML = `<tr><td colSpan="5" style="text-align:center;padding:30px;color:#ff4e6a;">❌ Không thể tải danh sách user: ${err.message}</td></tr>`;
+      }
+      showToast(`Lỗi tải danh sách người dùng: ${err.message}`, 'error');
+    }
+  }
+
+  function updateAdminStats(users) {
+    const totalEl = document.getElementById('admin-stat-total');
+    const adminEl = document.getElementById('admin-stat-admin');
+    const studentEl = document.getElementById('admin-stat-student');
+    const enterpriseEl = document.getElementById('admin-stat-enterprise');
+
+    if (totalEl) totalEl.textContent = users.length;
+    if (adminEl) adminEl.textContent = users.filter(u => u.role === 'admin').length;
+    if (studentEl) studentEl.textContent = users.filter(u => u.role === 'student').length;
+    if (enterpriseEl) enterpriseEl.textContent = users.filter(u => u.role === 'enterprise' || u.role === 'counselor').length;
+  }
+
+  function renderAdminUsersTable(users) {
+    const tbody = document.getElementById('admin-users-tbody');
+    if (!tbody) return;
+
+    if (!users || users.length === 0) {
+      tbody.innerHTML = `<tr><td colSpan="5" style="text-align:center;padding:30px;">Không tìm thấy người dùng nào.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = users.map(u => {
+      const createdDate = u.created_at ? new Date(u.created_at).toLocaleDateString('vi-VN') : '---';
+      let roleClass = 'role-student';
+      if (u.role === 'admin') roleClass = 'role-admin';
+      else if (u.role === 'counselor') roleClass = 'role-counselor';
+      else if (u.role === 'enterprise') roleClass = 'role-enterprise';
+
+      return `
+        <tr>
+          <td><strong>${u.full_name || 'Chưa đặt tên'}</strong></td>
+          <td>${u.email}</td>
+          <td><span class="role-badge ${roleClass}">${u.role}</span></td>
+          <td>${createdDate}</td>
+          <td style="text-align:center;">
+            <button class="btn-action-sm btn-edit-user" data-user-id="${u.id}">✏️ Sửa</button>
+            <button class="btn-action-sm btn-delete-user" data-user-id="${u.id}">🗑️ Xóa</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    // Attach edit and delete button events
+    tbody.querySelectorAll('.btn-edit-user').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const uId = btn.getAttribute('data-user-id');
+        const targetUser = adminUsersData.find(x => x.id === uId);
+        if (targetUser) openAdminUserModal('edit', targetUser);
+      });
+    });
+
+    tbody.querySelectorAll('.btn-delete-user').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const uId = btn.getAttribute('data-user-id');
+        const targetUser = adminUsersData.find(x => x.id === uId);
+        if (targetUser) deleteAdminUser(targetUser);
+      });
+    });
+  }
+
+  // Admin Search filter
+  document.getElementById('admin-user-search')?.addEventListener('input', (e) => {
+    const q = e.target.value.toLowerCase().trim();
+    if (!q) {
+      renderAdminUsersTable(adminUsersData);
+    } else {
+      const filtered = adminUsersData.filter(u => 
+        (u.full_name && u.full_name.toLowerCase().includes(q)) || 
+        (u.email && u.email.toLowerCase().includes(q)) ||
+        (u.role && u.role.toLowerCase().includes(q))
+      );
+      renderAdminUsersTable(filtered);
+    }
+  });
+
+  // Admin User Modal Logic
+  const adminUserModal = document.getElementById('modal-admin-user-overlay');
+  const adminUserForm = document.getElementById('admin-user-form');
+  const btnAdminAddUser = document.getElementById('btn-admin-add-user');
+  const btnAdminCloseUser = document.getElementById('modal-admin-user-close');
+
+  if (btnAdminAddUser) {
+    btnAdminAddUser.addEventListener('click', () => openAdminUserModal('add'));
+  }
+
+  if (btnAdminCloseUser) {
+    btnAdminCloseUser.addEventListener('click', () => closeAdminUserModal());
+  }
+
+  // Update modal header icon for edit mode
+  function updateAdminModalIcon(mode) {
+    const avatarEl = document.getElementById('admin-modal-avatar-icon');
+    if (!avatarEl) return;
+    if (mode === 'edit') {
+      avatarEl.innerHTML = `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+    } else {
+      avatarEl.innerHTML = `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>`;
+    }
+  }
+
+  function openAdminUserModal(mode = 'add', user = null) {
+    if (!adminUserModal) return;
+    const titleEl = document.getElementById('admin-user-modal-title');
+    const subEl = document.getElementById('admin-user-modal-sub');
+    const pwdLabel = document.getElementById('admin-label-password');
+
+    const editIdInput = document.getElementById('admin-edit-user-id');
+    const fullnameInput = document.getElementById('admin-input-fullname');
+    const emailInput = document.getElementById('admin-input-email');
+    const roleInput = document.getElementById('admin-input-role');
+    const pwdInput = document.getElementById('admin-input-password');
+
+    if (mode === 'edit' && user) {
+      if (titleEl) titleEl.textContent = 'Chỉnh Sửa Người Dùng';
+      if (subEl) subEl.textContent = `Cập nhật thông tin và vai trò cho ${user.email}`;
+      if (pwdLabel) pwdLabel.textContent = 'Mật khẩu mới (Để trống nếu không đổi)';
+      if (editIdInput) editIdInput.value = user.id;
+      if (fullnameInput) fullnameInput.value = user.full_name || '';
+      if (emailInput) emailInput.value = user.email || '';
+      if (roleInput) roleInput.value = user.role || 'student';
+      if (pwdInput) pwdInput.value = '';
+      updateAdminModalIcon('edit');
+    } else {
+      if (titleEl) titleEl.textContent = 'Thêm Người Dùng Mới';
+      if (subEl) subEl.textContent = 'Tạo tài khoản mới với vai trò Admin, Student, Counselor hoặc Enterprise';
+      if (pwdLabel) pwdLabel.textContent = 'Mật khẩu (Tối thiểu 6 ký tự)';
+      if (editIdInput) editIdInput.value = '';
+      if (fullnameInput) fullnameInput.value = '';
+      if (emailInput) emailInput.value = '';
+      if (roleInput) roleInput.value = 'student';
+      if (pwdInput) pwdInput.value = '';
+      updateAdminModalIcon('add');
+    }
+
+    adminUserModal.classList.add('open');
+  }
+
+  function closeAdminUserModal() {
+    if (adminUserModal) adminUserModal.classList.remove('open');
+  }
+
+  // Close admin modal when clicking overlay background
+  if (adminUserModal) {
+    adminUserModal.addEventListener('click', (e) => {
+      if (e.target === adminUserModal) closeAdminUserModal();
+    });
+  }
+
+
+  if (adminUserForm) {
+    adminUserForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const uId = document.getElementById('admin-edit-user-id')?.value;
+      const fullName = document.getElementById('admin-input-fullname')?.value.trim();
+      const email = document.getElementById('admin-input-email')?.value.trim();
+      const role = document.getElementById('admin-input-role')?.value;
+      const pwd = document.getElementById('admin-input-password')?.value.trim();
+
+      try {
+        if (uId) {
+          // Edit mode
+          const payload = { full_name: fullName, email: email, role: role };
+          if (pwd && pwd.length >= 6) payload.password = pwd;
+
+          await ApiClient.updateUserByAdmin(uId, payload);
+          showToast('✅ Cập nhật thông tin người dùng thành công!', 'success');
+        } else {
+          // Add mode
+          if (!pwd || pwd.length < 6) {
+            showToast('Mật khẩu tối thiểu 6 ký tự', 'warning');
+            return;
+          }
+          await ApiClient.createUserByAdmin(email, pwd, fullName, role);
+          showToast('✅ Thêm người dùng mới thành công!', 'success');
+        }
+        closeAdminUserModal();
+        loadAdminUsersList();
+      } catch (err) {
+        showToast(`❌ Thao tác thất bại: ${err.message}`, 'error');
+      }
+    });
+  }
+
+  // ── Custom Delete Confirmation Modal ──
+  const deleteConfirmOverlay = document.getElementById('modal-delete-confirm-overlay');
+  const deleteConfirmDesc = document.getElementById('delete-confirm-desc');
+  const deleteConfirmCancel = document.getElementById('delete-confirm-cancel');
+  const deleteConfirmOk = document.getElementById('delete-confirm-ok');
+  let pendingDeleteResolve = null;
+
+  function showDeleteConfirm(userName, userEmail) {
+    return new Promise((resolve) => {
+      pendingDeleteResolve = resolve;
+      if (deleteConfirmDesc) {
+        deleteConfirmDesc.innerHTML = `Bạn có chắc chắn muốn xóa người dùng <strong style="color:#fff;">"${userName}"</strong> <span style="color:rgba(255,255,255,0.5);">(${userEmail})</span>?`;
+      }
+      if (deleteConfirmOverlay) deleteConfirmOverlay.classList.add('open');
+    });
+  }
+
+  function closeDeleteConfirm(result) {
+    if (deleteConfirmOverlay) deleteConfirmOverlay.classList.remove('open');
+    if (pendingDeleteResolve) {
+      pendingDeleteResolve(result);
+      pendingDeleteResolve = null;
+    }
+  }
+
+  if (deleteConfirmCancel) {
+    deleteConfirmCancel.addEventListener('click', () => closeDeleteConfirm(false));
+  }
+  if (deleteConfirmOk) {
+    deleteConfirmOk.addEventListener('click', () => closeDeleteConfirm(true));
+  }
+  if (deleteConfirmOverlay) {
+    deleteConfirmOverlay.addEventListener('click', (e) => {
+      if (e.target === deleteConfirmOverlay) closeDeleteConfirm(false);
+    });
+  }
+
+  async function deleteAdminUser(user) {
+    const currentUser = ApiClient.getUser();
+    if (currentUser && currentUser.id === user.id) {
+      showToast('❌ Không thể tự xóa tài khoản Admin đang đăng nhập', 'error');
+      return;
+    }
+
+    const confirmed = await showDeleteConfirm(user.full_name || 'Không tên', user.email);
+    if (!confirmed) return;
+
+    try {
+      await ApiClient.deleteUserByAdmin(user.id);
+      showToast(`🗑️ Đã xóa người dùng ${user.email} thành công`, 'success');
+      loadAdminUsersList();
+    } catch (err) {
+      showToast(`❌ Lỗi xóa người dùng: ${err.message}`, 'error');
     }
   }
 

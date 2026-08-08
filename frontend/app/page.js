@@ -140,6 +140,7 @@ export default function Page() {
             <a href="#" className="nav-link" id="nav-jobs"><span className="nav-icon">🗺️</span> <span className="nav-text" data-i18n="nav-jobs">Thư viện Jobs</span></a>
             <a href="#" className="nav-link" id="nav-interview"><span className="nav-icon">🎙️</span> <span className="nav-text" data-i18n="nav-interview">Phỏng vấn STAR</span></a>
             <a href="#" className="nav-link" id="nav-gap"><span className="nav-icon">🎯</span> <span className="nav-text" data-i18n="nav-gap">Gap Analysis</span></a>
+            <a href="#" className="nav-link admin-only-link" id="nav-admin" style={{ display: 'none' }}><span className="nav-icon">👑</span> <span className="nav-text" data-i18n="nav-admin">Quản trị Admin</span></a>
           </nav>
 
           <div id="auth-container">
@@ -1129,6 +1130,67 @@ export default function Page() {
           </div>
         </div>
       </section>
+
+      {/* ===== 7. VIEW: ADMIN MANAGEMENT PORTAL ===== */}
+      <section className="app-view" id="view-admin">
+        <div className="spaceship-stage">
+          <div className="section-header center-header" style={{ marginBottom: '32px' }}>
+            <span className="section-tag glow-cyan" data-i18n="admin-tag">👑 QUẢN TRỊ VIÊN HỆ THỐNG</span>
+            <h2 className="section-title-large" data-i18n="admin-title">Quản Lý Người Dùng & Phân Quyền</h2>
+            <p className="section-subtitle" data-i18n="admin-sub">Danh sách toàn bộ tài khoản người dùng, phân quyền truy cập và thao tác thêm / sửa / xóa</p>
+          </div>
+
+          <div className="admin-container">
+            {/* Stats row */}
+            <div className="admin-stats-grid">
+              <div className="admin-stat-card">
+                <span className="admin-stat-num glow-cyan" id="admin-stat-total">0</span>
+                <span className="admin-stat-lbl" data-i18n="admin-stat-total">Tổng Người Dùng</span>
+              </div>
+              <div className="admin-stat-card">
+                <span className="admin-stat-num glow-purple" id="admin-stat-admin">0</span>
+                <span className="admin-stat-lbl" data-i18n="admin-stat-admin">Quản Trị Viên (Admin)</span>
+              </div>
+              <div className="admin-stat-card">
+                <span className="admin-stat-num glow-pink" id="admin-stat-student">0</span>
+                <span className="admin-stat-lbl" data-i18n="admin-stat-student">Sinh Viên / Candidate</span>
+              </div>
+              <div className="admin-stat-card">
+                <span className="admin-stat-num glow-green" id="admin-stat-enterprise">0</span>
+                <span className="admin-stat-lbl" data-i18n="admin-stat-enterprise">Doanh Nghiệp & Mentor</span>
+              </div>
+            </div>
+
+            {/* Actions & Search Header */}
+            <div className="admin-toolbar">
+              <div className="admin-search-wrap">
+                <input type="text" id="admin-user-search" className="form-input" placeholder="🔍 Tìm kiếm theo Tên hoặc Email..." />
+              </div>
+              <button className="btn-primary" id="btn-admin-add-user" data-i18n="btn-admin-add-user">➕ Thêm User Mới</button>
+            </div>
+
+            {/* Users Table */}
+            <div className="admin-table-wrap">
+              <table className="admin-users-table">
+                <thead>
+                  <tr>
+                    <th data-i18n="th-fullname">Họ và Tên</th>
+                    <th data-i18n="th-email">Email</th>
+                    <th data-i18n="th-role">Vai Trò</th>
+                    <th data-i18n="th-created">Ngày Tạo</th>
+                    <th style={{ textAlign: 'center' }} data-i18n="th-actions">Thao Tác</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-users-tbody">
+                  <tr>
+                    <td colSpan="5" style={{ textAlign: 'center', padding: '30px' }}>Đang tải danh sách người dùng...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
 
       <div className="modal-overlay" id="modal-overlay" role="dialog">
@@ -1340,6 +1402,107 @@ export default function Page() {
               <p style={{ fontSize: '12px', color: '#b084fc' }}>🚀 Khuyên Luyện Tập:</p>
               <ul id="report-recommendations-list" style={{ fontSize: '12px', color: 'var(--text-dim)' }}></ul>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ═══ Admin User Add/Edit Modal (Redesigned) ═══ */}
+      <div className="modal-overlay" id="modal-admin-user-overlay">
+        <div className="modal-card admin-user-modal-card">
+          <button className="modal-close" id="modal-admin-user-close">&times;</button>
+
+          {/* Header with avatar icon */}
+          <div className="admin-modal-hero">
+            <div className="admin-modal-avatar" id="admin-modal-avatar-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <line x1="19" y1="8" x2="19" y2="14"/>
+                <line x1="22" y1="11" x2="16" y2="11"/>
+              </svg>
+            </div>
+            <h2 className="modal-title" id="admin-user-modal-title" data-i18n="admin-modal-add-title">Thêm Người Dùng Mới</h2>
+            <p className="modal-sub" id="admin-user-modal-sub" data-i18n="admin-modal-add-sub">Tạo tài khoản mới với vai trò Admin, Student, Counselor hoặc Enterprise</p>
+          </div>
+
+          <form id="admin-user-form" className="admin-user-form">
+            <input type="hidden" id="admin-edit-user-id" value="" />
+
+            {/* Họ và tên */}
+            <div className="form-group admin-form-group">
+              <label className="form-label" data-i18n="label-fullname">Họ và tên</label>
+              <div className="admin-input-wrap">
+                <span className="admin-input-icon">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </span>
+                <input type="text" id="admin-input-fullname" className="form-input admin-form-input" placeholder="Nguyễn Văn A" required />
+              </div>
+            </div>
+
+            {/* Email */}
+            <div className="form-group admin-form-group">
+              <label className="form-label" data-i18n="label-email">Email</label>
+              <div className="admin-input-wrap">
+                <span className="admin-input-icon">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                </span>
+                <input type="email" id="admin-input-email" className="form-input admin-form-input" placeholder="user@example.com" required />
+              </div>
+            </div>
+
+            {/* Vai trò */}
+            <div className="form-group admin-form-group">
+              <label className="form-label" data-i18n="label-role">Vai trò</label>
+              <div className="admin-input-wrap">
+                <span className="admin-input-icon">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                </span>
+                <select id="admin-input-role" className="form-input admin-form-input admin-form-select">
+                  <option value="student">Sinh viên (Student)</option>
+                  <option value="counselor">Cố vấn (Counselor)</option>
+                  <option value="enterprise">Doanh nghiệp (Enterprise)</option>
+                  <option value="admin">Quản trị viên (Admin)</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Mật khẩu */}
+            <div className="form-group admin-form-group">
+              <label className="form-label" id="admin-label-password" data-i18n="label-password">Mật khẩu (Tối thiểu 6 ký tự)</label>
+              <div className="admin-input-wrap">
+                <span className="admin-input-icon">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                </span>
+                <input type="password" id="admin-input-password" className="form-input admin-form-input" placeholder="••••••••" />
+              </div>
+            </div>
+
+            <button type="submit" className="btn-primary admin-btn-save" id="btn-admin-save-user" data-i18n="btn-save-user">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              <span id="admin-btn-save-text">Lưu Thông Tin Người Dùng</span>
+            </button>
+          </form>
+        </div>
+      </div>
+
+      {/* ═══ Delete Confirmation Modal ═══ */}
+      <div className="modal-overlay" id="modal-delete-confirm-overlay">
+        <div className="modal-card delete-confirm-card">
+          <div className="delete-confirm-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 6h18"/>
+              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+              <line x1="10" y1="11" x2="10" y2="17"/>
+              <line x1="14" y1="11" x2="14" y2="17"/>
+            </svg>
+          </div>
+          <h3 className="delete-confirm-title">Xác Nhận Xóa Người Dùng</h3>
+          <p className="delete-confirm-desc" id="delete-confirm-desc">Bạn có chắc chắn muốn xóa người dùng này?</p>
+          <p className="delete-confirm-warning">⚠️ Thao tác này không thể hoàn tác.</p>
+          <div className="delete-confirm-actions">
+            <button className="delete-confirm-btn-cancel" id="delete-confirm-cancel">Hủy bỏ</button>
+            <button className="delete-confirm-btn-delete" id="delete-confirm-ok">Xóa Người Dùng</button>
           </div>
         </div>
       </div>

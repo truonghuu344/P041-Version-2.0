@@ -8,11 +8,18 @@ class UserRegister(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=6, description="Mật khẩu tối thiểu 6 ký tự")
     full_name: str = Field(..., min_length=2, description="Họ và tên người dùng")
-    role: str = Field(default="student", description="student | counselor | enterprise")
+    role: str = Field(default="student", description="student | counselor | enterprise | admin")
+
+
+class UserUpdate(BaseModel):
+    full_name: Optional[str] = None
+    email: Optional[str] = None
+    role: Optional[str] = None
+    password: Optional[str] = None
 
 
 class UserLogin(BaseModel):
-    email: EmailStr
+    email: str
     password: str
 
 
@@ -20,7 +27,7 @@ class UserOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: str
-    email: EmailStr
+    email: str
     full_name: str
     role: str
     created_at: datetime

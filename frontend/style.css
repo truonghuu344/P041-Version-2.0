@@ -2921,6 +2921,14 @@ html.light .form-input:focus,
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
+/* Admin link: hidden by default, shown via .visible class */
+.admin-only-link {
+  display: none !important;
+}
+.admin-only-link.visible {
+  display: inline-flex !important;
+}
+
 .nav-link:hover {
   color: #00e5ff !important;
   background: rgba(0, 229, 255, 0.08) !important;
@@ -3519,4 +3527,379 @@ html.light .form-input:focus,
   font-size: 12px;
   color: rgba(255, 255, 255, 0.55);
   margin: 0;
+}
+
+/* ============================================================
+   ADMIN PORTAL STYLING
+   ============================================================ */
+.admin-container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.admin-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.admin-stat-card {
+  background: rgba(13, 14, 43, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  backdrop-filter: blur(12px);
+}
+
+.admin-stat-num {
+  font-size: 32px;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.admin-stat-lbl {
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.admin-toolbar {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.admin-search-wrap {
+  flex: 1;
+  min-width: 260px;
+}
+
+.admin-table-wrap {
+  background: rgba(13, 14, 43, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  overflow-x: auto;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+.admin-users-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.admin-users-table th {
+  background: rgba(255, 255, 255, 0.04);
+  padding: 14px 18px;
+  font-size: 13px;
+  color: var(--text-dim);
+  font-weight: 600;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.admin-users-table td {
+  padding: 14px 18px;
+  font-size: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  vertical-align: middle;
+}
+
+.admin-users-table tr:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.role-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.role-admin {
+  background: rgba(124, 77, 255, 0.2);
+  color: #c084fc;
+  border: 1px solid rgba(124, 77, 255, 0.5);
+}
+
+.role-student {
+  background: rgba(0, 229, 255, 0.15);
+  color: #00e5ff;
+  border: 1px solid rgba(0, 229, 255, 0.4);
+}
+
+.role-counselor {
+  background: rgba(255, 140, 66, 0.15);
+  color: #ff8c42;
+  border: 1px solid rgba(255, 140, 66, 0.4);
+}
+
+.role-enterprise {
+  background: rgba(0, 230, 118, 0.15);
+  color: #00e676;
+  border: 1px solid rgba(0, 230, 118, 0.4);
+}
+
+.btn-action-sm {
+  padding: 5px 12px;
+  font-size: 12px;
+  border-radius: 8px;
+  margin: 0 3px;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.btn-edit-user {
+  background: rgba(0, 229, 255, 0.2);
+  color: #00e5ff;
+  border: 1px solid rgba(0, 229, 255, 0.4);
+}
+
+.btn-edit-user:hover {
+  background: #00e5ff;
+  color: #000;
+}
+
+.btn-delete-user {
+  background: rgba(255, 78, 106, 0.2);
+  color: #ff4e6a;
+  border: 1px solid rgba(255, 78, 106, 0.4);
+}
+
+.btn-delete-user:hover {
+  background: #ff4e6a;
+  color: #fff;
+}
+
+/* ==========================================
+   ADMIN USER MODAL (Redesigned)
+   ========================================== */
+.admin-user-modal-card {
+  max-width: 500px;
+  padding: 0;
+  overflow: hidden;
+}
+
+.admin-modal-hero {
+  text-align: center;
+  padding: 32px 32px 20px;
+  background: linear-gradient(180deg, rgba(124, 77, 255, 0.12) 0%, transparent 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.admin-modal-avatar {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 16px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(124, 77, 255, 0.3), rgba(0, 229, 255, 0.2));
+  border: 1.5px solid rgba(124, 77, 255, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #c084fc;
+  box-shadow: 0 8px 24px rgba(124, 77, 255, 0.2);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.admin-modal-avatar:hover {
+  transform: scale(1.06);
+  box-shadow: 0 12px 32px rgba(124, 77, 255, 0.35);
+}
+
+.admin-modal-hero .modal-title {
+  font-size: 20px;
+  margin-bottom: 6px;
+}
+
+.admin-modal-hero .modal-sub {
+  font-size: 13px;
+}
+
+.admin-user-form {
+  padding: 24px 32px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.admin-form-group {
+  gap: 7px;
+}
+
+.admin-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.admin-input-icon {
+  position: absolute;
+  left: 14px;
+  color: rgba(167, 139, 250, 0.55);
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  z-index: 1;
+  transition: color 0.2s ease;
+}
+
+.admin-input-wrap:focus-within .admin-input-icon {
+  color: rgba(167, 139, 250, 0.9);
+}
+
+.admin-form-input {
+  padding-left: 42px !important;
+}
+
+.admin-form-select {
+  background: rgba(14, 15, 48, 0.95) !important;
+  color: #fff !important;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(167,139,250,0.6)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 14px center !important;
+  cursor: pointer;
+}
+
+.admin-form-select option {
+  background: #0e0f30;
+  color: #fff;
+  padding: 10px;
+}
+
+.admin-btn-save {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 6px;
+  padding: 14px 24px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+/* ==========================================
+   DELETE CONFIRMATION MODAL
+   ========================================== */
+.delete-confirm-card {
+  max-width: 420px;
+  text-align: center;
+  padding: 36px 32px 28px;
+  border-color: rgba(255, 78, 106, 0.35);
+  box-shadow:
+    0 32px 80px rgba(0, 0, 0, 0.65),
+    0 0 0 1px rgba(255, 255, 255, 0.06) inset,
+    0 0 60px rgba(255, 78, 106, 0.15),
+    0 0 90px rgba(255, 50, 80, 0.1);
+}
+
+.delete-confirm-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 20px;
+  border-radius: 50%;
+  background: rgba(255, 78, 106, 0.12);
+  border: 1.5px solid rgba(255, 78, 106, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ff4e6a;
+  animation: deleteIconPulse 2s ease-in-out infinite;
+}
+
+@keyframes deleteIconPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 78, 106, 0.15); }
+  50% { box-shadow: 0 0 0 10px rgba(255, 78, 106, 0); }
+}
+
+.delete-confirm-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-white);
+  margin-bottom: 10px;
+  letter-spacing: -0.3px;
+}
+
+.delete-confirm-desc {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.6;
+  margin-bottom: 8px;
+}
+
+.delete-confirm-warning {
+  font-size: 12px;
+  color: rgba(255, 180, 120, 0.85);
+  margin-bottom: 24px;
+  padding: 8px 14px;
+  background: rgba(255, 180, 120, 0.08);
+  border: 1px solid rgba(255, 180, 120, 0.15);
+  border-radius: 8px;
+  display: inline-block;
+}
+
+.delete-confirm-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.delete-confirm-btn-cancel {
+  flex: 1;
+  padding: 12px 24px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: var(--font);
+}
+
+.delete-confirm-btn-cancel:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.22);
+  color: #fff;
+}
+
+.delete-confirm-btn-delete {
+  flex: 1;
+  padding: 12px 24px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, #ff4e6a, #ff2d55);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 20px rgba(255, 78, 106, 0.35);
+  font-family: var(--font);
+}
+
+.delete-confirm-btn-delete:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(255, 78, 106, 0.5);
+  filter: brightness(1.1);
+}
+
+.delete-confirm-btn-delete:active {
+  transform: translateY(0);
 }

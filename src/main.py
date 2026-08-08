@@ -11,11 +11,11 @@ from src.db.database import init_db
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     settings = get_settings()
-    print(f"Khởi động {settings.app_name} trong môi trường {settings.app_env}...")
+    print(f"Starting {settings.app_name} in {settings.app_env} mode...")
     # Tự động tạo bảng DB khi startup
     await init_db()
     yield
-    print("Đang dừng dịch vụ...")
+    print("Stopping service...")
 
 
 app = FastAPI(

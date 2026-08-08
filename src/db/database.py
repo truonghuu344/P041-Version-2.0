@@ -50,10 +50,32 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
         await session.close()
 
 async def init_db() -> None:
-    """Tự động khởi tạo cấu trúc bảng trong Database."""
+    """Tự động khởi tạo cấu trúc bảng trong Database & seed tài khoản Admin."""
     try:
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
-        logger.info("Khởi tạo bảng Database thành công.")
+        logger.info("Database tables initialized successfully.")
+
+        # Seed default admin user admin@cva.com / admin123
+        async with AsyncSessionLocal() as session:
+            from sqlalchemy import select
+            from src.db.models import User
+            from src.core.security import get_password_hash
+
+            admin_email = "admin@cva.com"
+            stmt = select(User).where(User.email == admin_email)
+            res = await session.execute(stmt)
+            existing_admin = res.scalar_one_or_none()
+
+            if not existing_admin:
+                admin_user = User(
+                    email=admin_email,
+                    hashed_password=get_password_hash("admin123"),
+                    full_name="System Administrator",
+                    role="admin",
+                )
+                session.add(admin_user)
+                await session.commit()
+                logger.info("Default Admin user (admin@cva.com) seeded successfully.")
     except Exception as e:
-        logger.error(f"Lỗi khởi tạo Database: {e}")
+        logger.error(f"Database initialization error: {e}")
