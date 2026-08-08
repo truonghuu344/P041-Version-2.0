@@ -1,14 +1,12 @@
 import sys
-import os
-import json
-from typing import List, Dict, Any, Optional
+from typing import Any
 
 try:
-    from retrieval.qa import QAPipeline
     from retrieval.llm import LLMClient
+    from retrieval.qa import QAPipeline
 except ModuleNotFoundError:
-    from qa import QAPipeline
     from llm import LLMClient
+    from qa import QAPipeline
 
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
@@ -24,14 +22,14 @@ class RAGAgent:
         """Phân loại ý định câu hỏi: 'RETRIEVAL' (tra cứu JD) hoặc 'CHITCHAT' (chào hỏi)"""
         q_lower = question.lower()
         chitchat_keywords = ["xin chào", "hello", "hi", "bạn là ai", "who are you", "cảm ơn", "thank you"]
-        
+
         for kw in chitchat_keywords:
             if kw in q_lower and len(q_lower) < 30:
                 return "CHITCHAT"
-                
+
         return "RETRIEVAL"
 
-    def run(self, question: str) -> Dict[str, Any]:
+    def run(self, question: str) -> dict[str, Any]:
         """Luồng xử lý chính của Agent trên tập JD"""
         print(f"\n🤖 [JD RAG Agent] Nhận câu hỏi: '{question}'")
         intent = self.route_intent(question)

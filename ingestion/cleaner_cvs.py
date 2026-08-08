@@ -1,9 +1,10 @@
-import sys
+import json
 import os
 import re
-import json
+import sys
+from typing import Any
+
 import pandas as pd
-from typing import List, Dict, Any
 
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
@@ -29,19 +30,19 @@ def clean_cv_text(text: str) -> str:
     text = re.sub(r'\s+', ' ', text)
     return text.strip()
 
-def extract_skills_from_text(text: str) -> List[str]:
+def extract_skills_from_text(text: str) -> list[str]:
     """Trích xuất từ khóa kỹ năng công nghệ thực tế từ văn bản CV bằng Regex"""
     found_skills = set()
     text_lower = text.lower()
-    
+
     for skill in TECH_SKILL_KEYWORDS:
         pattern = r'\b' + re.escape(skill.lower()) + r'\b'
         if re.search(pattern, text_lower):
             found_skills.add(skill)
-            
+
     return sorted(list(found_skills))
 
-def process_kaggle_resume_csv(csv_path: str = "Resume.csv", output_json: str = "./data/clean/cvs_clean.json") -> List[Dict[str, Any]]:
+def process_kaggle_resume_csv(csv_path: str = "Resume.csv", output_json: str = "./data/clean/cvs_clean.json") -> list[dict[str, Any]]:
     """Đọc và làm sạch bộ dữ liệu CSV CV từ Kaggle/GitHub"""
     if not os.path.exists(csv_path):
         print(f"⚠️ Không tìm thấy file {csv_path}")
@@ -60,13 +61,13 @@ def process_kaggle_resume_csv(csv_path: str = "Resume.csv", output_json: str = "
         raw_id = str(row.get("ID", idx))
         category = str(row.get("Category", "IT")).strip()
         raw_text = str(row.get("Resume_str", row.get("Resume_text", "")))
-        
+
         clean_text = clean_cv_text(raw_text)
         if len(clean_text) < 100:
             continue
 
         extracted_skills = extract_skills_from_text(clean_text)
-        
+
         # Summary snippet
         summary_snippet = clean_text[:300] + "..."
 

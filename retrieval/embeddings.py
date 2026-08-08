@@ -1,8 +1,6 @@
 import sys
-import os
-import math
+
 import numpy as np
-from typing import List, Union
 
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
@@ -31,7 +29,7 @@ class EmbeddingManager:
             print(f"⚠️ Chưa thể nạp mô hình SentenceTransformer ({e}). Sử dụng mô hình nhúng dự phòng (Fallback Hash Vector 384D).")
             self._is_sentence_transformers_available = False
 
-    def _fallback_hash_embed(self, text: str) -> List[float]:
+    def _fallback_hash_embed(self, text: str) -> list[float]:
         """Tạo vector 384 chiều dự phòng dựa trên thuật toán Hash & TF Normalization"""
         vec = np.zeros(EMBEDDING_DIMENSION, dtype=np.float32)
         words = text.lower().split()
@@ -50,7 +48,7 @@ class EmbeddingManager:
             vec = vec / norm
         return vec.tolist()
 
-    def embed_text(self, text: str) -> List[float]:
+    def embed_text(self, text: str) -> list[float]:
         """Đổi 1 đoạn văn bản thành vector 384 chiều"""
         if not text:
             return [0.0] * self.dimension
@@ -64,7 +62,7 @@ class EmbeddingManager:
 
         return self._fallback_hash_embed(text)
 
-    def embed_documents(self, texts: List[str]) -> List[List[float]]:
+    def embed_documents(self, texts: list[str]) -> list[list[float]]:
         """Đổi danh sách văn bản thành danh sách vector 384 chiều"""
         if not texts:
             return []

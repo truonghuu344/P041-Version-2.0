@@ -1,8 +1,9 @@
-import sys
-import os
 import json
-import psycopg2
+import os
+import sys
 from datetime import datetime
+
+import psycopg2
 
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
@@ -51,7 +52,7 @@ def load_stg_jds():
         print(f"❌ Không tìm thấy file JSON Staging: {STG_JSON_PATH}. Vui lòng chạy Python ETL trước!")
         return
 
-    with open(STG_JSON_PATH, "r", encoding="utf-8") as f:
+    with open(STG_JSON_PATH, encoding="utf-8") as f:
         stg_records = json.load(f)
 
     conn = get_db_connection()
@@ -63,7 +64,7 @@ def load_stg_jds():
         job_id = item.get("job_id")
         if not job_id:
             continue
-            
+
         source = item.get("source", "Other")
         job_title = item.get("job_title", "")
         company_name = item.get("company_name", "")
@@ -74,15 +75,15 @@ def load_stg_jds():
         education_required = json.dumps(item.get("education_required", []), ensure_ascii=False)
         must_have_skills = json.dumps(item.get("must_have_skills", []), ensure_ascii=False)
         nice_to_have_skills = json.dumps(item.get("nice_to_have_skills", []), ensure_ascii=False)
-        
+
         stg_data_json = json.dumps(item, ensure_ascii=False)
         loaded_at = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
 
         # Upsert in PostgreSQL
         cursor.execute("""
             INSERT INTO stg_jds (
-                job_id, source, job_title, company_name, domain_category, 
-                location, salary_range, experience_required, education_required, 
+                job_id, source, job_title, company_name, domain_category,
+                location, salary_range, experience_required, education_required,
                 must_have_skills, nice_to_have_skills, stg_data_json, loaded_at
             )
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
@@ -99,10 +100,10 @@ def load_stg_jds():
                 nice_to_have_skills=EXCLUDED.nice_to_have_skills,
                 stg_data_json=EXCLUDED.stg_data_json,
                 loaded_at=EXCLUDED.loaded_at
-        """, (job_id, source, job_title, company_name, domain_category, 
-              location, salary_range, experience_required, education_required, 
+        """, (job_id, source, job_title, company_name, domain_category,
+              location, salary_range, experience_required, education_required,
               must_have_skills, nice_to_have_skills, stg_data_json, loaded_at))
-        
+
         count += 1
 
     conn.commit()

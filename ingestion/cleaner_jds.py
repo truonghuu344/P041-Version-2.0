@@ -1,22 +1,23 @@
-import sys
 import json
-import re
 import os
+import re
+import sys
 from datetime import datetime
-from typing import List, Dict, Any, Optional
+
+from bs4 import BeautifulSoup
 
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
 
 MASTER_TECH_KEYWORDS = [
-    "Java", "Spring", "Spring Boot", "Spring MVC", "Spring Security", "Hibernate", "JPA", 
-    "Python", "Django", "Flask", "FastAPI", "NodeJS", "Express", "NestJS", 
-    "React", "ReactJS", "Next.js", "Angular", "Vue", "JavaScript", "TypeScript", 
+    "Java", "Spring", "Spring Boot", "Spring MVC", "Spring Security", "Hibernate", "JPA",
+    "Python", "Django", "Flask", "FastAPI", "NodeJS", "Express", "NestJS",
+    "React", "ReactJS", "Next.js", "Angular", "Vue", "JavaScript", "TypeScript",
     "C", "C++", "C#", "Objective-C", ".NET", "PHP", "Laravel", "Golang", "Go",
-    "SQL", "PostgreSQL", "MySQL", "MongoDB", "Redis", "Elasticsearch", 
+    "SQL", "PostgreSQL", "MySQL", "MongoDB", "Redis", "Elasticsearch",
     "Docker", "Kubernetes", "AWS", "Azure", "GCP", "EC2", "S3", "Lambda",
-    "CI/CD", "Git", "GitHub Actions", "Jenkins", "RESTful API", "GraphQL", "Microservices", 
-    "QA", "QC", "Tester", "Selenium", "Postman", "JUnit", "Mockito", "Automation", "Manual Testing", 
+    "CI/CD", "Git", "GitHub Actions", "Jenkins", "RESTful API", "GraphQL", "Microservices",
+    "QA", "QC", "Tester", "Selenium", "Postman", "JUnit", "Mockito", "Automation", "Manual Testing",
     "Linux", "DevOps", "AI", "Computer Vision", "OCR", "Kafka", "RabbitMQ",
     "Data Structure", "Algorithms", "Software Engineering", "ChatGPT", "Gemini", "Claude"
 ]
@@ -55,17 +56,17 @@ def clean_text_by_source(text: str, source: str) -> str:
                 break
     return text.strip()
 
-def smart_extract_sections(text: str) -> Dict[str, List[str]]:
+def smart_extract_sections(text: str) -> dict[str, list[str]]:
     """Tự động phân tách nội dung thành responsibilities, requirements, benefits dựa trên từ khóa"""
     sections = {
         "responsibilities": [],
         "requirements": [],
         "benefits": []
     }
-    
+
     current_section = "responsibilities"
-    lines = [l.strip() for l in text.split("\n") if l.strip()]
-    
+    lines = [line.strip() for line in text.split("\n") if line.strip()]
+
     resp_triggers = ["responsibilities", "what you'll do", "mô tả công việc", "duties", "role description", "nhiệm vụ", "your adventure ahead", "key responsibilities", "chi tiết công việc"]
     req_triggers = ["requirements", "qualifications", "who you are", "yêu cầu", "skills needed", "must-have", "kỹ năng", "essentials to succeed", "tiêu chuẩn"]
     ben_triggers = ["benefits", "what we offer", "why join", "quyền lợi", "phúc lợi", "chế độ", "what's in it for", "phúc lợi dành cho bạn", "our benefits", "special care", "trợ cấp", "perks"]
@@ -84,26 +85,26 @@ def smart_extract_sections(text: str) -> Dict[str, List[str]]:
 
         if len(line) > 5:
             sections[current_section].append(line)
-            
+
     return sections
 
-def extract_and_classify_skills(requirements: List[str], description: str) -> Dict[str, List[str]]:
+def extract_and_classify_skills(requirements: list[str], description: str) -> dict[str, list[str]]:
     """Phân loại kỹ năng thành Must-have và Nice-to-have chính xác"""
     req_text = " ".join(requirements).lower() if requirements else ""
     full_text = description.lower()
-    
+
     nice_triggers = ["nice to have", "plus", "preferred", "advantage", "điểm cộng", "ưu tiên", "khuyến khích", "bổ sung", "desirable", "big plus"]
-    
+
     nice_paragraphs = []
     must_paragraphs = []
-    
+
     for line in description.split("\n"):
         line_lower = line.lower().strip()
         if any(trig in line_lower for trig in nice_triggers):
             nice_paragraphs.append(line_lower)
         else:
             must_paragraphs.append(line_lower)
-            
+
     nice_text = " ".join(nice_paragraphs)
     must_text = " ".join(must_paragraphs) if must_paragraphs else req_text
 
@@ -118,10 +119,10 @@ def extract_and_classify_skills(requirements: List[str], description: str) -> Di
             found_must_have.add(kw)
         elif re.search(pattern, full_text):
             found_nice_to_have.add(kw)
-            
+
     found_nice_to_have = found_nice_to_have - found_must_have
     all_skills = sorted(list(found_must_have | found_nice_to_have))
-    
+
     return {
         "must_have_skills": sorted(list(found_must_have)),
         "nice_to_have_skills": sorted(list(found_nice_to_have)),
@@ -145,48 +146,65 @@ def normalize_domain(title: str, description: str) -> str:
 
 def infer_job_level(title: str, text: str) -> str:
     combined = f"{title} {text}".lower()
-    if any(k in combined for k in ["intern", "thực tập", "student"]): return "Intern"
-    if "fresher" in combined: return "Fresher"
-    if "junior" in combined: return "Junior"
-    if "senior" in combined: return "Senior"
-    if "middle" in combined or "mid-level" in combined: return "Middle"
+    if any(k in combined for k in ["intern", "thực tập", "student"]):
+        return "Intern"
+    if "fresher" in combined:
+        return "Fresher"
+    if "junior" in combined:
+        return "Junior"
+    if "senior" in combined:
+        return "Senior"
+    if "middle" in combined or "mid-level" in combined:
+        return "Middle"
     return "Not Specified"
 
-def infer_employment_type(text: str, extracted_val: Optional[str] = None) -> str:
+def infer_employment_type(text: str, extracted_val: str | None = None) -> str:
     if extracted_val and extracted_val.strip():
-        if "toàn thời gian" in extracted_val.lower() or "full-time" in extracted_val.lower(): return "Full-time"
-        if "bán thời gian" in extracted_val.lower() or "part-time" in extracted_val.lower(): return "Part-time"
-        if "thực tập" in extracted_val.lower() or "intern" in extracted_val.lower(): return "Internship"
+        if "toàn thời gian" in extracted_val.lower() or "full-time" in extracted_val.lower():
+            return "Full-time"
+        if "bán thời gian" in extracted_val.lower() or "part-time" in extracted_val.lower():
+            return "Part-time"
+        if "thực tập" in extracted_val.lower() or "intern" in extracted_val.lower():
+            return "Internship"
 
     text_lower = text.lower()
-    if "full-time" in text_lower or "toàn thời gian" in text_lower: return "Full-time"
-    if "part-time" in text_lower or "bán thời gian" in text_lower: return "Part-time"
-    if "contract" in text_lower or "hợp đồng" in text_lower: return "Contract"
+    if "full-time" in text_lower or "toàn thời gian" in text_lower:
+        return "Full-time"
+    if "part-time" in text_lower or "bán thời gian" in text_lower:
+        return "Part-time"
+    if "contract" in text_lower or "hợp đồng" in text_lower:
+        return "Contract"
     return "Full-time"
 
 def infer_remote_type(text: str) -> str:
     text_lower = text.lower()
-    if "remote" in text_lower or "làm tại nhà" in text_lower: return "Remote"
-    if "hybrid" in text_lower: return "Hybrid"
+    if "remote" in text_lower or "làm tại nhà" in text_lower:
+        return "Remote"
+    if "hybrid" in text_lower:
+        return "Hybrid"
     return "On-site"
 
-def infer_education(text: str) -> List[str]:
+def infer_education(text: str) -> list[str]:
     degrees = []
     text_lower = text.lower()
-    if any(k in text_lower for k in ["bachelor", "đại học", "degree", "bs", "ba", "cntt"]): degrees.append("Bachelor")
-    if any(k in text_lower for k in ["master", "thạc sĩ", "ms", "mba"]): degrees.append("Master")
+    if any(k in text_lower for k in ["bachelor", "đại học", "degree", "bs", "ba", "cntt"]):
+        degrees.append("Bachelor")
+    if any(k in text_lower for k in ["master", "thạc sĩ", "ms", "mba"]):
+        degrees.append("Master")
     return degrees if degrees else ["Bachelor (Preferred)"]
 
-def infer_languages(text: str) -> List[str]:
+def infer_languages(text: str) -> list[str]:
     langs = []
     text_lower = text.lower()
-    if any(k in text_lower for k in ["english", "tiếng anh"]): langs.append("English")
-    if any(k in text_lower for k in ["vietnamese", "tiếng việt"]): langs.append("Vietnamese")
+    if any(k in text_lower for k in ["english", "tiếng anh"]):
+        langs.append("English")
+    if any(k in text_lower for k in ["vietnamese", "tiếng việt"]):
+        langs.append("Vietnamese")
     return langs if langs else ["English"]
 
-from bs4 import BeautifulSoup
 
-def infer_salary_range(text: str, salary_text: Optional[str] = None) -> str:
+
+def infer_salary_range(text: str, salary_text: str | None = None) -> str:
     if salary_text and salary_text.strip() and "thỏa thuận" not in salary_text.lower():
         return salary_text.strip()
 
@@ -207,12 +225,12 @@ def infer_salary_range(text: str, salary_text: Optional[str] = None) -> str:
                 return val
     return "Negotiable"
 
-def infer_experience_required(title: str, text: str, exp_text: Optional[str] = None) -> str:
+def infer_experience_required(title: str, text: str, exp_text: str | None = None) -> str:
     if exp_text and exp_text.strip() and "không xác định" not in exp_text.lower():
         return exp_text.strip()
-        
+
     combined = f"{title} {text}".lower()
-    
+
     # 1. Direct regex for years
     exp_match = re.search(r'(\b\d+\s*(?:-\s*\d+)?\s*năm(?:\s*kinh nghiệm)?\b|\b\d+\s*\+\s*năm\b|\b\d+\s*(?:-\s*\d+)?\s*years?(?:\s*experience)?\b|\b\d+\s*\+\s*years?\b)', combined)
     if exp_match:
@@ -231,17 +249,17 @@ def infer_experience_required(title: str, text: str, exp_text: Optional[str] = N
         return "Middle (2-4 years)"
     if "senior" in combined:
         return "Senior (3+ years)"
-        
+
     return "Not Specified"
 
-def recover_company_from_html(job_id: str, title: str) -> Optional[str]:
+def recover_company_from_html(job_id: str, title: str) -> str | None:
     html_path = os.path.join("./data/jds/raw", f"{job_id}.html")
     if not os.path.exists(html_path):
         return None
     try:
-        with open(html_path, "r", encoding="utf-8") as f:
+        with open(html_path, encoding="utf-8") as f:
             soup = BeautifulSoup(f.read(), "html.parser")
-        
+
         comp_tag = soup.select_one("div.job-company-name, a.company-name, h2.company-name, h2, a.comp-name, div.company-name a, a.topcard__org-name-link, div.topcard__flavor-row a, .topcard__flavor--black-link")
         comp_text = comp_tag.get_text(strip=True) if comp_tag else None
         if comp_text and len(comp_text) < 80 and comp_text != title and "Joboko" not in comp_text:
@@ -263,7 +281,7 @@ def run_cleaning_pipeline():
         print(f"❌ Không tìm thấy file thô: {input_file}. Vui lòng chạy crawler trước!")
         return
 
-    with open(input_file, "r", encoding="utf-8") as f:
+    with open(input_file, encoding="utf-8") as f:
         raw_records = json.load(f)
 
     cleaned_records = []
@@ -272,10 +290,10 @@ def run_cleaning_pipeline():
         raw_desc = item.get("raw", {}).get("description_raw", "")
         extracted_sections = item.get("extracted", {})
         title = extracted_sections.get("job_title") or "Software Engineer"
-        
+
         # 1. Làm sạch text theo nguồn
         clean_desc = clean_text_by_source(raw_desc, source)
-        
+
         # 2. Phân tách sections thông minh nếu crawler thiếu
         requirements = extracted_sections.get("requirements", [])
         responsibilities = extracted_sections.get("responsibilities", [])
@@ -283,16 +301,19 @@ def run_cleaning_pipeline():
 
         if not requirements or not responsibilities or not benefits:
             smart_secs = smart_extract_sections(clean_desc)
-            if not responsibilities: responsibilities = smart_secs["responsibilities"]
-            if not requirements: requirements = smart_secs["requirements"]
-            if not benefits: benefits = smart_secs["benefits"]
+            if not responsibilities:
+                responsibilities = smart_secs["responsibilities"]
+            if not requirements:
+                requirements = smart_secs["requirements"]
+            if not benefits:
+                benefits = smart_secs["benefits"]
 
         # 3. Trích xuất kỹ năng đầy đủ
         skills_data = extract_and_classify_skills(requirements, clean_desc)
-        
+
         # 4. Phân loại Domain & Metadata bổ sung
         domain = normalize_domain(title, clean_desc)
-        
+
         # Bỏ infer_job_level bằng Python để SQL xử lý (ELT)
         job_level = "To Be Evaluated"
         emp_type = infer_employment_type(clean_desc, extracted_sections.get("employment_type"))
@@ -328,7 +349,7 @@ def run_cleaning_pipeline():
 
         must_have_skills_str = ", ".join(skills_data["must_have_skills"]) if skills_data["must_have_skills"] else "N/A"
         req_snippet = " ".join(requirements[:5]) if requirements else "N/A"
-        
+
         must_have_text_str = f"Vị trí: {title}. Kỹ năng bắt buộc: {must_have_skills_str}. Kinh nghiệm: {exp_req}. Yêu cầu: {req_snippet}"
         embedding_text_str = f"Job Title: {title} | Company: {company_name} | Domain: {domain} | Level: {job_level} | Must Have Skills: {must_have_skills_str} | Experience: {exp_req} | Requirements: {req_snippet}"
 

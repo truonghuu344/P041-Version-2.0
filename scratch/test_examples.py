@@ -1,18 +1,26 @@
 import sys
-import os
+
 sys.path.insert(0, '.')
 import json
+
 from ingestion.cleaner_jds import (
-    clean_text_by_source, smart_extract_sections, extract_and_classify_skills,
-    normalize_domain, infer_job_level, infer_employment_type, infer_remote_type,
-    infer_education, infer_languages, infer_salary_range, infer_experience_required
+    clean_text_by_source,
+    extract_and_classify_skills,
+    infer_education,
+    infer_employment_type,
+    infer_experience_required,
+    infer_job_level,
+    infer_remote_type,
+    infer_salary_range,
+    normalize_domain,
+    smart_extract_sections,
 )
 
 sys.stdout.reconfigure(encoding='utf-8')
 
 # Example 1: LinkedIn GeoComply
 text_linkedin = """
-Security Software Engineer Intern 
+Security Software Engineer Intern
 GeoComply
 Ho Chi Minh City, Ho Chi Minh City, Vietnam · About the job
 About GeoComply
@@ -20,28 +28,28 @@ We’re GeoComply! We are at the forefront of geolocation, cybersecurity, and an
 The Role
 The Security Software Engineer Intern contributes to GeoComply’s success by helping strengthen GeoGuard’s VPN...
 Key Responsibilities
-Investigate performance issues in our VPN/proxy data collection systems — low IP collection rates, coverage gaps, and recurring failures across proxy, residential-proxy, browser-extension, and smart-DNS based collectors (PHP-based). 
-Diagnose root causes of degradation and identify what else we can do to improve collection rate, freshness, and coverage. 
-Fix common failures following established procedures, and propose enhancements to avoid repeat failures. 
-Build new collectors for VPN/proxy providers following existing templates, and enable auto-updater tooling for new providers. 
-Support the config auto-updater (JS-based): fix recurring updater failures, handle CAPTCHA-related issues (Cloudflare, reCAPTCHA v3), and manually update configs when auto-updaters fail. 
-Run VPN testing across a set of VPN applications and research current VPN technology to understand how it behaves and evolves. 
-Apply AI tools to research VPN providers — identify their spoofing techniques and the corresponding detection and protection methods GeoGuard can use against them. 
-Explore and propose what else we can do to detect VPN users — new signals, heuristics, or techniques that improve detection coverage. 
-Query performance and detection data to identify anomalies and establish healthy baselines and alert thresholds. 
-Build automated, data-driven monitoring — from raw data, to anomaly/alert-detection logic, to a visual dashboard the team can use on an ongoing basis — so degradation is caught proactively rather than after the fact. 
-Document testing results, recurring failure patterns, and research findings to drive process improvement. 
+Investigate performance issues in our VPN/proxy data collection systems — low IP collection rates, coverage gaps, and recurring failures across proxy, residential-proxy, browser-extension, and smart-DNS based collectors (PHP-based).
+Diagnose root causes of degradation and identify what else we can do to improve collection rate, freshness, and coverage.
+Fix common failures following established procedures, and propose enhancements to avoid repeat failures.
+Build new collectors for VPN/proxy providers following existing templates, and enable auto-updater tooling for new providers.
+Support the config auto-updater (JS-based): fix recurring updater failures, handle CAPTCHA-related issues (Cloudflare, reCAPTCHA v3), and manually update configs when auto-updaters fail.
+Run VPN testing across a set of VPN applications and research current VPN technology to understand how it behaves and evolves.
+Apply AI tools to research VPN providers — identify their spoofing techniques and the corresponding detection and protection methods GeoGuard can use against them.
+Explore and propose what else we can do to detect VPN users — new signals, heuristics, or techniques that improve detection coverage.
+Query performance and detection data to identify anomalies and establish healthy baselines and alert thresholds.
+Build automated, data-driven monitoring — from raw data, to anomaly/alert-detection logic, to a visual dashboard the team can use on an ongoing basis — so degradation is caught proactively rather than after the fact.
+Document testing results, recurring failure patterns, and research findings to drive process improvement.
 Who You Are
-Recently graduated or in pursuit of a degree in Computer Science, Software Engineering, or a related field. 
-Basic backend development knowledge (PHP and/or Golang preferred). 
-Comfortable querying and working with data to spot patterns and anomalies. 
-Good to have: interest in or exposure to networking concepts (VPNs, proxies, DNS, IP infrastructure). 
-Proficient with AI tools and able to apply them effectively to research VPN providers, spoofing techniques, and detection/protection methods, and to accelerate development. 
-Demonstrated skills in analytical thinking, problem-solving, and attention to detail. 
-Demonstrated ability to manage time and prioritize tasks to meet deadlines. 
-Ability to work in small collaborative teams in a dynamic working environment. 
-English language skills: fluent in reading and writing, comfortable with listening and speaking. 
-Collaborative and client-centric mindset. 
+Recently graduated or in pursuit of a degree in Computer Science, Software Engineering, or a related field.
+Basic backend development knowledge (PHP and/or Golang preferred).
+Comfortable querying and working with data to spot patterns and anomalies.
+Good to have: interest in or exposure to networking concepts (VPNs, proxies, DNS, IP infrastructure).
+Proficient with AI tools and able to apply them effectively to research VPN providers, spoofing techniques, and detection/protection methods, and to accelerate development.
+Demonstrated skills in analytical thinking, problem-solving, and attention to detail.
+Demonstrated ability to manage time and prioritize tasks to meet deadlines.
+Ability to work in small collaborative teams in a dynamic working environment.
+English language skills: fluent in reading and writing, comfortable with listening and speaking.
+Collaborative and client-centric mindset.
 Why GeoComply?
 We Care About Our Team
 Our GeoComply team is talented, driven and hard-working, and is known for its positive attitude and energy. At GeoComply, we take care of our employees with the total package. Team members are generously rewarded with competitive salaries, incentives, and a comprehensive benefits program.
@@ -52,7 +60,7 @@ GeoComply culture thrives on a dynamic mix of in-person energy and independent f
 # Example 2: Joboko Blueco
 text_joboko = """
 TUYỂN DỤNG LẬP TRÌNH VIÊN FRONTEND
-Công ty Cổ phần Blueco toàn cầu 
+Công ty Cổ phần Blueco toàn cầu
 Hết hạn: Còn 28 ngày Thu nhập: thu nhập từ 12 đến 30 tr
 Loại hình: Toàn thời gian
 Chức vụ: Nhân viên
@@ -115,7 +123,7 @@ def process(title, comp, text, src):
     edu = infer_education(clean_desc)
     sal = infer_salary_range(clean_desc)
     exp = infer_experience_required(title, clean_desc)
-    
+
     must_have_obj = {
         'skills': skills['must_have_skills'],
         'experience': exp,
@@ -123,10 +131,10 @@ def process(title, comp, text, src):
         'job_level': level,
         'requirements': smart_secs['requirements']
     }
-    
+
     must_str = ', '.join(skills['must_have_skills']) if skills['must_have_skills'] else 'N/A'
     req_snip = ' '.join(smart_secs['requirements'][:4]) if smart_secs['requirements'] else 'N/A'
-    
+
     must_have_text = f'Vị trí: {title}. Kỹ năng bắt buộc: {must_str}. Kinh nghiệm: {exp}. Yêu cầu: {req_snip}'
     embedding_text = f'Job Title: {title} | Company: {comp} | Domain: {domain} | Level: {level} | Must Have Skills: {must_str} | Experience: {exp} | Requirements: {req_snip}'
 

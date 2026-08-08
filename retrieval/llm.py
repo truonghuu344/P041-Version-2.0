@@ -1,8 +1,8 @@
-import sys
 import os
-import json
 import re
-from typing import List, Dict, Any, Optional
+import sys
+from typing import Any
+
 from dotenv import load_dotenv
 
 load_dotenv(override=True)
@@ -29,7 +29,7 @@ class LLMClient:
             except Exception as e:
                 print(f"⚠️ Chưa thể nạp OpenAI API Client: {e}. Chuyển sang LLM Synthesis Engine dự phòng.")
         else:
-            print(f"ℹ️ Chưa cấu hình OPENAI_API_KEY trong file .env. Sử dụng LLM Synthesis Engine dự phòng.")
+            print("ℹ️ Chưa cấu hình OPENAI_API_KEY trong file .env. Sử dụng LLM Synthesis Engine dự phòng.")
 
     def generate_response(self, prompt: str, system_message: str = "Bạn là trợ lý AI thông minh.") -> str:
         """Gửi prompt tới LLM và trả về câu trả lời văn bản"""
@@ -50,7 +50,7 @@ class LLMClient:
         # Dynamic Synthesis Engine Fallback
         return f"[Mô phỏng LLM Response]: Dựa trên thông tin đã phân tích cho yêu cầu: '{prompt[:100]}...'"
 
-    def generate_rag_response(self, question: str, context_docs: List[Dict[str, Any]]) -> str:
+    def generate_rag_response(self, question: str, context_docs: list[dict[str, Any]]) -> str:
         """Tự động dựng Prompt RAG (Augmented Prompt) và gọi LLM trả lời câu hỏi thực tế"""
         if not context_docs:
             return "Xin lỗi, không tìm thấy tài liệu phù hợp trong cơ sở dữ liệu để trả lời câu hỏi này."
