@@ -7,7 +7,7 @@ from statistics import mean
 from typing import Any
 
 from langchain_core.messages import HumanMessage, SystemMessage
-from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 from src.agents.state import InterviewAgentState
 from src.agents.tools.career_tools import TECH_SKILLS, clamp_star_scores, extract_known_terms
@@ -17,7 +17,16 @@ logger = logging.getLogger(__name__)
 
 
 def _json_value(content: Any) -> Any:
-    text = str(content or "").strip()
+    if isinstance(content, str):
+        text = content.strip()
+    elif isinstance(content, list):
+        text = "\n".join(
+            str(block.get("text", ""))
+            for block in content
+            if isinstance(block, dict) and block.get("text")
+        ).strip()
+    else:
+        text = str(content or "").strip()
     fenced = re.fullmatch(r"```(?:json)?\s*(.*?)\s*```", text, flags=re.DOTALL | re.IGNORECASE)
     if fenced:
         text = fenced.group(1)
@@ -70,7 +79,7 @@ def _fallback_questions(state: InterviewAgentState) -> list[str]:
 async def generate_questions_node(state: InterviewAgentState) -> dict[str, Any]:
     fallback = _fallback_questions(state)
     settings = get_settings()
-    if not settings.openai_api_key:
+    if not settings.google_genai_api_key:
         return {"interview_questions": fallback}
 
     count = int(state.get("num_questions", 5))
@@ -79,7 +88,13 @@ Câu hỏi phải bám sát CV/JD, gồm động lực, kỹ thuật/dự án, h
 Trả về duy nhất JSON array các chuỗi."""
     context = f"CV:\n{state['cv_text']}\n\nJD:\n{state['jd_requirements']}"
     try:
-        llm = ChatOpenAI(model=settings.model_name, temperature=0.4, api_key=settings.openai_api_key)
+        llm = ChatGoogleGenerativeAI(
+            model=settings.model_name,
+            temperature=1.0,
+            api_key=settings.google_genai_api_key,
+            request_timeout=settings.llm_timeout_seconds,
+            retries=settings.llm_max_retries,
+        )
         response = await llm.ainvoke([SystemMessage(content=prompt), HumanMessage(content=context)])
         value = _json_value(response.content)
         questions = [str(item).strip() for item in value if str(item).strip()] if isinstance(value, list) else []
@@ -142,14 +157,20 @@ def _fallback_star_evaluation(answer: str) -> dict[str, Any]:
 async def evaluate_answer_node(state: InterviewAgentState) -> dict[str, Any]:
     fallback = _fallback_star_evaluation(state["user_answer"])
     settings = get_settings()
-    if not settings.openai_api_key:
+    if not settings.google_genai_api_key:
         return {"answer_evaluation": fallback}
     prompt = """Bạn là STAR Interview Evaluator. Chấm câu trả lời theo Situation, Task, Action, Result từ 0-100.
 Chỉ đánh giá thông tin ứng viên thực sự nói. Nếu thiếu một thành phần quan trọng, đặt đúng một câu follow-up trung lập, không gợi ý thành tích giả.
 Trả về JSON: {"needs_followup":true,"follow_up_question":"...","star_score":{"situation":0,"task":0,"action":0,"result":0},"feedback":"..."}"""
     content = f"Câu hỏi: {state['question_text']}\nCâu trả lời: {state['user_answer']}\nCV tham chiếu: {state.get('cv_text', '')}"
     try:
-        llm = ChatOpenAI(model=settings.model_name, temperature=0.2, api_key=settings.openai_api_key)
+        llm = ChatGoogleGenerativeAI(
+            model=settings.model_name,
+            temperature=1.0,
+            api_key=settings.google_genai_api_key,
+            request_timeout=settings.llm_timeout_seconds,
+            retries=settings.llm_max_retries,
+        )
         response = await llm.ainvoke([SystemMessage(content=prompt), HumanMessage(content=content)])
         value = _json_value(response.content)
         if not isinstance(value, dict):
@@ -184,12 +205,18 @@ def _fallback_report(history: list[dict[str, Any]]) -> dict[str, Any]:
 async def generate_report_node(state: InterviewAgentState) -> dict[str, Any]:
     fallback = _fallback_report(state["qa_history"])
     settings = get_settings()
-    if not settings.openai_api_key:
+    if not settings.google_genai_api_key:
         return {"final_report": fallback}
     prompt = """Bạn là Interview Report Agent. Tổng hợp lịch sử hỏi đáp và điểm đã chấm thành báo cáo STAR.
 Không thay đổi điểm thành phần đã có và không bịa nhận xét. Trả về JSON gồm total_score, star_scores, strengths, improvements, recommendations."""
     try:
-        llm = ChatOpenAI(model=settings.model_name, temperature=0.2, api_key=settings.openai_api_key)
+        llm = ChatGoogleGenerativeAI(
+            model=settings.model_name,
+            temperature=1.0,
+            api_key=settings.google_genai_api_key,
+            request_timeout=settings.llm_timeout_seconds,
+            retries=settings.llm_max_retries,
+        )
         response = await llm.ainvoke(
             [
                 SystemMessage(content=prompt),

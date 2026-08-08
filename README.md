@@ -43,7 +43,7 @@ pip install -e ".[dev]"
 
 # Cấu hình API keys
 cp .env.example .env
-# Mở .env và thêm OPENAI_API_KEY của bạn
+# Mở .env và thêm GEMINI_API_KEY của bạn (lấy từ Google AI Studio)
 # Đồng thời cập nhật AI_LOG_API_KEY bằng key riêng từ link mời của BTC
 # (giá trị trong .env.example chỉ là placeholder)
 ```
@@ -176,7 +176,7 @@ python scripts/demo_interactive_ats.py
 |-------|-----------|---------|
 | AI Agent | LangGraph + LangChain | Latest |
 | Backend | FastAPI + Uvicorn | 0.100+ |
-| LLM | OpenAI GPT-4o-mini | API |
+| LLM | Google Gemini 3.5 Flash | Gemini Developer API |
 | Frontend | Next.js / Streamlit | 14+ / 1.30+ |
 | Database | SQLite (dev) / PostgreSQL (prod) | — |
 | DevOps | Docker + GitHub Actions | — |

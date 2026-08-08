@@ -36,7 +36,7 @@ def test_local_cv_parser_extracts_only_present_skills():
 async def test_cv_parser_does_not_require_external_ai(monkeypatch):
     monkeypatch.setattr(
         "src.services.cv_parser.get_settings",
-        lambda: SimpleNamespace(openai_api_key="", model_name="gpt-4o-mini", cv_parser_mode="local"),
+        lambda: SimpleNamespace(google_genai_api_key="", model_name="gemini-3.5-flash", cv_parser_mode="local"),
     )
 
     result = await parse_cv_to_structured_json(CV_TEXT)
@@ -120,22 +120,22 @@ async def test_cv_agent_calls_structured_llm_and_rejects_hallucinated_skill(monk
     monkeypatch.setattr(
         "src.agents.nodes.cv_parser_nodes.get_settings",
         lambda: SimpleNamespace(
-            openai_api_key="test-key",
-            model_name="gpt-4o-mini",
+            google_genai_api_key="test-key",
+            model_name="gemini-3.5-flash",
             cv_parser_mode="local",
             llm_timeout_seconds=20,
             llm_max_retries=0,
         ),
     )
     monkeypatch.setattr(
-        "src.agents.nodes.cv_parser_nodes.ChatOpenAI",
+        "src.agents.nodes.cv_parser_nodes.ChatGoogleGenerativeAI",
         lambda **kwargs: FakeStructuredLLM(),
     )
 
     result = await parse_cv_to_structured_json(CV_TEXT, use_llm=True)
 
     assert called["value"] is True
-    assert result["parser_mode"] == "openai_agent"
+    assert result["parser_mode"] == "gemini_agent"
     assert result["agent_metadata"]["llm_called"] is True
     assert result["agent_metadata"]["llm_succeeded"] is True
     assert "Python" in result["hard_skills"]

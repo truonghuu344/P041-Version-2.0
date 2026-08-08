@@ -5,7 +5,7 @@ import re
 from typing import Any
 
 from langchain_core.messages import HumanMessage, SystemMessage
-from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from pydantic import BaseModel, Field
 
 from src.agents.state import GapAnalysisState
@@ -104,7 +104,7 @@ async def draft_gap_analysis(state: GapAnalysisState) -> dict[str, Any]:
         "suggestions": deterministic_cv_suggestions(state["cv_raw_text"], evidence["hard_skills_matching"]),
     }
     settings = get_settings()
-    if not settings.openai_api_key or settings.openai_api_key == "sk-your-key-here":
+    if not settings.google_genai_api_key:
         return {"draft_result": fallback}
 
     system_prompt = """Bạn là CV Gap Analysis & Career Action Plan Agent.
@@ -134,12 +134,12 @@ Missing skills: {evidence['hard_skills_missing']}
 Soft-skill gaps: {evidence['soft_skills_gap']}
 """
     try:
-        llm = ChatOpenAI(
+        llm = ChatGoogleGenerativeAI(
             model=settings.model_name,
-            temperature=0,
-            api_key=settings.openai_api_key,
-            timeout=settings.llm_timeout_seconds,
-            max_retries=settings.llm_max_retries,
+            temperature=1.0,
+            api_key=settings.google_genai_api_key,
+            request_timeout=settings.llm_timeout_seconds,
+            retries=settings.llm_max_retries,
         )
         structured_llm = llm.with_structured_output(GapCareerPlanDraft, method="json_schema", strict=True)
         response = await structured_llm.ainvoke(

@@ -9,7 +9,7 @@ class UserRegister(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=6, description="Mật khẩu tối thiểu 6 ký tự")
     full_name: str = Field(..., min_length=2, description="Họ và tên người dùng")
-    role: str = Field(default="student", description="student | counselor | enterprise | admin")
+    role: str = Field(default="student", description="student | counselor | enterprise")
 
 
 class UserUpdate(BaseModel):

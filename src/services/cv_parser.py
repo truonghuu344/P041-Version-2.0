@@ -250,5 +250,5 @@ async def parse_cv_to_structured_json(raw_text: str, *, use_llm: bool | None = N
     from src.agents.cv_parser_agent import cv_parser_agent
 
     if use_llm is None:
-        use_llm = get_settings().cv_parser_mode == "openai"
+        use_llm = get_settings().cv_parser_mode == "gemini"
     return await cv_parser_agent.run(sanitize_extracted_text(raw_text), use_llm=use_llm)

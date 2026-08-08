@@ -22,7 +22,7 @@ async def test_agent_state_structure():
 
 @pytest.fixture
 def disable_llm(monkeypatch):
-    fallback_settings = SimpleNamespace(openai_api_key="", model_name="gpt-4o-mini")
+    fallback_settings = SimpleNamespace(google_genai_api_key="", model_name="gemini-3.5-flash")
     monkeypatch.setattr("src.agents.nodes.gap_analysis_nodes.get_settings", lambda: fallback_settings)
     monkeypatch.setattr("src.agents.nodes.interview_nodes.get_settings", lambda: fallback_settings)
 

@@ -115,11 +115,11 @@ async def get_cv_agent_status(
 ) -> dict:
     """Thông tin runtime công khai của CV Agent; không bao giờ trả API key."""
     settings = get_settings()
-    configured = bool(settings.openai_api_key and settings.openai_api_key != "sk-your-key-here")
+    configured = bool(settings.google_genai_api_key)
     return {
         "agent_name": "CV Parsing & ATS Agent",
         "workflow_version": "2.0",
-        "provider": "openai",
+        "provider": "google_gemini",
         "model": settings.model_name,
         "default_mode": settings.cv_parser_mode,
         "configured": configured,

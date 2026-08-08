@@ -1,7 +1,8 @@
 import uuid
 from datetime import datetime
-from typing import Optional, List, Any
-from sqlalchemy import String, Text, Float, Boolean, Integer, DateTime, ForeignKey, JSON, func
+from typing import Any, List, Optional
+
+from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, Index, Integer, String, Text, func, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.db.database import Base
@@ -13,6 +14,15 @@ def generate_uuid() -> str:
 
 class User(Base):
     __tablename__ = "users"
+    __table_args__ = (
+        Index(
+            "uq_users_single_admin",
+            "role",
+            unique=True,
+            postgresql_where=text("role = 'admin'"),
+            sqlite_where=text("role = 'admin'"),
+        ),
+    )
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)

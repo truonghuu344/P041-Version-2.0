@@ -26,18 +26,26 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 10080
 
     # LLM
-    openai_api_key: str = ""
-    model_name: str = "gpt-4o-mini"
-    llm_temperature: float = Field(default=0.7, ge=0.0, le=2.0)
+    # Gemini Developer API. GOOGLE_API_KEY được hỗ trợ để tương thích với
+    # tên biến môi trường chuẩn của SDK Google/LangChain.
+    gemini_api_key: str = ""
+    google_api_key: str = ""
+    model_name: str = "gemini-3.5-flash"
+    llm_temperature: float = Field(default=1.0, ge=0.0, le=2.0)
     llm_timeout_seconds: float = Field(default=45, ge=5, le=120)
     llm_max_retries: int = Field(default=1, ge=0, le=3)
-    cv_parser_mode: Literal["local", "openai"] = "local"
+    cv_parser_mode: Literal["local", "gemini"] = "local"
 
     # Database
     database_url: str = "postgresql+asyncpg://postgres:postgrespassword@localhost:5432/career_assistant_db"
 
     # Vector Store
     chroma_persist_dir: str = "./data/chroma"
+
+    @property
+    def google_genai_api_key(self) -> str:
+        """Ưu tiên GEMINI_API_KEY, sau đó dùng GOOGLE_API_KEY nếu đã cấu hình."""
+        return self.gemini_api_key or self.google_api_key
 
 
 @lru_cache

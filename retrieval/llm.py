@@ -1,9 +1,11 @@
-import sys
 import os
-import json
 import re
-from typing import List, Dict, Any, Optional
+import sys
+from typing import Any
+
 from dotenv import load_dotenv
+from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 load_dotenv(override=True)
 
@@ -14,43 +16,50 @@ class LLMClient:
     """Wrapper gọi các mô hình ngôn ngữ lớn (LLM) dựa trên cấu hình môi trường .env"""
 
     def __init__(self, provider: str = None, api_key: str = None, model: str = None):
-        self.provider = provider or os.getenv("LLM_PROVIDER", "openai")
-        self.api_key = api_key or os.getenv("OPENAI_API_KEY")
-        self.model = model or os.getenv("OPENAI_MODEL_NAME", "gpt-4o-mini")
-        self._openai_client = None
+        self.provider = provider or os.getenv("LLM_PROVIDER", "google_gemini")
+        self.api_key = api_key or os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+        self.model = model or os.getenv("MODEL_NAME", "gemini-3.5-flash")
+        self._gemini_client = None
         self._init_client()
 
     def _init_client(self):
-        if self.api_key and self.api_key != "your_openai_api_key_here":
+        if self.api_key and self.api_key != "your-gemini-api-key-here":
             try:
-                import openai
-                self._openai_client = openai.OpenAI(api_key=self.api_key)
+                self._gemini_client = ChatGoogleGenerativeAI(
+                    model=self.model,
+                    api_key=self.api_key,
+                    temperature=1.0,
+                )
                 print(f"✅ Đã khởi tạo kết nối LLM Provider ({self.provider}: {self.model}) thành công!")
             except Exception as e:
-                print(f"⚠️ Chưa thể nạp OpenAI API Client: {e}. Chuyển sang LLM Synthesis Engine dự phòng.")
+                print(f"⚠️ Chưa thể nạp Gemini API Client: {e}. Chuyển sang LLM Synthesis Engine dự phòng.")
         else:
-            print(f"ℹ️ Chưa cấu hình OPENAI_API_KEY trong file .env. Sử dụng LLM Synthesis Engine dự phòng.")
+            print("ℹ️ Chưa cấu hình GEMINI_API_KEY trong file .env. Sử dụng LLM Synthesis Engine dự phòng.")
 
     def generate_response(self, prompt: str, system_message: str = "Bạn là trợ lý AI thông minh.") -> str:
         """Gửi prompt tới LLM và trả về câu trả lời văn bản"""
-        if self._openai_client:
+        if self._gemini_client:
             try:
-                response = self._openai_client.chat.completions.create(
-                    model=self.model,
-                    messages=[
-                        {"role": "system", "content": system_message},
-                        {"role": "user", "content": prompt}
-                    ],
-                    temperature=0.2
+                response = self._gemini_client.invoke(
+                    [
+                        SystemMessage(content=system_message),
+                        HumanMessage(content=prompt),
+                    ]
                 )
-                return response.choices[0].message.content.strip()
+                if isinstance(response.content, str):
+                    return response.content.strip()
+                return "\n".join(
+                    str(block.get("text", ""))
+                    for block in response.content
+                    if isinstance(block, dict) and block.get("text")
+                ).strip()
             except Exception as e:
                 print(f"⚠️ Lỗi gọi LLM API ({e}).")
 
         # Dynamic Synthesis Engine Fallback
         return f"[Mô phỏng LLM Response]: Dựa trên thông tin đã phân tích cho yêu cầu: '{prompt[:100]}...'"
 
-    def generate_rag_response(self, question: str, context_docs: List[Dict[str, Any]]) -> str:
+    def generate_rag_response(self, question: str, context_docs: list[dict[str, Any]]) -> str:
         """Tự động dựng Prompt RAG (Augmented Prompt) và gọi LLM trả lời câu hỏi thực tế"""
         if not context_docs:
             return "Xin lỗi, không tìm thấy tài liệu phù hợp trong cơ sở dữ liệu để trả lời câu hỏi này."
@@ -82,7 +91,7 @@ class LLMClient:
 
 Hãy trả lời câu hỏi trên một cách chính xác, ngắn gọn và dẫn chiếu rõ mã ID tài liệu liên quan."""
 
-        if self._openai_client:
+        if self._gemini_client:
             return self.generate_response(user_prompt, system_message)
 
         # Enhanced Phase 2 Synthesis Engine

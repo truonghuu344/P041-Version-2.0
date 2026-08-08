@@ -30,9 +30,8 @@ redis>=5.0.0                    # Cache session & state cho LangGraph
 # ==========================================
 langchain>=0.3.0
 langchain-community>=0.3.0
-langchain-openai>=0.3.0
+langchain-google-genai>=4.0.0
 langgraph>=0.2.0                # Xử lý luồng hội thoại phỏng vấn AI phức tạp
-tiktoken>=0.7.0                 # Dem token cho OpenAI
 
 # ==========================================
 # 5. DOCUMENT PROCESSING & EXPORT (XỬ LÝ CV)

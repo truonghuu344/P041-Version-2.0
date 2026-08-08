@@ -2,6 +2,7 @@ import logging
 import os
 from collections.abc import AsyncGenerator
 
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.pool import NullPool
@@ -59,6 +60,14 @@ async def init_db() -> None:
 
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
+            # create_all không thêm index mới vào bảng đã tồn tại. Lệnh này
+            # bảo vệ invariant một-admin cho cả PostgreSQL và SQLite.
+            await conn.execute(
+                text(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS uq_users_single_admin "
+                    "ON users (role) WHERE role = 'admin'"
+                )
+            )
         logger.info("Database tables initialized successfully.")
 
         # Seed default admin user admin@cva.com / admin123
@@ -68,11 +77,18 @@ async def init_db() -> None:
             from src.core.security import get_password_hash
 
             admin_email = "admin@cva.com"
-            stmt = select(User).where(User.email == admin_email)
+            stmt = select(User).where(User.role == "admin")
             res = await session.execute(stmt)
             existing_admin = res.scalar_one_or_none()
 
             if not existing_admin:
+                email_result = await session.execute(select(User).where(User.email == admin_email))
+                admin_user = email_result.scalar_one_or_none()
+                if admin_user:
+                    raise RuntimeError(
+                        "Cannot seed the system Admin: admin@cva.com already belongs "
+                        "to a non-admin account. Resolve the account explicitly."
+                    )
                 admin_user = User(
                     email=admin_email,
                     hashed_password=get_password_hash("admin123"),

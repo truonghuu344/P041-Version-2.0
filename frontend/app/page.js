@@ -632,7 +632,7 @@ export default function Page() {
                   <label className="llm-consent-card" htmlFor="cv-use-llm">
                     <input type="checkbox" id="cv-use-llm" />
                     <span className="llm-consent-copy">
-                      <strong>Dùng OpenAI để phân tích chuyên sâu</strong>
+                      <strong>Dùng Google Gemini để phân tích chuyên sâu</strong>
                       <small>CV sẽ được gửi tới <span id="cv-agent-model">LLM đã cấu hình</span> cho lần phân tích này. Bỏ chọn để chỉ xử lý cục bộ.</small>
                     </span>
                     <span className="llm-consent-badge">TÙY CHỌN</span>
@@ -998,17 +998,28 @@ export default function Page() {
 
           <div className="gap-workspace">
             <div className="gap-card">
-              <div className="form-row margin-bottom">
+              <div className="form-row gap-selection-grid margin-bottom">
                 <div className="form-group flex-1">
                   <label className="form-label">Chọn CV:</label>
-                  <select id="page-gap-select-cv" className="form-input select-dark"></select>
+                  <div className="gap-select-shell">
+                    <span className="gap-select-icon" aria-hidden="true">📄</span>
+                    <select id="page-gap-select-cv" className="form-input gap-select" aria-label="Chọn CV để phân tích"></select>
+                    <span className="gap-select-chevron" aria-hidden="true">⌄</span>
+                  </div>
                 </div>
                 <div className="form-group flex-1">
                   <label className="form-label">Chọn JD Mục Tiêu:</label>
-                  <select id="page-gap-select-jd" className="form-input select-dark"></select>
+                  <div className="gap-select-shell">
+                    <span className="gap-select-icon" aria-hidden="true">🎯</span>
+                    <select id="page-gap-select-jd" className="form-input gap-select" aria-label="Chọn JD mục tiêu"></select>
+                    <span className="gap-select-chevron" aria-hidden="true">⌄</span>
+                  </div>
                 </div>
               </div>
-              <button id="page-btn-run-gap" className="btn-primary full-width">Chạy Phân Tích Khớp Hồ Sơ CV - JD</button>
+              <button id="page-btn-run-gap" className="btn-primary full-width gap-analysis-submit">
+                <span className="gap-submit-icon" aria-hidden="true">✦</span>
+                <span>Chạy Phân Tích Khớp Hồ Sơ CV - JD</span>
+              </button>
             </div>
 
             <div id="page-gap-results-container" className="gap-results-card" style={{ display: 'none' }}>
@@ -1206,7 +1217,7 @@ export default function Page() {
           <div className="section-header center-header" style={{ marginBottom: '32px' }}>
             <span className="section-tag glow-cyan" data-i18n="admin-tag">👑 QUẢN TRỊ VIÊN HỆ THỐNG</span>
             <h2 className="section-title-large" data-i18n="admin-title">Quản Lý Người Dùng & Phân Quyền</h2>
-            <p className="section-subtitle" data-i18n="admin-sub">Danh sách toàn bộ tài khoản người dùng, phân quyền truy cập và thao tác thêm / sửa / xóa</p>
+            <p className="section-subtitle" data-i18n="admin-sub">Quản lý người dùng với một Admin hệ thống duy nhất; không hỗ trợ chuyển quyền Admin</p>
           </div>
 
           <div className="admin-container">
@@ -1218,7 +1229,7 @@ export default function Page() {
               </div>
               <div className="admin-stat-card">
                 <span className="admin-stat-num glow-purple" id="admin-stat-admin">0</span>
-                <span className="admin-stat-lbl" data-i18n="admin-stat-admin">Quản Trị Viên (Admin)</span>
+                <span className="admin-stat-lbl" data-i18n="admin-stat-admin">Admin Hệ Thống Duy Nhất</span>
               </div>
               <div className="admin-stat-card">
                 <span className="admin-stat-num glow-pink" id="admin-stat-student">0</span>
@@ -1386,17 +1397,28 @@ export default function Page() {
             <h2 className="modal-title" data-i18n="modal-gap-title">🎯 Phân Tích Match Score & Gap Analysis</h2>
             <p className="modal-sub" data-i18n="modal-gap-sub">So khớp CV với JD & đề xuất tối ưu câu từ Chân Thật (Anti-Hallucination)</p>
           </div>
-          <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
+          <div className="form-row gap-selection-grid" style={{ marginBottom: '16px' }}>
             <div style={{ flex: 1 }}>
               <label className="form-label" data-i18n="label-select-cv">Chọn CV:</label>
-              <select id="gap-select-cv" className="form-input" style={{ background: '#0e0f30', color: '#fff' }}></select>
+              <div className="gap-select-shell">
+                <span className="gap-select-icon" aria-hidden="true">📄</span>
+                <select id="gap-select-cv" className="form-input gap-select" aria-label="Chọn CV để phân tích"></select>
+                <span className="gap-select-chevron" aria-hidden="true">⌄</span>
+              </div>
             </div>
             <div style={{ flex: 1 }}>
               <label className="form-label" data-i18n="label-select-jd">Chọn JD Mục Tiêu:</label>
-              <select id="gap-select-jd" className="form-input" style={{ background: '#0e0f30', color: '#fff' }}></select>
+              <div className="gap-select-shell">
+                <span className="gap-select-icon" aria-hidden="true">🎯</span>
+                <select id="gap-select-jd" className="form-input gap-select" aria-label="Chọn JD mục tiêu"></select>
+                <span className="gap-select-chevron" aria-hidden="true">⌄</span>
+              </div>
             </div>
           </div>
-          <button id="btn-run-gap-analysis" className="btn-primary" style={{ width: '100%', marginBottom: '16px' }} data-i18n="btn-run-gap">Phân Tích Khớp CV - JD</button>
+          <button id="btn-run-gap-analysis" className="btn-primary gap-analysis-submit" style={{ width: '100%', marginBottom: '16px' }} data-i18n="btn-run-gap">
+            <span className="gap-submit-icon" aria-hidden="true">✦</span>
+            <span>Phân Tích Khớp CV - JD</span>
+          </button>
 
           <div id="gap-results-container" style={{ display: 'none', background: 'rgba(255,255,255,0.03)', padding: '16px', borderRadius: '12px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
@@ -1491,7 +1513,7 @@ export default function Page() {
               </svg>
             </div>
             <h2 className="modal-title" id="admin-user-modal-title" data-i18n="admin-modal-add-title">Thêm Người Dùng Mới</h2>
-            <p className="modal-sub" id="admin-user-modal-sub" data-i18n="admin-modal-add-sub">Tạo tài khoản mới với vai trò Admin, Student, Counselor hoặc Enterprise</p>
+            <p className="modal-sub" id="admin-user-modal-sub" data-i18n="admin-modal-add-sub">Tạo tài khoản Student, Counselor hoặc Enterprise</p>
           </div>
 
           <form id="admin-user-form" className="admin-user-form">
@@ -1530,9 +1552,9 @@ export default function Page() {
                   <option value="student">Sinh viên (Student)</option>
                   <option value="counselor">Cố vấn (Counselor)</option>
                   <option value="enterprise">Doanh nghiệp (Enterprise)</option>
-                  <option value="admin">Quản trị viên (Admin)</option>
                 </select>
               </div>
+              <p className="admin-role-policy">🔒 Hệ thống chỉ có một Admin. Không thể cấp hoặc chuyển quyền Admin cho user khác.</p>
             </div>
 
             {/* Mật khẩu */}

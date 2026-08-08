@@ -1,21 +1,30 @@
-from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.core.security import get_password_hash, require_role
 from src.db.database import get_db
 from src.db.models import User
-from src.core.security import require_role, get_password_hash
-from src.models.schemas import UserRegister, UserUpdate, UserOut
+from src.models.schemas import UserOut, UserRegister, UserUpdate
 
 router = APIRouter(prefix="/admin", tags=["Admin User Management"])
+MANAGED_ROLES = {"student", "counselor", "enterprise"}
 
 
-@router.get("/users", response_model=List[UserOut])
+def _managed_role(role: str) -> str:
+    if role == "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Hệ thống chỉ có một Admin. Không thể cấp quyền Admin cho tài khoản khác.",
+        )
+    return role if role in MANAGED_ROLES else "student"
+
+
+@router.get("/users", response_model=list[UserOut])
 async def list_all_users(
     db: AsyncSession = Depends(get_db),
     admin_user: User = Depends(require_role(["admin"])),
-) -> List[UserOut]:
+) -> list[UserOut]:
     """[ADMIN ONLY] Xem danh sách toàn bộ người dùng trong hệ thống."""
     stmt = select(User).order_by(User.created_at.desc())
     result = await db.execute(stmt)
@@ -25,7 +34,7 @@ async def list_all_users(
 async def get_user_by_admin(
     user_id: str,
     db: AsyncSession = Depends(get_db),
-    admin_user: User = Depends(require_role(["admin"]))
+    admin_user: User = Depends(require_role(["admin"])),
 ) -> UserOut:
     """[ADMIN ONLY] Lấy thông tin chi tiết của người dùng theo ID."""
     stmt = select(User).where(User.id == user_id)
@@ -42,7 +51,7 @@ async def create_user_by_admin(
     db: AsyncSession = Depends(get_db),
     admin_user: User = Depends(require_role(["admin"])),
 ) -> UserOut:
-    """[ADMIN ONLY] Thêm người dùng mới vào hệ thống (Admin, Student, Counselor, Enterprise)."""
+    """[ADMIN ONLY] Thêm Student, Counselor hoặc Enterprise; không thể tạo Admin thứ hai."""
     stmt = select(User).where(User.email == payload.email.lower())
     result = await db.execute(stmt)
     existing_user = result.scalar_one_or_none()
@@ -52,8 +61,7 @@ async def create_user_by_admin(
             detail="Email này đã tồn tại trong hệ thống",
         )
 
-    valid_roles = ["student", "counselor", "enterprise", "admin"]
-    role = payload.role if payload.role in valid_roles else "student"
+    role = _managed_role(payload.role)
 
     new_user = User(
         email=payload.email.lower(),
@@ -100,9 +108,13 @@ async def update_user_by_admin(
         user.full_name = payload.full_name.strip()
 
     if payload.role:
-        valid_roles = ["student", "counselor", "enterprise", "admin"]
-        if payload.role in valid_roles:
-            user.role = payload.role
+        if user.role == "admin" and payload.role != "admin":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Không thể thay đổi vai trò của Admin duy nhất.",
+            )
+        if user.role != "admin":
+            user.role = _managed_role(payload.role)
 
     if payload.password and len(payload.password.strip()) >= 6:
         user.hashed_password = get_password_hash(payload.password.strip())
@@ -133,6 +145,12 @@ async def delete_user_by_admin(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Không tìm thấy tài khoản người dùng để xóa",
+        )
+
+    if user.role == "admin":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Không thể xóa tài khoản Admin duy nhất.",
         )
 
     await db.delete(user)

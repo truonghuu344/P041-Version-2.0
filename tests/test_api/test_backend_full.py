@@ -2,7 +2,9 @@ from types import SimpleNamespace
 
 import pytest
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 
+from src.core.security import get_password_hash
 from src.db.models import CV, User
 from tests.conftest import TestingSessionLocal
 
@@ -67,8 +69,97 @@ async def test_auth_and_jds_flow(client):
 
 
 @pytest.mark.asyncio
+async def test_system_allows_exactly_one_immutable_admin(client):
+    async with TestingSessionLocal() as session:
+        primary_admin = User(
+            email="primary-admin@example.com",
+            hashed_password=get_password_hash("Admin123!"),
+            full_name="Primary Admin",
+            role="admin",
+        )
+        session.add(primary_admin)
+        await session.commit()
+        await session.refresh(primary_admin)
+        admin_id = primary_admin.id
+
+    login = await client.post(
+        "/api/v1/auth/login",
+        json={"email": "primary-admin@example.com", "password": "Admin123!"},
+    )
+    headers = {"Authorization": f"Bearer {login.json()['access_token']}"}
+
+    public_admin_attempt = await client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": "public-admin-attempt@example.com",
+            "password": "Password123!",
+            "full_name": "Public Attempt",
+            "role": "admin",
+        },
+    )
+    assert public_admin_attempt.status_code == 201
+    assert public_admin_attempt.json()["role"] == "student"
+
+    create_admin = await client.post(
+        "/api/v1/admin/users",
+        headers=headers,
+        json={
+            "email": "second-admin@example.com",
+            "password": "Password123!",
+            "full_name": "Second Admin",
+            "role": "admin",
+        },
+    )
+    assert create_admin.status_code == 403
+
+    create_student = await client.post(
+        "/api/v1/admin/users",
+        headers=headers,
+        json={
+            "email": "managed-user@example.com",
+            "password": "Password123!",
+            "full_name": "Managed User",
+            "role": "student",
+        },
+    )
+    assert create_student.status_code == 201
+    managed_user_id = create_student.json()["id"]
+
+    promote_user = await client.put(
+        f"/api/v1/admin/users/{managed_user_id}",
+        headers=headers,
+        json={"role": "admin"},
+    )
+    assert promote_user.status_code == 403
+
+    demote_primary_admin = await client.put(
+        f"/api/v1/admin/users/{admin_id}",
+        headers=headers,
+        json={"role": "student"},
+    )
+    assert demote_primary_admin.status_code == 400
+
+    async with TestingSessionLocal() as session:
+        admins = (await session.execute(select(User).where(User.role == "admin"))).scalars().all()
+    assert len(admins) == 1
+    assert admins[0].id == admin_id
+
+    async with TestingSessionLocal() as session:
+        session.add(
+            User(
+                email="db-level-admin@example.com",
+                hashed_password=get_password_hash("Password123!"),
+                full_name="DB-level Attempt",
+                role="admin",
+            )
+        )
+        with pytest.raises(IntegrityError):
+            await session.commit()
+
+
+@pytest.mark.asyncio
 async def test_two_ai_agent_workflows_match_frontend_contract(client, monkeypatch):
-    fallback_settings = SimpleNamespace(openai_api_key="", model_name="gpt-4o-mini")
+    fallback_settings = SimpleNamespace(google_genai_api_key="", model_name="gemini-3.5-flash")
     monkeypatch.setattr("src.agents.nodes.gap_analysis_nodes.get_settings", lambda: fallback_settings)
     monkeypatch.setattr("src.agents.nodes.interview_nodes.get_settings", lambda: fallback_settings)
 

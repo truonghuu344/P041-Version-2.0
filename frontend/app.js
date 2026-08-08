@@ -1839,7 +1839,7 @@ function startAppLogic() {
 
   document.getElementById('btn-inspector-reanalyze')?.addEventListener('click', async () => {
     if (!inspectedCV?.id) return;
-    const approved = window.confirm('CV chứa dữ liệu cá nhân và sẽ được gửi tới OpenAI để phân tích. Bạn có đồng ý cho lần chạy này không?');
+    const approved = window.confirm('CV chứa dữ liệu cá nhân và sẽ được gửi tới Google Gemini để phân tích. Bạn có đồng ý cho lần chạy này không?');
     if (!approved) return;
     const button = document.getElementById('btn-inspector-reanalyze');
     try {
@@ -1949,17 +1949,169 @@ function startAppLogic() {
   const pageBtnRunGap = document.getElementById('page-btn-run-gap');
   const pageGapResultsContainer = document.getElementById('page-gap-results-container');
 
+  function formatGapOptionDate(value) {
+    if (!value) return '';
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString('vi-VN');
+  }
+
+  function buildGapCvOptions(cvs) {
+    if (!cvs.length) {
+      return '<option value="" disabled selected>Chưa có CV — hãy tải CV lên trước</option>';
+    }
+    const titleCounts = cvs.reduce((counts, cv) => {
+      const title = cv.title || 'CV chưa đặt tên';
+      counts[title] = (counts[title] || 0) + 1;
+      return counts;
+    }, {});
+    return cvs.map(cv => {
+      const title = cv.title || 'CV chưa đặt tên';
+      const date = formatGapOptionDate(cv.created_at);
+      const duplicateId = titleCounts[title] > 1 ? ` • #${String(cv.id).slice(0, 6)}` : '';
+      const label = `${title}${date ? ` • ${date}` : ''}${duplicateId}`;
+      return `<option value="${escapeHtml(cv.id)}">${escapeHtml(label)}</option>`;
+    }).join('');
+  }
+
+  function buildGapJdOptions(jds) {
+    if (!jds.length) {
+      return '<option value="" disabled selected>Chưa có JD — hãy tạo JD trước</option>';
+    }
+    return jds.map(jd => {
+      const title = jd.title || 'JD chưa đặt tên';
+      const company = jd.company || 'Chưa ghi công ty';
+      return `<option value="${escapeHtml(jd.id)}">${escapeHtml(`${title} • ${company}`)}</option>`;
+    }).join('');
+  }
+
+  function closeGapSelectMenus(exceptShell = null) {
+    document.querySelectorAll('.gap-select-shell.is-open').forEach(shell => {
+      if (shell === exceptShell) return;
+      shell.classList.remove('is-open');
+      shell.querySelector('.gap-select-trigger')?.setAttribute('aria-expanded', 'false');
+    });
+  }
+
+  function enhanceGapSelect(select) {
+    if (!select) return;
+    const shell = select.closest('.gap-select-shell');
+    if (!shell) return;
+
+    let trigger = shell.querySelector('.gap-select-trigger');
+    let menu = shell.querySelector('.gap-select-menu');
+    if (!trigger || !menu) {
+      select.classList.add('gap-select-native-hidden');
+      trigger = document.createElement('button');
+      trigger.type = 'button';
+      trigger.className = 'gap-select-trigger';
+      trigger.setAttribute('aria-haspopup', 'listbox');
+      trigger.setAttribute('aria-expanded', 'false');
+      trigger.setAttribute('aria-controls', `${select.id}-menu`);
+      trigger.innerHTML = `
+        <span class="gap-select-value">
+          <strong class="gap-select-value-title"></strong>
+          <small class="gap-select-value-meta"></small>
+        </span>`;
+
+      menu = document.createElement('div');
+      menu.id = `${select.id}-menu`;
+      menu.className = 'gap-select-menu';
+      menu.setAttribute('role', 'listbox');
+      menu.setAttribute('aria-label', select.getAttribute('aria-label') || 'Danh sách lựa chọn');
+      shell.append(trigger, menu);
+
+      trigger.addEventListener('click', () => {
+        const shouldOpen = !shell.classList.contains('is-open');
+        closeGapSelectMenus(shell);
+        shell.classList.toggle('is-open', shouldOpen);
+        trigger.setAttribute('aria-expanded', String(shouldOpen));
+      });
+
+      trigger.addEventListener('keydown', event => {
+        if (!['ArrowDown', 'ArrowUp', 'Enter', ' '].includes(event.key)) return;
+        event.preventDefault();
+        closeGapSelectMenus(shell);
+        shell.classList.add('is-open');
+        trigger.setAttribute('aria-expanded', 'true');
+        const items = [...menu.querySelectorAll('.gap-select-menu-item:not(:disabled)')];
+        const selectedIndex = Math.max(0, items.findIndex(item => item.getAttribute('aria-selected') === 'true'));
+        const targetIndex = event.key === 'ArrowUp' ? Math.max(0, selectedIndex - 1) : selectedIndex;
+        items[targetIndex]?.focus();
+      });
+
+      menu.addEventListener('keydown', event => {
+        const items = [...menu.querySelectorAll('.gap-select-menu-item:not(:disabled)')];
+        const currentIndex = items.indexOf(document.activeElement);
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          shell.classList.remove('is-open');
+          trigger.setAttribute('aria-expanded', 'false');
+          trigger.focus();
+        } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+          event.preventDefault();
+          const offset = event.key === 'ArrowDown' ? 1 : -1;
+          items[(currentIndex + offset + items.length) % items.length]?.focus();
+        } else if (event.key === 'Home' || event.key === 'End') {
+          event.preventDefault();
+          items[event.key === 'Home' ? 0 : items.length - 1]?.focus();
+        }
+      });
+    }
+
+    const selectedOption = select.options[select.selectedIndex] || select.options[0];
+    const selectedParts = (selectedOption?.textContent || 'Chọn một mục').split(' • ');
+    trigger.querySelector('.gap-select-value-title').textContent = selectedParts.shift();
+    const selectedMeta = trigger.querySelector('.gap-select-value-meta');
+    selectedMeta.textContent = selectedParts.join(' • ');
+    selectedMeta.hidden = selectedParts.length === 0;
+    trigger.disabled = !selectedOption || selectedOption.disabled;
+
+    const badge = select.id.includes('cv') ? 'CV' : 'JD';
+    menu.innerHTML = [...select.options].map(option => {
+      const parts = option.textContent.split(' • ');
+      const title = parts.shift();
+      const meta = parts.join(' • ');
+      const selected = option.value === select.value;
+      return `
+        <button type="button" class="gap-select-menu-item${selected ? ' is-selected' : ''}"
+          role="option" data-value="${escapeHtml(option.value)}" aria-selected="${selected}"
+          ${option.disabled ? 'disabled' : ''}>
+          <span class="gap-option-badge">${badge}</span>
+          <span class="gap-option-copy">
+            <strong>${escapeHtml(title)}</strong>
+            ${meta ? `<small>${escapeHtml(meta)}</small>` : ''}
+          </span>
+          <span class="gap-option-check" aria-hidden="true">✓</span>
+        </button>`;
+    }).join('');
+
+    menu.querySelectorAll('.gap-select-menu-item:not(:disabled)').forEach(item => {
+      item.addEventListener('click', () => {
+        select.value = item.dataset.value;
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+        enhanceGapSelect(select);
+        shell.classList.remove('is-open');
+        trigger.setAttribute('aria-expanded', 'false');
+        trigger.focus();
+      });
+    });
+  }
+
+  if (!window.__gapSelectOutsideClickBound) {
+    window.__gapSelectOutsideClickBound = true;
+    document.addEventListener('click', event => {
+      if (!event.target.closest('.gap-select-shell')) closeGapSelectMenus();
+    });
+  }
+
   async function populatePageGapOptions() {
     if (!pageSelectGapCv || !pageSelectGapJd) return;
     try {
       const [cvs, jds] = await Promise.all([ApiClient.listCVs(), ApiClient.listJDs()]);
-      pageSelectGapCv.innerHTML = cvs.length > 0
-        ? cvs.map(c => `<option value="${c.id}">${c.title}</option>`).join('')
-        : `<option value="">(Vui lòng upload CV trước)</option>`;
-
-      pageSelectGapJd.innerHTML = jds.length > 0
-        ? jds.map(j => `<option value="${j.id}">${j.title} - ${j.company}</option>`).join('')
-        : `<option value="">(Vui lòng tạo JD trước)</option>`;
+      pageSelectGapCv.innerHTML = buildGapCvOptions(cvs);
+      pageSelectGapJd.innerHTML = buildGapJdOptions(jds);
+      enhanceGapSelect(pageSelectGapCv);
+      enhanceGapSelect(pageSelectGapJd);
     } catch (err) {
       showToast(`Không thể tải dữ liệu CV/JD: ${err.message}`, 'error');
     }
@@ -2312,13 +2464,13 @@ function startAppLogic() {
 
       return `
         <tr>
-          <td><strong>${u.full_name || 'Chưa đặt tên'}</strong></td>
-          <td>${u.email}</td>
-          <td><span class="role-badge ${roleClass}">${u.role}</span></td>
+          <td><strong>${escapeHtml(u.full_name || 'Chưa đặt tên')}</strong></td>
+          <td>${escapeHtml(u.email)}</td>
+          <td><span class="role-badge ${roleClass}">${escapeHtml(u.role)}</span></td>
           <td>${createdDate}</td>
           <td style="text-align:center;">
-            <button class="btn-action-sm btn-edit-user" data-user-id="${u.id}">✏️ Sửa</button>
-            <button class="btn-action-sm btn-delete-user" data-user-id="${u.id}">🗑️ Xóa</button>
+            <button class="btn-action-sm btn-edit-user" data-user-id="${escapeHtml(u.id)}">✏️ Sửa</button>
+            ${u.role === 'admin' ? '<span class="admin-locked-label">🔒 Admin duy nhất</span>' : `<button class="btn-action-sm btn-delete-user" data-user-id="${escapeHtml(u.id)}">🗑️ Xóa</button>`}
           </td>
         </tr>
       `;
@@ -2393,6 +2545,10 @@ function startAppLogic() {
     const emailInput = document.getElementById('admin-input-email');
     const roleInput = document.getElementById('admin-input-role');
     const pwdInput = document.getElementById('admin-input-password');
+    const managedRoleOptions = `
+      <option value="student">Sinh viên (Student)</option>
+      <option value="counselor">Cố vấn (Counselor)</option>
+      <option value="enterprise">Doanh nghiệp (Enterprise)</option>`;
 
     if (mode === 'edit' && user) {
       if (titleEl) titleEl.textContent = 'Chỉnh Sửa Người Dùng';
@@ -2401,17 +2557,27 @@ function startAppLogic() {
       if (editIdInput) editIdInput.value = user.id;
       if (fullnameInput) fullnameInput.value = user.full_name || '';
       if (emailInput) emailInput.value = user.email || '';
-      if (roleInput) roleInput.value = user.role || 'student';
+      if (roleInput) {
+        roleInput.innerHTML = user.role === 'admin'
+          ? '<option value="admin">Quản trị viên hệ thống duy nhất</option>'
+          : managedRoleOptions;
+        roleInput.value = user.role || 'student';
+        roleInput.disabled = user.role === 'admin';
+      }
       if (pwdInput) pwdInput.value = '';
       updateAdminModalIcon('edit');
     } else {
       if (titleEl) titleEl.textContent = 'Thêm Người Dùng Mới';
-      if (subEl) subEl.textContent = 'Tạo tài khoản mới với vai trò Admin, Student, Counselor hoặc Enterprise';
+      if (subEl) subEl.textContent = 'Tạo tài khoản mới với vai trò Student, Counselor hoặc Enterprise';
       if (pwdLabel) pwdLabel.textContent = 'Mật khẩu (Tối thiểu 6 ký tự)';
       if (editIdInput) editIdInput.value = '';
       if (fullnameInput) fullnameInput.value = '';
       if (emailInput) emailInput.value = '';
-      if (roleInput) roleInput.value = 'student';
+      if (roleInput) {
+        roleInput.innerHTML = managedRoleOptions;
+        roleInput.value = 'student';
+        roleInput.disabled = false;
+      }
       if (pwdInput) pwdInput.value = '';
       updateAdminModalIcon('add');
     }
@@ -2443,7 +2609,9 @@ function startAppLogic() {
       try {
         if (uId) {
           // Edit mode
-          const payload = { full_name: fullName, email: email, role: role };
+          const targetUser = adminUsersData.find(user => user.id === uId);
+          const payload = { full_name: fullName, email: email };
+          if (targetUser?.role !== 'admin') payload.role = role;
           if (pwd && pwd.length >= 6) payload.password = pwd;
 
           await ApiClient.updateUserByAdmin(uId, payload);
@@ -2808,13 +2976,10 @@ function startAppLogic() {
     if (!selectGapCv || !selectGapJd) return;
     try {
       const [cvs, jds] = await Promise.all([ApiClient.listCVs(), ApiClient.listJDs()]);
-      selectGapCv.innerHTML = cvs.length > 0
-        ? cvs.map(c => `<option value="${c.id}">${c.title}</option>`).join('')
-        : `<option value="">(Vui lòng upload CV trước)</option>`;
-
-      selectGapJd.innerHTML = jds.length > 0
-        ? jds.map(j => `<option value="${j.id}">${j.title} - ${j.company}</option>`).join('')
-        : `<option value="">(Vui lòng tạo JD trước)</option>`;
+      selectGapCv.innerHTML = buildGapCvOptions(cvs);
+      selectGapJd.innerHTML = buildGapJdOptions(jds);
+      enhanceGapSelect(selectGapCv);
+      enhanceGapSelect(selectGapJd);
     } catch (err) {
       showToast(`Không thể tải dữ liệu CV/JD: ${err.message}`, 'error');
     }

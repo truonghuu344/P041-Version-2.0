@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from langchain_core.messages import HumanMessage, SystemMessage
-from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from pydantic import BaseModel, Field
 
 from src.agents.state import CVParserAgentState
@@ -101,10 +101,10 @@ async def local_evidence_node(state: CVParserAgentState) -> dict[str, Any]:
 
 async def llm_structured_parse_node(state: CVParserAgentState) -> dict[str, Any]:
     settings = get_settings()
-    requested = state.get("llm_requested", settings.cv_parser_mode == "openai")
+    requested = state.get("llm_requested", settings.cv_parser_mode == "gemini")
     base = {
         "llm_requested": requested,
-        "provider": "openai",
+        "provider": "google_gemini",
         "model": settings.model_name,
     }
     if not requested:
@@ -115,12 +115,12 @@ async def llm_structured_parse_node(state: CVParserAgentState) -> dict[str, Any]
             "llm_error": "CV_PARSER_MODE đang là local.",
             "trace": [*state.get("trace", []), _trace("llm_parse", "skipped", "Chế độ local được cấu hình.")],
         }
-    if not settings.openai_api_key or settings.openai_api_key == "sk-your-key-here":
+    if not settings.google_genai_api_key:
         return {
             **base,
             "llm_called": False,
             "llm_succeeded": False,
-            "llm_error": "OPENAI_API_KEY chưa được cấu hình.",
+            "llm_error": "GEMINI_API_KEY chưa được cấu hình.",
             "trace": [
                 *state.get("trace", []),
                 _trace("llm_parse", "fallback", "Thiếu API key; dùng kết quả local có kiểm chứng."),
@@ -138,12 +138,12 @@ RÀNG BUỘC BẮT BUỘC:
 5. Không chấm điểm phù hợp với một JD vì bước này chỉ parse CV.
 """
     try:
-        llm = ChatOpenAI(
+        llm = ChatGoogleGenerativeAI(
             model=settings.model_name,
-            temperature=0,
-            api_key=settings.openai_api_key,
-            timeout=settings.llm_timeout_seconds,
-            max_retries=settings.llm_max_retries,
+            temperature=1.0,
+            api_key=settings.google_genai_api_key,
+            request_timeout=settings.llm_timeout_seconds,
+            retries=settings.llm_max_retries,
         )
         structured_llm = llm.with_structured_output(
             CVStructuredExtraction,
@@ -300,7 +300,7 @@ async def finalize_cv_node(state: CVParserAgentState) -> dict[str, Any]:
         "agent_metadata": {
             "agent_name": "CV Parsing & ATS Agent",
             "workflow_version": "2.0",
-            "provider": state.get("provider", "openai"),
+            "provider": state.get("provider", "google_gemini"),
             "model": state.get("model", ""),
             "llm_requested": state.get("llm_requested", False),
             "llm_called": state.get("llm_called", False),
@@ -311,7 +311,7 @@ async def finalize_cv_node(state: CVParserAgentState) -> dict[str, Any]:
             "trace": [*state.get("trace", []), _trace("finalize", "passed", "Kết quả sẵn sàng cho HITL review.")],
         },
         "parser_mode": (
-            "openai_agent"
+            "gemini_agent"
             if state.get("llm_succeeded")
             else "local_fallback"
             if state.get("llm_requested")

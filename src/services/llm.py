@@ -1,12 +1,14 @@
-from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 from src.config import get_settings
 
 
-def get_llm() -> ChatOpenAI:
+def get_llm() -> ChatGoogleGenerativeAI:
     settings = get_settings()
-    return ChatOpenAI(
+    return ChatGoogleGenerativeAI(
         model=settings.model_name,
-        api_key=settings.openai_api_key,
+        api_key=settings.google_genai_api_key,
         temperature=settings.llm_temperature,
+        request_timeout=settings.llm_timeout_seconds,
+        retries=settings.llm_max_retries,
     )
