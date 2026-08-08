@@ -66,7 +66,7 @@ async def upload_cv(
         else:
             raw_text = extract_text_from_docx(content_bytes)
     except ValueError as exc:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)) from exc
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc)) from exc
 
     if not raw_text:
         raise HTTPException(
@@ -78,7 +78,7 @@ async def upload_cv(
     try:
         parsed_json = await parse_cv_to_structured_json(raw_text, use_llm=use_llm)
     except ValueError as exc:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)) from exc
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc)) from exc
 
     # Chỉ lưu file sau khi đã xác nhận có thể trích xuất và parse, tránh file rác khi lỗi.
     file_ext = ".pdf" if filename.endswith(".pdf") else ".docx"
@@ -191,7 +191,7 @@ async def reanalyze_cv(
     try:
         cv.parsed_json = await parse_cv_to_structured_json(cv.raw_text, use_llm=use_llm)
     except ValueError as exc:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)) from exc
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc)) from exc
     await db.commit()
     await db.refresh(cv)
     return cv

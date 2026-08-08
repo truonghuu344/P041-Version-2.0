@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -41,7 +41,13 @@ async def start_interview_session(
         )
 
     # Verify JD
-    stmt_jd = select(JobDescription).where(JobDescription.id == payload.jd_id)
+    stmt_jd = select(JobDescription).where(
+        JobDescription.id == payload.jd_id,
+        or_(
+            JobDescription.is_system.is_(True),
+            JobDescription.created_by_user_id == current_user.id,
+        ),
+    )
     res_jd = await db.execute(stmt_jd)
     jd = res_jd.scalar_one_or_none()
     if not jd:

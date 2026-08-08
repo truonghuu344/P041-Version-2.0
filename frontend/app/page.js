@@ -1253,32 +1253,63 @@ export default function Page() {
               </div>
             </div>
 
-            {/* Actions & Search Header */}
-            <div className="admin-toolbar">
-              <div className="admin-search-wrap">
-                <input type="text" id="admin-user-search" className="form-input" placeholder="🔍 Tìm kiếm theo Tên hoặc Email..." />
-              </div>
-              <button className="btn-primary" id="btn-admin-add-user" data-i18n="btn-admin-add-user">➕ Thêm User Mới</button>
+            <div className="admin-section-tabs" role="tablist" aria-label="Khu vực quản trị">
+              <button type="button" id="admin-tab-users" className="admin-section-tab is-active" role="tab" aria-selected="true" aria-controls="admin-users-panel">👥 Người dùng</button>
+              <button type="button" id="admin-tab-ai-logs" className="admin-section-tab" role="tab" aria-selected="false" aria-controls="admin-ai-logs-panel">✦ AI Logs</button>
             </div>
 
-            {/* Users Table */}
-            <div className="admin-table-wrap">
-              <table className="admin-users-table">
-                <thead>
-                  <tr>
-                    <th data-i18n="th-fullname">Họ và Tên</th>
-                    <th data-i18n="th-email">Email</th>
-                    <th data-i18n="th-role">Vai Trò</th>
-                    <th data-i18n="th-created">Ngày Tạo</th>
-                    <th style={{ textAlign: 'center' }} data-i18n="th-actions">Thao Tác</th>
-                  </tr>
-                </thead>
-                <tbody id="admin-users-tbody">
-                  <tr>
-                    <td colSpan="5" style={{ textAlign: 'center', padding: '30px' }}>Đang tải danh sách người dùng...</td>
-                  </tr>
-                </tbody>
-              </table>
+            <div id="admin-users-panel" role="tabpanel" aria-labelledby="admin-tab-users">
+              {/* Actions & Search Header */}
+              <div className="admin-toolbar">
+                <div className="admin-search-wrap">
+                  <input type="text" id="admin-user-search" className="form-input" placeholder="🔍 Tìm kiếm theo Tên hoặc Email..." />
+                </div>
+                <button className="btn-primary" id="btn-admin-add-user" data-i18n="btn-admin-add-user">➕ Thêm User Mới</button>
+              </div>
+
+              {/* Users Table */}
+              <div className="admin-table-wrap">
+                <table className="admin-users-table">
+                  <thead>
+                    <tr>
+                      <th data-i18n="th-fullname">Họ và Tên</th>
+                      <th data-i18n="th-email">Email</th>
+                      <th data-i18n="th-role">Vai Trò</th>
+                      <th data-i18n="th-created">Ngày Tạo</th>
+                      <th style={{ textAlign: 'center' }} data-i18n="th-actions">Thao Tác</th>
+                    </tr>
+                  </thead>
+                  <tbody id="admin-users-tbody">
+                    <tr>
+                      <td colSpan="5" style={{ textAlign: 'center', padding: '30px' }}>Đang tải danh sách người dùng...</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div id="admin-ai-logs-panel" role="tabpanel" aria-labelledby="admin-tab-ai-logs" hidden>
+              <div className="ai-log-stats" aria-label="Thống kê AI log">
+                <span><strong id="ai-log-stat-total">0</strong> lượt gọi</span>
+                <span><strong id="ai-log-stat-success">0</strong> thành công</span>
+                <span><strong id="ai-log-stat-failed">0</strong> lỗi</span>
+                <span><strong id="ai-log-stat-users">0</strong> user</span>
+              </div>
+              <div className="admin-toolbar ai-log-toolbar">
+                <div className="admin-search-wrap">
+                  <input type="search" id="admin-ai-log-search" className="form-input" placeholder="Tìm theo email, tên hoặc nội dung prompt..." />
+                </div>
+                <select id="admin-ai-log-status" className="form-input ai-log-filter" aria-label="Lọc trạng thái AI log">
+                  <option value="">Tất cả trạng thái</option>
+                  <option value="true">LLM thành công</option>
+                  <option value="false">LLM lỗi</option>
+                </select>
+                <button type="button" id="btn-refresh-ai-logs" className="btn-outline">↻ Làm mới</button>
+              </div>
+              <p className="ai-log-privacy-note">🔒 Nhật ký chỉ dành cho Admin, bao gồm prompt và phản hồi để kiểm tra chất lượng, lỗi và việc sử dụng AI.</p>
+              <div id="admin-ai-log-list" className="admin-ai-log-list" aria-live="polite">
+                <div className="ai-log-empty">Chọn tab AI Logs để tải nhật ký.</div>
+              </div>
             </div>
           </div>
         </div>
@@ -1620,8 +1651,19 @@ export default function Page() {
               <span id="ai-companion-status-text">Đang kiểm tra Gemini…</span>
             </div>
           </div>
-          <button type="button" id="ai-companion-close" className="ai-chat-close" aria-label="Đóng cửa sổ chat">×</button>
+          <div className="ai-chat-header-actions">
+            <button type="button" id="ai-companion-history" className="ai-chat-header-btn" aria-label="Xem lịch sử hội thoại" aria-expanded="false" title="Lịch sử hội thoại">☰</button>
+            <button type="button" id="ai-companion-new-chat" className="ai-chat-header-btn" aria-label="Tạo cuộc hội thoại mới" title="Cuộc trò chuyện mới">＋</button>
+            <button type="button" id="ai-companion-close" className="ai-chat-close" aria-label="Đóng cửa sổ chat">×</button>
+          </div>
         </header>
+        <section id="ai-companion-history-panel" className="ai-chat-history-panel" aria-label="Lịch sử hội thoại" hidden>
+          <div className="ai-chat-history-heading">
+            <strong>Lịch sử hội thoại</strong>
+            <span>Chỉ bạn có thể xem các cuộc trò chuyện này</span>
+          </div>
+          <div id="ai-companion-history-list" className="ai-chat-history-list"></div>
+        </section>
         <div id="ai-companion-messages" className="ai-chat-messages" aria-live="polite">
           <div className="ai-chat-message assistant">
             <span className="ai-chat-message-name">Nova</span>
@@ -1639,7 +1681,7 @@ export default function Page() {
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/></svg>
           </button>
         </form>
-        <p className="ai-chat-privacy">Nova chỉ gửi nội dung bạn nhập và metadata hồ sơ tối thiểu tới Gemini.</p>
+        <p className="ai-chat-privacy">Tin nhắn được lưu vào lịch sử tài khoản; Admin có thể xem AI log để kiểm tra chất lượng và lỗi hệ thống.</p>
       </aside>
 
       {/* ═══ Delete Confirmation Modal ═══ */}

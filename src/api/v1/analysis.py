@@ -1,6 +1,6 @@
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.security import get_current_user
@@ -30,7 +30,13 @@ async def analyze_cv_jd_gap(
         )
 
     # Fetch JD
-    stmt_jd = select(JobDescription).where(JobDescription.id == payload.jd_id)
+    stmt_jd = select(JobDescription).where(
+        JobDescription.id == payload.jd_id,
+        or_(
+            JobDescription.is_system.is_(True),
+            JobDescription.created_by_user_id == current_user.id,
+        ),
+    )
     res_jd = await db.execute(stmt_jd)
     jd = res_jd.scalar_one_or_none()
     if not jd:

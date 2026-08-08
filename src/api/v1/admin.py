@@ -1,11 +1,18 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.security import get_password_hash, require_role
 from src.db.database import get_db
-from src.db.models import User
-from src.models.schemas import UserOut, UserRegister, UserUpdate
+from src.db.models import AIAuditLog, User
+from src.models.schemas import (
+    AdminAILogListOut,
+    AdminAILogOut,
+    AdminAILogStatsOut,
+    UserOut,
+    UserRegister,
+    UserUpdate,
+)
 
 router = APIRouter(prefix="/admin", tags=["Admin User Management"])
 MANAGED_ROLES = {"student", "counselor", "enterprise"}
@@ -29,6 +36,86 @@ async def list_all_users(
     stmt = select(User).order_by(User.created_at.desc())
     result = await db.execute(stmt)
     return result.scalars().all()
+
+
+@router.get("/ai-logs/stats", response_model=AdminAILogStatsOut)
+async def get_ai_log_stats(
+    db: AsyncSession = Depends(get_db),
+    admin_user: User = Depends(require_role(["admin"])),
+) -> AdminAILogStatsOut:
+    total = await db.scalar(select(func.count(AIAuditLog.id))) or 0
+    successful = await db.scalar(
+        select(func.count(AIAuditLog.id)).where(AIAuditLog.llm_succeeded.is_(True))
+    ) or 0
+    unique_users = await db.scalar(select(func.count(func.distinct(AIAuditLog.user_id)))) or 0
+    return AdminAILogStatsOut(
+        total_requests=total,
+        successful_requests=successful,
+        failed_requests=total - successful,
+        unique_users=unique_users,
+    )
+
+
+@router.get("/ai-logs", response_model=AdminAILogListOut)
+async def list_ai_logs(
+    search: str | None = Query(default=None, max_length=200),
+    success: bool | None = Query(default=None),
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+    db: AsyncSession = Depends(get_db),
+    admin_user: User = Depends(require_role(["admin"])),
+) -> AdminAILogListOut:
+    filters = []
+    if success is not None:
+        filters.append(AIAuditLog.llm_succeeded.is_(success))
+    if search and search.strip():
+        pattern = f"%{search.strip()}%"
+        filters.append(
+            or_(
+                User.email.ilike(pattern),
+                User.full_name.ilike(pattern),
+                AIAuditLog.prompt.ilike(pattern),
+            )
+        )
+
+    total = await db.scalar(
+        select(func.count(AIAuditLog.id)).join(User).where(*filters)
+    ) or 0
+    rows = (
+        await db.execute(
+            select(AIAuditLog, User)
+            .join(User, User.id == AIAuditLog.user_id)
+            .where(*filters)
+            .order_by(AIAuditLog.created_at.desc())
+            .offset(offset)
+            .limit(limit)
+        )
+    ).all()
+    return AdminAILogListOut(
+        items=[
+            AdminAILogOut(
+                id=log.id,
+                user_id=user.id,
+                user_email=user.email,
+                user_full_name=user.full_name,
+                conversation_id=log.conversation_id,
+                prompt=log.prompt,
+                response=log.response,
+                provider=log.provider,
+                model=log.model,
+                llm_succeeded=log.llm_succeeded,
+                error_code=log.error_code,
+                current_page=log.current_page,
+                latency_ms=log.latency_ms,
+                tools_used=log.tools_used_json or [],
+                created_at=log.created_at,
+            )
+            for log, user in rows
+        ],
+        total=total,
+        limit=limit,
+        offset=offset,
+    )
 
 @router.get("/users/{user_id}", response_model=UserOut)
 async def get_user_by_admin(

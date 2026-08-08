@@ -214,6 +214,7 @@ class AssistantChatRequest(BaseModel):
     message: str = Field(..., min_length=1, max_length=4000)
     history: list[AssistantChatMessage] = Field(default_factory=list, max_length=12)
     current_page: str = Field(default="dashboard", max_length=50)
+    conversation_id: str | None = Field(default=None, max_length=36)
 
 
 class AssistantAction(BaseModel):
@@ -227,6 +228,9 @@ class AssistantChatResponse(BaseModel):
     model: str
     llm_succeeded: bool
     suggested_actions: list[AssistantAction] = Field(default_factory=list)
+    conversation_id: str
+    user_message_id: str
+    assistant_message_id: str
 
 
 class AssistantStatusResponse(BaseModel):
@@ -235,3 +239,65 @@ class AssistantStatusResponse(BaseModel):
     model: str
     configured: bool
     weather_configured: bool = False
+
+
+class ConversationMessageOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    role: Literal["user", "assistant"]
+    content: str
+    provider: str | None = None
+    model: str | None = None
+    llm_succeeded: bool | None = None
+    suggested_actions: list[AssistantAction] = Field(default_factory=list)
+    created_at: datetime
+
+
+class ConversationSummaryOut(BaseModel):
+    id: str
+    title: str
+    message_count: int
+    last_message_preview: str
+    created_at: datetime
+    updated_at: datetime
+
+
+class ConversationDetailOut(BaseModel):
+    id: str
+    title: str
+    messages: list[ConversationMessageOut]
+    created_at: datetime
+    updated_at: datetime
+
+
+class AdminAILogOut(BaseModel):
+    id: str
+    user_id: str
+    user_email: str
+    user_full_name: str
+    conversation_id: str | None = None
+    prompt: str
+    response: str
+    provider: str
+    model: str
+    llm_succeeded: bool
+    error_code: str | None = None
+    current_page: str | None = None
+    latency_ms: int
+    tools_used: list[str] = Field(default_factory=list)
+    created_at: datetime
+
+
+class AdminAILogListOut(BaseModel):
+    items: list[AdminAILogOut]
+    total: int
+    limit: int
+    offset: int
+
+
+class AdminAILogStatsOut(BaseModel):
+    total_requests: int
+    successful_requests: int
+    failed_requests: int
+    unique_users: int

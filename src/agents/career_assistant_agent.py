@@ -52,8 +52,9 @@ def _extract_weather_request(message: str) -> tuple[str, int]:
         forecast_days = int(days_match.group(1))
 
     patterns = (
-        r"\b(?:ở|tại|cho)\s+([^?.,]+)",
-        r"\b(?:thời tiết|weather)\s+(?:ở|tại|in)?\s*([^?.,]+)",
+        r"\b(?:thời tiết|weather|dự báo).*?\b(?:ở|tại|in|cho)\s+([^?.,]+)",
+        r"\b(?:ở|tại)\s+([^?.,]+)",
+        r"\b(?:thời tiết|weather)\s+([^?.,]+)",
         r"^([^?.,]+?)\s+(?:có\s+)?(?:thời tiết|weather)",
     )
     location = ""

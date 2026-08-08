@@ -217,12 +217,31 @@ class ApiClient {
     return await this.requestAssistant('/assistant/status');
   }
 
-  static async chatWithAssistant(message, history = [], currentPage = 'dashboard') {
+  static async chatWithAssistant(message, history = [], currentPage = 'dashboard', conversationId = null) {
     const options = {
       method: 'POST',
-      body: JSON.stringify({ message, history, current_page: currentPage }),
+      body: JSON.stringify({
+        message,
+        history,
+        current_page: currentPage,
+        conversation_id: conversationId,
+      }),
     };
     return await this.requestAssistant('/assistant/chat', options);
+  }
+
+  static async listAssistantConversations() {
+    return await this.requestAssistant('/assistant/conversations');
+  }
+
+  static async getAssistantConversation(conversationId) {
+    return await this.requestAssistant(`/assistant/conversations/${conversationId}`);
+  }
+
+  static async deleteAssistantConversation(conversationId) {
+    return await this.requestAssistant(`/assistant/conversations/${conversationId}`, {
+      method: 'DELETE',
+    });
   }
 
   // --- Admin APIs ---
@@ -248,6 +267,17 @@ class ApiClient {
     return await this.request(`/admin/users/${userId}`, {
       method: 'DELETE',
     });
+  }
+
+  static async listAILogs(search = '', success = '') {
+    const params = new URLSearchParams({ limit: '100' });
+    if (search) params.set('search', search);
+    if (success !== '') params.set('success', success);
+    return await this.requestAssistant(`/admin/ai-logs?${params.toString()}`);
+  }
+
+  static async getAILogStats() {
+    return await this.requestAssistant('/admin/ai-logs/stats');
   }
 }
 
@@ -2592,6 +2622,96 @@ function startAppLogic() {
      👑 ADMIN MANAGEMENT PORTAL LOGIC
   ============================================================ */
   let adminUsersData = [];
+  let adminAILogsLoaded = false;
+
+  function activateAdminTab(tabName) {
+    const isLogs = tabName === 'ai-logs';
+    const usersTab = document.getElementById('admin-tab-users');
+    const logsTab = document.getElementById('admin-tab-ai-logs');
+    const usersPanel = document.getElementById('admin-users-panel');
+    const logsPanel = document.getElementById('admin-ai-logs-panel');
+    usersTab?.classList.toggle('is-active', !isLogs);
+    logsTab?.classList.toggle('is-active', isLogs);
+    usersTab?.setAttribute('aria-selected', String(!isLogs));
+    logsTab?.setAttribute('aria-selected', String(isLogs));
+    if (usersPanel) usersPanel.hidden = isLogs;
+    if (logsPanel) logsPanel.hidden = !isLogs;
+    if (isLogs && !adminAILogsLoaded) loadAdminAILogs();
+  }
+
+  function updateAILogStats(stats) {
+    const mappings = {
+      'ai-log-stat-total': stats.total_requests,
+      'ai-log-stat-success': stats.successful_requests,
+      'ai-log-stat-failed': stats.failed_requests,
+      'ai-log-stat-users': stats.unique_users,
+    };
+    Object.entries(mappings).forEach(([id, value]) => {
+      const element = document.getElementById(id);
+      if (element) element.textContent = value ?? 0;
+    });
+  }
+
+  function renderAdminAILogs(logs) {
+    const list = document.getElementById('admin-ai-log-list');
+    if (!list) return;
+    if (!logs.length) {
+      list.innerHTML = '<div class="ai-log-empty">Không có AI log phù hợp với bộ lọc.</div>';
+      return;
+    }
+    list.innerHTML = logs.map(log => {
+      const timestamp = log.created_at
+        ? new Date(log.created_at).toLocaleString('vi-VN')
+        : 'Không rõ thời gian';
+      const tools = (log.tools_used || []).map(tool => `<span>${escapeHtml(tool)}</span>`).join('');
+      const statusLabel = log.llm_succeeded ? 'Thành công' : 'Lỗi';
+      return `
+        <article class="ai-log-card">
+          <div class="ai-log-card-head">
+            <div>
+              <strong>${escapeHtml(log.user_full_name || 'User')}</strong>
+              <span>${escapeHtml(log.user_email || '')}</span>
+            </div>
+            <span class="ai-log-status ${log.llm_succeeded ? 'is-success' : 'is-error'}">${statusLabel}</span>
+          </div>
+          <div class="ai-log-meta">
+            <span>${escapeHtml(timestamp)}</span>
+            <span>${escapeHtml(log.provider)} · ${escapeHtml(log.model)}</span>
+            <span>${Number(log.latency_ms || 0)} ms</span>
+            <span>Trang: ${escapeHtml(log.current_page || 'unknown')}</span>
+          </div>
+          <div class="ai-log-content">
+            <div><span class="ai-log-label">PROMPT USER</span><p>${escapeHtml(log.prompt)}</p></div>
+            <details>
+              <summary>Xem phản hồi của Nova</summary>
+              <p>${escapeHtml(log.response)}</p>
+            </details>
+          </div>
+          ${tools ? `<div class="ai-log-tools"><b>Tools:</b>${tools}</div>` : ''}
+          ${log.error_code ? `<div class="ai-log-error">Error: ${escapeHtml(log.error_code)}</div>` : ''}
+        </article>
+      `;
+    }).join('');
+  }
+
+  async function loadAdminAILogs() {
+    const list = document.getElementById('admin-ai-log-list');
+    const search = document.getElementById('admin-ai-log-search')?.value.trim() || '';
+    const success = document.getElementById('admin-ai-log-status')?.value ?? '';
+    if (list) list.innerHTML = '<div class="ai-log-empty">⏳ Đang tải nhật ký AI…</div>';
+    try {
+      const [logs, stats] = await Promise.all([
+        ApiClient.listAILogs(search, success),
+        ApiClient.getAILogStats(),
+      ]);
+      renderAdminAILogs(logs.items || []);
+      updateAILogStats(stats);
+      adminAILogsLoaded = true;
+    } catch (err) {
+      if (list) list.innerHTML = `<div class="ai-log-empty is-error">Không thể tải AI log: ${escapeHtml(err.message)}</div>`;
+      showToast(`Lỗi tải AI log: ${err.message}`, 'error');
+    }
+  }
 
   async function loadAdminUsersList() {
     const tbody = document.getElementById('admin-users-tbody');
@@ -2692,6 +2812,16 @@ function startAppLogic() {
       );
       renderAdminUsersTable(filtered);
     }
+  });
+
+  document.getElementById('admin-tab-users')?.addEventListener('click', () => activateAdminTab('users'));
+  document.getElementById('admin-tab-ai-logs')?.addEventListener('click', () => activateAdminTab('ai-logs'));
+  document.getElementById('btn-refresh-ai-logs')?.addEventListener('click', loadAdminAILogs);
+  document.getElementById('admin-ai-log-status')?.addEventListener('change', loadAdminAILogs);
+  let aiLogSearchTimer = null;
+  document.getElementById('admin-ai-log-search')?.addEventListener('input', () => {
+    window.clearTimeout(aiLogSearchTimer);
+    aiLogSearchTimer = window.setTimeout(loadAdminAILogs, 350);
   });
 
   // Admin User Modal Logic
@@ -3399,6 +3529,10 @@ function startAppLogic() {
     const hint = document.getElementById('ai-companion-hint');
     const panel = document.getElementById('ai-companion-chat');
     const closeButton = document.getElementById('ai-companion-close');
+    const historyButton = document.getElementById('ai-companion-history');
+    const newChatButton = document.getElementById('ai-companion-new-chat');
+    const historyPanel = document.getElementById('ai-companion-history-panel');
+    const historyList = document.getElementById('ai-companion-history-list');
     const statusText = document.getElementById('ai-companion-status-text');
     const messagesElement = document.getElementById('ai-companion-messages');
     const form = document.getElementById('ai-companion-form');
@@ -3408,6 +3542,100 @@ function startAppLogic() {
 
     let isOpen = false;
     let conversationHistory = [];
+    let currentConversationId = null;
+    let historyOpen = false;
+
+    function resetConversation() {
+      currentConversationId = null;
+      conversationHistory = [];
+      messagesElement.innerHTML = '';
+      appendChatMessage(
+        'assistant',
+        'Chào bạn! Mình có thể hỗ trợ CV, Gap Analysis và luyện phỏng vấn STAR. Bạn muốn bắt đầu từ đâu?'
+      );
+      setHistoryOpen(false);
+      input.focus();
+    }
+
+    function setHistoryOpen(open) {
+      historyOpen = Boolean(open);
+      if (historyPanel) historyPanel.hidden = !historyOpen;
+      historyButton?.setAttribute('aria-expanded', String(historyOpen));
+      panel.classList.toggle('history-open', historyOpen);
+    }
+
+    function formatConversationDate(value) {
+      if (!value) return '';
+      return new Intl.DateTimeFormat('vi-VN', {
+        day: '2-digit',
+        month: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      }).format(new Date(value));
+    }
+
+    function renderConversationHistory(conversations) {
+      if (!historyList) return;
+      historyList.innerHTML = '';
+      if (!conversations.length) {
+        const empty = document.createElement('div');
+        empty.className = 'ai-chat-history-empty';
+        empty.textContent = 'Chưa có lịch sử. Hãy bắt đầu cuộc trò chuyện đầu tiên với Nova.';
+        historyList.appendChild(empty);
+        return;
+      }
+      conversations.forEach(conversation => {
+        const row = document.createElement('div');
+        row.className = `ai-chat-history-item${conversation.id === currentConversationId ? ' is-active' : ''}`;
+
+        const openButton = document.createElement('button');
+        openButton.type = 'button';
+        openButton.className = 'ai-chat-history-open';
+        openButton.dataset.conversationId = conversation.id;
+        const title = document.createElement('strong');
+        title.textContent = conversation.title || 'Cuộc trò chuyện với Nova';
+        const meta = document.createElement('span');
+        meta.textContent = `${conversation.message_count} tin nhắn · ${formatConversationDate(conversation.updated_at)}`;
+        openButton.append(title, meta);
+
+        const deleteButton = document.createElement('button');
+        deleteButton.type = 'button';
+        deleteButton.className = 'ai-chat-history-delete';
+        deleteButton.dataset.deleteConversationId = conversation.id;
+        deleteButton.setAttribute('aria-label', `Xóa ${conversation.title || 'cuộc hội thoại'}`);
+        deleteButton.textContent = '×';
+        row.append(openButton, deleteButton);
+        historyList.appendChild(row);
+      });
+    }
+
+    async function loadConversationHistory() {
+      if (!historyList) return;
+      if (!ApiClient.getToken()) {
+        historyList.innerHTML = '<div class="ai-chat-history-empty">Đăng nhập để xem lịch sử hội thoại.</div>';
+        return;
+      }
+      historyList.innerHTML = '<div class="ai-chat-history-empty">Đang tải lịch sử…</div>';
+      try {
+        renderConversationHistory(await ApiClient.listAssistantConversations());
+      } catch (err) {
+        historyList.innerHTML = `<div class="ai-chat-history-empty">Không thể tải lịch sử: ${escapeHtml(err.message)}</div>`;
+      }
+    }
+
+    async function openSavedConversation(conversationId) {
+      const conversation = await ApiClient.getAssistantConversation(conversationId);
+      currentConversationId = conversation.id;
+      conversationHistory = conversation.messages
+        .map(message => ({ role: message.role, content: message.content }))
+        .slice(-12);
+      messagesElement.innerHTML = '';
+      conversation.messages.forEach(message => {
+        appendChatMessage(message.role, message.content, message.suggested_actions || []);
+      });
+      setHistoryOpen(false);
+      input.focus();
+    }
 
     function restoreCompanionPosition() {
       localStorage.removeItem('nova_companion_position');
@@ -3505,6 +3733,34 @@ function startAppLogic() {
       if (event.detail === 0) toggleChat(true);
     });
     closeButton?.addEventListener('click', () => toggleChat(false));
+    historyButton?.addEventListener('click', async () => {
+      setHistoryOpen(!historyOpen);
+      if (historyOpen) await loadConversationHistory();
+    });
+    newChatButton?.addEventListener('click', resetConversation);
+
+    historyList?.addEventListener('click', async event => {
+      const deleteButton = event.target.closest('[data-delete-conversation-id]');
+      if (deleteButton) {
+        const conversationId = deleteButton.dataset.deleteConversationId;
+        if (!window.confirm('Xóa cuộc hội thoại này? AI audit log dành cho Admin vẫn được giữ lại.')) return;
+        try {
+          await ApiClient.deleteAssistantConversation(conversationId);
+          if (currentConversationId === conversationId) resetConversation();
+          await loadConversationHistory();
+        } catch (err) {
+          showToast(`Không thể xóa hội thoại: ${err.message}`, 'error');
+        }
+        return;
+      }
+      const openButton = event.target.closest('[data-conversation-id]');
+      if (!openButton) return;
+      try {
+        await openSavedConversation(openButton.dataset.conversationId);
+      } catch (err) {
+        showToast(`Không thể mở hội thoại: ${err.message}`, 'error');
+      }
+    });
 
     form.addEventListener('submit', async event => {
       event.preventDefault();
@@ -3524,8 +3780,14 @@ function startAppLogic() {
       if (sendButton) sendButton.disabled = true;
       const typing = appendTypingIndicator();
       try {
-        const result = await ApiClient.chatWithAssistant(text, previousHistory, currentViewName);
+        const result = await ApiClient.chatWithAssistant(
+          text,
+          previousHistory,
+          currentViewName,
+          currentConversationId
+        );
         typing.remove();
+        currentConversationId = result.conversation_id;
         appendChatMessage('assistant', result.response, result.suggested_actions || []);
         conversationHistory.push({ role: 'assistant', content: result.response });
         companion.classList.toggle('is-online', Boolean(result.llm_succeeded));
@@ -3538,6 +3800,8 @@ function startAppLogic() {
         typing.remove();
         if (err.status === 401) {
           ApiClient.logout();
+          currentConversationId = null;
+          conversationHistory = [];
           checkUserSession();
           appendChatMessage('assistant', 'Phiên đăng nhập đã hết hạn. Bạn hãy đăng nhập lại rồi gửi câu hỏi thời tiết.');
           openAuthModal();

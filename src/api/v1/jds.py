@@ -1,24 +1,23 @@
-from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, or_
 
-from src.db.database import get_db
-from src.db.models import User, JobDescription
 from src.core.security import get_current_user
+from src.db.database import get_db
+from src.db.models import JobDescription, User
 from src.models.schemas import JDCreate, JDOut
 
 router = APIRouter(prefix="/jds", tags=["Job Description Management"])
 
 
-@router.get("", response_model=List[JDOut])
+@router.get("", response_model=list[JDOut])
 async def list_jds(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> List[JDOut]:
+) -> list[JDOut]:
     """Danh sách Job Description (gồm JD mặc định của hệ thống & JD cá nhân tự dán)."""
     # Auto-seed sample JDs if system JDs are empty
-    stmt_check = select(JobDescription).where(JobDescription.is_system == True)
+    stmt_check = select(JobDescription).where(JobDescription.is_system.is_(True))
     res_check = await db.execute(stmt_check)
     if not res_check.scalars().first():
         sample_jds = [
@@ -51,7 +50,7 @@ async def list_jds(
 
     stmt = select(JobDescription).where(
         or_(
-            JobDescription.is_system == True,
+            JobDescription.is_system.is_(True),
             JobDescription.created_by_user_id == current_user.id,
         )
     ).order_by(JobDescription.created_at.desc())
@@ -87,7 +86,13 @@ async def get_jd_detail(
     current_user: User = Depends(get_current_user),
 ) -> JDOut:
     """Lấy chi tiết Job Description."""
-    stmt = select(JobDescription).where(JobDescription.id == jd_id)
+    stmt = select(JobDescription).where(
+        JobDescription.id == jd_id,
+        or_(
+            JobDescription.is_system.is_(True),
+            JobDescription.created_by_user_id == current_user.id,
+        ),
+    )
     result = await db.execute(stmt)
     jd = result.scalar_one_or_none()
 
