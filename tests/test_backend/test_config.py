@@ -1,11 +1,24 @@
 from pathlib import Path
 
+import pytest
 from pydantic import SecretStr
 
 from src.backend.config import Settings
 
 
-def test_settings_have_safe_development_defaults() -> None:
+def test_settings_have_safe_development_defaults(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    for variable_name in (
+        "APP_NAME",
+        "APP_ENV",
+        "APP_PORT",
+        "CORS_ORIGINS",
+        "CHROMA_PERSIST_DIR",
+        "SECRET_KEY",
+    ):
+        monkeypatch.delenv(variable_name, raising=False)
+
     settings = Settings(_env_file=None)
 
     assert settings.app_name == "Career Assistant Backend"
