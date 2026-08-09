@@ -100,7 +100,27 @@ def test_menubar_matches_gate1_role_flows_without_icons():
     assert 'Sinh viên của tôi' in nav_markup
     assert 'Hồ sơ ứng tuyển' in nav_markup
     assert "font-weight: 700 !important;" in STYLE_CSS
-    assert "'Arial Rounded MT Bold'" in STYLE_CSS
+    assert "from 'next/font/google'" in (ROOT / "frontend" / "app" / "layout.tsx").read_text(encoding="utf-8")
+    assert "Quicksand" in (ROOT / "frontend" / "app" / "layout.tsx").read_text(encoding="utf-8")
+    assert "--font-quicksand" in STYLE_CSS
+    assert "SOFT CYAN PALETTE" in STYLE_CSS
+
+
+def test_google_signin_uses_official_button_without_programmatic_one_tap_popup():
+    nginx_config = (ROOT / "infra" / "nginx" / "nginx.conf").read_text(encoding="utf-8")
+    assert 'id="google-signin-button"' in PAGE_JS
+    assert "window.google.accounts.id.renderButton" in APP_JS
+    assert "ux_mode: 'popup'" in APP_JS
+    assert "use_fedcm_for_prompt: true" in APP_JS
+    assert "window.google.accounts.id.prompt" not in APP_JS
+    assert "Cross-Origin-Opener-Policy same-origin-allow-popups" in nginx_config
+
+
+def test_quicksand_variable_is_defined_on_root_before_shared_font_token_resolves():
+    layout = (ROOT / "frontend" / "app" / "layout.tsx").read_text(encoding="utf-8")
+    assert '<html lang="vi" className={quicksand.variable}' in layout
+    assert '<body className={quicksand.variable}>' not in layout
+    assert "font-family: var(--font-quicksand), 'Quicksand'" in STYLE_CSS
 
 
 def test_enterprise_jd_supports_template_file_or_manual_text():

@@ -8,7 +8,7 @@
 :root {
   /* Brand Core Colors */
   --primary:          #6C63FF;
-  --secondary:        #3BB9FF;
+  --secondary:        #72B5C7;
   --accent:           #B983FF;
   --success:          #37D67A;
   --danger:           #FF6B6B;
@@ -58,13 +58,13 @@
 
   --accent-purple:    #7c4dff;
   --accent-pink:      #ff4e9a;
-  --accent-cyan:      #00e5ff;
+  --accent-cyan:      #68B9C6;
   --accent-red:       #ff4e6a;
   --radius-sm:        8px;
   --radius-md:        14px;
   --radius-lg:        22px;
   --radius-xl:        32px;
-  --font: ui-rounded, 'SF Pro Rounded', 'Nunito', 'Arial Rounded MT Bold', 'Segoe UI', system-ui, sans-serif;
+  --font: var(--font-quicksand), 'Quicksand', ui-rounded, 'SF Pro Rounded', 'Arial Rounded MT Bold', 'Segoe UI', system-ui, sans-serif;
 }
 
 /* Light Theme Variables (Universe Morning Theme) */
@@ -115,6 +115,11 @@ html.light,
 }
 
 html { scroll-behavior: smooth; }
+
+html,
+body {
+  font-family: var(--font-quicksand), 'Quicksand', ui-rounded, 'Arial Rounded MT Bold', system-ui, sans-serif;
+}
 
 body {
   font-family: var(--font);
@@ -4566,30 +4571,45 @@ html.light .form-input:focus,
   margin-bottom: 16px;
 }
 
-.btn-google-auth {
+.google-signin-button {
   width: 100%;
-  padding: 10px 16px;
-  border-radius: 10px;
-  background: #ffffff;
-  color: #1f1f1f;
-  border: 1px solid #dadce0;
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 600;
+  min-height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  cursor: pointer;
-  transition: all 0.25s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  border-radius: 999px;
 }
 
-.btn-google-auth:hover {
-  background: #f8f9fa;
-  border-color: #d2d4d7;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
-  transform: translateY(-1px);
+.google-signin-button > div,
+.google-signin-button iframe {
+  max-width: 100% !important;
+}
+
+.google-auth-loading,
+.google-auth-retry {
+  width: 100%;
+  min-height: 44px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(104, 185, 198, 0.25);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.78);
+  font: 600 13px var(--font);
+}
+
+.google-auth-retry {
+  cursor: pointer;
+}
+
+.google-auth-help {
+  margin-top: 8px;
+  color: #f5c46b;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.45;
+  text-align: center;
 }
 
 .auth-divider {
@@ -6011,6 +6031,121 @@ body.light-mode .gap-workspace .gap-select-trigger,
     padding: 0 16px;
     font-size: 12px;
   }
+}
+
+/* ============================================================
+   SOFT CYAN PALETTE
+   Giữ độ tương phản của giao diện vũ trụ nhưng giảm neon/glow.
+   ============================================================ */
+.hero-title {
+  color: #86ced8;
+  text-shadow: 0 0 18px rgba(104, 185, 198, 0.16);
+}
+
+.btn-primary:not(.gap-analysis-submit),
+.ship-btn-primary,
+.pricing-btn.pro-btn,
+.popular-badge,
+.ai-card-back {
+  background: linear-gradient(135deg, #7567e8 0%, #68b9c6 100%);
+  box-shadow: 0 8px 22px rgba(64, 126, 149, 0.2), 0 4px 18px rgba(100, 81, 194, 0.28);
+}
+
+.btn-primary:not(.gap-analysis-submit):hover,
+.ship-btn-primary:hover,
+.pricing-btn.pro-btn:hover {
+  box-shadow: 0 10px 26px rgba(64, 126, 149, 0.28), 0 7px 22px rgba(100, 81, 194, 0.34);
+  filter: brightness(1.04);
+}
+
+.agent-title,
+.feature-name,
+.section-tag,
+.plan-title.pro-title,
+.price-amount.pro-price,
+.check-icon.cyan,
+.crew-role-badge,
+.crew-stat-box .stat-num,
+.tag-cv {
+  color: #78c2ce;
+  text-shadow: none;
+}
+
+.feature-icon {
+  color: #78c2ce;
+  border-color: rgba(104, 185, 198, 0.3);
+  background: rgba(104, 185, 198, 0.11);
+  box-shadow: 0 0 12px rgba(104, 185, 198, 0.14);
+}
+
+.feature-item:hover,
+.pricing-card:hover {
+  border-color: rgba(104, 185, 198, 0.34);
+  box-shadow: 0 12px 28px rgba(37, 88, 111, 0.18);
+}
+
+.ai-card-inner {
+  border-color: rgba(104, 185, 198, 0.3);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.46), inset 0 0 32px rgba(104, 185, 198, 0.09);
+}
+
+.ai-label {
+  text-shadow: 0 0 16px rgba(104, 185, 198, 0.38), 0 0 30px rgba(124, 77, 255, 0.34);
+}
+
+.pricing-card.popular-highlight {
+  border-color: #68b9c6;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.56), 0 0 24px rgba(104, 185, 198, 0.2);
+}
+
+.navbar {
+  border-bottom-color: rgba(104, 185, 198, 0.16) !important;
+}
+
+.brand-icon {
+  background: linear-gradient(135deg, #7567e8, #68b9c6) !important;
+  box-shadow: 0 0 12px rgba(104, 185, 198, 0.24) !important;
+}
+
+.brand:hover .brand-icon {
+  box-shadow: 0 0 18px rgba(104, 185, 198, 0.34) !important;
+}
+
+.nav-link:hover {
+  color: #8acbd5 !important;
+  background: rgba(104, 185, 198, 0.07) !important;
+  box-shadow: 0 0 10px rgba(104, 185, 198, 0.11) !important;
+}
+
+.nav-link.active {
+  background: rgba(104, 185, 198, 0.1) !important;
+  border-color: rgba(104, 185, 198, 0.24) !important;
+  box-shadow: 0 0 14px rgba(104, 185, 198, 0.14) !important;
+  text-shadow: none !important;
+}
+
+.nav-link.active::after {
+  background: linear-gradient(90deg, #68b9c6, #7567e8);
+  box-shadow: 0 0 5px rgba(104, 185, 198, 0.44);
+}
+
+.btn-login {
+  background: linear-gradient(135deg, rgba(117, 103, 232, 0.2), rgba(104, 185, 198, 0.15)) !important;
+  border-color: rgba(104, 185, 198, 0.3) !important;
+  box-shadow: 0 0 9px rgba(104, 185, 198, 0.12) !important;
+}
+
+.btn-login:hover {
+  border-color: #78c2ce !important;
+  box-shadow: 0 0 15px rgba(104, 185, 198, 0.24) !important;
+}
+
+body,
+button,
+input,
+textarea,
+select {
+  font-family: var(--font);
 }
 @tailwind components;
 @tailwind utilities;

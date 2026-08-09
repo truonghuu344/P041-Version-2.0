@@ -3568,11 +3568,15 @@ TÊN CÔNG TY:
   const authSub = document.getElementById('auth-sub');
   const btnSubmitLabel = document.getElementById('btn-submit-label');
   const loginForm = document.getElementById('login-form');
+  const googleButtonHost = document.getElementById('google-signin-button');
+  const googleAuthHelp = document.getElementById('google-auth-help');
 
   let isRegisterMode = false;
+  let googleIdentityInitialized = false;
 
   function openAuthModal() {
     if (authOverlay) authOverlay.classList.add('open');
+    renderGoogleSignInButton();
   }
   function closeAuthModal() {
     if (authOverlay) authOverlay.classList.remove('open');
@@ -3601,6 +3605,7 @@ TÊN CÔNG TY:
       if (authSub) authSub.textContent = dict['auth-sub-login'] || 'Đăng nhập để tiếp tục hành trình nâng cấp sự nghiệp cùng AI Agent';
       if (btnSubmitLabel) btnSubmitLabel.textContent = dict['btn-submit-login'] || 'Đăng nhập';
     }
+    if (authOverlay?.classList.contains('open')) renderGoogleSignInButton();
   }
 
   if (tabLogin) tabLogin.addEventListener('click', () => setAuthMode(false));
@@ -3610,56 +3615,85 @@ TÊN CÔNG TY:
     if (window.google?.accounts?.id) return;
     await new Promise((resolve, reject) => {
       const existing = document.querySelector('script[data-google-identity]');
-      if (existing) {
-        existing.addEventListener('load', resolve, { once: true });
-        existing.addEventListener('error', reject, { once: true });
-        return;
-      }
+      if (existing) existing.remove();
       const script = document.createElement('script');
       script.src = 'https://accounts.google.com/gsi/client';
       script.async = true;
       script.defer = true;
       script.dataset.googleIdentity = 'true';
       script.onload = resolve;
-      script.onerror = reject;
+      script.onerror = () => {
+        script.remove();
+        reject(new Error('Google Identity Services không tải được.'));
+      };
       document.head.appendChild(script);
     });
   }
 
-  // Google Identity Services: ID token luôn được backend xác minh trước khi tạo phiên.
-  document.getElementById('btn-google-auth')?.addEventListener('click', async (event) => {
-    const button = event.currentTarget;
-    const clientId = button.dataset.clientId;
-    if (!clientId) {
-      showToast('Google OAuth chưa được cấu hình. Hãy đặt GOOGLE_OAUTH_CLIENT_ID.', 'warning');
+  async function handleGoogleCredential(response) {
+    if (!response?.credential) {
+      showToast('Google không trả về thông tin đăng nhập.', 'error');
       return;
     }
     try {
-      showToast('🔑 Đang mở Google Sign-In...');
-      await loadGoogleIdentityServices();
-      window.google.accounts.id.initialize({
-        client_id: clientId,
-        callback: async response => {
-          try {
-            const role = isRegisterMode ? document.getElementById('input-role')?.value || 'student' : 'student';
-            await ApiClient.googleAuth(response.credential, role);
-            closeAuthModal();
-            checkUserSession();
-            showToast('✅ Google đã xác minh và đăng nhập thành công!', 'success');
-          } catch (err) {
-            showToast(`❌ ${err.message}`, 'error');
-          }
-        },
-      });
-      window.google.accounts.id.prompt(notification => {
-        if (notification.isNotDisplayed?.() || notification.isSkippedMoment?.()) {
-          showToast('Trình duyệt đã chặn hộp thoại Google. Hãy cho phép popup/cookie đăng nhập.', 'warning');
-        }
-      });
-    } catch (_err) {
-      showToast('Không tải được Google Identity Services.', 'error');
+      const role = isRegisterMode ? document.getElementById('input-role')?.value || 'student' : 'student';
+      await ApiClient.googleAuth(response.credential, role);
+      closeAuthModal();
+      checkUserSession();
+      showToast('✅ Google đã xác minh và đăng nhập thành công!', 'success');
+    } catch (err) {
+      showToast(`❌ ${err.message}`, 'error');
     }
-  });
+  }
+
+  // Nút do Google render nhận click trực tiếp, tránh popup bị chặn do mở bằng script.
+  async function renderGoogleSignInButton() {
+    if (!googleButtonHost) return;
+    const clientId = googleButtonHost.dataset.clientId;
+    if (!clientId) {
+      googleButtonHost.innerHTML = '<span class="google-auth-loading">Google OAuth chưa được cấu hình.</span>';
+      return;
+    }
+    googleButtonHost.setAttribute('aria-busy', 'true');
+    googleButtonHost.innerHTML = '<span class="google-auth-loading">Đang tải nút Google…</span>';
+    if (googleAuthHelp) googleAuthHelp.hidden = true;
+    try {
+      await loadGoogleIdentityServices();
+      if (!googleIdentityInitialized) {
+        window.google.accounts.id.initialize({
+          client_id: clientId,
+          callback: handleGoogleCredential,
+          ux_mode: 'popup',
+          auto_select: false,
+          cancel_on_tap_outside: true,
+          use_fedcm_for_prompt: true,
+          itp_support: true,
+        });
+        googleIdentityInitialized = true;
+      }
+      googleButtonHost.innerHTML = '';
+      const currentLang = localStorage.getItem('career_copilot_lang') || 'vi';
+      window.google.accounts.id.renderButton(googleButtonHost, {
+        type: 'standard',
+        theme: 'outline',
+        size: 'large',
+        text: isRegisterMode ? 'signup_with' : 'continue_with',
+        shape: 'pill',
+        logo_alignment: 'left',
+        width: Math.min(Math.max(googleButtonHost.clientWidth || 320, 240), 400),
+        locale: currentLang,
+      });
+      googleButtonHost.removeAttribute('aria-busy');
+    } catch (_err) {
+      googleButtonHost.removeAttribute('aria-busy');
+      googleButtonHost.innerHTML = '<button type="button" class="google-auth-retry">Tải lại nút Google</button>';
+      googleButtonHost.querySelector('.google-auth-retry')?.addEventListener('click', renderGoogleSignInButton);
+      if (googleAuthHelp) {
+        googleAuthHelp.hidden = false;
+        googleAuthHelp.textContent = 'Không tải được Google. Hãy tắt tiện ích chặn theo dõi cho trang này hoặc dùng Email.';
+      }
+    }
+  }
 
   if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
