@@ -123,6 +123,18 @@ def test_quicksand_variable_is_defined_on_root_before_shared_font_token_resolves
     assert "font-family: var(--font-quicksand), 'Quicksand'" in STYLE_CSS
 
 
+def test_auth_role_dropdown_and_google_button_are_responsive_custom_controls():
+    assert 'className="auth-role-select"' in PAGE_JS
+    assert 'className="auth-role-native"' in PAGE_JS
+    assert "function enhanceAuthRoleSelect()" in APP_JS
+    assert "className = 'auth-role-trigger'" in APP_JS
+    assert "className = 'auth-role-menu'" in APP_JS
+    assert "theme: 'filled_black'" in APP_JS
+    assert ".auth-role-option.is-selected" in STYLE_CSS
+    assert ".google-signin-button iframe" in STYLE_CSS
+    assert "max-height: calc(100dvh - 40px)" in STYLE_CSS
+
+
 def test_enterprise_jd_supports_template_file_or_manual_text():
     assert 'id="page-download-jd-template"' in PAGE_JS
     assert 'id="page-upload-jd-form"' in PAGE_JS

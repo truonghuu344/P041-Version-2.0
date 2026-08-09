@@ -1486,11 +1486,13 @@ export default function Page() {
             </div>
             <div className="form-group" id="form-role-group" style={{ display: 'none' }}>
               <label className="form-label" data-i18n="label-role">Vai trò</label>
-              <select id="input-role" className="form-input" style={{ background: '#0e0f30', color: '#fff' }}>
-                <option value="student">Sinh viên (Student)</option>
-                <option value="counselor">Cố vấn (Counselor)</option>
-                <option value="enterprise">Doanh nghiệp (Enterprise)</option>
-              </select>
+              <div className="auth-role-select" id="auth-role-select">
+                <select id="input-role" className="auth-role-native" aria-label="Chọn vai trò tài khoản">
+                  <option value="student">Sinh viên (Student)</option>
+                  <option value="counselor">Cố vấn (Counselor)</option>
+                  <option value="enterprise">Doanh nghiệp (Enterprise)</option>
+                </select>
+              </div>
             </div>
             <div className="form-group">
               <label className="form-label" data-i18n="label-email">Email</label>

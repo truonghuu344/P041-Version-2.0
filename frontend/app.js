@@ -3580,6 +3580,7 @@ TÊN CÔNG TY:
   }
   function closeAuthModal() {
     if (authOverlay) authOverlay.classList.remove('open');
+    document.getElementById('auth-role-select')?.classList.remove('is-open');
   }
   if (authClose) authClose.addEventListener('click', closeAuthModal);
 
@@ -3610,6 +3611,84 @@ TÊN CÔNG TY:
 
   if (tabLogin) tabLogin.addEventListener('click', () => setAuthMode(false));
   if (tabRegister) tabRegister.addEventListener('click', () => setAuthMode(true));
+
+  function enhanceAuthRoleSelect() {
+    const select = document.getElementById('input-role');
+    const shell = document.getElementById('auth-role-select');
+    if (!select || !shell) return;
+
+    let trigger = shell.querySelector('.auth-role-trigger');
+    let menu = shell.querySelector('.auth-role-menu');
+    if (!trigger || !menu) {
+      trigger = document.createElement('button');
+      trigger.type = 'button';
+      trigger.className = 'auth-role-trigger';
+      trigger.setAttribute('aria-haspopup', 'listbox');
+      trigger.setAttribute('aria-expanded', 'false');
+      trigger.setAttribute('aria-controls', 'auth-role-menu');
+      trigger.innerHTML = '<span class="auth-role-current"></span><span class="auth-role-chevron" aria-hidden="true"></span>';
+      menu = document.createElement('div');
+      menu.id = 'auth-role-menu';
+      menu.className = 'auth-role-menu';
+      menu.setAttribute('role', 'listbox');
+      menu.setAttribute('aria-label', 'Danh sách vai trò');
+      shell.append(trigger, menu);
+
+      trigger.addEventListener('click', () => {
+        const shouldOpen = !shell.classList.contains('is-open');
+        shell.classList.toggle('is-open', shouldOpen);
+        trigger.setAttribute('aria-expanded', String(shouldOpen));
+        if (shouldOpen) menu.querySelector('[aria-selected="true"]')?.focus();
+      });
+      menu.addEventListener('keydown', event => {
+        const items = [...menu.querySelectorAll('.auth-role-option')];
+        const currentIndex = items.indexOf(document.activeElement);
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          shell.classList.remove('is-open');
+          trigger.setAttribute('aria-expanded', 'false');
+          trigger.focus();
+        } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+          event.preventDefault();
+          const offset = event.key === 'ArrowDown' ? 1 : -1;
+          items[(currentIndex + offset + items.length) % items.length]?.focus();
+        }
+      });
+    }
+
+    const parseLabel = label => {
+      const match = label.match(/^(.*?)\s*\((.*?)\)$/);
+      return { title: match?.[1] || label, meta: match?.[2] || '' };
+    };
+    const selectedOption = select.options[select.selectedIndex] || select.options[0];
+    const selectedLabel = parseLabel(selectedOption?.textContent || 'Chọn vai trò');
+    trigger.querySelector('.auth-role-current').innerHTML = `<strong>${escapeHtml(selectedLabel.title)}</strong>${selectedLabel.meta ? `<small>${escapeHtml(selectedLabel.meta)}</small>` : ''}`;
+    menu.innerHTML = [...select.options].map(option => {
+      const label = parseLabel(option.textContent);
+      const selected = option.value === select.value;
+      return `<button type="button" class="auth-role-option${selected ? ' is-selected' : ''}" role="option" data-value="${escapeHtml(option.value)}" aria-selected="${selected}">
+        <span class="auth-role-option-copy"><strong>${escapeHtml(label.title)}</strong><small>${escapeHtml(label.meta)}</small></span>
+        <span class="auth-role-check" aria-hidden="true">✓</span>
+      </button>`;
+    }).join('');
+    menu.querySelectorAll('.auth-role-option').forEach(item => item.addEventListener('click', () => {
+      select.value = item.dataset.value;
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+      enhanceAuthRoleSelect();
+      shell.classList.remove('is-open');
+      trigger.setAttribute('aria-expanded', 'false');
+      trigger.focus();
+    }));
+  }
+
+  enhanceAuthRoleSelect();
+  document.addEventListener('click', event => {
+    const shell = document.getElementById('auth-role-select');
+    if (shell && !event.target.closest('#auth-role-select')) {
+      shell.classList.remove('is-open');
+      shell.querySelector('.auth-role-trigger')?.setAttribute('aria-expanded', 'false');
+    }
+  });
 
   async function loadGoogleIdentityServices() {
     if (window.google?.accounts?.id) return;
@@ -3675,12 +3754,12 @@ TÊN CÔNG TY:
       const currentLang = localStorage.getItem('career_copilot_lang') || 'vi';
       window.google.accounts.id.renderButton(googleButtonHost, {
         type: 'standard',
-        theme: 'outline',
+        theme: 'filled_black',
         size: 'large',
         text: isRegisterMode ? 'signup_with' : 'continue_with',
         shape: 'pill',
         logo_alignment: 'left',
-        width: Math.min(Math.max(googleButtonHost.clientWidth || 320, 240), 400),
+        width: Math.min(Math.max((googleButtonHost.clientWidth || 360) - 12, 240), 360),
         locale: currentLang,
       });
       googleButtonHost.removeAttribute('aria-busy');
