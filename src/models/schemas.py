@@ -24,6 +24,11 @@ class UserLogin(BaseModel):
     password: str
 
 
+class GoogleAuthRequest(BaseModel):
+    credential: str = Field(..., min_length=20, description="Google Identity Services ID token")
+    role: Literal["student", "counselor", "enterprise"] = "student"
+
+
 class UserOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -79,6 +84,7 @@ class JDOut(BaseModel):
     requirements_text: str
     normalized_json: dict[str, Any] | None = None
     is_system: bool
+    is_published: bool = False
     created_at: datetime
 
 
@@ -152,6 +158,34 @@ class GapAnalysisResponse(BaseModel):
     cv_section_recommendations: list[CVSectionRecommendation] = []
     score_breakdown: dict[str, float] = {}
     created_at: datetime
+
+
+class ManualCVCreate(BaseModel):
+    title: str = Field(..., min_length=2, max_length=255)
+    template_name: Literal["classic", "modern", "compact"] = "classic"
+    personal_info: dict[str, str] = Field(default_factory=dict)
+    summary: str = Field(default="", max_length=3000)
+    education: list[dict[str, Any]] = Field(default_factory=list, max_length=20)
+    experience: list[dict[str, Any]] = Field(default_factory=list, max_length=30)
+    skills: list[str] = Field(default_factory=list, max_length=100)
+    projects: list[dict[str, Any]] = Field(default_factory=list, max_length=30)
+
+
+class CVOptimizationDecisionRequest(BaseModel):
+    suggestion_index: int = Field(..., ge=0, le=100)
+    accepted: bool
+    final_text: str | None = Field(default=None, max_length=5000)
+
+
+class CVOptimizationDecisionOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    analysis_id: str
+    suggestion_index: int
+    accepted: bool
+    final_text: str | None = None
+    updated_at: datetime
 
 
 class CVBulkDeleteRequest(BaseModel):
@@ -252,6 +286,116 @@ class ConversationMessageOut(BaseModel):
     llm_succeeded: bool | None = None
     suggested_actions: list[AssistantAction] = Field(default_factory=list)
     created_at: datetime
+
+
+class InterviewSessionSummaryOut(BaseModel):
+    id: str
+    cv_id: str
+    jd_id: str
+    status: str
+    total_questions: int
+    current_question_index: int
+    created_at: datetime
+    completed_at: datetime | None = None
+    total_score: float | None = None
+
+
+class InterviewFeedbackCreate(BaseModel):
+    rating: int = Field(..., ge=1, le=5)
+    comment: str | None = Field(default=None, max_length=1000)
+
+
+class InterviewFeedbackOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    session_id: str
+    rating: int
+    comment: str | None = None
+    created_at: datetime
+
+
+# --- Counselor / Human-in-the-loop Schemas ---
+class CounselorConsentCreate(BaseModel):
+    counselor_email: EmailStr
+
+
+class CounselorAssignmentOut(BaseModel):
+    id: str
+    counselor_id: str
+    counselor_name: str
+    counselor_email: str
+    student_id: str
+    student_name: str
+    student_email: str
+    status: str
+    consented_at: datetime
+    revoked_at: datetime | None = None
+
+
+class CounselorFeedbackCreate(BaseModel):
+    content: str = Field(..., min_length=3, max_length=4000)
+    kind: Literal["comment", "task", "star_note"] = "comment"
+    interview_report_id: str | None = None
+
+
+class CounselorFeedbackOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    student_id: str
+    counselor_id: str
+    interview_report_id: str | None = None
+    kind: str
+    content: str
+    created_at: datetime
+
+
+class CounselorStudentOverview(BaseModel):
+    student: UserOut
+    cv_count: int
+    analysis_count: int
+    interview_count: int
+    completed_interview_count: int
+    average_star_score: float
+    recent_feedback: list[CounselorFeedbackOut] = Field(default_factory=list)
+
+
+# --- Enterprise Schemas ---
+class JobApplicationCreate(BaseModel):
+    jd_id: str
+    cv_id: str
+    analysis_id: str | None = None
+
+
+class JobApplicationDecision(BaseModel):
+    status: Literal["submitted", "shortlisted", "interview", "rejected"]
+
+
+class JobApplicationOut(BaseModel):
+    id: str
+    jd_id: str
+    jd_title: str
+    student_id: str
+    candidate_name: str
+    candidate_email: str
+    cv_id: str
+    analysis_id: str | None = None
+    match_score: float
+    status: str
+    shared_at: datetime
+    decided_at: datetime | None = None
+
+
+# --- Operational metrics ---
+class ProductMetricsOut(BaseModel):
+    active_users: int
+    total_users: int
+    adoption_rate: float
+    average_csat: float | None = None
+    completed_interviews: int
+    average_interview_score: float | None = None
+    latency_by_event_ms: dict[str, float] = Field(default_factory=dict)
 
 
 class ConversationSummaryOut(BaseModel):

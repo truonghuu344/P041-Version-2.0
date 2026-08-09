@@ -127,6 +127,8 @@ def _join_pdf_fragments(value: str) -> str:
 
 def _name_score(candidate: str, *, index: int, lines: list[str], fragmented: bool) -> float:
     normalized = candidate.casefold()
+    if _section_name(candidate):
+        return -1
     excluded_terms = {
         "soft skills",
         "hard skills",

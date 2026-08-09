@@ -1,4 +1,5 @@
 from datetime import UTC, datetime
+from time import perf_counter
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import or_, select
@@ -7,11 +8,23 @@ from sqlalchemy.orm import selectinload
 
 from src.core.security import get_current_user
 from src.db.database import get_db
-from src.db.models import CV, InterviewQuestion, InterviewReport, InterviewSession, JobDescription, User
+from src.db.models import (
+    CV,
+    InterviewFeedback,
+    InterviewQuestion,
+    InterviewReport,
+    InterviewSession,
+    JobDescription,
+    UsageEvent,
+    User,
+)
 from src.models.schemas import (
     AnswerSubmitRequest,
+    InterviewFeedbackCreate,
+    InterviewFeedbackOut,
     InterviewQuestionOut,
     InterviewReportOut,
+    InterviewSessionSummaryOut,
     InterviewStartRequest,
 )
 from src.services.interview_service import (
@@ -30,6 +43,7 @@ async def start_interview_session(
     current_user: User = Depends(get_current_user),
 ) -> InterviewQuestionOut:
     """Bắt đầu phiên Phỏng vấn thử (Yêu cầu bắt buộc chọn 1 CV và 1 JD)."""
+    started_at = perf_counter()
     # Verify CV
     stmt_cv = select(CV).where(CV.id == payload.cv_id, CV.user_id == current_user.id)
     res_cv = await db.execute(stmt_cv)
@@ -45,6 +59,7 @@ async def start_interview_session(
         JobDescription.id == payload.jd_id,
         or_(
             JobDescription.is_system.is_(True),
+            JobDescription.is_published.is_(True),
             JobDescription.created_by_user_id == current_user.id,
         ),
     )
@@ -87,6 +102,15 @@ async def start_interview_session(
         question_objs.append(q_obj)
         db.add(q_obj)
 
+    db.add(
+        UsageEvent(
+            user_id=current_user.id,
+            event_name="interview_start",
+            duration_ms=round((perf_counter() - started_at) * 1000),
+            metadata_json={"question_count": len(question_texts)},
+        )
+    )
+
     await db.commit()
 
     return InterviewQuestionOut(
@@ -107,6 +131,7 @@ async def submit_interview_answer(
     current_user: User = Depends(get_current_user),
 ) -> InterviewQuestionOut:
     """Gửi câu trả lời của sinh viên -> nhận phản hồi / follow-up / câu hỏi tiếp theo."""
+    started_at = perf_counter()
     # Fetch session with questions
     stmt_session = (
         select(InterviewSession)
@@ -170,6 +195,14 @@ async def submit_interview_answer(
 
         if evaluation.get("needs_followup") and evaluation.get("follow_up_question"):
             current_q.follow_up_question = evaluation.get("follow_up_question")
+            db.add(
+                UsageEvent(
+                    user_id=current_user.id,
+                    event_name="interview_answer",
+                    duration_ms=round((perf_counter() - started_at) * 1000),
+                    metadata_json={"follow_up": True},
+                )
+            )
             await db.commit()
             return InterviewQuestionOut(
                 session_id=session.id,
@@ -214,6 +247,14 @@ async def submit_interview_answer(
             recommendations_json=report_data.get("recommendations", []),
         )
         db.add(new_report)
+        db.add(
+            UsageEvent(
+                user_id=current_user.id,
+                event_name="interview_answer",
+                duration_ms=round((perf_counter() - started_at) * 1000),
+                metadata_json={"completed": True},
+            )
+        )
         await db.commit()
 
         return InterviewQuestionOut(
@@ -224,6 +265,14 @@ async def submit_interview_answer(
             is_last_question=True,
         )
 
+    db.add(
+        UsageEvent(
+            user_id=current_user.id,
+            event_name="interview_answer",
+            duration_ms=round((perf_counter() - started_at) * 1000),
+            metadata_json={"completed": False},
+        )
+    )
     await db.commit()
     next_q = questions[session.current_question_index]
     return InterviewQuestionOut(
@@ -231,6 +280,62 @@ async def submit_interview_answer(
         question_index=session.current_question_index,
         question_text=next_q.question_text,
         follow_up_question=None,
+        is_last_question=False,
+    )
+
+
+@router.get("", response_model=list[InterviewSessionSummaryOut])
+async def list_interview_history(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> list[InterviewSessionSummaryOut]:
+    result = await db.execute(
+        select(InterviewSession)
+        .where(InterviewSession.user_id == current_user.id)
+        .options(selectinload(InterviewSession.report))
+        .order_by(InterviewSession.created_at.desc())
+    )
+    return [
+        InterviewSessionSummaryOut(
+            id=session.id,
+            cv_id=session.cv_id,
+            jd_id=session.jd_id,
+            status=session.status,
+            total_questions=session.total_questions,
+            current_question_index=session.current_question_index,
+            created_at=session.created_at,
+            completed_at=session.completed_at,
+            total_score=session.report.total_score if session.report else None,
+        )
+        for session in result.scalars().all()
+    ]
+
+
+@router.get("/{session_id}/resume", response_model=InterviewQuestionOut)
+async def resume_interview_session(
+    session_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> InterviewQuestionOut:
+    result = await db.execute(
+        select(InterviewSession)
+        .where(InterviewSession.id == session_id, InterviewSession.user_id == current_user.id)
+        .options(selectinload(InterviewSession.questions))
+    )
+    session = result.scalar_one_or_none()
+    if not session:
+        raise HTTPException(status_code=404, detail="Không tìm thấy phiên phỏng vấn.")
+    if session.status == "completed":
+        raise HTTPException(status_code=409, detail="Phiên đã hoàn thành; hãy mở báo cáo STAR.")
+    questions = sorted(session.questions, key=lambda item: item.question_index)
+    if session.current_question_index >= len(questions):
+        raise HTTPException(status_code=409, detail="Phiên không còn câu hỏi để tiếp tục.")
+    question = questions[session.current_question_index]
+    return InterviewQuestionOut(
+        session_id=session.id,
+        question_index=question.question_index,
+        question_text=question.question_text,
+        follow_up_question=question.follow_up_question if not question.follow_up_answer else None,
         is_last_question=False,
     )
 
@@ -266,3 +371,43 @@ async def get_interview_report(
         recommendations=report.recommendations_json or [],
         created_at=report.created_at,
     )
+
+
+@router.post(
+    "/{session_id}/feedback",
+    response_model=InterviewFeedbackOut,
+    status_code=status.HTTP_201_CREATED,
+)
+async def submit_interview_feedback(
+    session_id: str,
+    payload: InterviewFeedbackCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> InterviewFeedbackOut:
+    session_result = await db.execute(
+        select(InterviewSession).where(
+            InterviewSession.id == session_id,
+            InterviewSession.user_id == current_user.id,
+            InterviewSession.status == "completed",
+        )
+    )
+    if not session_result.scalar_one_or_none():
+        raise HTTPException(status_code=404, detail="Chỉ có thể đánh giá phiên phỏng vấn đã hoàn thành.")
+    existing_result = await db.execute(
+        select(InterviewFeedback).where(InterviewFeedback.session_id == session_id)
+    )
+    feedback = existing_result.scalar_one_or_none()
+    if feedback:
+        feedback.rating = payload.rating
+        feedback.comment = payload.comment
+    else:
+        feedback = InterviewFeedback(
+            session_id=session_id,
+            user_id=current_user.id,
+            rating=payload.rating,
+            comment=payload.comment,
+        )
+        db.add(feedback)
+    await db.commit()
+    await db.refresh(feedback)
+    return InterviewFeedbackOut.model_validate(feedback)

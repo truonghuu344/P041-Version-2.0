@@ -7,6 +7,7 @@ from sqlalchemy import text
 from src.api.routes import router
 from src.config import get_settings
 from src.db.database import engine, init_db
+from src.middleware.security import ApiProtectionMiddleware
 
 
 @asynccontextmanager
@@ -28,6 +29,12 @@ app = FastAPI(
 
 settings = get_settings()
 origins = [origin.strip() for origin in settings.cors_origins.split(",") if origin.strip()]
+
+app.add_middleware(
+    ApiProtectionMiddleware,
+    requests_per_minute=settings.api_rate_limit_per_minute,
+    max_body_bytes=settings.max_request_body_mb * 1024 * 1024,
+)
 
 app.add_middleware(
     CORSMiddleware,

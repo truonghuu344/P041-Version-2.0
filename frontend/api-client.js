@@ -8,11 +8,11 @@ const API_BASE_URL =
 
 export class ApiClient {
   static getToken() {
-    return localStorage.getItem('access_token');
+    return null;
   }
 
-  static setToken(token) {
-    localStorage.setItem('access_token', token);
+  static setToken(_token) {
+    localStorage.removeItem('access_token');
   }
 
   static getUser() {
@@ -20,11 +20,16 @@ export class ApiClient {
     return u ? JSON.parse(u) : null;
   }
 
+  static isAuthenticated() {
+    return Boolean(this.getUser());
+  }
+
   static setUser(user) {
     localStorage.setItem('user_info', JSON.stringify(user));
   }
 
-  static logout() {
+  static async logout() {
+    await this.request('/auth/logout', { method: 'POST' }).catch(() => undefined);
     localStorage.removeItem('access_token');
     localStorage.removeItem('user_info');
   }
@@ -44,6 +49,7 @@ export class ApiClient {
     const config = {
       ...options,
       headers,
+      credentials: 'include',
     };
 
     try {

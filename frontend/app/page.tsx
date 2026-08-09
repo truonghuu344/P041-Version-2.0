@@ -135,12 +135,17 @@ export default function Page() {
             <span className="brand-name">CV Assistant</span>
           </a>
           <nav className="nav-links" id="nav-links">
-            <a href="#" className="nav-link active" id="nav-dashboard"><span className="nav-icon">🚀</span> <span className="nav-text" data-i18n="nav-dashboard">Dashboard</span></a>
-            <a href="#" className="nav-link" id="nav-cv"><span className="nav-icon">🧪</span> <span className="nav-text" data-i18n="nav-cv">CV Upload</span></a>
-            <a href="#" className="nav-link" id="nav-jobs"><span className="nav-icon">🗺️</span> <span className="nav-text" data-i18n="nav-jobs">Thư viện Jobs</span></a>
-            <a href="#" className="nav-link" id="nav-interview"><span className="nav-icon">🎙️</span> <span className="nav-text" data-i18n="nav-interview">Phỏng vấn STAR</span></a>
-            <a href="#" className="nav-link" id="nav-gap"><span className="nav-icon">🎯</span> <span className="nav-text" data-i18n="nav-gap">Gap Analysis</span></a>
-            <a href="#" className="nav-link admin-only-link" id="nav-admin" style={{ display: 'none' }}><span className="nav-icon">👑</span> <span className="nav-text" data-i18n="nav-admin">Quản trị Admin</span></a>
+            <a href="#" className="nav-link active" id="nav-dashboard"><span className="nav-text" data-i18n="nav-dashboard">Trang chủ</span></a>
+            <a href="#" className="nav-link" id="nav-cv"><span className="nav-text" data-i18n="nav-cv">Hồ sơ CV</span></a>
+            <a href="#" className="nav-link" id="nav-jobs"><span className="nav-text" data-i18n="nav-jobs">Danh sách JD</span></a>
+            <a href="#" className="nav-link" id="nav-interview"><span className="nav-text" data-i18n="nav-interview">Phòng phỏng vấn</span></a>
+            <a href="#" className="nav-link" id="nav-history" hidden><span className="nav-text" data-i18n="nav-history">Lịch sử &amp; Báo cáo</span></a>
+            <a href="#" className="nav-link" id="nav-gap" hidden><span className="nav-text" data-i18n="nav-gap">Gap Analysis</span></a>
+            <a href="#" className="nav-link role-only-link" id="nav-counselor" hidden><span className="nav-text">Sinh viên của tôi</span></a>
+            <a href="#" className="nav-link role-only-link" id="nav-counselor-reports" hidden><span className="nav-text">Báo cáo</span></a>
+            <a href="#" className="nav-link role-only-link" id="nav-enterprise" hidden><span className="nav-text">Dashboard</span></a>
+            <a href="#" className="nav-link role-only-link" id="nav-enterprise-applications" hidden><span className="nav-text">Hồ sơ ứng tuyển</span></a>
+            <a href="#" className="nav-link admin-only-link" id="nav-admin" hidden><span className="nav-text">Quản trị hệ thống</span></a>
           </nav>
 
           <div id="auth-container">
@@ -513,7 +518,7 @@ export default function Page() {
               <div className="testimonial-card">
                 <div className="testi-stars">★★★★★</div>
                 <p className="testi-content" data-i18n="testi-user1-text">
-                  "Nhờ Gap Analysis mà tôi biết chính xác CV mình thiếu những từ khóa ATS nào đối với vị trí Senior Frontend. AI còn tự động tối ưu câu từ vô cùng chân thật!"
+                  &ldquo;Nhờ Gap Analysis mà tôi biết chính xác CV mình thiếu những từ khóa ATS nào đối với vị trí Senior Frontend. AI còn tự động tối ưu câu từ vô cùng chân thật!&rdquo;
                 </p>
                 <div className="testi-author">
                   <div className="author-avatar avatar-cyan">TT</div>
@@ -527,7 +532,7 @@ export default function Page() {
               <div className="testimonial-card highlighted-testimonial">
                 <div className="testi-stars">★★★★★</div>
                 <p className="testi-content" data-i18n="testi-user2-text">
-                  "Luyện phỏng vấn STAR với AI Agent giúp tôi rèn luyện phản xạ tuyệt vời. Khi bước vào phỏng vấn thực tế với HR, tôi hoàn toàn tự tin trả lời gãy gọn mạch lạc!"
+                  &ldquo;Luyện phỏng vấn STAR với AI Agent giúp tôi rèn luyện phản xạ tuyệt vời. Khi bước vào phỏng vấn thực tế với HR, tôi hoàn toàn tự tin trả lời gãy gọn mạch lạc!&rdquo;
                 </p>
                 <div className="testi-author">
                   <div className="author-avatar avatar-purple">LH</div>
@@ -541,7 +546,7 @@ export default function Page() {
               <div className="testimonial-card">
                 <div className="testi-stars">★★★★★</div>
                 <p className="testi-content" data-i18n="testi-user3-text">
-                  "Tính năng Anti-Hallucination là cứu cánh của tôi! CV không hề bị AI 'bốc phét' thêm kinh nghiệm ảo, nhà tuyển dụng đánh giá rất cao độ trung thực."
+                  &ldquo;Tính năng Anti-Hallucination là cứu cánh của tôi! CV không hề bị AI &lsquo;bốc phét&rsquo; thêm kinh nghiệm ảo, nhà tuyển dụng đánh giá rất cao độ trung thực.&rdquo;
                 </p>
                 <div className="testi-author">
                   <div className="author-avatar avatar-pink">NQ</div>
@@ -756,6 +761,27 @@ export default function Page() {
                 </div>
               </div>
             </div>
+            <div className="vessel-card manual-cv-card">
+              <div className="console-header">
+                <div className="console-icon console-icon-purple">✍️</div>
+                <div><h3 className="console-title">TẠO CV TỪ BIỂU MẪU</h3><p className="console-subtitle">Dành cho sinh viên chưa có file CV; mọi nội dung do bạn tự xác nhận.</p></div>
+              </div>
+              <form id="manual-cv-form" className="manual-cv-form">
+                <div className="manual-cv-grid">
+                  <input id="manual-cv-title" className="form-input" placeholder="Tên CV" required />
+                  <input id="manual-cv-name" className="form-input" placeholder="Họ và tên" required />
+                  <input id="manual-cv-email" type="email" className="form-input" placeholder="Email" required />
+                  <input id="manual-cv-phone" className="form-input" placeholder="Số điện thoại" />
+                  <select id="manual-cv-template" className="form-input"><option value="classic">Classic ATS</option><option value="modern">Modern ATS</option><option value="compact">Compact ATS</option></select>
+                  <input id="manual-cv-skills" className="form-input" placeholder="Kỹ năng, cách nhau bởi dấu phẩy" required />
+                </div>
+                <textarea id="manual-cv-summary" className="form-input" placeholder="Tóm tắt nghề nghiệp"></textarea>
+                <textarea id="manual-cv-education" className="form-input" placeholder="Học vấn: mỗi dòng là một mục"></textarea>
+                <textarea id="manual-cv-experience" className="form-input" placeholder="Kinh nghiệm: mỗi dòng là một mục"></textarea>
+                <textarea id="manual-cv-projects" className="form-input" placeholder="Dự án: mỗi dòng là một mục"></textarea>
+                <button type="submit" className="ship-btn-primary">Tạo CV &amp; xem trong Manifest</button>
+              </form>
+            </div>
           </div>
         </div>
       </section>
@@ -954,14 +980,28 @@ export default function Page() {
           <div className="interview-workspace">
             <div id="page-interview-setup" className="interview-card">
               <h3 className="card-section-title">Thiết Lập Phiên Phỏng Vấn Thử</h3>
-              <div className="form-row margin-bottom">
+              <div className="form-row margin-bottom interview-selection-grid">
                 <div className="form-group flex-1">
-                  <label className="form-label">Chọn CV Phỏng Vấn:</label>
-                  <select id="page-interview-select-cv" className="form-input select-dark"></select>
+                  <label className="form-label interview-select-label">
+                    <span>Chọn CV phỏng vấn</span>
+                    <small>Hồ sơ ứng viên</small>
+                  </label>
+                  <div className="gap-select-shell interview-select-shell interview-select-cv">
+                    <span className="gap-select-icon" aria-hidden="true">📄</span>
+                    <select id="page-interview-select-cv" className="form-input gap-select interview-select" aria-label="Chọn CV phỏng vấn"></select>
+                    <span className="gap-select-chevron" aria-hidden="true">⌄</span>
+                  </div>
                 </div>
                 <div className="form-group flex-1">
-                  <label className="form-label">Chọn JD Ứng Tuyển:</label>
-                  <select id="page-interview-select-jd" className="form-input select-dark"></select>
+                  <label className="form-label interview-select-label">
+                    <span>Chọn vị trí ứng tuyển</span>
+                    <small>Mô tả công việc</small>
+                  </label>
+                  <div className="gap-select-shell interview-select-shell interview-select-jd">
+                    <span className="gap-select-icon" aria-hidden="true">💼</span>
+                    <select id="page-interview-select-jd" className="form-input gap-select interview-select" aria-label="Chọn vị trí ứng tuyển"></select>
+                    <span className="gap-select-chevron" aria-hidden="true">⌄</span>
+                  </div>
                 </div>
               </div>
               <button id="page-btn-start-interview" className="btn-primary full-width">Bắt Đầu Phiên Phỏng Vấn STAR</button>
@@ -977,6 +1017,7 @@ export default function Page() {
 
               <form id="page-interview-answer-form" className="chat-input-form">
                 <input type="text" id="page-interview-answer-input" className="form-input flex-1" placeholder="Nhập câu trả lời của bạn theo mô hình STAR..." required />
+                <button type="button" id="page-interview-voice" className="btn-outline" aria-label="Nhập câu trả lời bằng giọng nói">🎤</button>
                 <button type="submit" className="btn-primary">Gửi Câu Trả Lời</button>
               </form>
             </div>
@@ -1004,6 +1045,14 @@ export default function Page() {
                 <p className="report-label label-purple">🚀 Khuyên Luyện Tập:</p>
                 <ul id="page-report-recommendations-list" className="report-list"></ul>
               </div>
+              <form id="page-interview-csat-form" className="csat-form">
+                <label>Đánh giá phiên luyện tập</label>
+                <select id="page-interview-csat" className="form-input" required>
+                  <option value="">Chọn 1–5 sao</option><option value="5">5 — Rất hữu ích</option><option value="4">4 — Hữu ích</option><option value="3">3 — Bình thường</option><option value="2">2 — Chưa tốt</option><option value="1">1 — Không hữu ích</option>
+                </select>
+                <input id="page-interview-csat-comment" className="form-input" placeholder="Góp ý thêm (tùy chọn)" />
+                <button className="btn-outline" type="submit">Gửi đánh giá</button>
+              </form>
             </div>
           </div>
         </div>
@@ -1127,6 +1176,11 @@ export default function Page() {
               <div className="gap-result-block">
                 <p className="block-title title-purple">💡 Đề xuất chỉnh sửa câu từ chuẩn ATS (Anti-Hallucination):</p>
                 <div id="page-gap-suggestions-list" className="suggestions-stack"></div>
+              </div>
+              <div className="cv-export-bar" id="page-cv-export-bar" hidden>
+                <label htmlFor="page-export-template">Template xuất PDF</label>
+                <select id="page-export-template" className="form-input"><option value="classic">Classic ATS</option><option value="modern">Modern ATS</option><option value="compact">Compact ATS</option></select>
+                <button type="button" id="page-download-optimized-cv" className="btn-primary">Tải CV đã xác nhận (.pdf)</button>
               </div>
             </div>
           </div>
@@ -1266,7 +1320,43 @@ export default function Page() {
                 <button className="btn-outline" id="btn-logout-crew">Đăng Xuất</button>
               </div>
             </div>
+            <div className="profile-settings-card student-consent-card" id="student-counselor-consent-panel">
+              <h3 className="card-section-title">🎓 Quyền truy cập của Cố vấn</h3>
+              <p className="page-sub">Chỉ cố vấn bạn cấp quyền mới được xem tiến độ và gửi nhận xét.</p>
+              <form id="student-counselor-consent-form" className="form-row">
+                <input id="student-counselor-email" type="email" className="form-input flex-1" placeholder="Email tài khoản Counselor" required />
+                <button className="btn-primary" type="submit">Cấp quyền</button>
+              </form>
+              <div id="student-counselor-consent-list" className="hitl-list"></div>
+            </div>
           </div>
+        </div>
+      </section>
+
+      <section className="app-view" id="view-counselor">
+        <div className="page-container">
+          <div className="page-header"><div className="page-badge">HUMAN-IN-THE-LOOP</div><h1 className="page-title">🎓 Dashboard Cố Vấn</h1><p className="page-sub">Chỉ hiển thị sinh viên đã chủ động cấp quyền.</p></div>
+          <div className="role-dashboard-grid">
+            <section className="role-panel"><h3>Sinh viên được phân công</h3><div id="counselor-student-list" className="hitl-list"></div></section>
+            <section className="role-panel role-menu-target" id="counselor-student-detail"><h3>Báo cáo tiến độ sinh viên</h3><p className="gap-empty">Chọn một sinh viên để xem CV, Gap Analysis và lịch sử STAR.</p></section>
+          </div>
+          <form id="counselor-feedback-form" className="role-panel" hidden>
+            <input type="hidden" id="counselor-feedback-student-id" />
+            <select id="counselor-feedback-kind" className="form-input"><option value="comment">Nhận xét</option><option value="task">Bài tập</option><option value="star_note">Ghi chú STAR</option></select>
+            <textarea id="counselor-feedback-content" className="form-input" placeholder="Nội dung phản hồi" required></textarea>
+            <button className="btn-primary" type="submit">Gửi phản hồi</button>
+          </form>
+        </div>
+      </section>
+
+      <section className="app-view" id="view-enterprise">
+        <div className="page-container">
+          <div className="page-header"><div className="page-badge">ENTERPRISE RECRUITMENT</div><h1 className="page-title">🏢 Dashboard Tuyển Dụng</h1><p className="page-sub">Công bố JD, xem ứng viên đã chia sẻ CV và tham khảo Match Score.</p></div>
+          <div className="role-dashboard-grid">
+            <section className="role-panel"><h3>JD của doanh nghiệp</h3><div id="enterprise-jd-list" className="hitl-list"></div></section>
+            <section className="role-panel role-menu-target" id="enterprise-applications-panel"><h3>Hồ sơ ứng tuyển theo Match Score</h3><p className="responsible-ai-note">Match Score chỉ để tham khảo; quyết định tuyển dụng luôn do con người thực hiện.</p><div id="enterprise-candidate-list" className="hitl-list"></div></section>
+          </div>
+          <section id="enterprise-candidate-cv" className="role-panel shared-cv-panel" hidden aria-live="polite"></section>
         </div>
       </section>
 
@@ -1328,7 +1418,7 @@ export default function Page() {
                   </thead>
                   <tbody id="admin-users-tbody">
                     <tr>
-                      <td colSpan="5" style={{ textAlign: 'center', padding: '30px' }}>Đang tải danh sách người dùng...</td>
+                      <td colSpan={5} style={{ textAlign: 'center', padding: '30px' }}>Đang tải danh sách người dùng...</td>
                     </tr>
                   </tbody>
                 </table>
@@ -1372,7 +1462,7 @@ export default function Page() {
           </div>
           {/* Google Sign-in / Register Option */}
           <div className="google-auth-wrap">
-            <button type="button" className="btn-google-auth" id="btn-google-auth">
+            <button type="button" className="btn-google-auth" id="btn-google-auth" data-client-id={process.env.NEXT_PUBLIC_GOOGLE_OAUTH_CLIENT_ID || ''}>
               <svg className="google-icon" width="18" height="18" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                 <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -1573,14 +1663,22 @@ export default function Page() {
             <p className="modal-sub" data-i18n="modal-int-sub">Đóng vai nhà tuyển dụng hỏi đáp chuyên sâu & tự động gợi mở follow-up</p>
           </div>
           <div id="interview-setup-section" style={{ background: 'rgba(255,255,255,0.03)', padding: '16px', borderRadius: '12px' }}>
-            <div style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
+            <div className="interview-selection-grid" style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
               <div style={{ flex: 1 }}>
                 <label className="form-label" data-i18n="label-int-cv">Chọn CV Phỏng Vấn:</label>
-                <select id="interview-select-cv" className="form-input" style={{ background: '#0e0f30', color: '#fff' }}></select>
+                <div className="gap-select-shell interview-select-shell interview-select-cv">
+                  <span className="gap-select-icon" aria-hidden="true">📄</span>
+                  <select id="interview-select-cv" className="form-input gap-select interview-select" aria-label="Chọn CV phỏng vấn"></select>
+                  <span className="gap-select-chevron" aria-hidden="true">⌄</span>
+                </div>
               </div>
               <div style={{ flex: 1 }}>
                 <label className="form-label" data-i18n="label-int-jd">Chọn JD Ứng Tuyển:</label>
-                <select id="interview-select-jd" className="form-input" style={{ background: '#0e0f30', color: '#fff' }}></select>
+                <div className="gap-select-shell interview-select-shell interview-select-jd">
+                  <span className="gap-select-icon" aria-hidden="true">💼</span>
+                  <select id="interview-select-jd" className="form-input gap-select interview-select" aria-label="Chọn vị trí ứng tuyển"></select>
+                  <span className="gap-select-chevron" aria-hidden="true">⌄</span>
+                </div>
               </div>
             </div>
             <button id="btn-start-interview-session" className="btn-primary" style={{ width: '100%' }} data-i18n="btn-start-int">Bắt Đầu Phiên Phỏng Vấn</button>
@@ -1711,11 +1809,15 @@ export default function Page() {
           aria-expanded="false"
           aria-controls="ai-companion-chat"
         >
+          {/* GIF gốc phải là img đang hoạt động để canvas đọc được từng frame animation. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             id="ai-companion-source"
             className="ai-companion-source"
             src="/assistant/idle-rotations-8dir.gif"
-            alt=""
+            alt="Nova - trợ lý nghề nghiệp AI"
+            width={64}
+            height={64}
             draggable={false}
           />
           <canvas id="ai-companion-canvas" className="ai-companion-canvas" width="64" height="64" aria-hidden="true"></canvas>
@@ -1757,7 +1859,7 @@ export default function Page() {
           <button type="button" data-assistant-prompt="Hãy giúp tôi luyện phỏng vấn STAR.">Luyện STAR</button>
         </div>
         <form id="ai-companion-form" className="ai-chat-form">
-          <textarea id="ai-companion-input" rows="1" maxLength="4000" placeholder="Nhắn cho Nova…" aria-label="Tin nhắn gửi trợ lý AI"></textarea>
+          <textarea id="ai-companion-input" rows={1} maxLength={4000} placeholder="Nhắn cho Nova…" aria-label="Tin nhắn gửi trợ lý AI"></textarea>
           <button type="submit" id="ai-companion-send" aria-label="Gửi tin nhắn">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/></svg>
           </button>

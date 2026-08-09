@@ -64,7 +64,7 @@
   --radius-md:        14px;
   --radius-lg:        22px;
   --radius-xl:        32px;
-  --font: 'Inter', system-ui, sans-serif;
+  --font: ui-rounded, 'SF Pro Rounded', 'Nunito', 'Arial Rounded MT Bold', 'Segoe UI', system-ui, sans-serif;
 }
 
 /* Light Theme Variables (Universe Morning Theme) */
@@ -118,6 +118,7 @@ html { scroll-behavior: smooth; }
 
 body {
   font-family: var(--font);
+  font-weight: 500;
   background-color: var(--bg-deep);
   color: var(--text-white);
   min-height: 100vh;
@@ -1871,6 +1872,106 @@ html.light .dark-planets-container,
 .full-width { width: 100%; }
 .select-dark { background: #0e0f30; color: #fff; }
 
+/* Interview selectors share the accessible custom listbox behavior with Gap
+   Analysis, with a denser visual treatment tailored to the setup card. */
+.interview-selection-grid {
+  align-items: flex-end;
+  gap: 16px;
+}
+
+.interview-select-label {
+  margin-bottom: 3px;
+  color: #e2e8f0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.interview-select-label small {
+  color: #7482a8;
+  font-size: 9px;
+  font-weight: 650;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.interview-select-shell {
+  min-width: 0;
+  color-scheme: dark;
+}
+
+.interview-select-shell .gap-select-icon {
+  left: 14px;
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(103, 232, 249, 0.18);
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.16), rgba(99, 102, 241, 0.2));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  font-size: 14px;
+}
+
+.interview-select-shell .gap-select-chevron {
+  right: 17px;
+  color: #67e8f9;
+  font-size: 21px;
+}
+
+.interview-select-shell .gap-select-trigger {
+  min-height: 58px;
+  padding: 9px 48px 9px 56px;
+  border-color: rgba(116, 105, 255, 0.46);
+  border-radius: 15px;
+  background:
+    radial-gradient(circle at 8% 0%, rgba(34, 211, 238, 0.12), transparent 36%),
+    linear-gradient(135deg, rgba(28, 33, 75, 0.98), rgba(10, 16, 44, 0.99));
+}
+
+.interview-select-shell .gap-select-trigger:hover {
+  border-color: rgba(34, 211, 238, 0.72);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 14px 30px rgba(8, 145, 178, 0.13);
+}
+
+.interview-select-shell.is-open .gap-select-trigger,
+.interview-select-shell .gap-select-trigger:focus-visible {
+  border-color: #22d3ee;
+  box-shadow:
+    0 0 0 3px rgba(34, 211, 238, 0.14),
+    0 18px 38px rgba(8, 145, 178, 0.17);
+}
+
+.interview-select-shell .gap-select-menu {
+  top: calc(100% + 8px);
+  max-height: 248px;
+  border-color: rgba(103, 232, 249, 0.3);
+}
+
+.interview-select-shell .gap-select-menu-item {
+  min-height: 52px;
+}
+
+.interview-select-shell .gap-select-value-title {
+  font-size: 13px;
+}
+
+.interview-select-shell .gap-select-value-meta {
+  color: #8fa1c7;
+}
+
+@media (max-width: 720px) {
+  .interview-selection-grid {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 13px !important;
+  }
+
+  .interview-selection-grid > * {
+    width: 100%;
+  }
+}
+
 /* Gap Analysis selectors: explicit option colors fix the white-on-white
    native dropdown menu on Windows while preserving keyboard accessibility. */
 .gap-select-shell {
@@ -2333,19 +2434,23 @@ html.light .gap-select-menu,
 }
 
 .ai-companion-source {
-  display: none;
+  position: absolute;
+  display: block;
   width: 64px;
   height: 64px;
   border-radius: 15px;
   image-rendering: pixelated;
   pointer-events: none;
+  opacity: 0;
 }
 
 .ai-companion-source.is-fallback {
-  display: block;
+  opacity: 1;
 }
 
 .ai-companion-canvas {
+  position: relative;
+  z-index: 1;
   width: 64px;
   height: 64px;
   image-rendering: pixelated;
@@ -4391,14 +4496,20 @@ html.light .form-input:focus,
   position: relative !important;
   display: inline-flex !important;
   align-items: center !important;
-  gap: 6px !important;
-  padding: 6px 14px !important;
+  gap: 0 !important;
+  padding: 8px 15px !important;
   white-space: nowrap !important;
   text-decoration: none !important;
-  font-size: 13px !important;
-  font-weight: 500 !important;
-  border-radius: 8px !important;
+  font-family: var(--font) !important;
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.1px !important;
+  border-radius: 999px !important;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.nav-link[hidden] {
+  display: none !important;
 }
 
 /* Admin link: hidden by default, shown via .visible class */
@@ -5161,6 +5272,51 @@ html.light .form-input:focus,
   color: #fff;
 }
 
+/* ── PRD completion: manual CV, HITL, enterprise and verified decisions ── */
+.manual-cv-card { margin-top: 22px; }
+.manual-cv-form { display: grid; gap: 12px; }
+.manual-cv-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.manual-cv-form textarea { min-height: 76px; resize: vertical; }
+.suggestion-decision-card {
+  display: grid; gap: 8px; padding: 13px; border: 1px solid rgba(176,132,252,.3);
+  border-left: 3px solid #b084fc; border-radius: 10px; background: rgba(255,255,255,.035);
+}
+.suggestion-decision-card[data-decision="accepted"] { border-color: rgba(0,230,118,.55); }
+.suggestion-decision-card[data-decision="rejected"] { opacity: .65; border-color: rgba(255,78,106,.45); }
+.suggestion-final-text { min-height: 72px; resize: vertical; }
+.suggestion-actions, .cv-export-bar, .jd-apply-row { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+.suggestion-status { font-size: 11px; color: var(--text-dim); }
+.cv-export-bar { margin-top: 14px; padding: 12px; border-radius: 10px; background: rgba(37,99,235,.1); }
+.cv-export-bar .form-input { width: auto; min-width: 160px; }
+.csat-form { display: grid; grid-template-columns: auto minmax(150px, 1fr) 2fr auto; align-items: center; gap: 9px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); }
+.role-dashboard-grid { display: grid; grid-template-columns: minmax(280px, .8fr) minmax(0, 1.4fr); gap: 18px; }
+.role-panel { padding: 20px; border: 1px solid var(--border); border-radius: 16px; background: rgba(13,16,50,.82); }
+.role-panel h3 { margin: 0 0 14px; color: #fff; }
+.hitl-list { display: grid; gap: 10px; margin-top: 12px; }
+.hitl-item, .candidate-card { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px; border: 1px solid rgba(148,163,184,.22); border-radius: 11px; background: rgba(255,255,255,.035); color: #fff; text-align: left; }
+.hitl-item small, .candidate-card small { display: block; margin-top: 3px; color: var(--text-dim); }
+.hitl-student { cursor: pointer; }
+.hitl-student:hover { border-color: #22d3ee; transform: translateY(-1px); }
+.hitl-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 14px 0; }
+.hitl-stats span { padding: 12px 6px; border-radius: 9px; background: rgba(34,211,238,.08); color: #22d3ee; font-size: 18px; font-weight: 800; text-align: center; }
+.hitl-stats small { display: block; color: var(--text-dim); font-size: 9px; }
+.feedback-item { padding: 10px; border-left: 3px solid #8b5cf6; background: rgba(139,92,246,.08); }
+.feedback-item p { margin: 4px 0 0; color: var(--text-dim); }
+.candidate-card { display: grid; grid-template-columns: minmax(160px, 1fr) auto auto minmax(140px, .5fr); }
+.candidate-card b { color: #22d3ee; font-size: 18px; }
+.shared-cv-panel { margin-top: 18px; }
+.shared-cv-panel pre { max-height: 420px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--text-dim); }
+.responsible-ai-note { padding: 9px; border: 1px solid rgba(245,158,11,.35); border-radius: 8px; color: #fcd34d; font-size: 11px; }
+.jd-apply-row { margin-top: 10px; }
+.jd-apply-row .form-input { flex: 1; min-width: 160px; }
+
+@media (max-width: 780px) {
+  .manual-cv-grid, .role-dashboard-grid { grid-template-columns: 1fr; }
+  .csat-form { grid-template-columns: 1fr; }
+  .hitl-stats { grid-template-columns: repeat(2, 1fr); }
+  .candidate-card { grid-template-columns: 1fr; }
+}
+
 .admin-section-tabs {
   display: inline-flex;
   gap: 5px;
@@ -5856,3 +6012,5 @@ body.light-mode .gap-workspace .gap-select-trigger,
     font-size: 12px;
   }
 }
+@tailwind components;
+@tailwind utilities;

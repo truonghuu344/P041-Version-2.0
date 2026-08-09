@@ -51,6 +51,7 @@ docker-compose.override.yml
 
 # Node (frontend)
 node_modules/
+*.tsbuildinfo
 .next/
 out/
 .nuxt/
@@ -62,3 +63,4 @@ out/
 # AI logs — tracked structure, ignored content
 .ai-log/*.jsonl
 .ai-log/archive/
+.vercel

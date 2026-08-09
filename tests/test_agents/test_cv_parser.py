@@ -32,6 +32,14 @@ def test_local_cv_parser_extracts_only_present_skills():
     assert result["projects"]
 
 
+def test_parser_does_not_treat_localized_section_heading_as_candidate_name():
+    result = parse_cv_locally(
+        "Trần Hoàng Nam\nnam@example.com\n0901234567\nMỤC TIÊU\nBackend developer\nWORK HISTORY\nBuilt APIs"
+    )
+
+    assert result["personal_info"]["full_name"] == "Trần Hoàng Nam"
+
+
 @pytest.mark.asyncio
 async def test_cv_parser_does_not_require_external_ai(monkeypatch):
     monkeypatch.setattr(

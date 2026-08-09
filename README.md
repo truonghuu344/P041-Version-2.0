@@ -70,6 +70,20 @@ uvicorn src.main:app --reload --port 8000
 # http://localhost:8000/docs
 ```
 
+### Chạy full-stack với Docker
+
+Yêu cầu Docker Desktop đang chạy. Sao chép `.env.example` thành `.env`, điền các API key cần dùng, và đặt `POSTGRES_PASSWORD` thành một mật khẩu mạnh. Sau đó chạy:
+
+```bash
+docker compose up --build -d
+```
+
+Truy cập ứng dụng qua Nginx Gateway tại [http://localhost:8080](http://localhost:8080); API documentation có tại [http://localhost:8080/docs](http://localhost:8080/docs). Chỉ Gateway được publish ra host, còn frontend/backend nằm trong mạng Docker. Kiểm tra trạng thái bằng `docker compose ps` hoặc `docker compose logs -f`.
+
+Khi đưa lên Internet, trỏ Cloudflare Tunnel hoặc reverse proxy của máy chủ vào `http://localhost:8080`. Đặt `APP_ENV=production`, `CORS_ORIGINS=https://ten-mien-cua-ban`, `SECRET_KEY`, `INITIAL_ADMIN_PASSWORD`, `POSTGRES_PASSWORD` và `GOOGLE_OAUTH_CLIENT_ID` bằng giá trị thật; không dùng URL `trycloudflare.com` lâu dài cho đăng nhập hoặc dữ liệu thật.
+
+Để dừng stack, dùng `docker compose down`. Thêm `-v` chỉ khi muốn xóa toàn bộ dữ liệu PostgreSQL và dữ liệu ứng dụng.
+
 ### Bước 5: Đọc hướng dẫn
 
 📖 Mở **[Technical Guidebook](https://phoenix.note.transformerlabs.ai/technical-book)** và làm theo từng chương.

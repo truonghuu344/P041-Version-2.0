@@ -71,6 +71,7 @@ class JobDescription(Base):
     requirements_text: Mapped[str] = mapped_column(Text, nullable=False)
     normalized_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
     is_system: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    is_published: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     created_by_user_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
@@ -233,3 +234,111 @@ class AIAuditLog(Base):
         server_default=func.now(),
         index=True,
     )
+
+
+class CounselorAssignment(Base):
+    """Sinh viên chủ động cấp quyền cho một cố vấn xem tiến độ của mình."""
+
+    __tablename__ = "counselor_assignments"
+    __table_args__ = (
+        Index("uq_counselor_student", "counselor_id", "student_id", unique=True),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    counselor_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    student_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    status: Mapped[str] = mapped_column(String(20), default="active", nullable=False)
+    consented_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class CounselorFeedback(Base):
+    __tablename__ = "counselor_feedback"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    assignment_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("counselor_assignments.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    counselor_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    student_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    interview_report_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("interview_reports.id", ondelete="SET NULL"), nullable=True
+    )
+    kind: Mapped[str] = mapped_column(String(20), default="comment", nullable=False)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class CVOptimizationDecision(Base):
+    __tablename__ = "cv_optimization_decisions"
+    __table_args__ = (
+        Index("uq_analysis_suggestion", "analysis_id", "suggestion_index", unique=True),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    user_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    cv_id: Mapped[str] = mapped_column(String(36), ForeignKey("cvs.id", ondelete="CASCADE"), nullable=False)
+    analysis_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("cv_analyses.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    suggestion_index: Mapped[int] = mapped_column(Integer, nullable=False)
+    accepted: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    final_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+
+class JobApplication(Base):
+    __tablename__ = "job_applications"
+    __table_args__ = (
+        Index("uq_application_jd_student", "jd_id", "student_id", unique=True),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    jd_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("job_descriptions.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    student_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    cv_id: Mapped[str] = mapped_column(String(36), ForeignKey("cvs.id", ondelete="CASCADE"), nullable=False)
+    analysis_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("cv_analyses.id", ondelete="SET NULL"), nullable=True
+    )
+    match_score: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
+    status: Mapped[str] = mapped_column(String(30), default="submitted", nullable=False)
+    shared_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class InterviewFeedback(Base):
+    __tablename__ = "interview_feedback"
+    __table_args__ = (
+        Index("uq_interview_feedback_session", "session_id", unique=True),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    session_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("interview_sessions.id", ondelete="CASCADE"), nullable=False
+    )
+    user_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    rating: Mapped[int] = mapped_column(Integer, nullable=False)
+    comment: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class UsageEvent(Base):
+    __tablename__ = "usage_events"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    user_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    event_name: Mapped[str] = mapped_column(String(80), nullable=False, index=True)
+    duration_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    metadata_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), index=True)

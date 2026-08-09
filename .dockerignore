@@ -2,6 +2,18 @@
 .gitignore
 .env
 .venv
+.vercel
+.ai-log
+.agents
+.claude
+.codex
+.cursor
+.gemini
+.github
+.vscode
+frontend/node_modules
+frontend/.next
+data/
 __pycache__
 *.pyc
 .pytest_cache
@@ -11,6 +23,7 @@ presentation/
 eval/
 *.md
 !requirements.txt
+!requirements-prod.txt
 .dockerignore
 Dockerfile
 docker-compose.yml

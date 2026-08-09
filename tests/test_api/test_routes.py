@@ -7,6 +7,19 @@ async def test_health(client):
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "ok"
+    assert float(response.headers["x-response-time-ms"]) >= 0
+    assert response.headers["x-content-type-options"] == "nosniff"
+
+
+@pytest.mark.asyncio
+async def test_request_body_size_guard(client):
+    response = await client.post(
+        "/api/v1/auth/register",
+        content=b"{}",
+        headers={"content-length": str(13 * 1024 * 1024), "content-type": "application/json"},
+    )
+
+    assert response.status_code == 413
 
 
 @pytest.mark.asyncio

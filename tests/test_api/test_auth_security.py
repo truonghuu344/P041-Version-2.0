@@ -99,6 +99,43 @@ async def test_login_rejects_wrong_password_without_leaking_account_state(client
 
 
 @pytest.mark.asyncio
+async def test_login_uses_httponly_cookie_and_logout_revokes_browser_session(client, monkeypatch):
+    from src.api.v1 import auth as auth_api
+
+    monkeypatch.setattr(auth_api.settings, "app_env", "production")
+    await client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": "cookie@example.com",
+            "password": "Password123!",
+            "full_name": "Cookie User",
+            "role": "student",
+        },
+    )
+    login = await client.post(
+        "/api/v1/auth/login",
+        json={"email": "cookie@example.com", "password": "Password123!"},
+    )
+
+    cookie = login.headers["set-cookie"].lower()
+    assert "career_session=" in cookie
+    assert "httponly" in cookie
+    assert "; secure" not in cookie
+    assert (await client.get("/api/v1/auth/me")).status_code == 200
+
+    logout = await client.post("/api/v1/auth/logout")
+    assert logout.status_code == 204
+    assert (await client.get("/api/v1/auth/me")).status_code == 401
+
+    https_login = await client.post(
+        "/api/v1/auth/login",
+        headers={"x-forwarded-proto": "https"},
+        json={"email": "cookie@example.com", "password": "Password123!"},
+    )
+    assert "; secure" in https_login.headers["set-cookie"].lower()
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "authorization",
     [None, "Bearer invalid.jwt.token"],

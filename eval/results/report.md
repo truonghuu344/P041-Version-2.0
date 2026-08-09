@@ -5,7 +5,6 @@
 - **Tỷ lệ Truy xuất Chính xác (Retrieval Hit Rate)**: **100.0%**
 - **Tỷ lệ Sinh câu trả lời Khớp Ground Truth**: **100.0%**
 
----
 
 ## 📋 Chi tiết Đánh giá từng Sample Câu hỏi
 

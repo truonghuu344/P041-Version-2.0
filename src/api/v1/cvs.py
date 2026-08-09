@@ -1,17 +1,21 @@
 import logging
 import os
 import uuid
+from io import BytesIO
+from time import perf_counter
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from fastapi.responses import StreamingResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config import get_settings
 from src.core.security import get_current_user
 from src.db.database import get_db
-from src.db.models import CV, User
-from src.models.schemas import CVBulkDeleteRequest, CVBulkDeleteResponse, CVOut
+from src.db.models import CV, CVAnalysis, CVOptimizationDecision, UsageEvent, User
+from src.models.schemas import CVBulkDeleteRequest, CVBulkDeleteResponse, CVOut, ManualCVCreate
 from src.services.cv_parser import extract_text_from_docx, extract_text_from_pdf, parse_cv_to_structured_json
+from src.services.pdf_export import build_cv_pdf
 
 router = APIRouter(prefix="/cvs", tags=["CV Management"])
 logger = logging.getLogger(__name__)
@@ -36,6 +40,25 @@ def _remove_uploaded_file(saved_filepath: str | None) -> None:
         logger.warning("Không thể xóa file CV khỏi filesystem: %s", resolved_path, exc_info=True)
 
 
+def _manual_cv_raw_text(payload: ManualCVCreate) -> str:
+    lines = [payload.title]
+    lines.extend(value for value in payload.personal_info.values() if value)
+    if payload.summary:
+        lines.extend(["Summary", payload.summary])
+    for heading, items in (
+        ("Education", payload.education),
+        ("Experience", payload.experience),
+        ("Projects", payload.projects),
+    ):
+        if items:
+            lines.append(heading)
+            for item in items:
+                lines.append(" | ".join(str(value) for value in item.values() if value))
+    if payload.skills:
+        lines.extend(["Skills", ", ".join(payload.skills)])
+    return "\n".join(lines)
+
+
 @router.post("/upload", response_model=CVOut, status_code=status.HTTP_201_CREATED)
 async def upload_cv(
     file: UploadFile = File(...),
@@ -45,6 +68,7 @@ async def upload_cv(
     current_user: User = Depends(get_current_user),
 ) -> CVOut:
     """Upload CV (dạng .pdf hoặc .docx), trích xuất văn bản & tự động parse thành cấu trúc JSON."""
+    started_at = perf_counter()
     filename = file.filename.lower()
     if not (filename.endswith(".pdf") or filename.endswith(".docx")):
         raise HTTPException(
@@ -97,6 +121,14 @@ async def upload_cv(
         parsed_json=parsed_json,
     )
     db.add(new_cv)
+    db.add(
+        UsageEvent(
+            user_id=current_user.id,
+            event_name="cv_parse",
+            duration_ms=round((perf_counter() - started_at) * 1000),
+            metadata_json={"use_llm": use_llm, "file_type": file_ext},
+        )
+    )
     try:
         await db.commit()
     except Exception as exc:
@@ -123,6 +155,102 @@ async def list_user_cvs(
     stmt = select(CV).where(CV.user_id == current_user.id).order_by(CV.created_at.desc())
     result = await db.execute(stmt)
     return result.scalars().all()
+
+
+@router.post("/manual", response_model=CVOut, status_code=status.HTTP_201_CREATED)
+async def create_manual_cv(
+    payload: ManualCVCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> CVOut:
+    """Tạo CV từ biểu mẫu; không gọi LLM và không thêm thông tin ngoài dữ liệu người dùng nhập."""
+    parsed = payload.model_dump(exclude={"title", "template_name"})
+    parsed["template_name"] = payload.template_name
+    cv = CV(
+        user_id=current_user.id,
+        title=payload.title.strip(),
+        file_path=None,
+        raw_text=_manual_cv_raw_text(payload),
+        parsed_json=parsed,
+    )
+    db.add(cv)
+    await db.commit()
+    await db.refresh(cv)
+    return cv
+
+
+@router.put("/{cv_id}/manual", response_model=CVOut)
+async def update_manual_cv(
+    cv_id: str,
+    payload: ManualCVCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> CVOut:
+    result = await db.execute(select(CV).where(CV.id == cv_id, CV.user_id == current_user.id))
+    cv = result.scalar_one_or_none()
+    if not cv:
+        raise HTTPException(status_code=404, detail="Không tìm thấy CV để chỉnh sửa.")
+    parsed = payload.model_dump(exclude={"title", "template_name"})
+    parsed["template_name"] = payload.template_name
+    cv.title = payload.title.strip()
+    cv.raw_text = _manual_cv_raw_text(payload)
+    cv.parsed_json = parsed
+    await db.commit()
+    await db.refresh(cv)
+    return cv
+
+
+@router.get("/{cv_id}/export")
+async def export_cv_pdf(
+    cv_id: str,
+    analysis_id: str | None = None,
+    template: str | None = None,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> StreamingResponse:
+    result = await db.execute(select(CV).where(CV.id == cv_id, CV.user_id == current_user.id))
+    cv = result.scalar_one_or_none()
+    if not cv:
+        raise HTTPException(status_code=404, detail="Không tìm thấy CV để xuất PDF.")
+
+    accepted_texts: list[str] = []
+    if analysis_id:
+        analysis_result = await db.execute(
+            select(CVAnalysis).where(
+                CVAnalysis.id == analysis_id,
+                CVAnalysis.cv_id == cv.id,
+                CVAnalysis.user_id == current_user.id,
+            )
+        )
+        if not analysis_result.scalar_one_or_none():
+            raise HTTPException(status_code=404, detail="Kết quả tối ưu không thuộc CV này.")
+        decision_result = await db.execute(
+            select(CVOptimizationDecision)
+            .where(
+                CVOptimizationDecision.analysis_id == analysis_id,
+                CVOptimizationDecision.user_id == current_user.id,
+                CVOptimizationDecision.accepted.is_(True),
+            )
+            .order_by(CVOptimizationDecision.suggestion_index)
+        )
+        accepted_texts = [item.final_text for item in decision_result.scalars().all() if item.final_text]
+
+    parsed = cv.parsed_json or {}
+    template_name = template or parsed.get("template_name") or "classic"
+    if template_name not in {"classic", "modern", "compact"}:
+        raise HTTPException(status_code=422, detail="Template CV không hợp lệ.")
+    pdf_bytes = build_cv_pdf(
+        title=cv.title,
+        parsed=parsed,
+        accepted_suggestions=accepted_texts,
+        template_name=template_name,
+    )
+    safe_filename = "".join(char for char in cv.title if char.isalnum() or char in "-_ ").strip() or "optimized-cv"
+    return StreamingResponse(
+        BytesIO(pdf_bytes),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{safe_filename}.pdf"'},
+    )
 
 
 @router.post("/bulk-delete", response_model=CVBulkDeleteResponse)

@@ -2,7 +2,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 APP_JS = (ROOT / "frontend" / "app.js").read_text(encoding="utf-8")
-PAGE_JS = (ROOT / "frontend" / "app" / "page.js").read_text(encoding="utf-8")
+PAGE_JS = (ROOT / "frontend" / "app" / "page.tsx").read_text(encoding="utf-8")
 STYLE_CSS = (ROOT / "frontend" / "style.css").read_text(encoding="utf-8")
 
 
@@ -25,6 +25,8 @@ def test_nova_widget_has_accessible_open_close_controls():
 
 def test_nova_uses_authenticated_backend_and_handles_expired_session():
     assert "requestAssistant('/assistant/chat'" in APP_JS
+    assert "if (!ApiClient.isAuthenticated())" in APP_JS
+    assert "if (!ApiClient.getToken())" not in APP_JS
     assert "Phiên đăng nhập đã hết hạn" in APP_JS
     assert "ApiClient.logout()" in APP_JS
 
@@ -41,6 +43,11 @@ def test_assistant_gif_asset_exists_and_is_not_empty():
     asset = ROOT / "frontend" / "public" / "assistant" / "idle-rotations-8dir.gif"
     assert asset.exists()
     assert asset.stat().st_size > 0
+    assert 'src="/assistant/idle-rotations-8dir.gif"' in PAGE_JS
+    assert '<img\n            id="ai-companion-source"' in PAGE_JS
+    assert ".ai-companion-source {" in STYLE_CSS
+    assert "opacity: 0;" in STYLE_CSS
+    assert "spriteContext.drawImage(sourceImage" in APP_JS
 
 
 def test_nova_conversation_history_is_connected_to_persistent_api():
@@ -62,11 +69,38 @@ def test_admin_ai_log_view_is_admin_portal_contract():
     assert ".ai-log-card" in STYLE_CSS
 
 
-def test_enterprise_role_keeps_all_student_features_visible():
+def test_role_specific_dashboards_are_wired():
     assert "function applyRoleAccess(user)" in APP_JS
-    assert "user?.role === 'enterprise'" not in APP_JS
-    assert "targetViewName !== 'jobs'" not in APP_JS
-    assert "body.role-enterprise .ai-companion-chat" not in STYLE_CSS
+    assert "const ROLE_HOME_VIEWS" in APP_JS
+    assert "student: 'dashboard'" in APP_JS
+    assert "counselor: 'counselor'" in APP_JS
+    assert "enterprise: 'enterprise'" in APP_JS
+    assert "admin: 'admin'" in APP_JS
+    assert "function getRoleHomeView" in APP_JS
+    assert "function canAccessView" in APP_JS
+    assert "switchToRoleHome();" in APP_JS
+    assert 'id="view-enterprise"' in PAGE_JS
+    assert 'id="view-counselor"' in PAGE_JS
+    assert 'id="view-admin"' in PAGE_JS
+    assert "Dashboard Cố Vấn" in PAGE_JS
+    assert "Dashboard Tuyển Dụng" in PAGE_JS
+    assert "Quản trị hệ thống" in PAGE_JS
+    assert "loadCounselorDashboard" in APP_JS
+    assert "loadEnterpriseDashboard" in APP_JS
+
+
+def test_menubar_matches_gate1_role_flows_without_icons():
+    nav_markup = PAGE_JS.split('<nav className="nav-links"', 1)[1].split('</nav>', 1)[0]
+    assert 'className="nav-icon"' not in nav_markup
+    assert "const ROLE_NAV_ITEMS" in APP_JS
+    assert "student: ['nav-dashboard', 'nav-cv', 'nav-interview', 'nav-history']" in APP_JS
+    assert "counselor: ['nav-counselor', 'nav-counselor-reports']" in APP_JS
+    assert "enterprise: ['nav-enterprise', 'nav-jobs', 'nav-enterprise-applications']" in APP_JS
+    assert 'Lịch sử &amp; Báo cáo' in nav_markup
+    assert 'Sinh viên của tôi' in nav_markup
+    assert 'Hồ sơ ứng tuyển' in nav_markup
+    assert "font-weight: 700 !important;" in STYLE_CSS
+    assert "'Arial Rounded MT Bold'" in STYLE_CSS
 
 
 def test_enterprise_jd_supports_template_file_or_manual_text():

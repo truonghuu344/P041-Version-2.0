@@ -22,8 +22,13 @@ class Settings(BaseSettings):
 
     # Security & JWT
     secret_key: str = "super-secret-jwt-key-ai20k-p041-career-assistant"
+    initial_admin_password: str = ""
+    google_oauth_client_id: str = ""
     algorithm: str = "HS256"
+    jwt_token_version: int = 2
     access_token_expire_minutes: int = 10080
+    api_rate_limit_per_minute: int = Field(default=120, ge=10, le=10_000)
+    max_request_body_mb: int = Field(default=12, ge=1, le=100)
 
     # LLM
     # Gemini Developer API. GOOGLE_API_KEY được hỗ trợ để tương thích với

@@ -10,11 +10,12 @@ const API_BASE_URL = window.__CAREER_API_BASE_URL__ || '/api/v1';
 
 class ApiClient {
   static getToken() {
-    return localStorage.getItem('access_token');
+    return null;
   }
 
-  static setToken(token) {
-    localStorage.setItem('access_token', token);
+  static setToken(_token) {
+    // JWT phiên đăng nhập do backend giữ trong cookie HttpOnly.
+    localStorage.removeItem('access_token');
   }
 
   static getUser() {
@@ -22,11 +23,17 @@ class ApiClient {
     return u ? JSON.parse(u) : null;
   }
 
+  static isAuthenticated() {
+    // Cache user chỉ được ghi sau login hoặc sau khi /auth/me xác minh cookie HttpOnly.
+    return Boolean(this.getUser());
+  }
+
   static setUser(user) {
     localStorage.setItem('user_info', JSON.stringify(user));
   }
 
-  static logout() {
+  static async logout() {
+    await this.request('/auth/logout', { method: 'POST' }).catch(() => undefined);
     localStorage.removeItem('access_token');
     localStorage.removeItem('user_info');
   }
@@ -43,7 +50,7 @@ class ApiClient {
       headers['Content-Type'] = 'application/json';
     }
 
-    const config = { ...options, headers };
+    const config = { ...options, headers, credentials: 'include' };
 
     try {
       const requestUrl = /^https?:\/\//i.test(endpoint) ? endpoint : `${API_BASE_URL}${endpoint}`;
@@ -94,6 +101,18 @@ class ApiClient {
     return user;
   }
 
+  static async googleAuth(credential, role = 'student') {
+    const data = await this.request('/auth/google', {
+      method: 'POST',
+      body: JSON.stringify({ credential, role }),
+    });
+    if (data.access_token) {
+      this.setToken(data.access_token);
+      this.setUser(data.user);
+    }
+    return data;
+  }
+
   // --- CV APIs ---
   static async uploadCV(file, title = '', useLLM = false) {
     const formData = new FormData();
@@ -109,6 +128,30 @@ class ApiClient {
 
   static async listCVs() {
     return await this.request('/cvs');
+  }
+
+  static async createManualCV(payload) {
+    return await this.request('/cvs/manual', { method: 'POST', body: JSON.stringify(payload) });
+  }
+
+  static async decideSuggestion(analysisId, suggestionIndex, accepted, finalText = null) {
+    return await this.request(`/analysis/${analysisId}/suggestions`, {
+      method: 'PUT',
+      body: JSON.stringify({ suggestion_index: suggestionIndex, accepted, final_text: finalText }),
+    });
+  }
+
+  static async downloadCV(cvId, analysisId, template = 'classic') {
+    const query = new URLSearchParams({ template });
+    if (analysisId) query.set('analysis_id', analysisId);
+    const response = await fetch(`${API_BASE_URL}/cvs/${cvId}/export?${query}`, {
+      credentials: 'include',
+    });
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      throw new Error(data.detail || 'Không thể xuất PDF.');
+    }
+    return response.blob();
   }
 
   static async getCVAgentStatus() {
@@ -196,6 +239,46 @@ class ApiClient {
 
   static async getInterviewReport(sessionId) {
     return await this.request(`/interviews/${sessionId}/report`);
+  }
+
+  static async listInterviews() { return await this.request('/interviews'); }
+  static async resumeInterview(sessionId) { return await this.request(`/interviews/${sessionId}/resume`); }
+  static async rateInterview(sessionId, rating, comment = '') {
+    return await this.request(`/interviews/${sessionId}/feedback`, {
+      method: 'POST', body: JSON.stringify({ rating, comment }),
+    });
+  }
+
+  static async grantCounselor(counselorEmail) {
+    return await this.request('/counselor/consents', {
+      method: 'POST', body: JSON.stringify({ counselor_email: counselorEmail }),
+    });
+  }
+  static async listCounselorConsents() { return await this.request('/counselor/consents'); }
+  static async revokeCounselor(assignmentId) {
+    return await this.request(`/counselor/consents/${assignmentId}`, { method: 'DELETE' });
+  }
+  static async listAssignedStudents() { return await this.request('/counselor/students'); }
+  static async getStudentOverview(studentId) { return await this.request(`/counselor/students/${studentId}`); }
+  static async sendCounselorFeedback(studentId, content, kind = 'comment') {
+    return await this.request(`/counselor/students/${studentId}/feedback`, {
+      method: 'POST', body: JSON.stringify({ content, kind }),
+    });
+  }
+
+  static async publishJD(jdId) { return await this.request(`/jds/${jdId}/publish`, { method: 'PATCH' }); }
+  static async listEnterpriseJDs() { return await this.request('/enterprise/jds'); }
+  static async shareCV(jdId, cvId, analysisId = null) {
+    return await this.request('/enterprise/applications', {
+      method: 'POST', body: JSON.stringify({ jd_id: jdId, cv_id: cvId, analysis_id: analysisId }),
+    });
+  }
+  static async listCandidates(jdId) { return await this.request(`/enterprise/jds/${jdId}/candidates`); }
+  static async getCandidateCV(applicationId) { return await this.request(`/enterprise/applications/${applicationId}/cv`); }
+  static async decideCandidate(applicationId, candidateStatus) {
+    return await this.request(`/enterprise/applications/${applicationId}`, {
+      method: 'PATCH', body: JSON.stringify({ status: candidateStatus }),
+    });
   }
 
   // --- Draggable Career Assistant Agent ---
@@ -918,8 +1001,37 @@ function startAppLogic() {
   /* ============================================================
      🚀 ROUTER & SPACESHIP SINGLE PAGE VIEW SWITCHER
   ============================================================ */
-  const ALL_VIEWS = ['dashboard', 'cv', 'jobs', 'interview', 'gap', 'history', 'profile', 'admin'];
+  const ALL_VIEWS = ['dashboard', 'cv', 'jobs', 'interview', 'gap', 'history', 'profile', 'counselor', 'enterprise', 'admin'];
+  const ROLE_HOME_VIEWS = Object.freeze({
+    student: 'dashboard',
+    counselor: 'counselor',
+    enterprise: 'enterprise',
+    admin: 'admin'
+  });
+  const ROLE_NAV_ITEMS = Object.freeze({
+    guest: ['nav-dashboard'],
+    student: ['nav-dashboard', 'nav-cv', 'nav-interview', 'nav-history'],
+    counselor: ['nav-counselor', 'nav-counselor-reports'],
+    enterprise: ['nav-enterprise', 'nav-jobs', 'nav-enterprise-applications'],
+    admin: ['nav-admin']
+  });
+  const ALL_ROLE_NAV_IDS = [...new Set(Object.values(ROLE_NAV_ITEMS).flat().concat('nav-gap'))];
+  const ROLE_DASHBOARD_VIEWS = new Set(Object.values(ROLE_HOME_VIEWS));
   let currentViewName = 'dashboard';
+
+  function getRoleHomeView(user = ApiClient.getUser()) {
+    return ROLE_HOME_VIEWS[user?.role] || 'dashboard';
+  }
+
+  function canAccessView(viewName, user = ApiClient.getUser()) {
+    if (!ROLE_DASHBOARD_VIEWS.has(viewName)) return true;
+    if (!user) return viewName === 'dashboard';
+    return viewName === getRoleHomeView(user);
+  }
+
+  function switchToRoleHome() {
+    switchView(getRoleHomeView());
+  }
 
   const roomTitles = {
     dashboard: 'COMMAND DECK // HOME',
@@ -929,13 +1041,20 @@ function startAppLogic() {
     gap: 'DECK DELTA // NAVIGATION DECK',
     history: 'DECK EPSILON // MISSION ARCHIVE',
     profile: 'DECK ZETA // CREW TERMINAL',
+    counselor: 'HITL DECK // COUNSELOR',
+    enterprise: 'RECRUITMENT DECK // ENTERPRISE',
     admin: 'DECK OMEGA // ADMIN PORTAL'
   };
 
   function switchView(targetViewName) {
     if (!ALL_VIEWS.includes(targetViewName)) targetViewName = 'dashboard';
 
-    const VIEW_ORDER = ['dashboard', 'cv', 'jobs', 'interview', 'gap', 'history', 'profile', 'admin'];
+    if (!canAccessView(targetViewName)) {
+      targetViewName = getRoleHomeView();
+      showToast('Bạn đã được chuyển về dashboard phù hợp với vai trò.', 'info');
+    }
+
+    const VIEW_ORDER = ['dashboard', 'cv', 'jobs', 'interview', 'gap', 'history', 'profile', 'counselor', 'enterprise', 'admin'];
     const currentIndex = VIEW_ORDER.indexOf(currentViewName);
     const targetIndex = VIEW_ORDER.indexOf(targetViewName);
     const direction = targetIndex >= currentIndex ? 'right' : 'left';
@@ -997,6 +1116,12 @@ function startAppLogic() {
       startAudioWaveformAnim();
     } else if (targetViewName === 'gap') {
       populatePageGapOptions();
+    } else if (targetViewName === 'profile') {
+      loadStudentCounselorConsents();
+    } else if (targetViewName === 'counselor') {
+      loadCounselorDashboard();
+    } else if (targetViewName === 'enterprise') {
+      loadEnterpriseDashboard();
     } else if (targetViewName === 'admin') {
       loadAdminUsersList();
     }
@@ -1042,10 +1167,11 @@ function startAppLogic() {
 
   const TRANSLATIONS = {
     vi: {
-      'nav-dashboard': 'Dashboard',
-      'nav-cv': 'CV Upload',
-      'nav-jobs': 'Thư viện Jobs',
-      'nav-interview': 'Phỏng vấn STAR',
+      'nav-dashboard': 'Trang chủ',
+      'nav-cv': 'Hồ sơ CV',
+      'nav-jobs': 'Danh sách JD',
+      'nav-interview': 'Phòng phỏng vấn',
+      'nav-history': 'Lịch sử & Báo cáo',
       'nav-gap': 'Gap Analysis',
       'btn-login': 'Đăng nhập',
       'btn-logout': 'Đăng xuất',
@@ -1135,10 +1261,11 @@ function startAppLogic() {
       'testi-user3-role': 'AI Research Specialist @ Global Hub'
     },
     en: {
-      'nav-dashboard': 'Dashboard',
-      'nav-cv': 'CV Upload',
-      'nav-jobs': 'Jobs Library',
-      'nav-interview': 'STAR Interview',
+      'nav-dashboard': 'Home',
+      'nav-cv': 'CV Profiles',
+      'nav-jobs': 'JD List',
+      'nav-interview': 'Interview Room',
+      'nav-history': 'History & Reports',
       'nav-gap': 'Gap Analysis',
       'btn-login': 'Log in',
       'btn-logout': 'Log out',
@@ -1228,10 +1355,11 @@ function startAppLogic() {
       'testi-user3-role': 'AI Research Specialist @ Global Hub'
     },
     ja: {
-      'nav-dashboard': 'ダッシュボード',
-      'nav-cv': 'CVアップロード',
-      'nav-jobs': '求人ライブラリ',
-      'nav-interview': 'STAR面接',
+      'nav-dashboard': 'ホーム',
+      'nav-cv': 'CVプロフィール',
+      'nav-jobs': 'JD一覧',
+      'nav-interview': '面接ルーム',
+      'nav-history': '履歴とレポート',
       'nav-gap': 'ギャップ分析',
       'btn-login': 'ログイン',
       'btn-logout': 'ログアウト',
@@ -1321,10 +1449,11 @@ function startAppLogic() {
       'testi-user3-role': 'AI Research Specialist @ Global Hub'
     },
     ko: {
-      'nav-dashboard': '대시보드',
-      'nav-cv': 'CV 업로드',
-      'nav-jobs': '채용 라이브러리',
-      'nav-interview': 'STAR 면접',
+      'nav-dashboard': '홈',
+      'nav-cv': 'CV 프로필',
+      'nav-jobs': 'JD 목록',
+      'nav-interview': '면접실',
+      'nav-history': '기록 및 보고서',
       'nav-gap': '갭 분석',
       'btn-login': '로그인',
       'btn-logout': '로그아웃',
@@ -1414,10 +1543,11 @@ function startAppLogic() {
       'testi-user3-role': 'AI Research Specialist @ Global Hub'
     },
     zh: {
-      'nav-dashboard': '仪表板',
-      'nav-cv': '上传简历',
-      'nav-jobs': '职位库',
-      'nav-interview': 'STAR 面试',
+      'nav-dashboard': '首页',
+      'nav-cv': '简历档案',
+      'nav-jobs': 'JD 列表',
+      'nav-interview': '面试室',
+      'nav-history': '历史与报告',
       'nav-gap': '差距分析',
       'btn-login': '登录',
       'btn-logout': '退出',
@@ -1628,12 +1758,12 @@ function startAppLogic() {
   // Register Navbar Link Click Handlers
   document.getElementById('brand-logo')?.addEventListener('click', (e) => {
     e.preventDefault();
-    switchView('dashboard');
+    switchToRoleHome();
   });
 
   document.getElementById('nav-dashboard')?.addEventListener('click', (e) => {
     e.preventDefault();
-    switchView('dashboard');
+    switchToRoleHome();
   });
 
   document.getElementById('nav-cv')?.addEventListener('click', (e) => {
@@ -1772,7 +1902,7 @@ function startAppLogic() {
   async function loadCVAgentStatus() {
     const statusEl = document.getElementById('cv-agent-runtime-status');
     const modelEl = document.getElementById('cv-agent-model');
-    if (!statusEl || !ApiClient.getToken()) return;
+    if (!statusEl || !ApiClient.isAuthenticated()) return;
     try {
       const status = await ApiClient.getCVAgentStatus();
       statusEl.innerHTML = `<i class="pill-dot ${status.configured ? 'green' : 'purple'}"></i> ${status.configured ? 'AI AGENT READY' : 'LOCAL READY · THIẾU API KEY'}`;
@@ -1819,7 +1949,7 @@ function startAppLogic() {
   if (cvPageForm) {
     cvPageForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      if (!ApiClient.getToken()) {
+      if (!ApiClient.isAuthenticated()) {
         showToast('⚠️ Vui lòng đăng nhập tài khoản để upload CV', 'warning');
         openAuthModal();
         return;
@@ -1860,10 +1990,43 @@ function startAppLogic() {
     });
   }
 
+  const manualCVForm = document.getElementById('manual-cv-form');
+  manualCVForm?.addEventListener('submit', async event => {
+    event.preventDefault();
+    if (!ApiClient.isAuthenticated()) {
+      showToast('Vui lòng đăng nhập để tạo CV.', 'warning'); openAuthModal(); return;
+    }
+    const lineItems = id => (document.getElementById(id)?.value || '')
+      .split('\n').map(value => value.trim()).filter(Boolean).map(description => ({ description }));
+    const payload = {
+      title: document.getElementById('manual-cv-title').value.trim(),
+      template_name: document.getElementById('manual-cv-template').value,
+      personal_info: {
+        full_name: document.getElementById('manual-cv-name').value.trim(),
+        email: document.getElementById('manual-cv-email').value.trim(),
+        phone: document.getElementById('manual-cv-phone').value.trim(),
+      },
+      summary: document.getElementById('manual-cv-summary').value.trim(),
+      skills: document.getElementById('manual-cv-skills').value.split(',').map(value => value.trim()).filter(Boolean),
+      education: lineItems('manual-cv-education'),
+      experience: lineItems('manual-cv-experience'),
+      projects: lineItems('manual-cv-projects'),
+    };
+    try {
+      const cv = await ApiClient.createManualCV(payload);
+      manualCVForm.reset();
+      showToast('✅ Đã tạo CV thủ công; hãy kiểm tra nội dung trước khi sử dụng.', 'success');
+      await loadSpaceshipCVList();
+      inspectCVDetail(cv);
+    } catch (err) {
+      showToast(`❌ ${err.message}`, 'error');
+    }
+  });
+
   // Load CV Manifest List inside Spaceship View
   async function loadSpaceshipCVList() {
     if (!cvPageListContainer) return;
-    if (!ApiClient.getToken()) {
+    if (!ApiClient.isAuthenticated()) {
       selectedCVIds.clear();
       if (cvBulkToolbar) cvBulkToolbar.hidden = true;
       cvPageListContainer.innerHTML = `<div class="empty-manifest"><p>⚠️ Vui lòng đăng nhập để xem danh sách CV đã lưu</p></div>`;
@@ -1963,6 +2126,27 @@ function startAppLogic() {
       checkbox.checked = cvSelectAll.checked;
     });
     updateCVBulkSelectionUI();
+  });
+
+  document.getElementById('nav-counselor')?.addEventListener('click', (e) => {
+    e.preventDefault(); switchView('counselor');
+  });
+  document.getElementById('nav-enterprise')?.addEventListener('click', (e) => {
+    e.preventDefault(); switchView('enterprise');
+  });
+  function openRoleMenuSection(viewName, navId, sectionId) {
+    switchView(viewName);
+    document.querySelectorAll('.role-only-link').forEach(link => link.classList.remove('active'));
+    document.getElementById(navId)?.classList.add('active');
+    requestAnimationFrame(() => document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+  }
+  document.getElementById('nav-counselor-reports')?.addEventListener('click', (event) => {
+    event.preventDefault();
+    openRoleMenuSection('counselor', 'nav-counselor-reports', 'counselor-student-detail');
+  });
+  document.getElementById('nav-enterprise-applications')?.addEventListener('click', (event) => {
+    event.preventDefault();
+    openRoleMenuSection('enterprise', 'nav-enterprise-applications', 'enterprise-applications-panel');
   });
 
   btnDeleteSelectedCVs?.addEventListener('click', async () => {
@@ -2179,6 +2363,8 @@ TÊN CÔNG TY:
     if (!pageJdListContainer) return;
     try {
       const jds = await ApiClient.listJDs();
+      const currentUser = ApiClient.getUser();
+      const cvs = currentUser?.role === 'student' ? await ApiClient.listCVs() : [];
       if (!jds || jds.length === 0) {
         pageJdListContainer.innerHTML = `<p style="font-size:12px;color:var(--text-muted);">Chưa có JD nào trong hệ thống.</p>`;
         return;
@@ -2186,13 +2372,20 @@ TÊN CÔNG TY:
       pageJdListContainer.innerHTML = jds.map(jd => `
         <div style="background:rgba(255,255,255,0.04);padding:14px;border-radius:10px;border:1px solid var(--border);">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <p style="font-size:14px;font-weight:700;color:#fff;margin:0;">💼 ${jd.title}</p>
+            <p style="font-size:14px;font-weight:700;color:#fff;margin:0;">💼 ${escapeHtml(jd.title)}</p>
             <span class="badge ${jd.is_system ? 'badge-ok' : 'badge-focus'}">${jd.is_system ? 'Hệ thống' : 'Tự dán'}</span>
           </div>
-          <p style="font-size:11px;color:var(--text-dim);margin:0 0 6px 0;">Công ty: ${jd.company || 'N/A'} | Địa điểm: ${jd.location || 'N/A'}</p>
-          <p style="font-size:11px;color:var(--text-muted);white-space:pre-line;max-height:70px;overflow:hidden;">${jd.requirements_text}</p>
+          <p style="font-size:11px;color:var(--text-dim);margin:0 0 6px 0;">Công ty: ${escapeHtml(jd.company || 'N/A')} | Địa điểm: ${escapeHtml(jd.location || 'N/A')}</p>
+          <p style="font-size:11px;color:var(--text-muted);white-space:pre-line;max-height:70px;overflow:hidden;">${escapeHtml(jd.requirements_text)}</p>
+          ${currentUser?.role === 'student' && !jd.is_system && jd.is_published ? `<div class="jd-apply-row"><select class="form-input jd-application-cv">${cvs.map(cv => `<option value="${escapeHtml(cv.id)}">${escapeHtml(cv.title)}</option>`).join('')}</select><button type="button" class="btn-primary apply-jd" data-id="${escapeHtml(jd.id)}" ${cvs.length ? '' : 'disabled'}>Chia sẻ CV ứng tuyển</button></div>` : ''}
         </div>
       `).join('');
+      pageJdListContainer.querySelectorAll('.apply-jd').forEach(button => button.addEventListener('click', async () => {
+        const cvId = button.closest('div').querySelector('.jd-application-cv')?.value;
+        if (!cvId) return;
+        try { await ApiClient.shareCV(button.dataset.id, cvId); showToast('Đã chia sẻ CV cho doanh nghiệp.', 'success'); }
+        catch (err) { showToast(`Không thể ứng tuyển: ${err.message}`, 'error'); }
+      }));
     } catch (err) {
       pageJdListContainer.innerHTML = `<p style="font-size:12px;color:#ff4e6a;">Lỗi tải JD: ${err.message}</p>`;
     }
@@ -2225,6 +2418,7 @@ TÊN CÔNG TY:
   const pageSelectGapJd = document.getElementById('page-gap-select-jd');
   const pageBtnRunGap = document.getElementById('page-btn-run-gap');
   const pageGapResultsContainer = document.getElementById('page-gap-results-container');
+  let currentGapResult = null;
 
   function formatGapOptionDate(value) {
     if (!value) return '';
@@ -2438,6 +2632,7 @@ TÊN CÔNG TY:
       try {
         showToast('⏳ AI đang tính toán Match Score & Gap Analysis...', 'info');
         const res = await ApiClient.runGapAnalysis(cvId, jdId);
+        currentGapResult = res;
 
         document.getElementById('page-gap-match-score-badge').textContent = `${res.match_score.toFixed(1)}%`;
 
@@ -2496,13 +2691,32 @@ TÊN CÔNG TY:
           </article>
         `).join('') || '<p class="gap-empty">Không có mục CV cần bổ sung.</p>';
 
-        document.getElementById('page-gap-suggestions-list').innerHTML = (res.suggestions || []).map(s => `
-          <div style="background:rgba(255,255,255,0.03);padding:8px 10px;border-radius:6px;border-left:3px solid #b084fc;">
+        const suggestionList = document.getElementById('page-gap-suggestions-list');
+        suggestionList.innerHTML = (res.suggestions || []).map((s, index) => `
+          <div class="suggestion-decision-card" data-index="${index}">
             <p style="font-size:11px;color:var(--text-muted);margin:0 0 2px 0;"><strong>Gốc:</strong> ${escapeHtml(s.original_text)}</p>
-            <p style="font-size:12px;color:#00e676;margin:0 0 2px 0;"><strong>Tối ưu:</strong> ${escapeHtml(s.suggested_improvement)}</p>
+            <label>Tối ưu (có thể chỉnh trước khi duyệt)</label>
+            <textarea class="form-input suggestion-final-text">${escapeHtml(s.suggested_improvement)}</textarea>
             <p style="font-size:10px;color:var(--text-dim);margin:0;"><em>${escapeHtml(s.reason)}</em></p>
+            <div class="suggestion-actions"><button type="button" class="btn-outline suggestion-reject">Từ chối</button><button type="button" class="btn-primary suggestion-accept">Chấp nhận</button><span class="suggestion-status">Chưa quyết định</span></div>
           </div>
         `).join('') || `<p style="font-size:11px;color:var(--text-muted);">CV của bạn đã tối ưu rất tốt!</p>`;
+        suggestionList.querySelectorAll('.suggestion-decision-card').forEach(card => {
+          const save = async accepted => {
+            const index = Number(card.dataset.index);
+            const finalText = card.querySelector('.suggestion-final-text').value.trim();
+            try {
+              await ApiClient.decideSuggestion(res.id, index, accepted, accepted ? finalText : null);
+              card.dataset.decision = accepted ? 'accepted' : 'rejected';
+              card.querySelector('.suggestion-status').textContent = accepted ? '✓ Đã chấp nhận' : '✕ Đã từ chối';
+              showToast(accepted ? 'Đã lưu nội dung được duyệt.' : 'Đã loại gợi ý.', 'success');
+            } catch (err) { showToast(`Không lưu được quyết định: ${err.message}`, 'error'); }
+          };
+          card.querySelector('.suggestion-accept').addEventListener('click', () => save(true));
+          card.querySelector('.suggestion-reject').addEventListener('click', () => save(false));
+        });
+        const exportBar = document.getElementById('page-cv-export-bar');
+        if (exportBar) exportBar.hidden = false;
 
         if (pageGapResultsContainer) pageGapResultsContainer.style.display = 'block';
         showToast('🎉 Đã phân tích xong Gap Analysis!', 'success');
@@ -2533,12 +2747,35 @@ TÊN CÔNG TY:
     try {
       const [cvs, jds] = await Promise.all([ApiClient.listCVs(), ApiClient.listJDs()]);
       pageSelectIntCv.innerHTML = cvs.length > 0
-        ? cvs.map(c => `<option value="${c.id}">${c.title}</option>`).join('')
+        ? cvs.map(c => `<option value="${escapeHtml(c.id)}">${escapeHtml(c.title || 'CV chưa đặt tên')}</option>`).join('')
         : `<option value="">(Bắt buộc upload 1 CV trước)</option>`;
 
       pageSelectIntJd.innerHTML = jds.length > 0
-        ? jds.map(j => `<option value="${j.id}">${j.title} - ${j.company}</option>`).join('')
+        ? jds.map(j => `<option value="${escapeHtml(j.id)}">${escapeHtml(j.title || 'JD chưa đặt tên')} • ${escapeHtml(j.company || 'Chưa ghi công ty')}</option>`).join('')
         : `<option value="">(Bắt buộc chọn 1 JD trước)</option>`;
+      enhanceGapSelect(pageSelectIntCv);
+      enhanceGapSelect(pageSelectIntJd);
+      const sessions = await ApiClient.listInterviews();
+      const ongoing = sessions.find(session => session.status === 'ongoing');
+      let resumeButton = document.getElementById('page-resume-interview');
+      if (ongoing && !resumeButton && pageSetupSec) {
+        resumeButton = document.createElement('button');
+        resumeButton.id = 'page-resume-interview';
+        resumeButton.type = 'button';
+        resumeButton.className = 'btn-outline full-width';
+        resumeButton.textContent = `Tiếp tục phiên đang lưu (${ongoing.current_question_index + 1}/${ongoing.total_questions})`;
+        resumeButton.addEventListener('click', async () => {
+          try {
+            const question = await ApiClient.resumeInterview(ongoing.id);
+            pageSessionId = ongoing.id;
+            pageSetupSec.style.display = 'none'; pageChatSec.style.display = 'block';
+            pageChatHistory.innerHTML = '';
+            appendPageMessage('interviewer', question.follow_up_question || question.question_text);
+            pageProgressText.textContent = `Câu hỏi ${question.question_index + 1} / ${ongoing.total_questions}`;
+          } catch (err) { showToast(err.message, 'error'); }
+        });
+        pageSetupSec.appendChild(resumeButton);
+      }
     } catch (err) {
       showToast(`Lỗi lấy dữ liệu CV/JD: ${err.message}`, 'error');
     }
@@ -2620,6 +2857,18 @@ TÊN CÔNG TY:
     });
   }
 
+  document.getElementById('page-interview-voice')?.addEventListener('click', () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      showToast('Trình duyệt này chưa hỗ trợ nhập giọng nói.', 'warning'); return;
+    }
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'vi-VN'; recognition.interimResults = false;
+    recognition.onresult = event => { pageAnswerInput.value = event.results[0][0].transcript; };
+    recognition.onerror = () => showToast('Không nhận diện được giọng nói.', 'error');
+    recognition.start();
+  });
+
   async function loadPageSTARReport(sessionId) {
     try {
       const report = await ApiClient.getInterviewReport(sessionId);
@@ -2665,6 +2914,102 @@ TÊN CÔNG TY:
     }
   }
 
+  document.getElementById('page-interview-csat-form')?.addEventListener('submit', async event => {
+    event.preventDefault();
+    if (!pageSessionId) return;
+    const rating = Number(document.getElementById('page-interview-csat').value);
+    const comment = document.getElementById('page-interview-csat-comment').value.trim();
+    try {
+      await ApiClient.rateInterview(pageSessionId, rating, comment);
+      showToast('Cảm ơn bạn đã đánh giá phiên phỏng vấn.', 'success');
+      event.currentTarget.querySelector('button').disabled = true;
+    } catch (err) { showToast(`Không gửi được đánh giá: ${err.message}`, 'error'); }
+  });
+
+  async function loadStudentCounselorConsents() {
+    const list = document.getElementById('student-counselor-consent-list');
+    if (!list || ApiClient.getUser()?.role !== 'student') return;
+    try {
+      const assignments = await ApiClient.listCounselorConsents();
+      list.innerHTML = assignments.map(item => `
+        <article class="hitl-item"><div><strong>${escapeHtml(item.counselor_name)}</strong><small>${escapeHtml(item.counselor_email)} · ${escapeHtml(item.status)}</small></div>
+        ${item.status === 'active' ? `<button class="btn-outline revoke-consent" data-id="${escapeHtml(item.id)}">Thu hồi</button>` : ''}</article>
+      `).join('') || '<p class="gap-empty">Bạn chưa cấp quyền cho cố vấn nào.</p>';
+      list.querySelectorAll('.revoke-consent').forEach(button => button.addEventListener('click', async () => {
+        await ApiClient.revokeCounselor(button.dataset.id); showToast('Đã thu hồi quyền cố vấn.', 'success'); loadStudentCounselorConsents();
+      }));
+    } catch (err) { list.innerHTML = `<p class="gap-empty">${escapeHtml(err.message)}</p>`; }
+  }
+
+  document.getElementById('student-counselor-consent-form')?.addEventListener('submit', async event => {
+    event.preventDefault();
+    try {
+      const email = document.getElementById('student-counselor-email').value.trim();
+      await ApiClient.grantCounselor(email); event.currentTarget.reset();
+      showToast('Đã cấp quyền truy cập cho cố vấn.', 'success'); loadStudentCounselorConsents();
+    } catch (err) { showToast(`Không cấp được quyền: ${err.message}`, 'error'); }
+  });
+
+  async function loadCounselorDashboard() {
+    const list = document.getElementById('counselor-student-list');
+    if (!list) return;
+    try {
+      const assignments = await ApiClient.listAssignedStudents();
+      list.innerHTML = assignments.map(item => `<button class="hitl-item hitl-student" data-id="${escapeHtml(item.student_id)}"><span><strong>${escapeHtml(item.student_name)}</strong><small>${escapeHtml(item.student_email)}</small></span><span>›</span></button>`).join('') || '<p class="gap-empty">Chưa có sinh viên cấp quyền.</p>';
+      list.querySelectorAll('.hitl-student').forEach(button => button.addEventListener('click', () => loadCounselorStudent(button.dataset.id)));
+    } catch (err) { list.innerHTML = `<p class="gap-empty">${escapeHtml(err.message)}</p>`; }
+  }
+
+  async function loadCounselorStudent(studentId) {
+    const detail = document.getElementById('counselor-student-detail');
+    const form = document.getElementById('counselor-feedback-form');
+    try {
+      const data = await ApiClient.getStudentOverview(studentId);
+      detail.innerHTML = `<h3>${escapeHtml(data.student.full_name)}</h3><div class="hitl-stats"><span>${data.cv_count}<small>CV</small></span><span>${data.analysis_count}<small>Gap</small></span><span>${data.completed_interview_count}<small>STAR</small></span><span>${data.average_star_score}<small>Điểm TB</small></span></div><h4>Phản hồi gần đây</h4>${data.recent_feedback.map(item => `<article class="feedback-item"><strong>${escapeHtml(item.kind)}</strong><p>${escapeHtml(item.content)}</p></article>`).join('') || '<p class="gap-empty">Chưa có phản hồi.</p>'}`;
+      document.getElementById('counselor-feedback-student-id').value = studentId;
+      form.hidden = false;
+    } catch (err) { detail.innerHTML = `<p class="gap-empty">${escapeHtml(err.message)}</p>`; form.hidden = true; }
+  }
+
+  document.getElementById('counselor-feedback-form')?.addEventListener('submit', async event => {
+    event.preventDefault();
+    const studentId = document.getElementById('counselor-feedback-student-id').value;
+    try {
+      await ApiClient.sendCounselorFeedback(studentId, document.getElementById('counselor-feedback-content').value.trim(), document.getElementById('counselor-feedback-kind').value);
+      event.currentTarget.reset(); document.getElementById('counselor-feedback-student-id').value = studentId;
+      showToast('Đã gửi phản hồi cho sinh viên.', 'success'); loadCounselorStudent(studentId);
+    } catch (err) { showToast(err.message, 'error'); }
+  });
+
+  async function loadEnterpriseDashboard() {
+    const list = document.getElementById('enterprise-jd-list');
+    if (!list) return;
+    try {
+      const jds = await ApiClient.listEnterpriseJDs();
+      list.innerHTML = jds.map(jd => `<article class="hitl-item"><div><strong>${escapeHtml(jd.title)}</strong><small>${jd.is_published ? 'Đã công bố' : 'Bản nháp'}</small></div><div>${!jd.is_published ? `<button class="btn-outline publish-jd" data-id="${escapeHtml(jd.id)}">Công bố</button>` : ''}<button class="btn-primary view-candidates" data-id="${escapeHtml(jd.id)}">Ứng viên</button></div></article>`).join('') || '<p class="gap-empty">Hãy tạo JD trong Thư viện Jobs.</p>';
+      list.querySelectorAll('.publish-jd').forEach(button => button.addEventListener('click', async () => { await ApiClient.publishJD(button.dataset.id); showToast('Đã công bố JD.', 'success'); loadEnterpriseDashboard(); }));
+      list.querySelectorAll('.view-candidates').forEach(button => button.addEventListener('click', () => loadEnterpriseCandidates(button.dataset.id)));
+    } catch (err) { list.innerHTML = `<p class="gap-empty">${escapeHtml(err.message)}</p>`; }
+  }
+
+  async function loadEnterpriseCandidates(jdId) {
+    const list = document.getElementById('enterprise-candidate-list');
+    try {
+      const candidates = await ApiClient.listCandidates(jdId);
+      list.innerHTML = candidates.map(item => `<article class="candidate-card"><div><strong>${escapeHtml(item.candidate_name)}</strong><small>${escapeHtml(item.candidate_email)}</small></div><b>${Number(item.match_score).toFixed(1)}%</b><button class="btn-outline view-shared-cv" data-id="${escapeHtml(item.id)}">Xem CV đã chia sẻ</button><select class="form-input candidate-decision" data-id="${escapeHtml(item.id)}"><option value="submitted" ${item.status === 'submitted' ? 'selected' : ''}>Đã nộp</option><option value="shortlisted" ${item.status === 'shortlisted' ? 'selected' : ''}>Shortlist</option><option value="interview" ${item.status === 'interview' ? 'selected' : ''}>Mời phỏng vấn</option><option value="rejected" ${item.status === 'rejected' ? 'selected' : ''}>Từ chối</option></select></article>`).join('') || '<p class="gap-empty">Chưa có ứng viên chủ động chia sẻ CV.</p>';
+      list.querySelectorAll('.view-shared-cv').forEach(button => button.addEventListener('click', async () => {
+        const detail = document.getElementById('enterprise-candidate-cv');
+        try {
+          const cv = await ApiClient.getCandidateCV(button.dataset.id);
+          const parsed = cv.parsed_json || {};
+          detail.hidden = false;
+          detail.innerHTML = `<h3>${escapeHtml(cv.title)}</h3><p>${escapeHtml(parsed.summary || '')}</p><h4>Kỹ năng</h4><p>${escapeHtml((parsed.skills || []).join(', '))}</p><h4>Nội dung CV đã chia sẻ</h4><pre>${escapeHtml(cv.raw_text || '')}</pre>`;
+        } catch (err) { showToast(err.message, 'error'); }
+      }));
+      list.querySelectorAll('.candidate-decision').forEach(select => select.addEventListener('change', async () => { await ApiClient.decideCandidate(select.dataset.id, select.value); showToast('Đã cập nhật quyết định.', 'success'); }));
+    } catch (err) { list.innerHTML = `<p class="gap-empty">${escapeHtml(err.message)}</p>`; }
+  }
+
   /* ============================================================
      🔐 AUTH & USER STATE MANAGEMENT
   ============================================================ */
@@ -2673,11 +3018,22 @@ TÊN CÔNG TY:
   const userRoleEl = document.getElementById('user-role-display');
 
   function applyRoleAccess(user) {
-    document.body.classList.remove('role-enterprise');
-    ['nav-dashboard', 'nav-cv', 'nav-interview', 'nav-gap', 'nav-admin'].forEach(id => {
+    document.body.classList.remove('role-student', 'role-counselor', 'role-enterprise', 'role-admin');
+    if (user?.role) document.body.classList.add(`role-${user.role}`);
+    const roleKey = ROLE_NAV_ITEMS[user?.role] ? user.role : 'guest';
+    const visibleNavItems = new Set(ROLE_NAV_ITEMS[roleKey]);
+    ALL_ROLE_NAV_IDS.forEach(id => {
       const element = document.getElementById(id);
-      if (element) element.hidden = false;
+      if (element) element.hidden = !visibleNavItems.has(id);
     });
+    const isAdmin = user?.role === 'admin';
+    const adminNav = document.getElementById('nav-admin');
+    if (adminNav) {
+      adminNav.hidden = !isAdmin;
+      adminNav.classList.toggle('visible', isAdmin);
+    }
+    const consentPanel = document.getElementById('student-counselor-consent-panel');
+    if (consentPanel) consentPanel.hidden = user?.role !== 'student';
     const jobsNavText = document.querySelector('#nav-jobs .nav-text');
     if (jobsNavText) {
       const currentLang = localStorage.getItem('career_copilot_lang') || 'vi';
@@ -2740,8 +3096,8 @@ TÊN CÔNG TY:
     window.dispatchEvent(new Event('career:session-cleared'));
   }
 
-  function performLogout({ notify = true } = {}) {
-    ApiClient.logout();
+  async function performLogout({ notify = true } = {}) {
+    await ApiClient.logout();
     resetUIAfterLogout();
     if (notify) showToast('Đã đăng xuất tài khoản', 'info');
     checkUserSession();
@@ -2750,13 +3106,14 @@ TÊN CÔNG TY:
 
   function checkUserSession() {
     const user = ApiClient.getUser();
-    const token = ApiClient.getToken();
     const navAdmin = document.getElementById('nav-admin');
 
-    if (user && token) {
+    if (user) {
       applyRoleAccess(user);
       if (userNameEl) userNameEl.textContent = user.full_name || user.email;
       if (userRoleEl) userRoleEl.textContent = `Vai trò: ${user.role.toUpperCase()}`;
+      const roleHomeView = getRoleHomeView(user);
+      if (currentViewName !== roleHomeView) switchView(roleHomeView);
       if (navAdmin) {
         if (user.role === 'admin') {
           navAdmin.classList.add('visible');
@@ -2820,6 +3177,18 @@ TÊN CÔNG TY:
       if (element) element.textContent = value ?? 0;
     });
   }
+
+  document.getElementById('page-download-optimized-cv')?.addEventListener('click', async () => {
+    if (!currentGapResult) return;
+    try {
+      const template = document.getElementById('page-export-template')?.value || 'classic';
+      const blob = await ApiClient.downloadCV(currentGapResult.cv_id, currentGapResult.id, template);
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url; anchor.download = `optimized-cv-${template}.pdf`; anchor.click();
+      URL.revokeObjectURL(url);
+    } catch (err) { showToast(`❌ ${err.message}`, 'error'); }
+  });
 
   function renderAdminAILogs(logs) {
     const list = document.getElementById('admin-ai-log-list');
@@ -3181,13 +3550,12 @@ TÊN CÔNG TY:
     }
   }
 
-  if (ApiClient.getToken()) {
-    ApiClient.getMe().then(() => checkUserSession()).catch(() => {
-      performLogout({ notify: false });
-    });
-  } else {
+  // Khôi phục phiên từ cookie HttpOnly; dữ liệu user trong localStorage chỉ là cache hiển thị.
+  ApiClient.getMe().then(() => checkUserSession()).catch(() => {
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('user_info');
     checkUserSession();
-  }
+  });
 
   /* ── Auth Modal Logic ── */
   const authOverlay = document.getElementById('modal-overlay');
@@ -3238,21 +3606,59 @@ TÊN CÔNG TY:
   if (tabLogin) tabLogin.addEventListener('click', () => setAuthMode(false));
   if (tabRegister) tabRegister.addEventListener('click', () => setAuthMode(true));
 
-  // Google Sign-In & Registration Event Handler
-  document.getElementById('btn-google-auth')?.addEventListener('click', () => {
-    showToast('🔑 Đang kết nối với Google Sign-In...');
-    setTimeout(() => {
-      const mockGoogleUser = {
-        email: 'user.google@gmail.com',
-        full_name: 'Google User (Verified)',
-        role: 'student'
-      };
-      ApiClient.setToken('google-oauth-jwt-token');
-      ApiClient.setUser(mockGoogleUser);
-      checkUserSession();
-      closeAuthModal();
-      showToast('✅ Đăng nhập bằng Google thành công!');
-    }, 800);
+  async function loadGoogleIdentityServices() {
+    if (window.google?.accounts?.id) return;
+    await new Promise((resolve, reject) => {
+      const existing = document.querySelector('script[data-google-identity]');
+      if (existing) {
+        existing.addEventListener('load', resolve, { once: true });
+        existing.addEventListener('error', reject, { once: true });
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = 'https://accounts.google.com/gsi/client';
+      script.async = true;
+      script.defer = true;
+      script.dataset.googleIdentity = 'true';
+      script.onload = resolve;
+      script.onerror = reject;
+      document.head.appendChild(script);
+    });
+  }
+
+  // Google Identity Services: ID token luôn được backend xác minh trước khi tạo phiên.
+  document.getElementById('btn-google-auth')?.addEventListener('click', async (event) => {
+    const button = event.currentTarget;
+    const clientId = button.dataset.clientId;
+    if (!clientId) {
+      showToast('Google OAuth chưa được cấu hình. Hãy đặt GOOGLE_OAUTH_CLIENT_ID.', 'warning');
+      return;
+    }
+    try {
+      showToast('🔑 Đang mở Google Sign-In...');
+      await loadGoogleIdentityServices();
+      window.google.accounts.id.initialize({
+        client_id: clientId,
+        callback: async response => {
+          try {
+            const role = isRegisterMode ? document.getElementById('input-role')?.value || 'student' : 'student';
+            await ApiClient.googleAuth(response.credential, role);
+            closeAuthModal();
+            checkUserSession();
+            showToast('✅ Google đã xác minh và đăng nhập thành công!', 'success');
+          } catch (err) {
+            showToast(`❌ ${err.message}`, 'error');
+          }
+        },
+      });
+      window.google.accounts.id.prompt(notification => {
+        if (notification.isNotDisplayed?.() || notification.isSkippedMoment?.()) {
+          showToast('Trình duyệt đã chặn hộp thoại Google. Hãy cho phép popup/cookie đăng nhập.', 'warning');
+        }
+      });
+    } catch (_err) {
+      showToast('Không tải được Google Identity Services.', 'error');
+    }
   });
 
   if (loginForm) {
@@ -3294,7 +3700,7 @@ TÊN CÔNG TY:
   const cvListContainer = document.getElementById('cv-list-container');
 
   function openCVModal() {
-    if (!ApiClient.getToken()) {
+    if (!ApiClient.isAuthenticated()) {
       showToast('⚠️ Vui lòng đăng nhập trước khi tải CV', 'warning');
       openAuthModal();
       return;
@@ -3370,7 +3776,7 @@ TÊN CÔNG TY:
   bindJDFileName(uploadJdFile, document.getElementById('upload-jd-file-name'));
 
   function openJDModal() {
-    if (!ApiClient.getToken()) {
+    if (!ApiClient.isAuthenticated()) {
       showToast('⚠️ Vui lòng đăng nhập trước khi xem thư viện Jobs', 'warning');
       openAuthModal();
       return;
@@ -3485,7 +3891,7 @@ TÊN CÔNG TY:
   const gapResultsContainer = document.getElementById('gap-results-container');
 
   function openGapModal() {
-    if (!ApiClient.getToken()) {
+    if (!ApiClient.isAuthenticated()) {
       showToast('⚠️ Vui lòng đăng nhập trước khi chạy Gap Analysis', 'warning');
       openAuthModal();
       return;
@@ -3571,7 +3977,7 @@ TÊN CÔNG TY:
   let currentSessionId = null;
 
   function openInterviewModal() {
-    if (!ApiClient.getToken()) {
+    if (!ApiClient.isAuthenticated()) {
       showToast('⚠️ Vui lòng đăng nhập trước khi bắt đầu phỏng vấn thử', 'warning');
       openAuthModal();
       return;
@@ -3591,12 +3997,14 @@ TÊN CÔNG TY:
     try {
       const [cvs, jds] = await Promise.all([ApiClient.listCVs(), ApiClient.listJDs()]);
       selectIntCv.innerHTML = cvs.length > 0
-        ? cvs.map(c => `<option value="${c.id}">${c.title}</option>`).join('')
+        ? cvs.map(c => `<option value="${escapeHtml(c.id)}">${escapeHtml(c.title || 'CV chưa đặt tên')}</option>`).join('')
         : `<option value="">(Bắt buộc upload 1 CV trước)</option>`;
 
       selectIntJd.innerHTML = jds.length > 0
-        ? jds.map(j => `<option value="${j.id}">${j.title} - ${j.company}</option>`).join('')
+        ? jds.map(j => `<option value="${escapeHtml(j.id)}">${escapeHtml(j.title || 'JD chưa đặt tên')} • ${escapeHtml(j.company || 'Chưa ghi công ty')}</option>`).join('')
         : `<option value="">(Bắt buộc chọn 1 JD trước)</option>`;
+      enhanceGapSelect(selectIntCv);
+      enhanceGapSelect(selectIntJd);
     } catch (err) {
       showToast(`Lỗi lấy dữ liệu CV/JD: ${err.message}`, 'error');
     }
@@ -3816,7 +4224,7 @@ TÊN CÔNG TY:
 
     async function loadConversationHistory() {
       if (!historyList) return;
-      if (!ApiClient.getToken()) {
+      if (!ApiClient.isAuthenticated()) {
         historyList.innerHTML = '<div class="ai-chat-history-empty">Đăng nhập để xem lịch sử hội thoại.</div>';
         return;
       }
@@ -3978,7 +4386,7 @@ TÊN CÔNG TY:
       event.preventDefault();
       const text = input.value.trim();
       if (!text || sendButton?.disabled) return;
-      if (!ApiClient.getToken()) {
+      if (!ApiClient.isAuthenticated()) {
         appendChatMessage('assistant', 'Bạn cần đăng nhập để Nova có thể sử dụng hồ sơ và bảo vệ phiên chat.');
         openAuthModal();
         return;
@@ -4104,3 +4512,5 @@ if (document.readyState === 'loading') {
 } else {
   startAppLogic();
 }
+
+export {};
