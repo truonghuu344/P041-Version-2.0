@@ -34,7 +34,11 @@ class LLMClient:
             except Exception as e:
                 print(f"⚠️ Chưa thể nạp Gemini API Client: {e}. Chuyển sang LLM Synthesis Engine dự phòng.")
         else:
+<<<<<<< HEAD
             print("ℹ️ Chưa cấu hình GEMINI_API_KEY trong file .env. Sử dụng LLM Synthesis Engine dự phòng.")
+=======
+            print("ℹ️ Chưa cấu hình OPENAI_API_KEY trong file .env. Sử dụng LLM Synthesis Engine dự phòng.")
+>>>>>>> e2c9488757c30acdef31d1b45cd54c1997058dad
 
     def generate_response(self, prompt: str, system_message: str = "Bạn là trợ lý AI thông minh.") -> str:
         """Gửi prompt tới LLM và trả về câu trả lời văn bản"""

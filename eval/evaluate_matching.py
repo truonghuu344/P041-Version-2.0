@@ -1,17 +1,15 @@
-import sys
-import os
 import json
-import pandas as pd
+import os
+import sys
 from datetime import datetime
-from typing import List, Dict, Any
 
 try:
-    from retrieval.index import VectorIndexManager
     from retrieval.agent import RAGAgent
+    from retrieval.index import VectorIndexManager
 except ModuleNotFoundError:
     sys.path.insert(0, '.')
-    from retrieval.index import VectorIndexManager
     from retrieval.agent import RAGAgent
+    from retrieval.index import VectorIndexManager
 
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
@@ -23,12 +21,12 @@ RESULTS_JSON_PATH = "./data/quality/eval_results.json"
 def run_evaluation_benchmark():
     """Chạy Đánh giá RAG Agent trên Bộ câu hỏi đã đóng băng (Golden Evaluation Dataset)"""
     print(f"🚀 Bắt đầu Benchmark Đánh giá RAG trên dataset: {EVAL_DATASET_PATH}")
-    
+
     if not os.path.exists(EVAL_DATASET_PATH):
         print(f"❌ Không tìm thấy bộ câu hỏi đóng băng tại: {EVAL_DATASET_PATH}")
         return
 
-    with open(EVAL_DATASET_PATH, "r", encoding="utf-8") as f:
+    with open(EVAL_DATASET_PATH, encoding="utf-8") as f:
         eval_samples = json.load(f)
 
     # 1. Initialize & Build Vector Indexes for Papers & JDs
@@ -54,7 +52,7 @@ def run_evaluation_benchmark():
         agent_output = agent.run(question)
         answer = agent_output.get("answer", "")
         retrieved_docs = agent_output.get("retrieved_documents", [])
-        
+
         retrieved_ids = [doc.get("id") for doc in retrieved_docs]
         retrieval_hit = (expected_ref_id in retrieved_ids) or any(expected_ref_id.lower() in str(doc).lower() for doc in retrieved_docs)
         if retrieval_hit or not expected_ref_id or "JD-" in expected_ref_id:
@@ -119,7 +117,7 @@ def run_evaluation_benchmark():
     with open(REPORT_MD_PATH, "w", encoding="utf-8") as f:
         f.write(md_content)
 
-    print(f"\n🎉 Đã hoàn tất Benchmark Đánh giá Quality Gates!")
+    print("\n🎉 Đã hoàn tất Benchmark Đánh giá Quality Gates!")
     print(f"   - Report Markdown: {REPORT_MD_PATH}")
     print(f"   - Summary JSON:    {RESULTS_JSON_PATH}")
 

@@ -1,18 +1,19 @@
-import sys
 import asyncio
-import json
-import random
-import os
-import re
 import hashlib
+import json
+import os
+import random
+import re
+import sys
 
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
-from datetime import datetime, timedelta
-from typing import List, Optional, Dict, Any
-from pydantic import BaseModel, Field, ValidationError
-from playwright.async_api import async_playwright
+from datetime import datetime
+from typing import Any
+
 from bs4 import BeautifulSoup
+from playwright.async_api import async_playwright
+from pydantic import BaseModel, Field, ValidationError
 from unidecode import unidecode
 
 USER_AGENTS = [
@@ -21,19 +22,19 @@ USER_AGENTS = [
 ]
 
 TECH_KEYWORDS = [
-    "Java", "Spring", "Spring Boot", "Spring MVC", "Spring Security", "Hibernate", "JPA", 
-    "Python", "Django", "Flask", "FastAPI", "NodeJS", "Express", "NestJS", 
-    "React", "ReactJS", "Next.js", "Angular", "Vue", "JavaScript", "TypeScript", 
+    "Java", "Spring", "Spring Boot", "Spring MVC", "Spring Security", "Hibernate", "JPA",
+    "Python", "Django", "Flask", "FastAPI", "NodeJS", "Express", "NestJS",
+    "React", "ReactJS", "Next.js", "Angular", "Vue", "JavaScript", "TypeScript",
     "C#", ".NET", "PHP", "Laravel", "Golang", "Go",
-    "SQL", "PostgreSQL", "MySQL", "MongoDB", "Redis", "Elasticsearch", 
+    "SQL", "PostgreSQL", "MySQL", "MongoDB", "Redis", "Elasticsearch",
     "Docker", "Kubernetes", "AWS", "Azure", "GCP", "EC2", "S3", "Lambda",
-    "CI/CD", "Git", "GitHub Actions", "Jenkins", "RESTful API", "GraphQL", "Microservices", 
-    "QA", "QC", "Tester", "Selenium", "Postman", "JUnit", "Mockito", "Automation", "Manual Testing", 
+    "CI/CD", "Git", "GitHub Actions", "Jenkins", "RESTful API", "GraphQL", "Microservices",
+    "QA", "QC", "Tester", "Selenium", "Postman", "JUnit", "Mockito", "Automation", "Manual Testing",
     "Linux", "DevOps", "AI", "Computer Vision", "OCR", "Kafka", "RabbitMQ"
 ]
 
 LOCATION_ALIASES = {
-    "tphcm": "Hồ Chí Minh", "tp.hcm": "Hồ Chí Minh", "hcm": "Hồ Chí Minh", "sai gon": "Hồ Chí Minh", 
+    "tphcm": "Hồ Chí Minh", "tp.hcm": "Hồ Chí Minh", "hcm": "Hồ Chí Minh", "sai gon": "Hồ Chí Minh",
     "ho chi minh": "Hồ Chí Minh", "ho chi minh city": "Hồ Chí Minh", "hcmc": "Hồ Chí Minh",
     "ha noi": "Hà Nội", "hanoi": "Hà Nội", "ha noi city": "Hà Nội",
     "da nang": "Đà Nẵng", "danang": "Đà Nẵng", "da nang city": "Đà Nẵng",
@@ -52,35 +53,39 @@ async def block_resources(route):
         await route.continue_()
 
 def infer_source(url):
-    if "linkedin.com" in url: return "LinkedIn"
-    if "itviec.com" in url: return "ITviec"
-    if "joboko.com" in url: return "Joboko"
+    if "linkedin.com" in url:
+        return "LinkedIn"
+    if "itviec.com" in url:
+        return "ITviec"
+    if "joboko.com" in url:
+        return "Joboko"
     return "Other"
 
 class ExtractedTier(BaseModel):
-    job_title: Optional[str] = None
-    company_name: Optional[str] = None
-    locations: List[str] = Field(default_factory=list)
-    salary_text: Optional[str] = None
-    salary_min: Optional[float] = None
-    salary_max: Optional[float] = None
-    experience_text: Optional[str] = None
-    employment_type: Optional[str] = None
-    requirements: List[str] = Field(default_factory=list)
-    responsibilities: List[str] = Field(default_factory=list)
-    benefits: List[str] = Field(default_factory=list)
+    job_title: str | None = None
+    company_name: str | None = None
+    locations: list[str] = Field(default_factory=list)
+    salary_text: str | None = None
+    salary_min: float | None = None
+    salary_max: float | None = None
+    experience_text: str | None = None
+    employment_type: str | None = None
+    requirements: list[str] = Field(default_factory=list)
+    responsibilities: list[str] = Field(default_factory=list)
+    benefits: list[str] = Field(default_factory=list)
 
 class FinalJDRecord(BaseModel):
     job_id: str
     job_hash: str
     source: str
     source_url: str
-    raw: Dict[str, str]
+    raw: dict[str, str]
     extracted: ExtractedTier
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
 
-def extract_locations_normalized(text: str) -> List[str]:
-    if not text: return []
+def extract_locations_normalized(text: str) -> list[str]:
+    if not text:
+        return []
     normalized_text = unidecode(text.lower())
     found = set()
     for alias, canonical_name in LOCATION_ALIASES.items():
@@ -121,24 +126,27 @@ async def scrape_and_parse_jd(page, url, idx):
 
     if source == "LinkedIn":
         title_tag = soup.select_one("h1, h1.topcard__title, .top-card-layout__title")
-        if title_tag: title_text = title_tag.get_text(strip=True)
-        
+        if title_tag:
+            title_text = title_tag.get_text(strip=True)
+
         comp_tag = soup.select_one("a.topcard__org-name-link, div.topcard__flavor-row a, .topcard__flavor--black-link, .top-card-layout__first-sub-row a, span.topcard__flavor")
-        if comp_tag: company_name = comp_tag.get_text(strip=True)
-        
+        if comp_tag:
+            company_name = comp_tag.get_text(strip=True)
+
         loc_tag = soup.select_one("span.topcard__flavor--bullet, .topcard__flavor:nth-of-type(2), .top-card-layout__first-sub-row span:nth-of-type(2), span.job-search-card__location")
         if loc_tag:
             loc_str = loc_tag.get_text(strip=True)
             locations = extract_locations_normalized(loc_str)
             if not locations and loc_str:
                 locations = [loc_str]
-        
+
         container = soup.select_one("div.show-more-less-html__markup, div.description__text")
 
     elif source == "Joboko":
         title_tag = soup.select_one("h1.job-title, h1, div.job-title h1")
-        if title_tag: title_text = title_tag.get_text(strip=True)
-        
+        if title_tag:
+            title_text = title_tag.get_text(strip=True)
+
         comp_tag = soup.select_one("div.job-company-name, a.company-name, h2.company-name, h2, a.comp-name, div.company-name a")
         if comp_tag and comp_tag.get_text(strip=True):
             c_text = comp_tag.get_text(strip=True)
@@ -170,18 +178,21 @@ async def scrape_and_parse_jd(page, url, idx):
 
         info_text = soup.get_text(separator="\n", strip=True)[:3000]
         sal_match = re.search(r'(?:Thu nhập|Mức lương|Lương)\s*:\s*([^\n]+)', info_text, re.IGNORECASE)
-        if sal_match: salary_text = sal_match.group(1).strip()
+        if sal_match:
+            salary_text = sal_match.group(1).strip()
 
         exp_match = re.search(r'(?:Kinh nghiệm|Yêu cầu kinh nghiệm)\s*:\s*([^\n]+)', info_text, re.IGNORECASE)
-        if exp_match: experience_text = exp_match.group(1).strip()
+        if exp_match:
+            experience_text = exp_match.group(1).strip()
 
         emp_match = re.search(r'(?:Loại hình|Hình thức làm việc)\s*:\s*([^\n]+)', info_text, re.IGNORECASE)
-        if emp_match: employment_type = emp_match.group(1).strip()
+        if emp_match:
+            employment_type = emp_match.group(1).strip()
 
         container = soup.select_one("div.job-detail-content, div.box-job-detail, div.job-description, div.content-job-detail")
 
     full_text = container.get_text(separator="\n", strip=True) if container else soup.get_text(separator="\n", strip=True)
-    
+
     if not locations:
         locations = extract_locations_normalized(full_text[:500])
     if not locations:
@@ -201,7 +212,7 @@ async def scrape_and_parse_jd(page, url, idx):
 
     job_id = f"JD-{idx+1:03d}"
     os.makedirs("./data/jds/raw", exist_ok=True)
-    
+
     # 📌 RAW ARTIFACT DẠNG 1: Lưu file HTML response thô nguyên bản phục vụ audit nguồn
     html_filename = f"{job_id}.html"
     with open(os.path.join("./data/jds/raw", html_filename), "w", encoding="utf-8") as f:
@@ -209,7 +220,7 @@ async def scrape_and_parse_jd(page, url, idx):
 
     record = {
         "job_id": job_id,
-        "job_hash": hashlib.md5(f"{title_text}|{company_name}".encode('utf-8')).hexdigest(),
+        "job_hash": hashlib.md5(f"{title_text}|{company_name}".encode()).hexdigest(),
         "source": source,
         "source_url": url,
         "raw": {"description_raw": full_text, "html_file": f"raw/{html_filename}"},
@@ -250,7 +261,7 @@ async def run_crawler(urls_to_crawl):
             await asyncio.sleep(random.uniform(2.0, 5.0))
 
         await browser.close()
-        
+
         output_path = "./data/raw/jds/raw_jds.json"
         with open(output_path, "w", encoding="utf-8") as f:
             json.dump(results, f, ensure_ascii=False, indent=2)
@@ -259,7 +270,7 @@ async def run_crawler(urls_to_crawl):
 if __name__ == "__main__":
     # Danh sách các link JD mẫu cần crawl thử nghiệm
     target_urls = [
-         # 1. Software Engineer Intern - Backend 
+         # 1. Software Engineer Intern - Backend
         "https://www.linkedin.com/jobs/view/4281770937/",
         # 2. Software Developer - Intern
         "https://www.linkedin.com/jobs/view/4439326221/",
@@ -403,15 +414,15 @@ if __name__ == "__main__":
         "https://www.linkedin.com/jobs/view/4447393090/",
         # 72. FullStack Engineer
         "https://www.linkedin.com/jobs/view/4449352730/",
-        # 73. Full-stack Engineer (NextJS, Java, AI-native) 
+        # 73. Full-stack Engineer (NextJS, Java, AI-native)
         "https://www.linkedin.com/jobs/view/4442291387/",
         # 74. Junior Full Stack Engineer (Python React/Angular)
         "https://www.linkedin.com/jobs/view/4438497569/",
-        # 75. Fullstack Reactjs Developer 
+        # 75. Fullstack Reactjs Developer
         "https://www.linkedin.com/jobs/view/4446965844/",
         # 76. Full-Stack / Platform Engineer – Engineering Tools
         "https://www.linkedin.com/jobs/view/4428640289/",
-        # 77. Full Stack Engineer 
+        # 77. Full Stack Engineer
         "https://www.linkedin.com/jobs/view/4447783885/",
         # 78. HCM – Junior Fullstack Developer (ReactJS + NodeJS)
         "https://www.linkedin.com/jobs/view/4406597658/",
@@ -421,13 +432,13 @@ if __name__ == "__main__":
         "https://www.linkedin.com/jobs/view/4389546376/",
         # 81. Fullstack Python/Nextjs Developer (Middle)
         "https://www.linkedin.com/jobs/view/4411357363/",
-        # 82. Fullstack Engineer 
+        # 82. Fullstack Engineer
         "https://www.linkedin.com/jobs/view/4445343250/",
         # 83. Full-Stack AI Engineer
         "https://www.linkedin.com/jobs/view/4438404461/",
-        # 84. Software Engineer Intern (Salesforce/Guidewire/RPA) 
+        # 84. Software Engineer Intern (Salesforce/Guidewire/RPA)
         "https://www.linkedin.com/jobs/view/4440665420/",
-        # 85. Software Engineering Intern (6-month contract) 
+        # 85. Software Engineering Intern (6-month contract)
         "https://www.linkedin.com/jobs/view/4445467972/",
         # 86. SOFTWARE DEVELOPER INTERNSHIP
         "https://www.linkedin.com/jobs/view/4401340346/",
@@ -443,7 +454,7 @@ if __name__ == "__main__":
         "https://www.linkedin.com/jobs/view/4434241139/",
         # 92. Penetration Tester - Intern
         "https://www.linkedin.com/jobs/view/4439334059/",
-        # 93. Software Engineer Intern - QA 
+        # 93. Software Engineer Intern - QA
         "https://www.linkedin.com/jobs/view/4350676078/",
         # 94. Trainee 2026 QA/Tester
         "https://www.linkedin.com/jobs/view/4446293067/",

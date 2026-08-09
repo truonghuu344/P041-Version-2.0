@@ -1,12 +1,15 @@
-import sys
-import os
 import json
-from typing import List, Dict, Any, Union
+import os
+import sys
+from typing import Any
+
+import psycopg2
+from psycopg2.extras import RealDictCursor
 
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
 
-def calculate_completeness(records: List[Dict[str, Any]], required_fields: List[str]) -> float:
+def calculate_completeness(records: list[dict[str, Any]], required_fields: list[str]) -> float:
     """Tính tỷ lệ điền đầy đủ (Completeness Rate) của dữ liệu sạch"""
     if not records:
         return 0.0
@@ -22,7 +25,7 @@ def calculate_completeness(records: List[Dict[str, Any]], required_fields: List[
 
     return round((valid_checks / total_checks) * 100.0, 2)
 
-def calculate_uniqueness(records: List[Dict[str, Any]], key_field: str = "job_id") -> float:
+def calculate_uniqueness(records: list[dict[str, Any]], key_field: str = "job_id") -> float:
     """Tính tỷ lệ duy nhất không trùng lặp (Uniqueness Rate)"""
     if not records:
         return 0.0
@@ -39,23 +42,37 @@ def calculate_uniqueness(records: List[Dict[str, Any]], key_field: str = "job_id
     return round((unique_count / len(records)) * 100.0, 2)
 
 def run_data_quality_checks(
-    jds_clean_path: str = "./data/clean/jds_clean.json",
+    db_path: str = "./data/app.db",
     cvs_clean_path: str = "./data/clean/cvs_clean.json"
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Chạy toàn bộ các hàm kiểm tra Data Quality cho JDs và CVs"""
     required_jd_fields = [
         "job_id", "job_title", "company_name", "domain_category",
-        "location", "salary_range", "experience_required", "must_have", "embedding_text"
+        "location", "salary_range", "experience_required", "embedding_text"
     ]
 
+    pg_config = {
+        "host": "localhost",
+        "port": 5432,
+        "user": "ats_user",
+        "password": "ats_password",
+        "dbname": "ats_db"
+    }
+
     jd_records = []
-    if os.path.exists(jds_clean_path):
-        with open(jds_clean_path, "r", encoding="utf-8") as f:
-            jd_records = json.load(f)
+    try:
+        conn = psycopg2.connect(**pg_config)
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        cursor.execute("SELECT * FROM mart_jds_final")
+        rows = cursor.fetchall()
+        jd_records = [dict(row) for row in rows]
+        conn.close()
+    except Exception as e:
+        print(f"Lỗi đọc DB: {e}")
 
     cv_records = []
     if os.path.exists(cvs_clean_path):
-        with open(cvs_clean_path, "r", encoding="utf-8") as f:
+        with open(cvs_clean_path, encoding="utf-8") as f:
             cv_records = json.load(f)
 
     jd_completeness = calculate_completeness(jd_records, required_jd_fields)

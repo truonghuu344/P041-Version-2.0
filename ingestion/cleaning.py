@@ -1,10 +1,11 @@
-import sys
+import html
+import json
 import os
 import re
-import json
-import html
+import sys
 from datetime import datetime
-from typing import List, Dict, Any, Optional, Union
+from typing import Any
+
 import pandas as pd
 
 if hasattr(sys.stdout, 'reconfigure'):
@@ -28,7 +29,7 @@ def parse_authors(authors_raw: Any) -> str:
     """Gộp list tác giả bị lồng nested trong dict/list thành chuỗi tác giả cách nhau bởi dấu phẩy"""
     if not authors_raw:
         return "Unknown Authors"
-    
+
     names = []
     if isinstance(authors_raw, str):
         return strip_html_xml_tags(authors_raw)
@@ -38,7 +39,7 @@ def parse_authors(authors_raw: Any) -> str:
                 given = author.get("given", "").strip()
                 family = author.get("family", "").strip()
                 name = author.get("name", "").strip()
-                
+
                 if given and family:
                     names.append(f"{given} {family}")
                 elif family:
@@ -51,14 +52,14 @@ def parse_authors(authors_raw: Any) -> str:
                 cleaned_str = strip_html_xml_tags(author)
                 if cleaned_str:
                     names.append(cleaned_str)
-                    
+
     return ", ".join(names) if names else "Unknown Authors"
 
 def parse_subjects_keywords(subjects_raw: Any) -> str:
     """Gộp list chủ đề/từ khóa thành chuỗi cách nhau bởi dấu phẩy"""
     if not subjects_raw:
         return "General"
-    
+
     if isinstance(subjects_raw, str):
         return strip_html_xml_tags(subjects_raw)
     elif isinstance(subjects_raw, list):
@@ -66,7 +67,7 @@ def parse_subjects_keywords(subjects_raw: Any) -> str:
         return ", ".join([s for s in cleaned_list if s])
     return "General"
 
-def extract_published_year(item: Dict[str, Any]) -> int:
+def extract_published_year(item: dict[str, Any]) -> int:
     """Trích xuất năm xuất bản từ thông tin date/created/published của Crossref API"""
     # 1. Check published-print or published-online
     for date_key in ["published-print", "published-online", "published", "created", "issued"]:
@@ -101,7 +102,7 @@ def calculate_freshness(published_year: int) -> float:
     score = max(0.0, 1.0 - (age_years / 10.0))
     return round(score, 4)
 
-def clean_crossref_paper_record(item: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+def clean_crossref_paper_record(item: dict[str, Any]) -> dict[str, Any] | None:
     """Xử lý và làm sạch 1 bản ghi bài báo từ Crossref API"""
     # 1. Trích xuất Tiêu đề
     raw_title = item.get("title")
@@ -135,7 +136,7 @@ def clean_crossref_paper_record(item: Dict[str, Any]) -> Optional[Dict[str, Any]
     # 5. Tạo cột biểu diễn ngữ nghĩa (embedding_text cho Retrieval / Vector Search)
     doi = item.get("DOI") or item.get("doi") or item.get("id") or ""
     publisher = strip_html_xml_tags(item.get("publisher", ""))
-    
+
     embedding_text = (
         f"Title: {title} | "
         f"Authors: {author_names} | "
@@ -171,10 +172,10 @@ def run_paper_cleaning_pipeline(
 ):
     """Pipeline làm sạch dữ liệu bài báo từ Crossref API và xuất lưu dạng CSV và JSON"""
     raw_records = []
-    
+
     if os.path.exists(input_file):
         print(f"📖 Đang đọc dữ liệu bài báo thô từ: {input_file}")
-        with open(input_file, "r", encoding="utf-8") as f:
+        with open(input_file, encoding="utf-8") as f:
             raw_data = json.load(f)
             if isinstance(raw_data, list):
                 raw_records = raw_data
@@ -238,7 +239,7 @@ def run_paper_cleaning_pipeline(
     df = pd.DataFrame(df_rows)
     df.to_csv(output_csv, index=False, encoding="utf-8-sig")
 
-    print(f"📁 Dữ liệu bài báo sạch đã được lưu trữ:")
+    print("📁 Dữ liệu bài báo sạch đã được lưu trữ:")
     print(f"   - JSON: {output_json}")
     print(f"   - CSV:  {output_csv}")
 

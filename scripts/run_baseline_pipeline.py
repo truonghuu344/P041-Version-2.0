@@ -1,9 +1,9 @@
-import sys
+import json
 import os
 import re
-import json
+import sys
 from datetime import datetime
-from typing import List, Dict, Any
+from typing import Any
 
 sys.path.insert(0, '.')
 
@@ -11,10 +11,10 @@ if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
 
 # Import project modules
-from ingestion.cleaner_jds import run_cleaning_pipeline as run_jd_cleaning_pipeline
-from retrieval.index import VectorIndexManager
-from retrieval.agent import RAGAgent
 from eval.testset_generator import freeze_eval_dataset
+from ingestion.cleaner_jds import run_cleaning_pipeline as run_jd_cleaning_pipeline
+from retrieval.agent import RAGAgent
+from retrieval.index import VectorIndexManager
 from src.observability.quality import run_data_quality_checks
 
 PHASE1_REPORT_MD = "./data/reports/phase1_report.md"
@@ -36,13 +36,13 @@ def compute_token_f1(pred_text: str, target_text: str) -> float:
     recall = len(common) / len(target_tokens)
     return round(2.0 * (precision * recall) / (precision + recall), 4)
 
-def llm_judge_evaluate(question: str, pred_answer: str, ground_truth: str) -> Dict[str, Any]:
+def llm_judge_evaluate(question: str, pred_answer: str, ground_truth: str) -> dict[str, Any]:
     """LLM Judge chấm điểm chất lượng câu trả lời JD (Faithfulness & Relevance trên thang 1-5)"""
     f1 = compute_token_f1(pred_answer, ground_truth)
     length_check = len(pred_answer) > 30 and not pred_answer.startswith("Không tìm thấy")
 
     score = 5.0 if (f1 > 0.3 and length_check) else (4.0 if length_check else 2.0)
-    
+
     return {
         "judge_score": score,
         "faithfulness": 5.0 if length_check else 2.0,
@@ -63,7 +63,7 @@ def run_complete_baseline_pipeline():
     raw_jds_path = "./data/raw/jds/raw_jds.json"
     if not os.path.exists(raw_jds_path):
         print(f"⚠️ Chưa có raw data tại {raw_jds_path}. Tiến hành crawler...")
-    
+
     run_jd_cleaning_pipeline()
     print("✅ Làm sạch và chuẩn hóa 91 bản ghi JD thành công tại ./data/clean/jds_clean.json")
 
@@ -85,7 +85,7 @@ def run_complete_baseline_pipeline():
     eval_json_path = "./data/eval/eval_dataset.json"
     freeze_eval_dataset(output_json=eval_json_path)
 
-    with open(eval_json_path, "r", encoding="utf-8") as f:
+    with open(eval_json_path, encoding="utf-8") as f:
         test_samples = json.load(f)
 
     # -------------------------------------------------------------
@@ -93,7 +93,7 @@ def run_complete_baseline_pipeline():
     # -------------------------------------------------------------
     print(f"\n📌 [Bước 5] Duyệt qua {len(test_samples)} câu hỏi JD test set, chạy RAG Agent & LLM Judge...")
     agent = RAGAgent(collection_name="jds_collection")
-    
+
     eval_results = []
     retrieval_hits = 0
     token_f1_list = []
@@ -110,7 +110,7 @@ def run_complete_baseline_pipeline():
         pred_answer = agent_out.get("answer", "")
         retrieved_docs = agent_out.get("retrieved_documents", [])
         retrieved_ids = [d.get("id") for d in retrieved_docs if d.get("id")] + [d.get("metadata", {}).get("job_id") for d in retrieved_docs if d.get("metadata", {}).get("job_id")]
-        
+
         # 5b. Calculate Retrieval Hit Rate (Ref ID match or Company/Title metadata match)
         target_comp = sample.get("context", {}).get("company_name", "")
         hit = (expected_ref_id in retrieved_ids) or any(
@@ -146,7 +146,7 @@ def run_complete_baseline_pipeline():
     mean_token_f1 = round(sum(token_f1_list) / len(token_f1_list), 4)
     avg_judge_score = round(sum(judge_scores) / len(judge_scores), 2)
 
-    print(f"📊 Kết quả Đánh giá Benchmark JD:")
+    print("📊 Kết quả Đánh giá Benchmark JD:")
     print(f"   - Retrieval Hit Rate: {retrieval_hit_rate}%")
     print(f"   - Mean Token F1 Score: {mean_token_f1}")
     print(f"   - Average LLM Judge Score: {avg_judge_score}/5.0")

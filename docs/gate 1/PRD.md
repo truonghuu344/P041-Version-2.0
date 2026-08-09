@@ -356,5 +356,5 @@ class AgentState(TypedDict):
 * **Mã nhóm / Repo:** G06 | P-041
 * **Kho lưu mã nguồn (GitHub):** [https://github.com/AI20K-Build-Phase-Cohort-3/P-041.git](https://github.com/AI20K-Build-Phase-Cohort-3/P-041.git)
 * **Thời gian thực hiện:** 02/08/2026 – 13/09/2026 (6 tuần)
-* **Trưởng nhóm:** Nguyễn Minh Quân (PM)
+* **Trưởng nhóm:** Nguyễn Thị Thanh Hiền (PM)
 * **Mentor phụ trách:** Trần Vũ Anh (Andy)

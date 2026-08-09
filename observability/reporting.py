@@ -1,7 +1,7 @@
-import sys
 import os
-import json
+import sys
 from datetime import datetime
+
 try:
     from observability.quality_checks import run_quality_audit
 except ModuleNotFoundError:
@@ -25,7 +25,7 @@ def generate_markdown_report(report_data: dict, output_md_path: str = "./data/qu
 
     md_content = f"""# 📊 Data Quality & Observability Report
 
-> **Thời gian tạo báo cáo:** `{ts}`  
+> **Thời gian tạo báo cáo:** `{ts}`
 > **Tổng số bản ghi kiểm định:** `{total}`
 
 ---

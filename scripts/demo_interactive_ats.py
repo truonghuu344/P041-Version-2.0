@@ -1,7 +1,5 @@
-import sys
-import os
 import json
-from typing import Dict, Any
+import sys
 
 sys.path.insert(0, '.')
 
@@ -9,10 +7,11 @@ if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
 
 # Import core modules
-from retrieval.retriever import HybridRetriever
-from retrieval.qa import QAPipeline
 from eval.ats_matching import ATSMatcher
+from retrieval.qa import QAPipeline
+from retrieval.retriever import HybridRetriever
 from src.observability.quality import run_data_quality_checks
+
 
 def run_live_interactive_demo():
     """Chạy chương trình Test Thực tế (Live Interactive Demo) toàn bộ Hệ thống CV-JD Matching & RAG"""
@@ -32,7 +31,7 @@ def run_live_interactive_demo():
     # 2. Test Truy xuất RAG Hybrid Search
     print("📌 [BƯỚC 2] TEST TRUY XUẤT HYBRID SEARCH (DENSE VECTOR 384D + BM25 KEYWORD)")
     retriever = HybridRetriever(collection_name="jds_collection")
-    
+
     test_queries = [
         "Software Engineer Intern Backend tại ShopBack",
         "Vị trí Thực tập sinh Java tại CÔNG TY TNHH BZCOM",
@@ -52,11 +51,11 @@ def run_live_interactive_demo():
     print("-"*70)
 
     matcher = ATSMatcher()
-    
-    with open("./data/eval/simulated_cvs.json", "r", encoding="utf-8") as f:
+
+    with open("./data/eval/simulated_cvs.json", encoding="utf-8") as f:
         test_cvs = json.load(f)
 
-    with open("./data/clean/jds_clean.json", "r", encoding="utf-8") as f:
+    with open("./data/clean/jds_clean.json", encoding="utf-8") as f:
         jds = json.load(f)
 
     sample_cv = test_cvs[0] # Nguyen Van A - Backend Intern

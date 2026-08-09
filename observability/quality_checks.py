@@ -1,9 +1,10 @@
-import sys
-import os
 import json
+import os
+import sys
 from datetime import datetime
-from typing import List, Dict, Any, Optional, Tuple
-from pydantic import BaseModel, Field, ValidationError
+from typing import Any
+
+from pydantic import BaseModel, ValidationError
 
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
@@ -20,25 +21,25 @@ class CleanJDRecordSchema(BaseModel):
     remote_type: str
     domain_category: str
     industry: str
-    location: List[str]
+    location: list[str]
     salary_range: str
     experience_required: str
-    education_required: List[str]
-    language_required: List[str]
-    skills: List[str]
-    tech_stack: List[str]
-    must_have: Dict[str, Any]
-    must_have_skills: List[str]
-    nice_to_have_skills: List[str]
+    education_required: list[str]
+    language_required: list[str]
+    skills: list[str]
+    tech_stack: list[str]
+    must_have: dict[str, Any]
+    must_have_skills: list[str]
+    nice_to_have_skills: list[str]
     must_have_text: str
     embedding_text: str
-    requirements: List[str]
-    responsibilities: List[str]
-    benefits: List[str]
+    requirements: list[str]
+    responsibilities: list[str]
+    benefits: list[str]
     clean_description: str
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
 
-def validate_record_schema(record: Dict[str, Any]) -> Tuple[bool, List[str]]:
+def validate_record_schema(record: dict[str, Any]) -> tuple[bool, list[str]]:
     """Kiểm tra tính tuân thủ Schema Pydantic cho một bản ghi Clean JD"""
     try:
         CleanJDRecordSchema.model_validate(record)
@@ -47,13 +48,13 @@ def validate_record_schema(record: Dict[str, Any]) -> Tuple[bool, List[str]]:
         errors = [f"{err['loc']}: {err['msg']}" for err in ve.errors()]
         return False, errors
 
-def run_quality_audit(input_path: str = "./data/clean/jds_clean.json", output_report_path: str = "./data/quality/quality_report.json") -> Dict[str, Any]:
+def run_quality_audit(input_path: str = "./data/clean/jds_clean.json", output_report_path: str = "./data/quality/quality_report.json") -> dict[str, Any]:
     """Chạy đánh giá toàn diện chất lượng dữ liệu sạch thu thập được"""
     if not os.path.exists(input_path):
         print(f"❌ Không tìm thấy file dữ liệu: {input_path}")
         return {}
 
-    with open(input_path, "r", encoding="utf-8") as f:
+    with open(input_path, encoding="utf-8") as f:
         records = json.load(f)
 
     total_records = len(records)
@@ -67,8 +68,8 @@ def run_quality_audit(input_path: str = "./data/clean/jds_clean.json", output_re
     negotiable_salary_count = 0
     empty_skills_count = 0
     schema_valid_count = 0
-    sources_distribution: Dict[str, int] = {}
-    domains_distribution: Dict[str, int] = {}
+    sources_distribution: dict[str, int] = {}
+    domains_distribution: dict[str, int] = {}
 
     schema_errors_log = []
 

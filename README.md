@@ -97,6 +97,20 @@ Khi clone dự án về máy cá nhân, chạy câu lệnh sau để tự độn
 # Khởi tạo Vector DB & chạy thử nghiệm truy xuất dữ liệu mẫu
 python scripts/demo_interactive_ats.py
 ```
+
+### 3. Quy trình xử lý dữ liệu (ETLT) với PostgreSQL hội tụ
+Hệ thống hiện tại sử dụng kiến trúc Converged Database với **PostgreSQL + pgvector**. Để khởi chạy luồng ETLT và tự động chạy test Pipeline:
+
+```bash
+# 1. Khởi động PostgreSQL (có sẵn pgvector) qua Docker
+docker compose up db -d
+
+# 2. Đảm bảo đã cài đặt các thư viện kết nối (psycopg2, pgvector, v.v.)
+pip install -r requirements.txt
+
+# 3. Chạy toàn bộ luồng ETLT (Load, Transform, Vectorize) và kiểm thử RAG
+python scripts/run_phase2_pipeline.py
+```
 ---
 
 ## 📁 Cấu trúc dự án

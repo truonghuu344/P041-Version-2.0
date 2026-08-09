@@ -1,9 +1,9 @@
-import sys
+import json
 import os
 import re
-import json
+import sys
 from datetime import datetime
-from typing import List, Dict, Any
+from typing import Any
 
 sys.path.insert(0, '.')
 
@@ -11,11 +11,12 @@ if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
 
 # Import Phase 2 modules
-from ingestion.cleaner_jds import run_cleaning_pipeline as run_jd_cleaning_pipeline
-from retrieval.index import VectorIndexManager
-from retrieval.retriever import HybridRetriever
-from retrieval.agent import RAGAgent
 from eval.testset_generator import freeze_eval_dataset
+from ingestion.cleaner_jds import run_cleaning_pipeline as run_jd_cleaning_pipeline
+from ingestion.elt_transform import run_elt_transform
+from ingestion.load_stg import load_stg_jds
+from retrieval.agent import RAGAgent
+from retrieval.index import VectorIndexManager
 from src.observability.quality import run_data_quality_checks
 
 PHASE2_REPORT_MD = "./data/reports/phase2_report.md"
@@ -37,7 +38,7 @@ def compute_token_f1(pred_text: str, target_text: str) -> float:
     recall = len(common) / len(target_tokens)
     return round(2.0 * (precision * recall) / (precision + recall), 4)
 
-def llm_judge_evaluate_phase2(question: str, pred_answer: str, ground_truth: str) -> Dict[str, Any]:
+def llm_judge_evaluate_phase2(question: str, pred_answer: str, ground_truth: str) -> dict[str, Any]:
     """LLM Judge chấm điểm chất lượng câu trả lời Phase 2 (Faithfulness & Relevance trên thang 1-5)"""
     f1 = compute_token_f1(pred_answer, ground_truth)
     length_check = len(pred_answer) > 30 and not pred_answer.startswith("Không tìm thấy")
@@ -65,23 +66,29 @@ def run_phase2_pipeline():
     print("🚀 BẮT ĐẦU THỰC THI PHASE 2 PIPELINE (HYBRID SEARCH & RERANKING)")
     print("================================================================\n")
 
-    # 1. Clean Data
+    # 1. Clean Data (ETL)
     run_jd_cleaning_pipeline()
 
-    # 2. Vector Store Indexing
+    # 2. Load to Staging (ELT - Load)
+    load_stg_jds()
+
+    # 3. Transform in DB (ELT - Transform)
+    run_elt_transform()
+
+    # 4. Vector Store Indexing
     indexer = VectorIndexManager()
-    manifest = indexer.build_jd_index(clean_json_path="./data/clean/jds_clean.json", collection_name="jds_collection")
+    manifest = indexer.build_jd_index(db_path="./data/app.db", collection_name="jds_collection")
 
     # 3. Testset Verification
     eval_json_path = "./data/eval/eval_dataset.json"
     freeze_eval_dataset(output_json=eval_json_path)
 
-    with open(eval_json_path, "r", encoding="utf-8") as f:
+    with open(eval_json_path, encoding="utf-8") as f:
         test_samples = json.load(f)
 
     # 4. Phase 2 Agent & Hybrid Retrieval Execution
     agent = RAGAgent(collection_name="jds_collection")
-    
+
     eval_results = []
     retrieval_hits = 0
     token_f1_list = []
@@ -98,9 +105,9 @@ def run_phase2_pipeline():
         agent_out = agent.run(question)
         pred_answer = agent_out.get("answer", "")
         retrieved_docs = agent_out.get("retrieved_documents", [])
-        
+
         retrieved_ids = [d.get("id") for d in retrieved_docs if d.get("id")] + [d.get("metadata", {}).get("job_id") for d in retrieved_docs if d.get("metadata", {}).get("job_id")]
-        
+
         target_comp = sample.get("context", {}).get("company_name", "")
         hit = (expected_ref_id in retrieved_ids) or any(
             expected_ref_id.lower() in str(d).lower() or
@@ -134,13 +141,13 @@ def run_phase2_pipeline():
     mean_token_f1 = round(sum(token_f1_list) / len(token_f1_list), 4)
     avg_judge_score = round(sum(judge_scores) / len(judge_scores), 2)
 
-    print(f"\n📊 KẾT QUẢ ĐÁNH GIÁ PHASE 2 BENCHMARK:")
+    print("\n📊 KẾT QUẢ ĐÁNH GIÁ PHASE 2 BENCHMARK:")
     print(f"   - Retrieval Hit Rate: {retrieval_hit_rate}%")
     print(f"   - Mean Token F1 Score: {mean_token_f1}")
     print(f"   - Average LLM Judge Score: {avg_judge_score} / 5.0 🌟")
 
     # 5. Data Quality Checks
-    quality_summary = run_data_quality_checks(jds_clean_path="./data/clean/jds_clean.json")
+    quality_summary = run_data_quality_checks(db_path="./data/app.db")
 
     # 6. Export Reports
     os.makedirs(os.path.dirname(PHASE2_REPORT_MD), exist_ok=True)
