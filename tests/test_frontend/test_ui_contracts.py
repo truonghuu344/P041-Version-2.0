@@ -1,9 +1,10 @@
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-APP_JS = (ROOT / "frontend" / "app.js").read_text(encoding="utf-8")
-PAGE_JS = (ROOT / "frontend" / "app" / "page.tsx").read_text(encoding="utf-8")
-STYLE_CSS = (ROOT / "frontend" / "style.css").read_text(encoding="utf-8")
+FRONTEND_ROOT = ROOT / "src" / "frontend"
+APP_JS = (FRONTEND_ROOT / "app.js").read_text(encoding="utf-8")
+PAGE_JS = (FRONTEND_ROOT / "app" / "page.tsx").read_text(encoding="utf-8")
+STYLE_CSS = (FRONTEND_ROOT / "style.css").read_text(encoding="utf-8")
 
 
 def test_cv_bulk_delete_controls_and_api_are_wired():
@@ -40,7 +41,7 @@ def test_gap_analysis_dropdown_and_submit_contract_are_present():
 
 
 def test_assistant_gif_asset_exists_and_is_not_empty():
-    asset = ROOT / "frontend" / "public" / "assistant" / "idle-rotations-8dir.gif"
+    asset = FRONTEND_ROOT / "public" / "assistant" / "idle-rotations-8dir.gif"
     assert asset.exists()
     assert asset.stat().st_size > 0
     assert 'src="/assistant/idle-rotations-8dir.gif"' in PAGE_JS
@@ -100,8 +101,8 @@ def test_menubar_matches_gate1_role_flows_without_icons():
     assert 'Sinh viên của tôi' in nav_markup
     assert 'Hồ sơ ứng tuyển' in nav_markup
     assert "font-weight: 700 !important;" in STYLE_CSS
-    assert "from 'next/font/google'" in (ROOT / "frontend" / "app" / "layout.tsx").read_text(encoding="utf-8")
-    assert "Quicksand" in (ROOT / "frontend" / "app" / "layout.tsx").read_text(encoding="utf-8")
+    assert "from 'next/font/google'" in (FRONTEND_ROOT / "app" / "layout.tsx").read_text(encoding="utf-8")
+    assert "Quicksand" in (FRONTEND_ROOT / "app" / "layout.tsx").read_text(encoding="utf-8")
     assert "--font-quicksand" in STYLE_CSS
     assert "SOFT CYAN PALETTE" in STYLE_CSS
 
@@ -117,7 +118,7 @@ def test_google_signin_uses_official_button_without_programmatic_one_tap_popup()
 
 
 def test_quicksand_variable_is_defined_on_root_before_shared_font_token_resolves():
-    layout = (ROOT / "frontend" / "app" / "layout.tsx").read_text(encoding="utf-8")
+    layout = (FRONTEND_ROOT / "app" / "layout.tsx").read_text(encoding="utf-8")
     assert '<html lang="vi" className={quicksand.variable}' in layout
     assert '<body className={quicksand.variable}>' not in layout
     assert "font-family: var(--font-quicksand), 'Quicksand'" in STYLE_CSS

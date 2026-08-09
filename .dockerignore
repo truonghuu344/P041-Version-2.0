@@ -11,8 +11,7 @@
 .gemini
 .github
 .vscode
-frontend/node_modules
-frontend/.next
+src/frontend
 data/
 __pycache__
 *.pyc

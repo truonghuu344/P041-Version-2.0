@@ -8,7 +8,7 @@ Các test tự động không gọi Gemini, OpenWeather hoặc WeatherAPI thật
 ```powershell
 pytest tests -q -p no:cacheprovider
 ruff check src tests
-cd frontend
+cd src/frontend
 npm run build
 ```
 
