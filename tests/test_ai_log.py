@@ -32,8 +32,7 @@ def read_entries(log_dir: Path) -> list[dict]:
 def test_codex_hook_config_has_cross_platform_command_handlers():
     config = json.loads(HOOK_CONFIG.read_text(encoding="utf-8"))
 
-    assert set(config["hooks"]) == {"UserPromptSubmit", "PostToolUse", "Stop"}
-    assert config["hooks"]["PostToolUse"][0]["matcher"] == "*"
+    assert set(config["hooks"]) == {"UserPromptSubmit"}
     for event_groups in config["hooks"].values():
         for event_group in event_groups:
             for handler in event_group["hooks"]:
@@ -42,7 +41,7 @@ def test_codex_hook_config_has_cross_platform_command_handlers():
                 assert "git rev-parse --show-toplevel" in handler["commandWindows"]
 
 
-def test_codex_hooks_log_prompt_and_tool_use_from_nested_directory(tmp_path: Path):
+def test_codex_hook_logs_only_prompt_from_nested_directory(tmp_path: Path):
     log_dir = tmp_path / "logs"
     nested_cwd = REPO_ROOT / "src" / "backend"
 
@@ -52,23 +51,21 @@ def test_codex_hooks_log_prompt_and_tool_use_from_nested_directory(tmp_path: Pat
         nested_cwd,
     )
     tool_result = run_hook(
-        {
-            "hook_event_name": "PostToolUse",
-            "tool_name": "shell_command",
-            "tool_input": {"command": "pytest", "api_key": "must-not-leak"},
-            "tool_response": {"output": "passed", "Authorization": "Bearer secret"},
-        },
+        {"hook_event_name": "PostToolUse", "tool_name": "shell_command"},
         log_dir,
         nested_cwd,
     )
-
+    stop_result = run_hook(
+        {"hook_event_name": "Stop"},
+        log_dir,
+        nested_cwd,
+    )
     assert json.loads(prompt_result.stdout) == {"continue": True}
-    assert json.loads(tool_result.stdout) == {"continue": True}
+    assert tool_result.stdout == ""
+    assert stop_result.stdout == ""
     entries = read_entries(log_dir)
+    assert len(entries) == 1
     assert entries[0]["prompt"] == "Xin chào"
-    assert entries[1]["tool_name"] == "shell_command"
-    assert entries[1]["tool_input"]["api_key"] == "[REDACTED]"
-    assert entries[1]["tool_response"]["Authorization"] == "[REDACTED]"
 
 
 def test_submit_check_validates_without_sending_or_printing_key(tmp_path: Path):

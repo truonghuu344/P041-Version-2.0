@@ -13,15 +13,6 @@ from pathlib import Path
 
 VN_TZ = timezone(timedelta(hours=7))
 REPO_ROOT = Path(__file__).resolve().parent.parent
-SENSITIVE_KEY_PARTS = (
-    "api_key",
-    "authorization",
-    "cookie",
-    "credential",
-    "password",
-    "secret",
-    "token",
-)
 
 try:
     from dotenv import load_dotenv
@@ -29,39 +20,6 @@ try:
     load_dotenv(REPO_ROOT / ".env")
 except ImportError:
     pass
-
-
-def sanitize(value, depth: int = 0):
-    """Redact common credentials and bound hook payload size."""
-    if depth >= 6:
-        return "[TRUNCATED]"
-    if isinstance(value, dict):
-        cleaned = {}
-        for key, item in list(value.items())[:100]:
-            key_text = str(key)
-            if any(part in key_text.lower() for part in SENSITIVE_KEY_PARTS):
-                cleaned[key_text] = "[REDACTED]"
-            else:
-                cleaned[key_text] = sanitize(item, depth + 1)
-        return cleaned
-    if isinstance(value, list):
-        return [sanitize(item, depth + 1) for item in value[:100]]
-    if isinstance(value, tuple):
-        return [sanitize(item, depth + 1) for item in value[:100]]
-    if isinstance(value, str):
-        return value[:2000]
-    if value is None or isinstance(value, (bool, int, float)):
-        return value
-    return str(value)[:2000]
-
-
-def sanitize_payload(value, max_chars: int = 4000):
-    """Keep small payloads structured and truncate unusually large ones."""
-    cleaned = sanitize(value)
-    encoded = json.dumps(cleaned, ensure_ascii=False)
-    if len(encoded) <= max_chars:
-        return cleaned
-    return encoded[:max_chars] + "...[TRUNCATED]"
 
 
 def git(cmd):
@@ -170,14 +128,13 @@ def normalize(data: dict, tool: str) -> dict | None:
             base.update({"prompt": prompt, "response_summary": answer})
 
     elif tool == "codex":
+        if event != "UserPromptSubmit":
+            return None
         base.update(
             {
                 "prompt": data.get("prompt", "")[:1000],
                 "turn_id": data.get("turn_id", ""),
                 "transcript_path": data.get("transcript_path", ""),
-                "tool_name": data.get("tool_name", ""),
-                "tool_input": sanitize_payload(data.get("tool_input")),
-                "tool_response": sanitize_payload(data.get("tool_response")),
             }
         )
 
@@ -223,12 +180,6 @@ def main():
     try:
         data = json.loads(raw)
     except json.JSONDecodeError:
-        sys.exit(0)
-
-    # Apply the same credential redaction to every supported AI client before
-    # any tool-specific normalization writes the payload to disk.
-    data = sanitize(data)
-    if not isinstance(data, dict):
         sys.exit(0)
 
     tool = detect_tool(data)

@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "description": "Record approved Codex activity for the project AI log.",
+  "description": "Record approved Codex prompts for the project AI log.",
   "hooks": {
     "UserPromptSubmit": [
       {
@@ -12,35 +12,6 @@
             "commandWindows": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"$root = git rev-parse --show-toplevel; & (Join-Path $root 'scripts/_pyrun.cmd') (Join-Path $root 'scripts/log_hook.py') '--tool=codex'\"",
             "timeout": 10,
             "statusMessage": "Recording prompt in the project AI log"
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "name": "log-tool-use",
-            "command": "bash -lc 'root=$(git rev-parse --show-toplevel) && bash \"$root/scripts/_pyrun.sh\" \"$root/scripts/log_hook.py\" --tool=codex'",
-            "commandWindows": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"$root = git rev-parse --show-toplevel; & (Join-Path $root 'scripts/_pyrun.cmd') (Join-Path $root 'scripts/log_hook.py') '--tool=codex'\"",
-            "timeout": 10,
-            "statusMessage": "Recording tool activity in the project AI log"
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "name": "log-stop",
-            "command": "bash -lc 'root=$(git rev-parse --show-toplevel) && bash \"$root/scripts/_pyrun.sh\" \"$root/scripts/log_hook.py\" --tool=codex'",
-            "commandWindows": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"$root = git rev-parse --show-toplevel; & (Join-Path $root 'scripts/_pyrun.cmd') (Join-Path $root 'scripts/log_hook.py') '--tool=codex'\"",
-            "timeout": 10,
-            "statusMessage": "Finalizing the project AI log"
           }
         ]
       }

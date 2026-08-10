@@ -133,10 +133,10 @@ Kiểm tra SQL migration mà không thay đổi database:
 
 ## AI-log cho Codex
 
-Project ghi lại prompt, thao tác công cụ và kết quả công cụ vào
-`.ai-log/session.jsonl`. Các trường credential phổ biến như token, password,
-cookie và API key được che trước khi ghi. Khi `git push`, pre-push hook gửi các
-bản ghi đang chờ tới server đã cấu hình rồi chuyển chúng vào `archive`.
+Project chỉ ghi lại prompt bạn gửi cho Codex vào `.ai-log/session.jsonl`. API key
+được đọc từ `AI_LOG_API_KEY` trong `.env` và không được ghi vào log hoặc Git. Khi
+`git push`, pre-push hook gửi các bản ghi đang chờ tới server đã cấu hình rồi
+chuyển chúng vào `archive`.
 
 Sau khi clone hoặc khi hook thay đổi:
 
@@ -146,6 +146,5 @@ powershell -ExecutionPolicy Bypass -File scripts/setup_hooks.ps1
 ```
 
 Trong Codex, chạy `/hooks`, kiểm tra và trust hook của project, sau đó mở phiên
-Codex mới. Ba sự kiện được theo dõi là `UserPromptSubmit`, `PostToolUse` và
-`Stop`. Lệnh `--check` chỉ kiểm tra cấu hình và số bản ghi cục bộ, không gửi dữ
-liệu và không in API key.
+Codex mới. Chỉ sự kiện `UserPromptSubmit` được theo dõi. Lệnh `--check` chỉ kiểm
+tra cấu hình và số bản ghi cục bộ, không gửi dữ liệu và không in API key.
