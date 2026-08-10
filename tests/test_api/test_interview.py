@@ -232,6 +232,17 @@ async def test_interview_empty_answer(client):
     assert response.status_code == 422
 
 
+@pytest.mark.asyncio
+async def test_interview_conflicting_answers_rejected(client):
+    """T1-021b: Cung cấp cả 'answer' và 'user_answer' với nội dung khác nhau → 422."""
+    response = await client.post(
+        f"/api/v1/interview/{SAMPLE_SESSION_ID}/answer",
+        json={"answer": "Nội dung A", "user_answer": "Nội dung B"},
+    )
+    assert response.status_code == 422
+
+
+
 # ─── T1-022: Get STAR report sau khi completed ────────────────────────────────
 
 @pytest.mark.asyncio

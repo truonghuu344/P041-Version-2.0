@@ -38,10 +38,23 @@ class InterviewAnswerRequest(BaseModel):
 
     @model_validator(mode="after")
     def check_answer_present(self) -> "InterviewAnswerRequest":
-        ans = (self.answer if self.answer is not None else self.user_answer) or ""
+        # Không cho phép cung cấp cả 2 trường với giá trị khác nhau
+        if (
+            self.answer is not None
+            and self.user_answer is not None
+            and self.answer.strip() != self.user_answer.strip()
+        ):
+            raise ValueError("Không được cung cấp đồng thời cả 'answer' và 'user_answer' với nội dung khác nhau")
+
+        ans = self.get_text()
         if not ans.strip():
             raise ValueError("Câu trả lời không được để trống")
         return self
 
     def get_text(self) -> str:
-        return (self.answer if self.answer is not None else self.user_answer) or ""
+        if self.answer is not None:
+            return self.answer
+        if self.user_answer is not None:
+            return self.user_answer
+        return ""
+

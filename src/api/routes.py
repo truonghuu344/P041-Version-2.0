@@ -66,27 +66,20 @@ async def upload_cv(file: UploadFile = File(...)):
             detail="Unsupported Media Type: Only PDF and DOCX files are allowed",
         )
 
-    contents = await file.read()
-    if len(contents) > 10 * 1024 * 1024:  # 10MB
-        raise HTTPException(
-            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            detail="File size exceeds maximum limit of 10MB",
-        )
-
-    # Ưu tiên cv_parser, nếu agent được mock thì dùng agent
-    agent_res = None
     try:
-        agent_res = await agent.ainvoke({"query": f"parse {filename}"})
-    except Exception:
-        pass
+        contents = await file.read()
+        if len(contents) > 10 * 1024 * 1024:  # 10MB
+            raise HTTPException(
+                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                detail="File size exceeds maximum limit of 10MB",
+            )
 
-    if isinstance(agent_res, dict) and "cv_id" in agent_res and "sections" in agent_res:
-        result = agent_res
-    else:
         result = await cv_parser.parse_cv(contents, filename, file.content_type or "")
+        logger.info("CV uploaded successfully", extra={"event": "cv_upload", "cv_id": result.get("cv_id")})
+        return result
+    finally:
+        await file.close()
 
-    logger.info("CV uploaded successfully", extra={"event": "cv_upload", "cv_id": result.get("cv_id")})
-    return result
 
 
 @router.post("/cv/analyze")
