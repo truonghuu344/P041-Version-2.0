@@ -10,14 +10,12 @@ QUAN TRỌNG: Mark @pytest.mark.slow cho bất kỳ test nào gọi LLM thật.
             qua GitHub Actions manual trigger.
 """
 
-import os
 
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 
 from src.main import app
-
 
 # ─── Markers ─────────────────────────────────────────────────────────────────
 

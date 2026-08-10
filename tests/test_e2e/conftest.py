@@ -15,12 +15,10 @@ import io
 import uuid
 from unittest.mock import AsyncMock, patch
 
-import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 
 from src.main import app
-
 
 # ─── HTTP Client ──────────────────────────────────────────────────────────────
 
@@ -72,6 +70,21 @@ def build_mock_upload(cv_id: str | None = None) -> dict:
 def build_mock_analyze(cv_id: str, suggestion_ids: list[str] | None = None) -> dict:
     """Tạo mock response cho POST /api/v1/cv/analyze."""
     _sug_ids = suggestion_ids or [str(uuid.uuid4()), str(uuid.uuid4())]
+    suggestions = []
+    templates = [
+        ("Phát triển REST API với FastAPI", "Thiết kế và phát triển RESTful API với FastAPI, tối ưu query PostgreSQL giảm response time", "experience[0].description"),
+        ("Hệ thống quản lý sinh viên 200 users", "Xây dựng Student Management System phục vụ 200+ users với JWT authentication và CRUD operations đầy đủ", "projects[0].description"),
+    ]
+    for i, s_id in enumerate(_sug_ids):
+        orig, sugg, field = templates[i % len(templates)]
+        suggestions.append({
+            "suggestion_id": s_id,
+            "type": "rephrase",
+            "original": orig,
+            "suggested": sugg,
+            "source_field": field,
+        })
+
     return {
         "match_score": 72.5,
         "gap_analysis": {
@@ -80,28 +93,7 @@ def build_mock_analyze(cv_id: str, suggestion_ids: list[str] | None = None) -> d
             "missing_soft_skills": [],
             "missing_keywords": ["microservices", "CI/CD"],
         },
-        "suggestions": [
-            {
-                "suggestion_id": _sug_ids[0],
-                "type": "rephrase",
-                "original": "Phát triển REST API với FastAPI",
-                "suggested": (
-                    "Thiết kế và phát triển RESTful API với FastAPI, "
-                    "tối ưu query PostgreSQL giảm response time"
-                ),
-                "source_field": "experience[0].description",
-            },
-            {
-                "suggestion_id": _sug_ids[1],
-                "type": "rephrase",
-                "original": "Hệ thống quản lý sinh viên 200 users",
-                "suggested": (
-                    "Xây dựng Student Management System phục vụ 200+ users "
-                    "với JWT authentication và CRUD operations đầy đủ"
-                ),
-                "source_field": "projects[0].description",
-            },
-        ],
+        "suggestions": suggestions,
     }
 
 

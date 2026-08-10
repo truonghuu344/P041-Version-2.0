@@ -17,16 +17,11 @@ import pytest
 from tests.test_e2e.conftest import (
     build_mock_answer_followup,
     build_mock_answer_next,
-    build_mock_session_complete,
     build_mock_star_report,
 )
 
-ENDPOINT_NOT_IMPL = pytest.mark.skip(reason="Endpoint chưa được implement trong MVP")
-
-
 # ─── WF3-001: Analyze xong → có thể start interview với cv_id đó ─────────────
 
-@ENDPOINT_NOT_IMPL
 @pytest.mark.asyncio
 async def test_wf3_analyze_enables_interview_start(analyzed_cv):
     """WF3-001: cv_id từ analyze phải đủ điều kiện để start interview (AC F-05).
@@ -49,7 +44,6 @@ async def test_wf3_analyze_enables_interview_start(analyzed_cv):
 
 # ─── WF3-002: Start interview → session_id + câu hỏi đầu tiên ────────────────
 
-@ENDPOINT_NOT_IMPL
 @pytest.mark.asyncio
 async def test_wf3_start_interview_returns_session_id(started_session):
     """WF3-002: Start interview với cv_id + jd_id → session_id và câu hỏi đầu tiên.
@@ -80,7 +74,6 @@ async def test_wf3_start_interview_returns_session_id(started_session):
 
 # ─── WF3-003: Trả lời câu hỏi đủ ý → chuyển sang câu tiếp ───────────────────
 
-@ENDPOINT_NOT_IMPL
 @pytest.mark.asyncio
 async def test_wf3_sufficient_answer_advances_to_next_question(e2e_client, started_session):
     """WF3-003: Câu trả lời đầy đủ STAR → không trigger follow-up, chuyển câu tiếp.
@@ -127,7 +120,6 @@ async def test_wf3_sufficient_answer_advances_to_next_question(e2e_client, start
 
 # ─── WF3-004: Câu trả lời ngắn → AI hỏi follow-up ───────────────────────────
 
-@ENDPOINT_NOT_IMPL
 @pytest.mark.asyncio
 async def test_wf3_short_answer_triggers_followup(e2e_client, started_session):
     """WF3-004: Câu trả lời quá ngắn → AI đặt follow-up, không chuyển câu (AC F-05).
@@ -168,7 +160,6 @@ async def test_wf3_short_answer_triggers_followup(e2e_client, started_session):
 
 # ─── WF3-005: Hoàn thành phiên → lấy STAR report ────────────────────────────
 
-@ENDPOINT_NOT_IMPL
 @pytest.mark.asyncio
 async def test_wf3_get_star_report_after_completion(e2e_client, started_session):
     """WF3-005: Sau khi phiên hoàn thành → GET report trả đủ STAR scores.
@@ -213,7 +204,6 @@ async def test_wf3_get_star_report_after_completion(e2e_client, started_session)
 
 # ─── WF3-006: Sample answers trong report phải là guidance, không bịa nội dung ─
 
-@ENDPOINT_NOT_IMPL
 @pytest.mark.asyncio
 async def test_wf3_sample_answers_are_guidance_not_fabrication(e2e_client, started_session):
     """WF3-006: Gợi ý câu trả lời mẫu trong STAR report phải là hướng dẫn cấu trúc.

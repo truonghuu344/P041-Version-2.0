@@ -23,7 +23,6 @@ from src.logger import (
 )
 from src.main import app
 
-
 # ─── Tests cho JsonFormatter ──────────────────────────────────────────────────
 
 class TestJsonFormatter:

@@ -13,12 +13,8 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-ENDPOINT_NOT_IMPL = pytest.mark.skip(reason="Endpoint chưa được implement trong MVP")
-
-
 # ─── WF2-001: Upload file không hợp lệ → không tạo cv_id rác ─────────────────
 
-@ENDPOINT_NOT_IMPL
 @pytest.mark.asyncio
 async def test_wf2_invalid_upload_leaves_no_ghost_cv_id(e2e_client):
     """WF2-001: Upload file .txt không hợp lệ → phải bị từ chối (404 hoặc 415).
@@ -47,7 +43,6 @@ async def test_wf2_invalid_upload_leaves_no_ghost_cv_id(e2e_client):
 
 # ─── WF2-002: Analyze với JD rỗng → 422, session sạch ───────────────────────
 
-@ENDPOINT_NOT_IMPL
 @pytest.mark.asyncio
 async def test_wf2_analyze_with_empty_jd_cleans_up(e2e_client, uploaded_cv):
     """WF2-002: Upload CV thành công, nhưng analyze với JD rỗng → 422.
@@ -99,7 +94,6 @@ async def test_wf2_analyze_with_empty_jd_cleans_up(e2e_client, uploaded_cv):
 
 # ─── WF2-003: Accept suggestion của CV khác → 404 / 403 (cross-contamination) ─
 
-@ENDPOINT_NOT_IMPL
 @pytest.mark.asyncio
 async def test_wf2_cannot_accept_foreign_suggestion(e2e_client, analyzed_cv):
     """WF2-003: Thử accept suggestion_id của session analyze KHÁC → phải bị từ chối.
@@ -146,7 +140,6 @@ async def test_wf2_cannot_accept_foreign_suggestion(e2e_client, analyzed_cv):
 
 # ─── WF2-004: Analyze lại cùng cv_id với JD mới → kết quả mới, không cache bẩn ─
 
-@ENDPOINT_NOT_IMPL
 @pytest.mark.asyncio
 async def test_wf2_reanalyze_same_cv_different_jd(e2e_client, uploaded_cv):
     """WF2-004: Analyze cùng CV với 2 JD khác nhau → 2 kết quả khác nhau, không bị cache.
