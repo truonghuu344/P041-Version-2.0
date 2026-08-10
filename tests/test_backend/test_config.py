@@ -73,3 +73,13 @@ def test_settings_normalize_postgresql_url_for_async_sqlalchemy() -> None:
     assert settings.database_url == (
         "postgresql+asyncpg://user:password@localhost:5432/app"
     )
+
+
+def test_google_api_key_takes_precedence_for_gemini() -> None:
+    settings = Settings(
+        _env_file=None,
+        google_api_key="google-key",
+        gemini_api_key="gemini-key",
+    )
+
+    assert settings.effective_gemini_api_key == "google-key"

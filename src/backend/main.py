@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.backend.api import auth_router
+from src.backend.api import admin_router, assistant_router, auth_router
 from src.backend.config import get_settings
 from src.backend.db.database import check_database_connection, close_database_connection
 
@@ -42,6 +42,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(auth_router, prefix="/api/v1")
+app.include_router(assistant_router, prefix="/api/v1")
+app.include_router(admin_router, prefix="/api/v1")
 
 
 @app.get("/health", tags=["System"], summary="Check backend health")

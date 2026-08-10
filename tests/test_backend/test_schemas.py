@@ -5,6 +5,7 @@ from pydantic import ValidationError
 
 from src.backend.db.models import UserRole
 from src.backend.models import (
+    AdminUserCreateRequest,
     AdminUserUpdateRequest,
     InterviewRatingRequest,
     InterviewReportResponse,
@@ -99,6 +100,19 @@ def test_accepted_suggestion_requires_reviewed_final_text() -> None:
 def test_admin_update_requires_a_change() -> None:
     with pytest.raises(ValidationError):
         AdminUserUpdateRequest()
+
+
+def test_admin_create_and_update_apply_password_strength_rules() -> None:
+    with pytest.raises(ValidationError):
+        AdminUserCreateRequest(
+            email="managed@example.com",
+            password="weakpass",
+            full_name="Managed User",
+            role="student",
+        )
+
+    update = AdminUserUpdateRequest(password="Updated-password1")
+    assert update.password == "Updated-password1"
 
 
 def test_interview_responses_accept_database_column_names() -> None:

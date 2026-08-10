@@ -64,6 +64,7 @@
   --radius-md:        14px;
   --radius-lg:        22px;
   --radius-xl:        32px;
+  --font-quicksand:   'Segoe UI';
   --font: var(--font-quicksand), 'Quicksand', ui-rounded, 'SF Pro Rounded', 'Arial Rounded MT Bold', 'Segoe UI', system-ui, sans-serif;
 }
 

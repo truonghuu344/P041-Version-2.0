@@ -21,6 +21,9 @@ EXPECTED_TABLES = {
     "interview_sessions",
     "interview_qa_logs",
     "evaluation_reports",
+    "chat_conversations",
+    "chat_messages",
+    "ai_audit_logs",
 }
 
 

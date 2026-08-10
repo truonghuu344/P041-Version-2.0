@@ -145,6 +145,25 @@ def test_me_endpoint_returns_401_without_session_cookie() -> None:
     assert response.json() == {"detail": "Not authenticated"}
 
 
+def test_user_response_preserves_legacy_id_format() -> None:
+    user = _user()
+    user.id = uuid.uuid4().hex
+    session = AsyncMock(spec=AsyncSession)
+    session.get.return_value = user
+    client = _client_with_fake_database(session)
+    client.cookies.set(
+        get_settings().auth_cookie_name,
+        create_access_token(user.id, user.role),
+    )
+    try:
+        response = client.get("/api/v1/auth/me")
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.status_code == 200
+    assert response.json()["id"] == user.id
+
+
 def test_logout_endpoint_clears_session_cookie() -> None:
     response = TestClient(app).post("/api/v1/auth/logout")
 
