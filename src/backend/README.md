@@ -134,9 +134,11 @@ Kiểm tra SQL migration mà không thay đổi database:
 ## AI-log cho Codex
 
 Project chỉ ghi lại prompt bạn gửi cho Codex vào `.ai-log/session.jsonl`. API key
-được đọc từ `AI_LOG_API_KEY` trong `.env` và không được ghi vào log hoặc Git. Khi
-`git push`, pre-push hook gửi các bản ghi đang chờ tới server đã cấu hình rồi
-chuyển chúng vào `archive`.
+được đọc từ `AI_LOG_API_KEY` trong `.env` và không được ghi vào log hoặc Git.
+Codex hook chỉ ghi cục bộ; pre-push hook gửi các bản ghi đang chờ tới server khi
+`git push` rồi chuyển bản ghi đã gửi vào `archive`. Trước khi gửi, pre-push cũng
+quét transcript Codex gần đây để khôi phục prompt nếu lifecycle hook của client
+không chuyển được payload cho script.
 
 Sau khi clone hoặc khi hook thay đổi:
 

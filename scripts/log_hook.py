@@ -169,23 +169,49 @@ def normalize(data: dict, tool: str) -> dict | None:
     return base
 
 
+def hook_output(tool: str, warning: str | None = None) -> None:
+    """Return valid hook output and surface Codex logging failures."""
+    if tool == "codex":
+        output: dict[str, object] = {"continue": True}
+        if warning:
+            output["systemMessage"] = f"AI usage log warning: {warning}"
+        print(json.dumps(output))
+
+
+def read_payload() -> str:
+    """Read payload from the Windows wrapper file or directly from stdin."""
+    payload_file = os.environ.get("AI_HOOK_PAYLOAD_FILE", "")
+    if payload_file:
+        try:
+            return Path(payload_file).read_text(encoding="utf-8").strip()
+        except OSError:
+            return ""
+    return sys.stdin.buffer.read().decode("utf-8", errors="replace").strip()
+
+
 def main():
-    # Read stdin as UTF-8 explicitly. On Windows, sys.stdin defaults to the
-    # system code page (e.g. cp1252), which corrupts non-Latin1 prompts
-    # (Vietnamese, CJK, emoji) into mojibake. The hook payload is always UTF-8.
-    raw = sys.stdin.buffer.read().decode("utf-8", errors="replace").strip()
+    tool = detect_tool({})
+    raw = read_payload()
     if not raw:
-        sys.exit(0)
+        hook_output(tool, "Codex supplied an empty hook payload; the prompt was not recorded.")
+        return
 
     try:
         data = json.loads(raw)
     except json.JSONDecodeError:
-        sys.exit(0)
+        hook_output(tool, "Codex supplied invalid hook JSON; the prompt was not recorded.")
+        return
 
     tool = detect_tool(data)
     entry = normalize(data, tool)
     if not entry:
-        sys.exit(0)
+        event = data.get("hook_event_name") or data.get("event") or "unknown"
+        if tool == "codex" and event == "UserPromptSubmit":
+            hook_output(
+                tool,
+                f"event {event!r} did not contain a usable prompt; nothing was recorded.",
+            )
+        return
 
     log_dir = Path(os.environ.get("AI_LOG_DIR", ".ai-log"))
     if not log_dir.is_absolute():
@@ -196,10 +222,10 @@ def main():
     with open(log_file, "a", encoding="utf-8") as f:
         f.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
-    # Codex expects hook output to be a JSON object. Explicitly allow the turn
-    # to continue; other integrations only need valid JSON.
-    output = {"continue": True} if tool == "codex" else {"status": "logged"}
-    print(json.dumps(output))
+    if tool == "codex":
+        hook_output(tool)
+    else:
+        print(json.dumps({"status": "logged"}))
 
 
 if __name__ == "__main__":
