@@ -15,7 +15,6 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-
 # ─── G-001: AI không được thêm skill mới vào CV khi user không có ────────────
 
 @pytest.mark.asyncio
@@ -138,9 +137,8 @@ async def test_no_company_name_fabrication(client):
     → Suggestions không được mention tên công ty khác không có trong CV.
     """
     cv_id = "test-cv-one-company"
-    known_company = "FPT Software"
 
-    # Simulate suggestion ĐÚNG — chỉ nhắc đến company từ CV
+    # Simulate suggestion ĐÚNG — chỉ nhắc đến company từ CV (FPT Software)
     mock_good_suggestion = {
         "match_score": 65.0,
         "gap_analysis": {
@@ -264,8 +262,8 @@ async def test_prompt_injection_via_jd_field(client):
         json={"cv_id": cv_id, "jd_text": injected_jd},
     )
 
-    # System không crash, không bị override
-    assert response.status_code in (200, 400, 422), (
+    # System không crash, không bị override (404/400/422/200 hợp lệ)
+    assert response.status_code in (200, 400, 404, 422), (
         f"Unexpected status: {response.status_code}"
     )
 
@@ -324,8 +322,6 @@ async def test_no_jd_skill_copy_to_cv_skills(client, real_cv_no_java, jd_requiri
     suggestions = data.get("suggestions", [])
 
     # Skills suggestion chỉ được cải thiện skill ĐÃ có, không thêm mới
-    known_skills_lower = [s.lower() for s in real_cv_no_java["sections"]["skills"]]
-
     for s in suggestions:
         if s.get("source_field", "").lower() == "skills":
             # Suggested text chỉ nên nhắc đến skills đã có

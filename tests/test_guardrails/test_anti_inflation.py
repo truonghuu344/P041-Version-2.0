@@ -17,7 +17,6 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-
 # ─── G-008: Thời gian thực tập không được thổi phồng ────────────────────────
 
 @pytest.mark.asyncio

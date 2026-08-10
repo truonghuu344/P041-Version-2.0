@@ -26,7 +26,6 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-
 # ─── Mock helpers ────────────────────────────────────────────────────────────
 
 def make_pdf_bytes(size_mb: float = 0.1) -> bytes:

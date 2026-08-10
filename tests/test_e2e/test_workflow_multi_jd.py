@@ -20,9 +20,6 @@ from tests.test_e2e.conftest import (
     build_mock_reject,
 )
 
-ENDPOINT_NOT_IMPL = pytest.mark.skip(reason="Endpoint chưa được implement trong MVP")
-
-
 # ─── Fixtures cục bộ cho WF4 ──────────────────────────────────────────────────
 
 JD_BACKEND = (
@@ -40,7 +37,6 @@ JD_DATA_ANALYST = (
 
 # ─── WF4-001: 1 CV → analyze được với JD Backend ─────────────────────────────
 
-@ENDPOINT_NOT_IMPL
 @pytest.mark.asyncio
 async def test_wf4_one_cv_can_analyze_jd_backend(e2e_client, uploaded_cv):
     """WF4-001: CV upload 1 lần → analyze với JD Backend → kết quả hợp lệ.
@@ -80,7 +76,6 @@ async def test_wf4_one_cv_can_analyze_jd_backend(e2e_client, uploaded_cv):
 
 # ─── WF4-002: Cùng CV → analyze với JD Data Analyst ─────────────────────────
 
-@ENDPOINT_NOT_IMPL
 @pytest.mark.asyncio
 async def test_wf4_same_cv_can_analyze_jd_data_analyst(e2e_client, uploaded_cv):
     """WF4-002: Cùng CV → analyze với JD Data Analyst → score khác, suggestions khác.
@@ -133,7 +128,6 @@ async def test_wf4_same_cv_can_analyze_jd_data_analyst(e2e_client, uploaded_cv):
 
 # ─── WF4-003: Hai kết quả analyze phải có score khác nhau ────────────────────
 
-@ENDPOINT_NOT_IMPL
 @pytest.mark.asyncio
 async def test_wf4_two_jd_analyses_have_different_scores(e2e_client, uploaded_cv):
     """WF4-003: Analyze cùng CV với 2 JD → 2 match_score KHÁC nhau.
@@ -185,7 +179,6 @@ async def test_wf4_two_jd_analyses_have_different_scores(e2e_client, uploaded_cv
 
 # ─── WF4-004: suggestion_ids của 2 JD phải hoàn toàn unique ──────────────────
 
-@ENDPOINT_NOT_IMPL
 @pytest.mark.asyncio
 async def test_wf4_suggestion_ids_are_isolated_between_jds(e2e_client, uploaded_cv):
     """WF4-004: suggestion_id của JD-1 và JD-2 phải hoàn toàn khác nhau.
@@ -260,7 +253,6 @@ async def test_wf4_suggestion_ids_are_isolated_between_jds(e2e_client, uploaded_
 
 # ─── WF4-005: Accept JD-1, Reject JD-2 → không conflict ─────────────────────
 
-@ENDPOINT_NOT_IMPL
 @pytest.mark.asyncio
 async def test_wf4_accept_from_jd1_reject_from_jd2_no_conflict(e2e_client, uploaded_cv):
     """WF4-005: Accept suggestion của JD-1, Reject của JD-2 → không conflict.
@@ -327,7 +319,7 @@ async def test_wf4_accept_from_jd1_reject_from_jd2_no_conflict(e2e_client, uploa
 
     assert accept_resp.status_code == 200
     assert accept_resp.json().get("status") == "accepted", (
-        f"WF4-005 FAIL: Accept JD-1 suggestion thất bại"
+        "WF4-005 FAIL: Accept JD-1 suggestion thất bại"
     )
 
     # Reject suggestion từ JD-2
@@ -342,7 +334,7 @@ async def test_wf4_accept_from_jd1_reject_from_jd2_no_conflict(e2e_client, uploa
 
     assert reject_resp.status_code == 200
     assert reject_resp.json().get("status") == "rejected", (
-        f"WF4-005 FAIL: Reject JD-2 suggestion thất bại"
+        "WF4-005 FAIL: Reject JD-2 suggestion thất bại"
     )
 
     # Verify IDs không bị trộn lẫn

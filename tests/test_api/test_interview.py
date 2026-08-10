@@ -18,7 +18,6 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-
 # ─── Mock Data ────────────────────────────────────────────────────────────────
 
 SAMPLE_CV_ID = str(uuid.uuid4())

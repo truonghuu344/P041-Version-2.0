@@ -23,12 +23,8 @@ from tests.test_e2e.conftest import (
     build_mock_reject,
 )
 
-ENDPOINT_NOT_IMPL = pytest.mark.skip(reason="Endpoint chưa được implement trong MVP")
-
-
 # ─── WF1-001: Upload CV → nhận cv_id hợp lệ ──────────────────────────────────
 
-@ENDPOINT_NOT_IMPL
 @pytest.mark.asyncio
 async def test_wf1_upload_returns_valid_cv_id(uploaded_cv):
     """WF1-001: Bước đầu tiên của workflow — upload CV phải trả về cv_id có thể dùng tiếp.
@@ -55,7 +51,6 @@ async def test_wf1_upload_returns_valid_cv_id(uploaded_cv):
 
 # ─── WF1-002: Analyze dùng cv_id từ upload ────────────────────────────────────
 
-@ENDPOINT_NOT_IMPL
 @pytest.mark.asyncio
 async def test_wf1_analyze_uses_uploaded_cv_id(uploaded_cv, analyzed_cv):
     """WF1-002: cv_id từ upload phải được dùng đúng trong bước analyze.
@@ -87,7 +82,6 @@ async def test_wf1_analyze_uses_uploaded_cv_id(uploaded_cv, analyzed_cv):
 
 # ─── WF1-003: Accept suggestion dùng suggestion_id thật từ analyze ───────────
 
-@ENDPOINT_NOT_IMPL
 @pytest.mark.asyncio
 async def test_wf1_accept_suggestion_from_analyze(e2e_client, analyzed_cv):
     """WF1-003: Lấy suggestion_id từ kết quả analyze → accept thành công.
@@ -127,7 +121,6 @@ async def test_wf1_accept_suggestion_from_analyze(e2e_client, analyzed_cv):
 
 # ─── WF1-004: Reject suggestion khác trong cùng phiên ────────────────────────
 
-@ENDPOINT_NOT_IMPL
 @pytest.mark.asyncio
 async def test_wf1_reject_other_suggestion(e2e_client, analyzed_cv):
     """WF1-004: Reject suggestion thứ 2 trong cùng phiên analyze.
@@ -164,7 +157,6 @@ async def test_wf1_reject_other_suggestion(e2e_client, analyzed_cv):
 
 # ─── WF1-005: Download CV sau khi accept suggestion ──────────────────────────
 
-@ENDPOINT_NOT_IMPL
 @pytest.mark.asyncio
 async def test_wf1_export_cv_after_accept(e2e_client, analyzed_cv):
     """WF1-005: Sau khi accept suggestions → export CV phải thành công.
@@ -196,7 +188,6 @@ async def test_wf1_export_cv_after_accept(e2e_client, analyzed_cv):
 
 # ─── WF1-006: cv_id idempotent — tra cứu lại được sau download ───────────────
 
-@ENDPOINT_NOT_IMPL
 @pytest.mark.asyncio
 async def test_wf1_cv_id_idempotent_after_export(e2e_client, uploaded_cv, analyzed_cv):
     """WF1-006: Sau khi download, cv_id vẫn còn trong hệ thống — có thể analyze lại.
