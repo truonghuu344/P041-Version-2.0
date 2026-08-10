@@ -116,11 +116,21 @@ Tất cả người dùng đều bắt đầu tại cùng một điểm vào: **
 
 ```mermaid
 flowchart TD
-    Start([Người dùng truy cập hệ thống]) --> SignIn[Đăng nhập bằng Email hoặc Google]
-    SignIn --> Role{Hệ thống xác định vai trò}
+    Start([Người dùng truy cập hệ thống]) --> HasAccount{Đã có tài khoản?}
+    HasAccount -->|Chưa| SignUp[Đăng ký tài khoản]
+    SignUp --> SignIn[Đăng nhập bằng Email hoặc Google]
+    HasAccount -->|Rồi| SignIn
+    SignIn --> AuthCheck{Xác thực thành công?}
+    AuthCheck -->|Sai email/mật khẩu| SignInError[Thông báo lỗi chung chung, giữ email đã nhập]
+    SignInError --> SignIn
+    AuthCheck -->|Đúng| Role{Hệ thống xác định vai trò}
     Role -->|Sinh viên| StudentHome[Dashboard Sinh viên]
     Role -->|Cố vấn| CounselorHome[Dashboard Cố vấn]
     Role -->|Doanh nghiệp - Phase 2| EnterpriseHome[Dashboard Doanh nghiệp]
+    StudentHome --> SignOut[Đăng xuất]
+    CounselorHome --> SignOut
+    EnterpriseHome --> SignOut
+    SignOut --> Start
 ```
 
 ### 5.1 Sinh viên — Tối ưu CV theo JD
@@ -184,8 +194,12 @@ Báo cáo phỏng vấn gồm điểm tổng, điểm theo Situation-Task-Action
 
 ```mermaid
 flowchart TD
-    A[Dashboard Cố vấn] --> B[Chọn sinh viên được phân công hoặc đã cấp quyền]
-    B --> C[Xem tiến độ CV và lịch sử phỏng vấn]
+    A[Dashboard Cố vấn] --> HasStudents{Có sinh viên được phân công/cấp quyền?}
+    HasStudents -->|Chưa có| Empty[Empty state: hướng dẫn chờ phân công/cấp quyền]
+    HasStudents -->|Có| B[Chọn sinh viên được phân công hoặc đã cấp quyền]
+    B --> PermCheck{Sinh viên đã cấp quyền cho cố vấn này?}
+    PermCheck -->|Chưa/đã thu hồi| Denied[Permission denied: không lộ preview dữ liệu]
+    PermCheck -->|Đã cấp quyền| C[Xem tiến độ CV và lịch sử phỏng vấn]
     C --> D{Sinh viên cần hỗ trợ?}
     D -->|Có| E[Gửi nhận xét hoặc bài tập bổ sung]
     E --> F[Sinh viên nhận phản hồi]
@@ -283,18 +297,29 @@ class AgentState(TypedDict):
 
 ## 9. Danh sách User Stories (User Story Mapping)
 
-| Mã US | Tên User Story | Description / User Story | Priority | Sprint |
-|---|---|---|---|---|
-| **US-001** | Xác thực & phân quyền | Là người dùng, tôi muốn đăng nhập bằng Email/Google để hệ thống xác định đúng vai trò, điều hướng đến dashboard phù hợp và bảo vệ dữ liệu cá nhân. | P0 | Sprint 1 |
-| **US-002** | Upload & xác nhận CV | Là sinh viên đã có CV, tôi muốn upload CV PDF/DOCX và xác nhận nội dung được trích xuất để hệ thống phân tích đúng hồ sơ thật của tôi. | P0 | Sprint 2 |
-| **US-003** | Tạo CV từ thông tin thô & chọn template | Là sinh viên chưa có CV, tôi muốn nhập học vấn, kỹ năng, dự án và kinh nghiệm, sau đó chọn một trong ba template ATS để tạo CV ban đầu. | P1 | Sprint 2 |
-| **US-004** | Chọn nguồn JD & Match Score | Là sinh viên, tôi muốn chọn JD từ thư viện hệ thống hoặc dán JD của công ty bên ngoài để xem mức độ phù hợp giữa CV và vị trí ứng tuyển. | P0 | Sprint 2 |
-| **US-005** | Gap Analysis & tối ưu CV chân thật | Là sinh viên, tôi muốn xem khoảng cách CV-JD, Accept/Reject từng gợi ý tối ưu và tải CV sau khi xác nhận, mà không bị AI bịa kinh nghiệm hoặc thành tích. | P0 | Sprint 2 |
-| **US-006** | Mock Interview đa lượt | Là sinh viên, tôi muốn chọn đủ một CV và một JD để tham gia phỏng vấn thử 5-7 câu, được AI hỏi follow-up khi câu trả lời chưa rõ. | P0 | Sprint 3 |
-| **US-007** | Báo cáo & lịch sử STAR | Là sinh viên, tôi muốn nhận điểm tổng, điểm STAR, feedback và gợi ý luyện tập sau phỏng vấn để cải thiện ở các lần sau. | P0 | Sprint 3 |
-| **US-008** | Dashboard cố vấn (HITL) | Là cố vấn hướng nghiệp, tôi muốn xem tiến độ CV và báo cáo phỏng vấn của sinh viên đã cấp quyền hoặc được phân công để hỗ trợ khi cần. | P1 | Sprint 3 |
-| **US-009** | Đăng JD & xử lý hồ sơ doanh nghiệp | Là nhà tuyển dụng, tôi muốn đăng JD, xem các CV sinh viên đã chủ động nộp và dùng Match Score như thông tin tham khảo khi tự đưa ra quyết định tuyển dụng. | P2 — Phase 2 | Phase 2 |
-| **US-010** | Phản hồi từ cố vấn | Là cố vấn hướng nghiệp, tôi muốn gửi nhận xét hoặc bài tập bổ sung cho sinh viên để cung cấp hỗ trợ cá nhân hóa ngoài phản hồi của AI. | P1 | Sprint 3 |
+> **Đã hợp nhất mã US** với sheet "Danh sách User Story" trong `docs/team041_project_management_template.xlsx` (nguồn chi tiết, bám sát sơ đồ mục 5) — mã US ở bảng dưới đây là **mã chuẩn duy nhất** dùng cho toàn dự án (backlog mục 10, task, test case). Đã bổ sung US-018, US-019 (2 story còn thiếu so với sơ đồ) và tách rõ US-007/US-011 để không còn trùng phạm vi "tải CV".
+
+| Mã US | Tên User Story | Description / User Story | Priority | Sprint | Mã đặc tả (FEAT) |
+|---|---|---|---|---|---|
+| **US-001** | Đăng ký và đăng nhập | Là người dùng, tôi muốn đăng ký, đăng nhập và đăng xuất an toàn (Email/Google) để hệ thống xác định đúng vai trò, điều hướng đến dashboard phù hợp và bảo vệ dữ liệu cá nhân. | P0 | Sprint 1 | FEAT-001 |
+| **US-002** | Tìm kiếm JD | Là sinh viên, tôi muốn tìm kiếm và lọc JD trong thư viện hệ thống để nhanh chóng chọn vị trí phù hợp với mục tiêu ứng tuyển. | P0 | Sprint 2 | FEAT-002 |
+| **US-003** | Đánh giá mức độ phù hợp JD | Là sinh viên, tôi muốn xem Match Score của các JD trong thư viện để ưu tiên những vị trí phù hợp với mình. | P1 | Sprint 2 | FEAT-002 |
+| **US-004** | Upload và trích xuất CV | Là sinh viên đã có CV, tôi muốn tải CV PDF/DOCX và xác nhận nội dung trích xuất để AI phân tích đúng hồ sơ của tôi. | P0 | Sprint 2 | FEAT-002 |
+| **US-005** | Phân tích CV theo JD (Gap Analysis) | Là sinh viên, tôi muốn nhận phân tích khoảng cách giữa CV và JD đã chọn để biết hồ sơ của mình phù hợp ở đâu và còn thiếu gì. | P0 | Sprint 2–3 | FEAT-002 |
+| **US-006** | Tối ưu CV theo JD | Là sinh viên, tôi muốn nhận gợi ý tối ưu CV dựa trên thông tin thật để phù hợp hơn với JD mà không bịa kinh nghiệm. | P0 | Sprint 2–3 | FEAT-002 |
+| **US-007** | Xác nhận và tải CV đã tối ưu | Là sinh viên, tôi muốn Accept/Reject từng gợi ý, xác nhận nội dung cuối và tải CV đã tối ưu (từ CV có sẵn) để tự chịu trách nhiệm trước khi nộp hồ sơ. | P0 | Sprint 2 | FEAT-002 |
+| **US-008** | Tạo CV từ biểu mẫu | Là sinh viên chưa có CV, tôi muốn điền học vấn, dự án, kinh nghiệm và kỹ năng theo biểu mẫu để AI hỗ trợ tạo CV ban đầu. | P0 | Sprint 2 | FEAT-002 |
+| **US-009** | Xử lý thông tin còn thiếu | Là sinh viên, tôi muốn hệ thống hỏi lại khi thông tin chưa đủ thay vì tự thêm kinh nghiệm hoặc thành tích vào CV. | P0 | Sprint 2 | FEAT-002 |
+| **US-010** | Đề xuất template CV | Là sinh viên, tôi muốn nhận ba template CV chuẩn ATS để chọn cách trình bày phù hợp với hồ sơ của mình. | P0 | Sprint 2 | FEAT-002 |
+| **US-011** | Chọn và chỉnh sửa CV theo template mới | Là sinh viên, tôi muốn chọn template, xem trước và chỉnh sửa CV vừa tạo để có bản CV hoàn chỉnh, sẵn sàng chọn JD và tối ưu trước khi tải (dùng chung bước tải cuối với US-007). | P0 | Sprint 2 | FEAT-002 |
+| **US-012** | Upload JD của doanh nghiệp *(Phase 2)* | Là nhà tuyển dụng, tôi muốn upload JD để hệ thống chuẩn hóa và đưa cơ hội việc làm đến sinh viên. | P2 — Phase 2 | Phase 2 | Chưa có spec (ngoài MVP) |
+| **US-013** | Công bố JD lên hệ thống *(Phase 2)* | Là nhà tuyển dụng, tôi muốn JD được AI chuẩn hóa và công bố trên hệ thống để sinh viên có thể tìm kiếm. | P2 — Phase 2 | Phase 2 | Chưa có spec (ngoài MVP) |
+| **US-014** | Bắt đầu phỏng vấn thử | Là sinh viên, tôi muốn chọn đủ 1 CV và 1 JD để bắt đầu mock interview 5–7 câu theo JD nhằm chuẩn bị tốt hơn cho phỏng vấn thực tế. | P0 | Sprint 2 | FEAT-003 |
+| **US-015** | Nhận điểm và feedback STAR | Là sinh viên, tôi muốn nhận điểm tổng, điểm theo 4 tiêu chí STAR và feedback sau phỏng vấn để biết chính xác cần luyện phần nào. | P0 | Sprint 2–3 | FEAT-003 |
+| **US-016** | Giám sát tiến độ sinh viên (HITL) | Là cố vấn hướng nghiệp, tôi muốn xem tiến độ CV và lịch sử phỏng vấn của sinh viên đã cấp quyền để nắm được tình hình và hỗ trợ đúng lúc. | P1 | Sprint 3 | FEAT-004 |
+| **US-017** | Gửi phản hồi cho sinh viên | Là cố vấn hướng nghiệp, tôi muốn gửi nhận xét hoặc bài tập bổ sung cho sinh viên để hỗ trợ cá nhân hóa, trong khi sinh viên vẫn là người duyệt nội dung CV cuối cùng. | P1 | Sprint 3 | FEAT-004 |
+| **US-018** | Dán JD từ công ty bên ngoài | Là sinh viên, tôi muốn dán nội dung JD của công ty bên ngoài để hệ thống kiểm tra và chuẩn hóa, nhằm phân tích Gap Analysis cả với JD ngoài thư viện hệ thống. | P0 | Sprint 2 | FEAT-002 |
+| **US-019** | Được AI hỏi đào sâu khi trả lời thiếu ý | Là sinh viên, tôi muốn AI đặt câu hỏi follow-up khi câu trả lời của tôi quá ngắn hoặc thiếu ý trong lúc phỏng vấn thử, để trả lời đầy đủ hơn và được đánh giá chính xác hơn. | P0 | Sprint 2 | FEAT-003 |
 
 ---
 
@@ -307,16 +332,16 @@ class AgentState(TypedDict):
 | 2 | T-002 | Thiết lập GitHub & CI/CD | — | Cấu hình repo, branch protection, linter, Docker setup | Sprint 1 | P0 | 2 | Vũ Hữu Trường | Chưa làm |
 | 3 | T-003 | Thiết kế Kiến trúc & DB Schema | US-001 | Thiết kế FastAPI, DB Postgres/Qdrant, LangGraph State | Sprint 1 | P0 | 6 | Vũ Hữu Trường | Chưa làm |
 | 4 | T-004 | Gặp Đối tác & Thu thập Yêu cầu | — | Phỏng vấn nhu cầu cố vấn hướng nghiệp và sinh viên | Sprint 1 | P0 | 2 | Nguyễn Thị Thanh Hiền | Chưa làm |
-| 5 | T-005 | Xây dựng Knowledge Base & Vector DB | US-004 | Ingest danh sách JD mẫu, tiêu chí ATS vào Qdrant | Sprint 1 | P1 | 8 | Vũ Hữu Trường | Chưa làm |
+| 5 | T-005 | Xây dựng Knowledge Base & Vector DB | US-002, US-003 | Ingest danh sách JD mẫu, tiêu chí ATS vào Qdrant | Sprint 1 | P1 | 8 | Vũ Hữu Trường | Chưa làm |
 | **Sprint 2: Core Agent Engine - CV Gap Analysis (W2-W3)** |
-| 6 | T-006 | API Endpoint Upload & Parse CV | US-002 | Viết service parse PDF/Word và trích xuất JSON | Sprint 2 | P0 | 10 | Vũ Hữu Trường | Chưa làm |
-| 7 | T-007 | Giao diện Dashboard & Upload CV | US-002 | Dựng UI Next.js trang upload, xem thông tin CV | Sprint 2 | P0 | 10 | Nguyễn Minh Quân | Chưa làm |
-| 8 | T-008 | Agent CV Gap Analysis & Match Score | US-004, US-005 | Phát triển LangGraph Agent so khớp CV-JD & đề xuất sửa | Sprint 2 | P0 | 8 | Vũ Hữu Trường | Chưa làm |
+| 6 | T-006 | API Endpoint Upload & Parse CV | US-004 | Viết service parse PDF/Word và trích xuất JSON | Sprint 2 | P0 | 10 | Vũ Hữu Trường | Chưa làm |
+| 7 | T-007 | Giao diện Dashboard & Upload CV | US-004 | Dựng UI Next.js trang upload, xem thông tin CV | Sprint 2 | P0 | 10 | Nguyễn Minh Quân | Chưa làm |
+| 8 | T-008 | Agent CV Gap Analysis & Match Score | US-002, US-003, US-005, US-006 | Phát triển LangGraph Agent so khớp CV-JD & đề xuất sửa | Sprint 2 | P0 | 8 | Vũ Hữu Trường | Chưa làm |
 | 9 | T-009 | Triển khai AI Log Hook & Demo 1 | — | Tích hợp phoenix logging, kịch bản Demo lần 1 | Sprint 2 | P0 | 4 | Vũ Xuân Đức | Chưa làm |
 | **Sprint 3: Mock Interview Agent & Evaluation (W4-W5)** |
 | 10 | T-010 | Xử lý Phản hồi Demo 1 | — | Cải thiện UI/UX và prompt theo góp ý | Sprint 3 | P0 | 6 | Nguyễn Thị Thanh Hiền | Chưa làm |
-| 11 | T-011 | Phát triển Mock Interview Agent | US-006, US-007 | LangGraph Agent phỏng vấn STAR & sinh báo cáo | Sprint 3 | P0 | 8 | Vũ Hữu Trường | Chưa làm |
-| 12 | T-012 | UI Phòng Phỏng Vấn & Evaluation | US-006, US-008 | Dựng UI chat phỏng vấn, Dashboard cố vấn, LLM-as-Judge | Sprint 3 | P0 | 6 | Nguyễn Minh Quân / Vũ Xuân Đức | Chưa làm |
+| 11 | T-011 | Phát triển Mock Interview Agent | US-014, US-015, US-019 | LangGraph Agent phỏng vấn STAR & sinh báo cáo | Sprint 3 | P0 | 8 | Vũ Hữu Trường | Chưa làm |
+| 12 | T-012 | UI Phòng Phỏng Vấn & Evaluation | US-014, US-016 | Dựng UI chat phỏng vấn, Dashboard cố vấn, LLM-as-Judge | Sprint 3 | P0 | 6 | Nguyễn Minh Quân / Vũ Xuân Đức | Chưa làm |
 | **Sprint 4: Hoàn thiện, Testing & Bàn giao (W6)** |
 | 13 | T-013 | Triển khai Production & Cloud | — | Dockerize, deploy Cloud, cấu hình HTTPS & Domain | Sprint 4 | P0 | 4 | Vũ Hữu Trường | Chưa làm |
 | 14 | T-014 | System Testing & Tinh chỉnh UI | — | Test luồng end-to-end, sửa bug UI, kiểm tra guardrails | Sprint 4 | P0 | 6 | Vũ Xuân Đức / Nguyễn Minh Quân | Chưa làm |
@@ -331,5 +356,5 @@ class AgentState(TypedDict):
 * **Mã nhóm / Repo:** G06 | P-041
 * **Kho lưu mã nguồn (GitHub):** [https://github.com/AI20K-Build-Phase-Cohort-3/P-041.git](https://github.com/AI20K-Build-Phase-Cohort-3/P-041.git)
 * **Thời gian thực hiện:** 02/08/2026 – 13/09/2026 (6 tuần)
-* **Trưởng nhóm:** Nguyễn Minh Quân (PM)
+* **Trưởng nhóm:** Nguyễn Thị Thanh Hiền (PM)
 * **Mentor phụ trách:** Trần Vũ Anh (Andy)

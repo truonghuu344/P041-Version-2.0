@@ -9,25 +9,32 @@ After a successful submit, the live log is rotated:
 
 If the POST fails, the pending file is restored so nothing is lost.
 """
+
 import json
 import os
 import shutil
 import sys
 import time
-import urllib.request
 import urllib.error
-from datetime import datetime, timezone
+import urllib.request
+from datetime import UTC, datetime
 from pathlib import Path
+from urllib.parse import urlparse
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
 
 try:
     from dotenv import load_dotenv
-    load_dotenv()
+
+    load_dotenv(REPO_ROOT / ".env")
 except ImportError:
     pass
 
 SERVER_URL = os.environ.get("AI_LOG_SERVER", "")
 API_KEY = os.environ.get("AI_LOG_API_KEY", "")
 LOG_DIR = Path(os.environ.get("AI_LOG_DIR", ".ai-log"))
+if not LOG_DIR.is_absolute():
+    LOG_DIR = REPO_ROOT / LOG_DIR
 LOG_FILE = LOG_DIR / "session.jsonl"
 ARCHIVE_DIR = LOG_DIR / "archive"
 
@@ -37,12 +44,34 @@ ARCHIVE_DIR = LOG_DIR / "archive"
 BATCH_LIMIT = 500
 
 
+def check_config() -> int:
+    """Validate configuration without printing secrets or sending data."""
+    problems = []
+    parsed = urlparse(SERVER_URL)
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        problems.append("AI_LOG_SERVER must be a valid HTTP(S) URL")
+    if not API_KEY:
+        problems.append("AI_LOG_API_KEY is not set")
+
+    if problems:
+        for problem in problems:
+            print(f"[ai-log] {problem}.", file=sys.stderr)
+        return 1
+
+    pending = 0
+    if LOG_FILE.exists():
+        with open(LOG_FILE, encoding="utf-8") as handle:
+            pending = sum(1 for line in handle if line.strip())
+    print(f"[ai-log] Configuration ready; {pending} local entries pending.")
+    return 0
+
+
 def _archive(pending: Path) -> None:
     """Append pending file to today's archive. Never overwrites existing data."""
     if not pending.exists() or pending.stat().st_size == 0:
         return
     ARCHIVE_DIR.mkdir(parents=True, exist_ok=True)
-    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    today = datetime.now(UTC).strftime("%Y-%m-%d")
     archive_file = ARCHIVE_DIR / f"{today}.jsonl"
     with open(pending, "rb") as src, open(archive_file, "ab") as dst:
         shutil.copyfileobj(src, dst)
@@ -68,8 +97,15 @@ def _restore_pending(pending: Path) -> None:
 
 
 def main():
+    if "--check" in sys.argv[1:]:
+        sys.exit(check_config())
+
     if not SERVER_URL:
         print("[ai-log] AI_LOG_SERVER not set — skipping submission.", file=sys.stderr)
+        sys.exit(0)
+
+    if not API_KEY:
+        print("[ai-log] AI_LOG_API_KEY not set — logs kept locally.", file=sys.stderr)
         sys.exit(0)
 
     if not LOG_FILE.exists() or LOG_FILE.stat().st_size == 0:
@@ -108,9 +144,10 @@ def main():
         sys.exit(0)
 
     payload = json.dumps({"entries": entries}, ensure_ascii=False).encode("utf-8")
-    headers = {"Content-Type": "application/json"}
-    if API_KEY:
-        headers["Authorization"] = f"Bearer {API_KEY}"
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {API_KEY}",
+    }
     req = urllib.request.Request(
         SERVER_URL,
         data=payload,

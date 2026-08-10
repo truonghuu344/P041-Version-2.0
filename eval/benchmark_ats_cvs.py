@@ -1,11 +1,12 @@
-import sys
-import os
 import json
+import os
+import sys
 
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
 
 from ats_matching import ATSMatcher
+
 
 def run_ats_cv_benchmark():
     kaggle_cvs_path = "./data/clean/cvs_clean.json"
@@ -16,23 +17,23 @@ def run_ats_cv_benchmark():
     # Load Simulated CVs
     all_cvs = []
     if os.path.exists(simulated_cvs_path):
-        with open(simulated_cvs_path, "r", encoding="utf-8") as f:
+        with open(simulated_cvs_path, encoding="utf-8") as f:
             sim_cvs = json.load(f)
             all_cvs.extend(sim_cvs)
 
     # Load Kaggle CSV CVs
     if os.path.exists(kaggle_cvs_path):
-        with open(kaggle_cvs_path, "r", encoding="utf-8") as f:
+        with open(kaggle_cvs_path, encoding="utf-8") as f:
             kag_cvs = json.load(f)
             # Select top 20 tech CVs for benchmarking
             tech_kag_cvs = [c for c in kag_cvs if c.get("skills")]
             all_cvs.extend(tech_kag_cvs[:20])
 
-    with open(jds_path, "r", encoding="utf-8") as f:
+    with open(jds_path, encoding="utf-8") as f:
         jds = json.load(f)
 
     matcher = ATSMatcher(jds_clean_path=jds_path)
-    
+
     benchmark_results = []
 
     print(f"🚀 Đang chạy ATS Benchmark cho {len(all_cvs)} CV (gồm Kaggle Resume.csv & Test CVs) trên {len(jds)} JD làm sạch...\n")

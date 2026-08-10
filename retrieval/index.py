@@ -1,10 +1,9 @@
-import sys
-import os
 import json
-import psycopg2
-import numpy as np
+import sys
 from datetime import datetime
-from typing import List, Dict, Any, Optional
+from typing import Any
+
+import psycopg2
 
 try:
     from retrieval.embeddings import EmbeddingManager
@@ -34,18 +33,18 @@ class VectorIndexManager:
         self,
         db_path: str = "./data/app.db",
         collection_name: str = "jds_collection"
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Tạo Vector Embeddings (JD) và cập nhật trực tiếp vào cột embedding của bảng mart_jds_final trong PostgreSQL"""
-        
+
         try:
             conn = psycopg2.connect(**PG_CONFIG)
         except Exception as e:
             print(f"❌ Không thể kết nối PostgreSQL: {e}")
             return {}
-            
+
         from psycopg2.extras import RealDictCursor
         cursor = conn.cursor(cursor_factory=RealDictCursor)
-        
+
         try:
             cursor.execute("SELECT job_id, embedding_text FROM mart_jds_final WHERE embedding_text IS NOT NULL")
             rows = cursor.fetchall()
@@ -59,13 +58,12 @@ class VectorIndexManager:
             return {}
 
         documents = []
-        metadatas = []
         ids = []
 
         for row in rows:
             job_id = row["job_id"]
             text = row["embedding_text"]
-            
+
             documents.append(text)
             ids.append(job_id)
 
@@ -75,9 +73,9 @@ class VectorIndexManager:
         # Update embeddings directly into PostgreSQL
         from pgvector.psycopg2 import register_vector
         register_vector(conn)
-        
+
         print("🔄 Đang cập nhật Vector Embeddings vào bảng mart_jds_final...")
-        
+
         update_count = 0
         for i in range(len(ids)):
             try:
@@ -88,13 +86,13 @@ class VectorIndexManager:
                 update_count += 1
             except Exception as e:
                 print(f"Lỗi khi update vector cho {ids[i]}: {e}")
-                
+
         # Create HNSW index for fast vector search
         try:
             cursor.execute("CREATE INDEX IF NOT EXISTS hnsw_idx_jds ON mart_jds_final USING hnsw (embedding vector_cosine_ops)")
         except Exception as e:
             print(f"Lỗi khi tạo index HNSW: {e}")
-            
+
         conn.commit()
         conn.close()
         print(f"✅ Đã nạp thành công {update_count} Vector vào PostgreSQL!")
@@ -121,7 +119,7 @@ class VectorIndexManager:
         query: str,
         k: int = 3,
         collection_name: str = "jds_collection"
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Truy xuất TOP-K JD tuyển dụng tương đồng nhất từ PostgreSQL bằng Vector Cosine Similarity"""
         if not query:
             return []
@@ -130,15 +128,15 @@ class VectorIndexManager:
 
         try:
             conn = psycopg2.connect(**PG_CONFIG)
-            from psycopg2.extras import RealDictCursor
             from pgvector.psycopg2 import register_vector
-            
+            from psycopg2.extras import RealDictCursor
+
             register_vector(conn)
             cursor = conn.cursor(cursor_factory=RealDictCursor)
-            
+
             # Use <=> for Cosine distance in pgvector
             cursor.execute("""
-                SELECT 
+                SELECT
                     job_id AS id,
                     embedding_text AS document,
                     job_title,
@@ -155,10 +153,10 @@ class VectorIndexManager:
                 ORDER BY embedding <=> %s
                 LIMIT %s
             """, (query_vec, query_vec, k))
-            
+
             rows = cursor.fetchall()
             conn.close()
-            
+
             results = []
             for row in rows:
                 meta = {
@@ -172,14 +170,14 @@ class VectorIndexManager:
                     "location": row["location"] or "",
                     "source": row["source"] or "JD"
                 }
-                
+
                 results.append({
                     "id": row["id"],
                     "document": row["document"],
                     "metadata": meta,
                     "similarity_score": round(row["similarity_score"], 4)
                 })
-            
+
             return results
         except Exception as e:
             print(f"⚠️ Lỗi PostgreSQL Vector Query ({e}).")

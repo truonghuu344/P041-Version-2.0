@@ -1,14 +1,14 @@
-import sys
-import os
 import glob
-from bs4 import BeautifulSoup
 import re
+import sys
+
+from bs4 import BeautifulSoup
 from unidecode import unidecode
 
 sys.stdout.reconfigure(encoding='utf-8')
 
 LOCATION_ALIASES = {
-    "tphcm": "Hồ Chí Minh", "tp.hcm": "Hồ Chí Minh", "hcm": "Hồ Chí Minh", "sai gon": "Hồ Chí Minh", 
+    "tphcm": "Hồ Chí Minh", "tp.hcm": "Hồ Chí Minh", "hcm": "Hồ Chí Minh", "sai gon": "Hồ Chí Minh",
     "ho chi minh": "Hồ Chí Minh", "ho chi minh city": "Hồ Chí Minh", "hcmc": "Hồ Chí Minh",
     "ha noi": "Hà Nội", "hanoi": "Hà Nội", "ha noi city": "Hà Nội",
     "da nang": "Đà Nẵng", "danang": "Đà Nẵng", "da nang city": "Đà Nẵng",
@@ -19,7 +19,8 @@ LOCATION_ALIASES = {
 }
 
 def extract_locations_from_string(text: str):
-    if not text: return []
+    if not text:
+        return []
     normalized_text = unidecode(text.lower())
     found = set()
     for alias, canonical_name in LOCATION_ALIASES.items():
@@ -31,7 +32,6 @@ def parse_joboko_html(soup):
     title = None
     company = None
     locations = []
-    salary = None
 
     t_tag = soup.select_one("h1.job-title, h1, div.job-title h1")
     if t_tag:
@@ -113,10 +113,10 @@ def run_test():
     bloated_loc = 0
 
     for fpath in files:
-        with open(fpath, 'r', encoding='utf-8') as f:
+        with open(fpath, encoding='utf-8') as f:
             content = f.read()
         soup = BeautifulSoup(content, 'html.parser')
-        
+
         if "joboko.com" in content or "Joboko" in content:
             joboko_count += 1
             res = parse_joboko_html(soup)
