@@ -5,14 +5,26 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.api.routes import router
 from src.config import get_settings
+from src.logger import get_logger, setup_logging
+from src.middleware import RequestLoggingMiddleware
+
+logger = get_logger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     settings = get_settings()
-    print(f"Starting {settings.app_name} in {settings.app_env} mode")
+    setup_logging(level=settings.log_level)
+    logger.info(
+        "App starting",
+        extra={
+            "app_name": settings.app_name,
+            "app_env": settings.app_env,
+            "log_level": settings.log_level,
+        },
+    )
     yield
-    print("Shutting down...")
+    logger.info("App shutting down")
 
 
 app = FastAPI(
@@ -30,6 +42,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Request logging — phải add sau CORS để request_id có trong tất cả responses
+app.add_middleware(RequestLoggingMiddleware)
 
 app.include_router(router, prefix="/api/v1")
 
