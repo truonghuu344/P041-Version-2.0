@@ -1,24 +1,15 @@
 {
-  "version": "1.0",
+  "description": "Record approved Codex prompts for the project AI log.",
   "hooks": {
     "UserPromptSubmit": [
       {
         "hooks": [
           {
-            "name": "log-prompt",
-            "command": "bash scripts/_pyrun.sh scripts/log_hook.py --tool=codex",
-            "timeout": 10
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "name": "log-stop",
-            "command": "bash scripts/_pyrun.sh scripts/log_hook.py --tool=codex",
-            "timeout": 10
+            "type": "command",
+            "command": "bash -lc 'root=$(git rev-parse --show-toplevel) && bash \"$root/scripts/_pyrun.sh\" \"$root/scripts/log_hook.py\" --tool=codex'",
+            "commandWindows": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"$root = git rev-parse --show-toplevel; & (Join-Path $root 'scripts/codex_hook.ps1')\"",
+            "timeout": 10,
+            "statusMessage": "Recording prompt in the project AI log"
           }
         ]
       }
