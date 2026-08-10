@@ -6,6 +6,49 @@
 const API_BASE_URL =
   (typeof window !== 'undefined' && window.__CAREER_API_BASE_URL__) || '/api/v1';
 
+function formatApiError(data, status) {
+  const detail = data?.detail ?? data?.message;
+  const fieldLabels = {
+    email: 'Email',
+    password: 'Mật khẩu',
+    full_name: 'Họ và tên',
+    role: 'Vai trò',
+    credential: 'Đăng nhập Google',
+  };
+  const translateMessage = (message) => {
+    const normalized = String(message || '').replace(/^Value error,\s*/i, '');
+    const exactMessages = {
+      'Password must not contain whitespace': 'không được chứa khoảng trắng',
+      'Password must contain a lowercase letter': 'phải có ít nhất một chữ thường',
+      'Password must contain an uppercase letter': 'phải có ít nhất một chữ hoa',
+      'Password must contain a number': 'phải có ít nhất một chữ số',
+      'Admin accounts cannot be self-registered': 'không thể tự đăng ký tài khoản quản trị',
+    };
+    if (exactMessages[normalized]) return exactMessages[normalized];
+    const minimum = normalized.match(/^String should have at least (\d+) characters?$/i);
+    if (minimum) return `phải có ít nhất ${minimum[1]} ký tự`;
+    const maximum = normalized.match(/^String should have at most (\d+) characters?$/i);
+    if (maximum) return `không được vượt quá ${maximum[1]} ký tự`;
+    if (/valid email address/i.test(normalized)) return 'không đúng định dạng';
+    return normalized || 'Dữ liệu không hợp lệ';
+  };
+
+  if (Array.isArray(detail)) {
+    return detail.map((issue) => {
+      if (typeof issue === 'string') return issue;
+      const location = Array.isArray(issue?.loc) ? issue.loc : [];
+      const field = location.filter((part) => part !== 'body').at(-1);
+      const label = fieldLabels[field] || field;
+      const message = translateMessage(issue?.msg);
+      return label ? `${label}: ${message}` : message;
+    }).filter(Boolean).join(' • ');
+  }
+  if (detail && typeof detail === 'object') {
+    return detail.message || JSON.stringify(detail);
+  }
+  return detail ? String(detail) : `Lỗi HTTP ${status}`;
+}
+
 export class ApiClient {
   static getToken() {
     return null;
@@ -57,13 +100,17 @@ export class ApiClient {
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        const errorMsg = data.detail || data.message || `Lỗi HTTP ${response.status}`;
-        throw new Error(errorMsg);
+        const errorMsg = formatApiError(data, response.status);
+        const requestError = new Error(errorMsg);
+        requestError.status = response.status;
+        requestError.payload = data;
+        throw requestError;
       }
 
       return data;
     } catch (err) {
-      console.error(`API Error [${endpoint}]:`, err);
+      const isAnonymousSessionCheck = endpoint === '/auth/me' && err?.status === 401;
+      if (!isAnonymousSessionCheck) console.error(`API Error [${endpoint}]:`, err);
       if (err instanceof TypeError && /failed to fetch/i.test(err.message)) {
         throw new Error('Không thể kết nối máy chủ xử lý CV. Hãy kiểm tra FastAPI đang chạy ở cổng 8000.');
       }
@@ -97,9 +144,17 @@ export class ApiClient {
   }
 
   static async getMe() {
-    const user = await this.request('/auth/me');
-    this.setUser(user);
-    return user;
+    try {
+      const user = await this.request('/auth/me');
+      this.setUser(user);
+      return user;
+    } catch (err) {
+      if (err?.status === 401) {
+        localStorage.removeItem('user_info');
+        return null;
+      }
+      throw err;
+    }
   }
 
   // --- CV APIs ---

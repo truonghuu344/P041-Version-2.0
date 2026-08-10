@@ -4,7 +4,9 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Request, status
+from fastapi.middleware.cors import CORSMiddleware
 
+from src.backend.api import auth_router
 from src.backend.config import get_settings
 from src.backend.db.database import check_database_connection, close_database_connection
 
@@ -32,6 +34,14 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
 )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origin_list,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+app.include_router(auth_router, prefix="/api/v1")
 
 
 @app.get("/health", tags=["System"], summary="Check backend health")

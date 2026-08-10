@@ -10,9 +10,18 @@ from src.backend.models.common import APIModel
 Password = Annotated[str, StringConstraints(min_length=8, max_length=128)]
 
 
+def _normalize_email(value: EmailStr) -> str:
+    return str(value).strip().lower()
+
+
 class LoginRequest(APIModel):
     email: EmailStr
     password: str = Field(min_length=1, max_length=128)
+
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, email: EmailStr) -> str:
+        return _normalize_email(email)
 
 
 class RegisterRequest(APIModel):
@@ -20,6 +29,32 @@ class RegisterRequest(APIModel):
     password: Password
     full_name: str = Field(min_length=2, max_length=255)
     role: UserRole = UserRole.STUDENT
+
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, email: EmailStr) -> str:
+        return _normalize_email(email)
+
+    @field_validator("password")
+    @classmethod
+    def validate_password_strength(cls, password: str) -> str:
+        if any(character.isspace() for character in password):
+            raise ValueError("Password must not contain whitespace")
+        if not any(character.islower() for character in password):
+            raise ValueError("Password must contain a lowercase letter")
+        if not any(character.isupper() for character in password):
+            raise ValueError("Password must contain an uppercase letter")
+        if not any(character.isdigit() for character in password):
+            raise ValueError("Password must contain a number")
+        return password
+
+    @field_validator("full_name")
+    @classmethod
+    def normalize_full_name(cls, full_name: str) -> str:
+        normalized = " ".join(full_name.split())
+        if len(normalized) < 2:
+            raise ValueError("Full name must contain at least 2 characters")
+        return normalized
 
     @field_validator("role")
     @classmethod
