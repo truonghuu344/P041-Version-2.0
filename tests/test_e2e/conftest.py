@@ -217,7 +217,7 @@ async def uploaded_cv(e2e_client):
     mock_result = build_mock_upload()
 
     with patch(
-        "src.agents.graph.agent.ainvoke",
+        "src.services.cv_parser.parse_cv",
         new_callable=AsyncMock,
         return_value=mock_result,
     ):
@@ -226,6 +226,7 @@ async def uploaded_cv(e2e_client):
             "/api/v1/cv/upload",
             files={"file": ("my_cv.pdf", io.BytesIO(pdf_bytes), "application/pdf")},
         )
+
 
     assert response.status_code == 200, (
         f"[uploaded_cv fixture] Upload thất bại: {response.status_code} — {response.text}\n"
