@@ -7,7 +7,7 @@
   <meta name="description" content="Công cụ hỗ trợ cho CV, phỏng vấn thử, và tư vấn nghề nghiệp – được thiết kế cho sinh viên." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -902,17 +902,35 @@
           <!-- Setup Panel -->
           <div id="page-interview-setup" class="interview-card">
             <h3 class="card-section-title">Thiết Lập Phiên Phỏng Vấn Thử</h3>
-            <div class="form-row margin-bottom">
+            <div class="form-row margin-bottom interview-selection-grid">
               <div class="form-group flex-1">
-                <label class="form-label">Chọn CV Phỏng Vấn:</label>
-                <select id="page-interview-select-cv" class="form-input select-dark"></select>
+                <label class="form-label interview-select-label">
+                  <span>Chọn CV phỏng vấn</span>
+                  <small>Hồ sơ ứng viên</small>
+                </label>
+                <div class="gap-select-shell interview-select-shell interview-select-cv">
+                  <span class="gap-select-icon" aria-hidden="true">📄</span>
+                  <select id="page-interview-select-cv" class="form-input gap-select interview-select" aria-label="Chọn CV phỏng vấn">
+                    <option value="">⏳ Đang tải danh sách CV...</option>
+                  </select>
+                  <span class="gap-select-chevron" aria-hidden="true">⌄</span>
+                </div>
               </div>
               <div class="form-group flex-1">
-                <label class="form-label">Chọn JD Ứng Tuyển:</label>
-                <select id="page-interview-select-jd" class="form-input select-dark"></select>
+                <label class="form-label interview-select-label">
+                  <span>Chọn vị trí ứng tuyển</span>
+                  <small>Mô tả công việc</small>
+                </label>
+                <div class="gap-select-shell interview-select-shell interview-select-jd">
+                  <span class="gap-select-icon" aria-hidden="true">💼</span>
+                  <select id="page-interview-select-jd" class="form-input gap-select interview-select" aria-label="Chọn vị trí ứng tuyển">
+                    <option value="">⏳ Đang tải danh sách JD...</option>
+                  </select>
+                  <span class="gap-select-chevron" aria-hidden="true">⌄</span>
+                </div>
               </div>
             </div>
-            <button id="page-btn-start-interview" class="btn-primary full-width">Bắt Đầu Phiên Phỏng Vấn STAR</button>
+            <button id="page-btn-start-interview" class="btn-primary full-width">🚀 Bắt Đầu Phiên Phỏng Vấn STAR</button>
           </div>
 
           <!-- Active Chat Workspace -->
