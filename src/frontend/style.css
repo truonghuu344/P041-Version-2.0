@@ -6590,7 +6590,8 @@ select {
   font-family: var(--font);
 }
 
-#modal-interview-overlay {
+#modal-interview-overlay,
+#modal-cv-overlay {
   display: none !important;
   visibility: hidden !important;
   pointer-events: none !important;
