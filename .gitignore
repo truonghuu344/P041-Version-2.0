@@ -30,8 +30,10 @@ Thumbs.db
 
 # Data (never commit large data)
 data/
+chroma_db/
 *.db
 *.sqlite3
+*.csv
 
 # Logs
 logs/

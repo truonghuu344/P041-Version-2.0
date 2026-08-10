@@ -3,14 +3,23 @@
 Shared AI hook logger — works with Claude Code, Gemini CLI, Codex, Cursor, Copilot.
 Reads JSON from stdin, normalizes to common format, appends to .ai-log/session.jsonl
 """
+
 import json
 import os
-import sys
 import subprocess
-from datetime import datetime, timezone, timedelta
+import sys
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 VN_TZ = timezone(timedelta(hours=7))
+REPO_ROOT = Path(__file__).resolve().parent.parent
+
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv(REPO_ROOT / ".env")
+except ImportError:
+    pass
 
 
 def git(cmd):
@@ -70,11 +79,7 @@ def normalize(data: dict, tool: str) -> dict | None:
         "ts": ts,
         "tool": tool,
         "event": event,
-        "session_id": (
-            data.get("session_id") or
-            data.get("conversation_id") or
-            data.get("generation_id") or ""
-        ),
+        "session_id": (data.get("session_id") or data.get("conversation_id") or data.get("generation_id") or ""),
         "model": data.get("model", ""),
         "repo": repo,
         "branch": git("git rev-parse --abbrev-ref HEAD"),
@@ -90,12 +95,14 @@ def normalize(data: dict, tool: str) -> dict | None:
         # PostToolUse: extract from tool_input
         elif isinstance(data.get("tool_input"), dict):
             prompt = data["tool_input"].get("prompt") or data["tool_input"].get("content") or ""
-        base.update({
-            "prompt": prompt,
-            "tool_name": data.get("tool_name", ""),
-            "tool_input": data.get("tool_input") if event != "UserPromptSubmit" else None,
-            "tool_response": str(data.get("tool_response", ""))[:500],
-        })
+        base.update(
+            {
+                "prompt": prompt,
+                "tool_name": data.get("tool_name", ""),
+                "tool_input": data.get("tool_input") if event != "UserPromptSubmit" else None,
+                "tool_response": str(data.get("tool_response", ""))[:500],
+            }
+        )
 
     elif tool == "gemini":
         if event == "BeforeAgent":
@@ -121,67 +128,104 @@ def normalize(data: dict, tool: str) -> dict | None:
             base.update({"prompt": prompt, "response_summary": answer})
 
     elif tool == "codex":
-        base.update({
-            "prompt": data.get("prompt", "")[:1000],
-            "turn_id": data.get("turn_id", ""),
-            "transcript_path": data.get("transcript_path", ""),
-        })
+        if event != "UserPromptSubmit":
+            return None
+        base.update(
+            {
+                "prompt": data.get("prompt", "")[:1000],
+                "turn_id": data.get("turn_id", ""),
+                "transcript_path": data.get("transcript_path", ""),
+            }
+        )
 
     elif tool == "cursor":
-        base.update({
-            "prompt": data.get("prompt", "")[:1000],
-            "files_context": data.get("attachments", []),
-        })
+        base.update(
+            {
+                "prompt": data.get("prompt", "")[:1000],
+                "files_context": data.get("attachments", []),
+            }
+        )
 
     elif tool == "copilot":
-        base.update({
-            "prompt": data.get("prompt", "")[:1000],
-            "tool_name": data.get("toolName", ""),
-            "tool_args": data.get("toolArgs"),
-        })
+        base.update(
+            {
+                "prompt": data.get("prompt", "")[:1000],
+                "tool_name": data.get("toolName", ""),
+                "tool_args": data.get("toolArgs"),
+            }
+        )
 
     # Skip only true noise: no prompt AND no tool-specific payload (tool_input,
     # response_summary, tool_response, tool_args, files_context). Previously
     # this only checked `prompt`, which dropped Claude Bash/Edit events (their
     # tool_input has `command` / `file_path`, not `prompt` or `content`) and
     # any Gemini/Cursor/Copilot turn that carried context but no plain prompt.
-    _PAYLOAD_KEYS = ("prompt", "tool_input", "response_summary",
-                     "tool_response", "tool_args", "files_context")
-    _LIFECYCLE_EVENTS = ("Stop", "stop", "SessionEnd", "sessionEnd", "AfterModel")
-    has_payload = any(base.get(k) for k in _PAYLOAD_KEYS)
-    if not has_payload and event not in _LIFECYCLE_EVENTS:
+    payload_keys = ("prompt", "tool_input", "response_summary", "tool_response", "tool_args", "files_context")
+    lifecycle_events = ("Stop", "stop", "SessionEnd", "sessionEnd", "AfterModel")
+    has_payload = any(base.get(k) for k in payload_keys)
+    if not has_payload and event not in lifecycle_events:
         return None
 
     return base
 
 
+def hook_output(tool: str, warning: str | None = None) -> None:
+    """Return valid hook output and surface Codex logging failures."""
+    if tool == "codex":
+        output: dict[str, object] = {"continue": True}
+        if warning:
+            output["systemMessage"] = f"AI usage log warning: {warning}"
+        print(json.dumps(output))
+
+
+def read_payload() -> str:
+    """Read payload from the Windows wrapper file or directly from stdin."""
+    payload_file = os.environ.get("AI_HOOK_PAYLOAD_FILE", "")
+    if payload_file:
+        try:
+            return Path(payload_file).read_text(encoding="utf-8").strip()
+        except OSError:
+            return ""
+    return sys.stdin.buffer.read().decode("utf-8", errors="replace").strip()
+
+
 def main():
-    # Read stdin as UTF-8 explicitly. On Windows, sys.stdin defaults to the
-    # system code page (e.g. cp1252), which corrupts non-Latin1 prompts
-    # (Vietnamese, CJK, emoji) into mojibake. The hook payload is always UTF-8.
-    raw = sys.stdin.buffer.read().decode("utf-8", errors="replace").strip()
+    tool = detect_tool({})
+    raw = read_payload()
     if not raw:
-        sys.exit(0)
+        hook_output(tool, "Codex supplied an empty hook payload; the prompt was not recorded.")
+        return
 
     try:
         data = json.loads(raw)
     except json.JSONDecodeError:
-        sys.exit(0)
+        hook_output(tool, "Codex supplied invalid hook JSON; the prompt was not recorded.")
+        return
 
     tool = detect_tool(data)
     entry = normalize(data, tool)
     if not entry:
-        sys.exit(0)
+        event = data.get("hook_event_name") or data.get("event") or "unknown"
+        if tool == "codex" and event == "UserPromptSubmit":
+            hook_output(
+                tool,
+                f"event {event!r} did not contain a usable prompt; nothing was recorded.",
+            )
+        return
 
     log_dir = Path(os.environ.get("AI_LOG_DIR", ".ai-log"))
-    log_dir.mkdir(exist_ok=True)
+    if not log_dir.is_absolute():
+        log_dir = REPO_ROOT / log_dir
+    log_dir.mkdir(parents=True, exist_ok=True)
     log_file = log_dir / "session.jsonl"
 
     with open(log_file, "a", encoding="utf-8") as f:
         f.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
-    # Output valid JSON (required by some tools like Gemini)
-    print(json.dumps({"status": "logged"}))
+    if tool == "codex":
+        hook_output(tool)
+    else:
+        print(json.dumps({"status": "logged"}))
 
 
 if __name__ == "__main__":

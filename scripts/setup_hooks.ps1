@@ -8,13 +8,15 @@ $HookFile = '.git/hooks/pre-push'
 # Git on Windows runs hooks via Git Bash, so the hook body must be bash.
 $HookBody = @'
 #!/usr/bin/env bash
-# Pre-push: sweep recent Antigravity / Gemini prompts, then submit AI logs.
+# Pre-push: recover Codex and Antigravity prompts, then submit AI logs.
+bash scripts/_pyrun.sh scripts/log_codex.py --auto || true
 bash scripts/_pyrun.sh scripts/log_antigravity.py --auto || true
 bash scripts/_pyrun.sh scripts/submit_log.py || true
 exit 0
 '@
 
-Set-Content -Path $HookFile -Value $HookBody -Encoding UTF8 -NoNewline
+$HookBody = $HookBody.Replace("`r`n", "`n")
+[System.IO.File]::WriteAllText("$PWD/$HookFile", $HookBody)
 Write-Host "[ai-log] Git pre-push hook installed."
 
 if (-not (Test-Path .ai-log)) { New-Item -ItemType Directory -Path .ai-log | Out-Null }

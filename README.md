@@ -74,6 +74,45 @@ uvicorn src.main:app --reload --port 8000
 
 📖 Mở **[Technical Guidebook](https://phoenix.note.transformerlabs.ai/technical-book)** và làm theo từng chương.
 
+---
+
+## 📦 Data Setup & Quản lý dữ liệu cho Team Dev
+
+Để đảm bảo repository gọn nhẹ, dễ bảo trì và hạn chế xung đột (Git merge conflict) khi làm việc nhóm, dự án tuân thủ các quy tắc quản lý dữ liệu sau:
+
+### 1. Quy tắc Commit Git (Push vs Ignore)
+- ✅ **ĐƯỢC COMMIT LÊN GIT**:
+  - **Seed / Mock Data**: Các file dữ liệu mẫu nhỏ gọn (ví dụ: `data/eval/simulated_cvs.json`) dùng để Dev nhanh API/UI.
+  - **Source Code & Scripts**: Toàn bộ code trong `ingestion/`, `retrieval/`, `eval/`, `scripts/`.
+  - **Cấu hình Git**: File `.gitignore`.
+
+- ❌ **TỰ ĐỘNG BỎ QUA (KHÔNG COMMIT)**:
+  - **Full Dataset**: File dữ liệu thô dung lượng lớn (ví dụ: `Resume.csv` ~56MB).
+  - **Vector Database**: Thư mục `chroma_db/`, các file `.bin` (HNSW Index), `*.sqlite3`, `*.db`.
+
+### 2. Hướng dẫn Dev khởi tạo dữ liệu local (Quick Seeding)
+Khi clone dự án về máy cá nhân, chạy câu lệnh sau để tự động tạo ChromaDB local và nạp dữ liệu thử nghiệm:
+
+```bash
+# Khởi tạo Vector DB & chạy thử nghiệm truy xuất dữ liệu mẫu
+python scripts/demo_interactive_ats.py
+```
+
+### 3. Quy trình xử lý dữ liệu (ETLT) với PostgreSQL hội tụ
+Hệ thống hiện tại sử dụng kiến trúc Converged Database với **PostgreSQL + pgvector**. Để khởi chạy luồng ETLT và tự động chạy test Pipeline:
+
+```bash
+# 1. Khởi động PostgreSQL (có sẵn pgvector) qua Docker
+docker compose up db -d
+
+# 2. Đảm bảo đã cài đặt các thư viện kết nối (psycopg2, pgvector, v.v.)
+pip install -r requirements.txt
+
+# 3. Chạy toàn bộ luồng ETLT (Load, Transform, Vectorize) và kiểm thử RAG
+python scripts/run_phase2_pipeline.py
+```
+---
+
 ## 📁 Cấu trúc dự án
 
 ```
