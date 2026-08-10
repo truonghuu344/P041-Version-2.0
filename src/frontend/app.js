@@ -3887,12 +3887,12 @@ TÊN CÔNG TY:
 
   function openCVModal() {
     if (!ApiClient.isAuthenticated()) {
-      showToast('⚠️ Vui lòng đăng nhập trước khi tải CV', 'warning');
+      showToast('⚠️ Vui lòng đăng nhập trước khi xem Hồ sơ CV', 'warning');
       openAuthModal();
       return;
     }
-    if (cvOverlay) cvOverlay.classList.add('open');
-    loadCVList();
+    if (cvOverlay) cvOverlay.classList.remove('open');
+    switchView('cv');
   }
   function closeCVModal() { if (cvOverlay) cvOverlay.classList.remove('open'); }
   if (cvClose) cvClose.addEventListener('click', closeCVModal);
