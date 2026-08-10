@@ -24,6 +24,10 @@ class Settings(BaseSettings):
     app_port: int = Field(default=8000, ge=1, le=65535)
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
     secret_key: SecretStr = SecretStr("development-only-change-me")
+    access_token_expire_minutes: int = Field(default=60, ge=5, le=1440)
+    jwt_issuer: str = "career-assistant"
+    jwt_audience: str = "career-assistant-api"
+    auth_cookie_name: str = "career_access_token"
 
     # Database and vector store
     database_url: str = (

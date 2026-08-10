@@ -1252,7 +1252,7 @@ html.light .dark-planets-container,
 }
 
 /* ── Toast notification ── */
-.toast {
+  .toast {
   position: fixed;
   bottom: 28px;
   left: 50%;
@@ -1268,8 +1268,12 @@ html.light .dark-planets-container,
   transition: opacity 0.3s, transform 0.3s;
   backdrop-filter: blur(12px);
   box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-  white-space: nowrap;
-}
+    width: max-content;
+    max-width: min(520px, calc(100vw - 32px));
+    white-space: normal;
+    text-align: center;
+    line-height: 1.45;
+  }
 .toast.show {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
