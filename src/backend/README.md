@@ -14,9 +14,27 @@ Các nền tảng backend đã hoàn thành:
 5. Cấu hình Alembic và migration schema ban đầu.
 6. Định nghĩa Pydantic request/response schemas khớp với frontend và PRD.
 
-API hiện mới có các endpoint nền tảng `/health`, `/ready`, `/docs` và
-`/openapi.json`. Các endpoint nghiệp vụ `/api/v1` sẽ được bổ sung ở các bước
-tiếp theo; schemas trong `models/` là hợp đồng dữ liệu cho những endpoint đó.
+API hiện có các endpoint nền tảng `/health`, `/ready`, `/docs`, `/openapi.json`
+và nhóm xác thực `/api/v1/auth`. Các endpoint nghiệp vụ CV/JD sẽ được bổ sung ở
+các bước tiếp theo; schemas trong `models/` là hợp đồng dữ liệu cho những
+endpoint đó.
+
+## Xác thực
+
+- `POST /api/v1/auth/register`: đăng ký bằng email và mật khẩu.
+- `POST /api/v1/auth/login`: đăng nhập bằng email và mật khẩu.
+- `POST /api/v1/auth/google`: đăng ký hoặc đăng nhập bằng Google ID token.
+- `GET /api/v1/auth/me`: đọc user hiện tại từ cookie HttpOnly.
+- `POST /api/v1/auth/logout`: đăng xuất và xóa cookie phiên.
+
+Mật khẩu đăng ký cần dài 8–128 ký tự, có chữ thường, chữ hoa, chữ số và không có
+khoảng trắng. Backend chỉ lưu mật khẩu đã băm bằng scrypt. Sau khi xác thực thành
+công, API trả access token JWT, thông tin user và đặt cookie HttpOnly để frontend
+duy trì phiên đăng nhập mà không lưu token trong localStorage.
+
+Google Identity Services ở frontend gửi trường `credential` tới endpoint
+`/google`. Backend xác minh chữ ký, thời hạn, audience, email verified bằng
+`GOOGLE_OAUTH_CLIENT_ID`; không tin dữ liệu profile do frontend tự gửi.
 
 ## Cấu trúc
 
@@ -81,6 +99,13 @@ Xem revision hiện tại hoặc lùi một revision:
 Nếu database đã có schema cũ với các bảng trùng tên, không chạy migration đầu
 tiên trực tiếp. Hãy sao lưu dữ liệu và dùng database/volume sạch, hoặc tạo một
 baseline migration riêng.
+
+Riêng database legacy đang dùng cột `hashed_password`, chạy migration auth bảo
+toàn dữ liệu sau để bổ sung Google login và trạng thái tài khoản:
+
+```powershell
+.\.venv\Scripts\python.exe -m scripts.migrate_auth_schema
+```
 
 Khi thay đổi SQLAlchemy models:
 

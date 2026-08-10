@@ -19,7 +19,7 @@ from src.backend.models import (
 def test_registration_accepts_public_roles_and_rejects_admin() -> None:
     registration = RegisterRequest(
         email="student@example.com",
-        password="strong-password",
+        password="Strong-password1",
         full_name="Student Example",
         role="student",
     )
@@ -29,7 +29,7 @@ def test_registration_accepts_public_roles_and_rejects_admin() -> None:
     with pytest.raises(ValidationError):
         RegisterRequest(
             email="admin@example.com",
-            password="strong-password",
+            password="Strong-password1",
             full_name="System Admin",
             role="admin",
         )

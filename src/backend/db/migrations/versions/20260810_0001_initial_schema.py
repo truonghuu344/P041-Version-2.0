@@ -48,9 +48,9 @@ def timestamp_columns() -> tuple[sa.Column, sa.Column]:
 def upgrade() -> None:
     op.create_table(
         "users",
-        sa.Column("id", sa.Uuid(), nullable=False),
-        sa.Column("email", sa.String(length=320), nullable=False),
-        sa.Column("password_hash", sa.String(length=255), nullable=True),
+        sa.Column("id", sa.String(length=36), nullable=False),
+        sa.Column("email", sa.String(length=255), nullable=False),
+        sa.Column("hashed_password", sa.String(length=255), nullable=True),
         sa.Column("google_subject", sa.String(length=255), nullable=True),
         sa.Column("full_name", sa.String(length=255), nullable=False),
         sa.Column("role", user_role, server_default="student", nullable=False),
@@ -65,7 +65,7 @@ def upgrade() -> None:
     op.create_table(
         "counselors",
         sa.Column("id", sa.Uuid(), nullable=False),
-        sa.Column("user_id", sa.Uuid(), nullable=False),
+        sa.Column("user_id", sa.String(length=36), nullable=False),
         sa.Column("department", sa.String(length=255), nullable=True),
         sa.Column("title", sa.String(length=255), nullable=True),
         *timestamp_columns(),
@@ -77,7 +77,7 @@ def upgrade() -> None:
     op.create_table(
         "enterprises",
         sa.Column("id", sa.Uuid(), nullable=False),
-        sa.Column("user_id", sa.Uuid(), nullable=False),
+        sa.Column("user_id", sa.String(length=36), nullable=False),
         sa.Column("company_name", sa.String(length=255), nullable=False),
         sa.Column("industry", sa.String(length=255), nullable=True),
         sa.Column("website_url", sa.String(length=2048), nullable=True),
@@ -90,7 +90,7 @@ def upgrade() -> None:
     op.create_table(
         "students",
         sa.Column("id", sa.Uuid(), nullable=False),
-        sa.Column("user_id", sa.Uuid(), nullable=False),
+        sa.Column("user_id", sa.String(length=36), nullable=False),
         sa.Column("university", sa.String(length=255), nullable=True),
         sa.Column("major", sa.String(length=255), nullable=True),
         sa.Column("graduation_year", sa.Integer(), nullable=True),
