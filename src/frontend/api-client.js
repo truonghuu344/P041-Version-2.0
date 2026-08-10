@@ -17,6 +17,9 @@ function formatApiError(data, status) {
   };
   const translateMessage = (message) => {
     const normalized = String(message || '').replace(/^Value error,\s*/i, '');
+    if (/invalid/i.test(normalized) || /credentials/i.test(normalized) || /unauthorized/i.test(normalized)) {
+      return 'Email hoặc mật khẩu không chính xác. Bạn vui lòng kiểm tra lại nhé!';
+    }
     const exactMessages = {
       'Password must not contain whitespace': 'không được chứa khoảng trắng',
       'Password must contain a lowercase letter': 'phải có ít nhất một chữ thường',
@@ -45,6 +48,12 @@ function formatApiError(data, status) {
   }
   if (detail && typeof detail === 'object') {
     return detail.message || JSON.stringify(detail);
+  }
+  if (detail && typeof detail === 'string') {
+    if (/invalid/i.test(detail) || /credentials/i.test(detail) || status === 401) {
+      return 'Email hoặc mật khẩu không chính xác. Bạn vui lòng kiểm tra lại nhé!';
+    }
+    return detail;
   }
   return detail ? String(detail) : `Lỗi HTTP ${status}`;
 }

@@ -2546,13 +2546,13 @@ TÊN CÔNG TY:
 
   function enhanceGapSelect(select) {
     if (!select) return;
+    select.classList.add('gap-select-native-hidden');
     const shell = select.closest('.gap-select-shell');
     if (!shell) return;
 
     let trigger = shell.querySelector('.gap-select-trigger');
     let menu = shell.querySelector('.gap-select-menu');
     if (!trigger || !menu) {
-      select.classList.add('gap-select-native-hidden');
       trigger = document.createElement('button');
       trigger.type = 'button';
       trigger.className = 'gap-select-trigger';
@@ -2614,8 +2614,9 @@ TÊN CÔNG TY:
     const selectedParts = (selectedOption?.textContent || 'Chọn một mục').split(' • ');
     trigger.querySelector('.gap-select-value-title').textContent = selectedParts.shift();
     const selectedMeta = trigger.querySelector('.gap-select-value-meta');
-    selectedMeta.textContent = selectedParts.join(' • ');
-    selectedMeta.hidden = selectedParts.length === 0;
+    const metaText = selectedParts.join(' • ');
+    selectedMeta.textContent = metaText;
+    selectedMeta.hidden = !metaText;
     trigger.disabled = !selectedOption || selectedOption.disabled;
 
     const badge = select.id.includes('cv') ? 'CV' : 'JD';
@@ -2655,6 +2656,10 @@ TÊN CÔNG TY:
       if (!event.target.closest('.gap-select-shell')) closeGapSelectMenus();
     });
   }
+
+  setTimeout(() => {
+    document.querySelectorAll('select.gap-select').forEach(select => enhanceGapSelect(select));
+  }, 100);
 
   async function populatePageGapOptions() {
     if (!pageSelectGapCv || !pageSelectGapJd) return;
@@ -3863,7 +3868,11 @@ TÊN CÔNG TY:
         closeAuthModal();
         checkUserSession();
       } catch (err) {
-        showToast(`❌ ${err.message}`, 'error');
+        let msg = err.message || '';
+        if (/invalid/i.test(msg) || /credentials/i.test(msg) || /unauthorized/i.test(msg) || err.status === 401) {
+          msg = 'Email hoặc mật khẩu chưa chính xác. Bạn vui lòng kiểm tra lại nhé! 💡';
+        }
+        showToast(`⚠️ ${msg}`, 'error');
       }
     });
   }
@@ -4159,8 +4168,8 @@ TÊN CÔNG TY:
       openAuthModal();
       return;
     }
-    if (intOverlay) intOverlay.classList.add('open');
-    populateInterviewOptions();
+    if (intOverlay) intOverlay.classList.remove('open');
+    switchView('interview');
   }
   function closeInterviewModal() { if (intOverlay) intOverlay.classList.remove('open'); }
   if (intClose) intClose.addEventListener('click', closeInterviewModal);
