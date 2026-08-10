@@ -3,6 +3,7 @@
 Shared AI hook logger — works with Claude Code, Gemini CLI, Codex, Cursor, Copilot.
 Reads JSON from stdin, normalizes to common format, appends to .ai-log/session.jsonl
 """
+
 import json
 import os
 import subprocess
@@ -11,6 +12,56 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 VN_TZ = timezone(timedelta(hours=7))
+REPO_ROOT = Path(__file__).resolve().parent.parent
+SENSITIVE_KEY_PARTS = (
+    "api_key",
+    "authorization",
+    "cookie",
+    "credential",
+    "password",
+    "secret",
+    "token",
+)
+
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv(REPO_ROOT / ".env")
+except ImportError:
+    pass
+
+
+def sanitize(value, depth: int = 0):
+    """Redact common credentials and bound hook payload size."""
+    if depth >= 6:
+        return "[TRUNCATED]"
+    if isinstance(value, dict):
+        cleaned = {}
+        for key, item in list(value.items())[:100]:
+            key_text = str(key)
+            if any(part in key_text.lower() for part in SENSITIVE_KEY_PARTS):
+                cleaned[key_text] = "[REDACTED]"
+            else:
+                cleaned[key_text] = sanitize(item, depth + 1)
+        return cleaned
+    if isinstance(value, list):
+        return [sanitize(item, depth + 1) for item in value[:100]]
+    if isinstance(value, tuple):
+        return [sanitize(item, depth + 1) for item in value[:100]]
+    if isinstance(value, str):
+        return value[:2000]
+    if value is None or isinstance(value, (bool, int, float)):
+        return value
+    return str(value)[:2000]
+
+
+def sanitize_payload(value, max_chars: int = 4000):
+    """Keep small payloads structured and truncate unusually large ones."""
+    cleaned = sanitize(value)
+    encoded = json.dumps(cleaned, ensure_ascii=False)
+    if len(encoded) <= max_chars:
+        return cleaned
+    return encoded[:max_chars] + "...[TRUNCATED]"
 
 
 def git(cmd):
@@ -70,11 +121,7 @@ def normalize(data: dict, tool: str) -> dict | None:
         "ts": ts,
         "tool": tool,
         "event": event,
-        "session_id": (
-            data.get("session_id") or
-            data.get("conversation_id") or
-            data.get("generation_id") or ""
-        ),
+        "session_id": (data.get("session_id") or data.get("conversation_id") or data.get("generation_id") or ""),
         "model": data.get("model", ""),
         "repo": repo,
         "branch": git("git rev-parse --abbrev-ref HEAD"),
@@ -90,12 +137,14 @@ def normalize(data: dict, tool: str) -> dict | None:
         # PostToolUse: extract from tool_input
         elif isinstance(data.get("tool_input"), dict):
             prompt = data["tool_input"].get("prompt") or data["tool_input"].get("content") or ""
-        base.update({
-            "prompt": prompt,
-            "tool_name": data.get("tool_name", ""),
-            "tool_input": data.get("tool_input") if event != "UserPromptSubmit" else None,
-            "tool_response": str(data.get("tool_response", ""))[:500],
-        })
+        base.update(
+            {
+                "prompt": prompt,
+                "tool_name": data.get("tool_name", ""),
+                "tool_input": data.get("tool_input") if event != "UserPromptSubmit" else None,
+                "tool_response": str(data.get("tool_response", ""))[:500],
+            }
+        )
 
     elif tool == "gemini":
         if event == "BeforeAgent":
@@ -121,32 +170,40 @@ def normalize(data: dict, tool: str) -> dict | None:
             base.update({"prompt": prompt, "response_summary": answer})
 
     elif tool == "codex":
-        base.update({
-            "prompt": data.get("prompt", "")[:1000],
-            "turn_id": data.get("turn_id", ""),
-            "transcript_path": data.get("transcript_path", ""),
-        })
+        base.update(
+            {
+                "prompt": data.get("prompt", "")[:1000],
+                "turn_id": data.get("turn_id", ""),
+                "transcript_path": data.get("transcript_path", ""),
+                "tool_name": data.get("tool_name", ""),
+                "tool_input": sanitize_payload(data.get("tool_input")),
+                "tool_response": sanitize_payload(data.get("tool_response")),
+            }
+        )
 
     elif tool == "cursor":
-        base.update({
-            "prompt": data.get("prompt", "")[:1000],
-            "files_context": data.get("attachments", []),
-        })
+        base.update(
+            {
+                "prompt": data.get("prompt", "")[:1000],
+                "files_context": data.get("attachments", []),
+            }
+        )
 
     elif tool == "copilot":
-        base.update({
-            "prompt": data.get("prompt", "")[:1000],
-            "tool_name": data.get("toolName", ""),
-            "tool_args": data.get("toolArgs"),
-        })
+        base.update(
+            {
+                "prompt": data.get("prompt", "")[:1000],
+                "tool_name": data.get("toolName", ""),
+                "tool_args": data.get("toolArgs"),
+            }
+        )
 
     # Skip only true noise: no prompt AND no tool-specific payload (tool_input,
     # response_summary, tool_response, tool_args, files_context). Previously
     # this only checked `prompt`, which dropped Claude Bash/Edit events (their
     # tool_input has `command` / `file_path`, not `prompt` or `content`) and
     # any Gemini/Cursor/Copilot turn that carried context but no plain prompt.
-    payload_keys = ("prompt", "tool_input", "response_summary",
-                     "tool_response", "tool_args", "files_context")
+    payload_keys = ("prompt", "tool_input", "response_summary", "tool_response", "tool_args", "files_context")
     lifecycle_events = ("Stop", "stop", "SessionEnd", "sessionEnd", "AfterModel")
     has_payload = any(base.get(k) for k in payload_keys)
     if not has_payload and event not in lifecycle_events:
@@ -168,20 +225,30 @@ def main():
     except json.JSONDecodeError:
         sys.exit(0)
 
+    # Apply the same credential redaction to every supported AI client before
+    # any tool-specific normalization writes the payload to disk.
+    data = sanitize(data)
+    if not isinstance(data, dict):
+        sys.exit(0)
+
     tool = detect_tool(data)
     entry = normalize(data, tool)
     if not entry:
         sys.exit(0)
 
     log_dir = Path(os.environ.get("AI_LOG_DIR", ".ai-log"))
-    log_dir.mkdir(exist_ok=True)
+    if not log_dir.is_absolute():
+        log_dir = REPO_ROOT / log_dir
+    log_dir.mkdir(parents=True, exist_ok=True)
     log_file = log_dir / "session.jsonl"
 
     with open(log_file, "a", encoding="utf-8") as f:
         f.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
-    # Output valid JSON (required by some tools like Gemini)
-    print(json.dumps({"status": "logged"}))
+    # Codex expects hook output to be a JSON object. Explicitly allow the turn
+    # to continue; other integrations only need valid JSON.
+    output = {"continue": True} if tool == "codex" else {"status": "logged"}
+    print(json.dumps(output))
 
 
 if __name__ == "__main__":

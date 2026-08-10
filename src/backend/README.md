@@ -130,3 +130,22 @@ Kiểm tra SQL migration mà không thay đổi database:
 - Mỗi truy vấn phải giới hạn theo user/role hiện tại để tránh lộ dữ liệu.
 - Nội dung AI tối ưu CV phải dựa trên dữ liệu đã xác nhận; không tự tạo thành tích.
 - Mọi thay đổi schema database phải có Alembic migration và test tương ứng.
+
+## AI-log cho Codex
+
+Project ghi lại prompt, thao tác công cụ và kết quả công cụ vào
+`.ai-log/session.jsonl`. Các trường credential phổ biến như token, password,
+cookie và API key được che trước khi ghi. Khi `git push`, pre-push hook gửi các
+bản ghi đang chờ tới server đã cấu hình rồi chuyển chúng vào `archive`.
+
+Sau khi clone hoặc khi hook thay đổi:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/setup_hooks.ps1
+.\.venv\Scripts\python.exe scripts\submit_log.py --check
+```
+
+Trong Codex, chạy `/hooks`, kiểm tra và trust hook của project, sau đó mở phiên
+Codex mới. Ba sự kiện được theo dõi là `UserPromptSubmit`, `PostToolUse` và
+`Stop`. Lệnh `--check` chỉ kiểm tra cấu hình và số bản ghi cục bộ, không gửi dữ
+liệu và không in API key.
