@@ -1,4 +1,3 @@
-import uuid
 from datetime import datetime
 from typing import Annotated
 
@@ -12,6 +11,25 @@ Password = Annotated[str, StringConstraints(min_length=8, max_length=128)]
 
 def _normalize_email(value: EmailStr) -> str:
     return str(value).strip().lower()
+
+
+def _validate_password_strength(password: str) -> str:
+    if any(character.isspace() for character in password):
+        raise ValueError("Password must not contain whitespace")
+    if not any(character.islower() for character in password):
+        raise ValueError("Password must contain a lowercase letter")
+    if not any(character.isupper() for character in password):
+        raise ValueError("Password must contain an uppercase letter")
+    if not any(character.isdigit() for character in password):
+        raise ValueError("Password must contain a number")
+    return password
+
+
+def _normalize_full_name(full_name: str) -> str:
+    normalized = " ".join(full_name.split())
+    if len(normalized) < 2:
+        raise ValueError("Full name must contain at least 2 characters")
+    return normalized
 
 
 class LoginRequest(APIModel):
@@ -38,23 +56,12 @@ class RegisterRequest(APIModel):
     @field_validator("password")
     @classmethod
     def validate_password_strength(cls, password: str) -> str:
-        if any(character.isspace() for character in password):
-            raise ValueError("Password must not contain whitespace")
-        if not any(character.islower() for character in password):
-            raise ValueError("Password must contain a lowercase letter")
-        if not any(character.isupper() for character in password):
-            raise ValueError("Password must contain an uppercase letter")
-        if not any(character.isdigit() for character in password):
-            raise ValueError("Password must contain a number")
-        return password
+        return _validate_password_strength(password)
 
     @field_validator("full_name")
     @classmethod
     def normalize_full_name(cls, full_name: str) -> str:
-        normalized = " ".join(full_name.split())
-        if len(normalized) < 2:
-            raise ValueError("Full name must contain at least 2 characters")
-        return normalized
+        return _normalize_full_name(full_name)
 
     @field_validator("role")
     @classmethod
@@ -77,12 +84,17 @@ class GoogleAuthRequest(APIModel):
 
 
 class UserResponse(APIModel):
-    id: uuid.UUID
+    id: str = Field(min_length=32, max_length=36)
     email: EmailStr
     full_name: str
     role: UserRole
     is_active: bool
     created_at: datetime
+
+    @field_validator("id", mode="before")
+    @classmethod
+    def stringify_id_without_normalizing_legacy_values(cls, user_id: object) -> str:
+        return str(user_id)
 
 
 class AuthResponse(APIModel):
@@ -97,15 +109,49 @@ class AdminUserCreateRequest(APIModel):
     full_name: str = Field(min_length=2, max_length=255)
     role: UserRole
 
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, email: EmailStr) -> str:
+        return _normalize_email(email)
+
+    @field_validator("password")
+    @classmethod
+    def validate_password_strength(cls, password: str) -> str:
+        return _validate_password_strength(password)
+
+    @field_validator("full_name")
+    @classmethod
+    def normalize_full_name(cls, full_name: str) -> str:
+        return _normalize_full_name(full_name)
+
 
 class AdminUserUpdateRequest(APIModel):
     email: EmailStr | None = None
     full_name: str | None = Field(default=None, min_length=2, max_length=255)
     role: UserRole | None = None
     is_active: bool | None = None
+    password: Password | None = None
+
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, email: EmailStr | None) -> str | None:
+        return _normalize_email(email) if email is not None else None
+
+    @field_validator("full_name")
+    @classmethod
+    def normalize_full_name(cls, full_name: str | None) -> str | None:
+        return _normalize_full_name(full_name) if full_name is not None else None
+
+    @field_validator("password")
+    @classmethod
+    def validate_password_strength(cls, password: str | None) -> str | None:
+        return _validate_password_strength(password) if password is not None else None
 
     @model_validator(mode="after")
     def require_at_least_one_change(self) -> "AdminUserUpdateRequest":
-        if all(value is None for value in (self.email, self.full_name, self.role, self.is_active)):
+        if all(
+            value is None
+            for value in (self.email, self.full_name, self.role, self.is_active, self.password)
+        ):
             raise ValueError("At least one field must be supplied")
         return self

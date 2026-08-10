@@ -111,7 +111,9 @@ class ApiClient {
       return data;
     } catch (err) {
       const isAnonymousSessionCheck = endpoint === '/auth/me' && err?.status === 401;
-      if (!isAnonymousSessionCheck) console.error(`API Error [${endpoint}]:`, err);
+      // Lỗi HTTP được các màn hình xử lý bằng toast/empty state. Dùng warning để
+      // Next.js dev overlay không che toàn bộ UI vì một request đã được catch.
+      if (!isAnonymousSessionCheck) console.warn(`API Warning [${endpoint}]:`, err);
       if (err instanceof TypeError && /failed to fetch/i.test(err.message)) {
         throw new Error('Không thể kết nối máy chủ xử lý CV. Hãy kiểm tra FastAPI đang chạy ở cổng 8000.');
       }
@@ -337,9 +339,6 @@ class ApiClient {
   static getAssistantFallbackUrl(endpoint) {
     const configuredBase = window.__NOVA_API_BASE_URL__;
     if (configuredBase) return `${configuredBase.replace(/\/$/, '')}${endpoint}`;
-    if (['localhost', '127.0.0.1'].includes(window.location.hostname)) {
-      return `http://127.0.0.1:8001/api/v1${endpoint}`;
-    }
     return '';
   }
 
@@ -349,9 +348,7 @@ class ApiClient {
       try {
         return await this.request(localNovaUrl, options);
       } catch (err) {
-        // Nếu Nova local phản hồi lỗi nghiệp vụ/xác thực thì giữ nguyên lỗi đó.
-        // Chỉ quay về same-origin khi cổng local chưa chạy hoặc chưa có endpoint.
-        if (err.status && ![404, 405].includes(err.status)) throw err;
+        if (err.status) throw err;
       }
     }
     return await this.request(endpoint, options);
@@ -3517,14 +3514,14 @@ TÊN CÔNG TY:
           const targetUser = adminUsersData.find(user => user.id === uId);
           const payload = { full_name: fullName, email: email };
           if (targetUser?.role !== 'admin') payload.role = role;
-          if (pwd && pwd.length >= 6) payload.password = pwd;
+          if (pwd && pwd.length >= 8) payload.password = pwd;
 
           await ApiClient.updateUserByAdmin(uId, payload);
           showToast('✅ Cập nhật thông tin người dùng thành công!', 'success');
         } else {
           // Add mode
-          if (!pwd || pwd.length < 6) {
-            showToast('Mật khẩu tối thiểu 6 ký tự', 'warning');
+          if (!pwd || pwd.length < 8) {
+            showToast('Mật khẩu tối thiểu 8 ký tự', 'warning');
             return;
           }
           await ApiClient.createUserByAdmin(email, pwd, fullName, role);
@@ -4506,9 +4503,14 @@ TÊN CÔNG TY:
         const status = await ApiClient.getAssistantStatus();
         companion.classList.toggle('is-online', Boolean(status.configured));
         if (statusText) {
+          const provider = status.provider === 'openai'
+            ? 'OpenAI'
+            : status.provider === 'gemini' ? 'Gemini' : 'AI dự phòng';
           statusText.textContent = status.configured
-            ? `${status.weather_configured ? 'Gemini + Weather online' : 'Gemini online'} · ${status.model}`
-            : 'Thiếu GEMINI_API_KEY';
+            ? `${provider}${status.weather_configured ? ' + Weather' : ''} online · ${status.model}`
+            : status.provider === 'gemini'
+              ? 'Gemini chưa cấu hình · thêm GEMINI_API_KEY ở backend'
+              : 'Chưa cấu hình API key AI · đang dùng dự phòng';
         }
       } catch (_err) {
         companion.classList.remove('is-online');
@@ -4592,15 +4594,20 @@ TÊN CÔNG TY:
         conversationHistory.push({ role: 'assistant', content: result.response });
         companion.classList.toggle('is-online', Boolean(result.llm_succeeded));
         if (statusText) {
+          const provider = result.provider === 'openai'
+            ? 'OpenAI'
+            : result.provider === 'gemini' ? 'Gemini' : 'AI dự phòng';
           statusText.textContent = result.llm_succeeded
-            ? `Gemini online · ${result.model}`
-            : 'Gemini chưa phản hồi';
+            ? `${provider} online · ${result.model}`
+            : result.provider === 'gemini'
+              ? `Gemini offline · kiểm tra API key/model ${result.model}`
+              : 'AI dự phòng đang trả lời';
         }
       } catch (err) {
         typing.remove();
         if (err.status === 401) {
           performLogout({ notify: false });
-          appendChatMessage('assistant', 'Phiên đăng nhập đã hết hạn. Bạn hãy đăng nhập lại rồi gửi câu hỏi thời tiết.');
+          appendChatMessage('assistant', 'Phiên đăng nhập đã hết hạn. Bạn hãy đăng nhập lại rồi gửi câu hỏi.');
           openAuthModal();
           return;
         }
@@ -4678,11 +4685,7 @@ TÊN CÔNG TY:
     }
 
     restoreCompanionPosition();
-    // Assistant là module tùy chọn. Không tự gọi endpoint khi trang vừa tải vì
-    // backend auth hiện chưa triển khai nhóm /assistant; chỉ kiểm tra khi người
-    // dùng thực sự mở hoặc sử dụng trợ lý.
-    companion.classList.remove('is-online');
-    if (statusText) statusText.textContent = 'Trợ lý AI chưa được bật';
+    loadAssistantStatus();
     window.setTimeout(() => hint?.classList.add('is-hidden'), 6500);
   }
 

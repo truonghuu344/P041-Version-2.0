@@ -1800,7 +1800,7 @@ export default function Page() {
         </div>
       </div>
 
-      {/* ═══ Fixed Gemini Career Chatbot ═══ */}
+      {/* ═══ Fixed AI Career Chatbot ═══ */}
       <div id="ai-companion" className="ai-companion" aria-label="Chatbot AI Nova">
         <div id="ai-companion-hint" className="ai-companion-hint">Bấm để chat với Nova ✨</div>
         <button
@@ -1833,7 +1833,7 @@ export default function Page() {
             <span className="ai-chat-orb" aria-hidden="true">✦</span>
             <div>
               <strong>Nova · Career Agent</strong>
-              <span id="ai-companion-status-text">Đang kiểm tra Gemini…</span>
+              <span id="ai-companion-status-text">Đang kiểm tra AI…</span>
             </div>
           </div>
           <div className="ai-chat-header-actions">
@@ -1859,6 +1859,7 @@ export default function Page() {
           <button type="button" data-assistant-prompt="Tôi nên cải thiện CV từ đâu?">Cải thiện CV</button>
           <button type="button" data-assistant-prompt="Hãy hướng dẫn tôi phân tích khoảng cách với JD.">So khớp JD</button>
           <button type="button" data-assistant-prompt="Hãy giúp tôi luyện phỏng vấn STAR.">Luyện STAR</button>
+          <button type="button" data-assistant-prompt="Thời tiết Hà Nội hôm nay thế nào?">Thời tiết</button>
         </div>
         <form id="ai-companion-form" className="ai-chat-form">
           <textarea id="ai-companion-input" rows={1} maxLength={4000} placeholder="Nhắn cho Nova…" aria-label="Tin nhắn gửi trợ lý AI"></textarea>

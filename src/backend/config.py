@@ -44,8 +44,24 @@ class Settings(BaseSettings):
     google_oauth_client_id: str = ""
 
     # LLM providers. SecretStr prevents accidental disclosure in repr/log output.
+    assistant_provider: Literal["auto", "gemini", "openai"] = "gemini"
+    google_api_key: SecretStr = SecretStr("")
     gemini_api_key: SecretStr = SecretStr("")
+    gemini_model: str = "gemini-3.6-flash"
     openai_api_key: SecretStr = SecretStr("")
+    openai_model: str = "gpt-5.6-luna"
+    openai_fallback_model: str = "gpt-4o-mini"
+    weather_api_key: SecretStr = SecretStr("")
+    assistant_request_timeout: float = Field(default=45.0, gt=1, le=120)
+    assistant_max_output_tokens: int = Field(default=1000, ge=128, le=4000)
+
+    @property
+    def effective_gemini_api_key(self) -> str:
+        """Return the Gemini key using Google's documented precedence."""
+        return (
+            self.google_api_key.get_secret_value().strip()
+            or self.gemini_api_key.get_secret_value().strip()
+        )
 
     @property
     def cors_origin_list(self) -> list[str]:

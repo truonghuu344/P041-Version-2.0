@@ -63,6 +63,88 @@ def upgrade() -> None:
     op.create_index(op.f("ix_users_role"), "users", ["role"], unique=False)
 
     op.create_table(
+        "chat_conversations",
+        sa.Column("id", sa.String(length=36), nullable=False),
+        sa.Column("user_id", sa.String(length=36), nullable=False),
+        sa.Column("title", sa.String(length=160), nullable=False),
+        *timestamp_columns(),
+        sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
+        sa.PrimaryKeyConstraint("id"),
+    )
+    op.create_index(
+        op.f("ix_chat_conversations_user_id"),
+        "chat_conversations",
+        ["user_id"],
+        unique=False,
+    )
+
+    op.create_table(
+        "chat_messages",
+        sa.Column("id", sa.String(length=36), nullable=False),
+        sa.Column("conversation_id", sa.String(length=36), nullable=False),
+        sa.Column("role", sa.String(length=20), nullable=False),
+        sa.Column("content", sa.Text(), nullable=False),
+        sa.Column("provider", sa.String(length=80), nullable=True),
+        sa.Column("model", sa.String(length=120), nullable=True),
+        sa.Column("llm_succeeded", sa.Boolean(), nullable=True),
+        sa.Column("suggested_actions_json", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.ForeignKeyConstraint(
+            ["conversation_id"],
+            ["chat_conversations.id"],
+            ondelete="CASCADE",
+        ),
+        sa.PrimaryKeyConstraint("id"),
+    )
+    op.create_index(
+        op.f("ix_chat_messages_conversation_id"),
+        "chat_messages",
+        ["conversation_id"],
+        unique=False,
+    )
+
+    op.create_table(
+        "ai_audit_logs",
+        sa.Column("id", sa.String(length=36), nullable=False),
+        sa.Column("user_id", sa.String(length=36), nullable=False),
+        sa.Column("conversation_id", sa.String(length=36), nullable=True),
+        sa.Column("prompt", sa.Text(), nullable=False),
+        sa.Column("response", sa.Text(), nullable=False),
+        sa.Column("provider", sa.String(length=80), nullable=False),
+        sa.Column("model", sa.String(length=120), nullable=False),
+        sa.Column("llm_succeeded", sa.Boolean(), server_default="false", nullable=False),
+        sa.Column("error_code", sa.String(length=160), nullable=True),
+        sa.Column("current_page", sa.String(length=50), nullable=True),
+        sa.Column("latency_ms", sa.Integer(), nullable=False),
+        sa.Column("tools_used_json", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.ForeignKeyConstraint(
+            ["conversation_id"],
+            ["chat_conversations.id"],
+            ondelete="SET NULL",
+        ),
+        sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
+        sa.PrimaryKeyConstraint("id"),
+    )
+    op.create_index(op.f("ix_ai_audit_logs_user_id"), "ai_audit_logs", ["user_id"], unique=False)
+    op.create_index(
+        op.f("ix_ai_audit_logs_conversation_id"),
+        "ai_audit_logs",
+        ["conversation_id"],
+        unique=False,
+    )
+
+    op.create_table(
         "counselors",
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("user_id", sa.String(length=36), nullable=False),
@@ -386,6 +468,13 @@ def downgrade() -> None:
     op.drop_table("enterprises")
     op.drop_index(op.f("ix_counselors_user_id"), table_name="counselors")
     op.drop_table("counselors")
+    op.drop_index(op.f("ix_ai_audit_logs_conversation_id"), table_name="ai_audit_logs")
+    op.drop_index(op.f("ix_ai_audit_logs_user_id"), table_name="ai_audit_logs")
+    op.drop_table("ai_audit_logs")
+    op.drop_index(op.f("ix_chat_messages_conversation_id"), table_name="chat_messages")
+    op.drop_table("chat_messages")
+    op.drop_index(op.f("ix_chat_conversations_user_id"), table_name="chat_conversations")
+    op.drop_table("chat_conversations")
     op.drop_index(op.f("ix_users_role"), table_name="users")
     op.drop_index(op.f("ix_users_email"), table_name="users")
     op.drop_table("users")

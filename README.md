@@ -4,6 +4,170 @@ Template chính thức cho học viên **VinUni AI20K Build Phase** — cung c�
 
 > 📖 **Technical Guidebook:** [phoenix.note.transformerlabs.ai/technical-book](https://phoenix.note.transformerlabs.ai/technical-book)
 
+## Trạng thái triển khai hiện tại
+
+### Chức năng đã hoàn thành
+
+#### 1. Xác thực người dùng
+
+- Đăng ký bằng email và mật khẩu, có validation email, độ mạnh mật khẩu, họ tên và vai trò.
+- Đăng nhập, đăng xuất và đọc thông tin người dùng hiện tại.
+- Đăng ký/đăng nhập bằng Google ID Token.
+- Phiên đăng nhập dùng JWT trong cookie `HttpOnly`; API bảo vệ dữ liệu theo người dùng.
+- Có tài khoản và quyền `student`, `counselor`, `enterprise`, `admin`.
+
+Các endpoint chính:
+
+```text
+POST /api/v1/auth/register
+POST /api/v1/auth/login
+POST /api/v1/auth/google
+GET  /api/v1/auth/me
+POST /api/v1/auth/logout
+```
+
+#### 2. Nova AI Career Agent chatbot
+
+- Chat nhiều lượt bằng Google Gemini; mặc định dùng model ổn định `gemini-3.6-flash`.
+- Khi `ASSISTANT_PROVIDER=gemini`, backend chỉ gọi Gemini và không âm thầm chuyển sang model của provider khác.
+- Trả lời dự phòng an toàn khi provider chưa cấu hình hoặc tạm thời lỗi.
+- Dùng ngữ cảnh đã xác minh từ hồ sơ người dùng, CV và Job Description trong PostgreSQL.
+- Hỗ trợ tư vấn CV, Gap Analysis, phỏng vấn STAR và tra cứu thời tiết trực tiếp.
+- WeatherAPI dùng `WEATHER_API_KEY` là nguồn chính; Open-Meteo là nguồn dự phòng khi key hết hạn hoặc dịch vụ tạm lỗi.
+- Sinh nút hành động để điều hướng người dùng tới trang CV, JD, Gap Analysis hoặc phỏng vấn.
+- Lưu hội thoại và tin nhắn theo từng tài khoản; hỗ trợ xem danh sách, mở lại và xóa hội thoại.
+- Ghi `ai_audit_logs` gồm provider, model, trạng thái LLM, độ trễ và tool đã dùng.
+- Chống truy cập hội thoại của tài khoản khác và không tự bịa thông tin CV/JD còn thiếu.
+
+Các endpoint chính:
+
+```text
+GET    /api/v1/assistant/status
+POST   /api/v1/assistant/chat
+GET    /api/v1/assistant/conversations
+GET    /api/v1/assistant/conversations/{conversation_id}
+DELETE /api/v1/assistant/conversations/{conversation_id}
+```
+
+#### 3. Quản trị người dùng
+
+- Trang Admin tải danh sách tài khoản trực tiếp từ PostgreSQL.
+- Admin có thể tạo, cập nhật thông tin, đổi mật khẩu và xóa tài khoản được quản lý.
+- Bắt buộc xác thực quyền `admin`; tài khoản thường nhận `403 Forbidden`.
+- Không cho tự xóa, vô hiệu hóa hoặc hạ quyền tài khoản quản trị hệ thống.
+- Email được kiểm tra trùng và mật khẩu áp dụng cùng quy tắc độ mạnh với đăng ký.
+- Lỗi API đã được giao diện xử lý sẽ hiển thị trong bảng/toast thay vì kích hoạt Next.js Console Error overlay.
+
+```text
+GET    /api/v1/admin/users
+POST   /api/v1/admin/users
+PUT    /api/v1/admin/users/{user_id}
+DELETE /api/v1/admin/users/{user_id}
+```
+
+### Công nghệ đang sử dụng
+
+| Thành phần | Công nghệ |
+|---|---|
+| Frontend | Next.js 15, React 18, TypeScript, JavaScript |
+| Backend API | FastAPI, Uvicorn, Pydantic v2 |
+| Authentication | JWT, cookie HttpOnly, bcrypt, Google OAuth ID Token |
+| AI provider chính | Google Gemini REST API `generateContent` (`gemini-3.6-flash`) |
+| AI provider tùy chọn | OpenAI Responses API (chỉ dùng khi đổi `ASSISTANT_PROVIDER`) |
+| Agent tools | CV context, JD context, hồ sơ người dùng, WeatherAPI + Open-Meteo fallback |
+| Database | PostgreSQL, SQLAlchemy async, asyncpg, Alembic |
+| Kiểm thử | pytest, pytest-asyncio, FastAPI TestClient, TypeScript compiler, Next.js build |
+
+### Cách cài đặt và chạy
+
+Yêu cầu: Python 3.11+, Node.js, npm và PostgreSQL đang hoạt động.
+
+#### 1. Cài backend
+
+Windows PowerShell:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+Copy-Item .env.example .env
+```
+
+Cập nhật tối thiểu các biến sau trong `.env`:
+
+```dotenv
+DATABASE_URL=postgresql+asyncpg://user:password@localhost:5432/database_name
+SECRET_KEY=replace-with-a-long-random-secret
+ASSISTANT_PROVIDER=gemini
+GOOGLE_API_KEY=your-valid-google-key
+GEMINI_MODEL=gemini-3.6-flash
+WEATHER_API_KEY=your-valid-weatherapi-key
+GOOGLE_OAUTH_CLIENT_ID=your-client-id.apps.googleusercontent.com
+```
+
+Đặt `ASSISTANT_PROVIDER=gemini` để Nova luôn dùng Gemini. Backend chấp nhận cả `GOOGLE_API_KEY` và `GEMINI_API_KEY`; nếu có cả hai thì `GOOGLE_API_KEY` được ưu tiên. Giá trị mẫu chỉ là hướng dẫn, không phải khóa hoạt động. Hãy tạo khóa trong Google AI Studio, đặt khóa thật ở backend `.env`, không đưa khóa vào frontend hoặc commit lên Git.
+
+Khởi tạo database mới và chạy backend:
+
+```powershell
+alembic upgrade head
+uvicorn src.backend.main:app --reload --port 8000
+```
+
+Swagger UI: [http://localhost:8000/docs](http://localhost:8000/docs)
+
+Kiểm tra Gemini đã sẵn sàng:
+
+```powershell
+Invoke-RestMethod http://localhost:8000/api/v1/assistant/status
+```
+
+Kết quả đúng có `configured: true`, `provider: gemini` và `model: gemini-3.6-flash`. Nếu vừa sửa `.env`, hãy khởi động lại Uvicorn để backend nạp API key mới.
+
+Trong giao diện Nova, có thể bấm nút **Thời tiết** hoặc hỏi trực tiếp: `Thời tiết Hà Nội hôm nay thế nào?`. Backend sẽ lấy dữ liệu hiện tại từ WeatherAPI; nếu WeatherAPI không phản hồi, hệ thống tự dùng Open-Meteo rồi đưa dữ liệu đã xác minh cho Gemini diễn đạt bằng tiếng Việt.
+
+#### 2. Cài và chạy frontend
+
+Mở terminal thứ hai:
+
+```powershell
+cd src\frontend
+npm install
+npm run dev
+```
+
+Mở [http://localhost:3000](http://localhost:3000), đăng ký hoặc đăng nhập, sau đó bấm biểu tượng Nova ở góc màn hình để bắt đầu chat. Next.js tự proxy `/api/v1/*` sang FastAPI ở cổng `8000`.
+
+#### 3. Chạy kiểm tra trước khi bàn giao
+
+```powershell
+# Tại thư mục gốc
+.\.venv\Scripts\python.exe -m ruff check src/backend tests/test_backend
+.\.venv\Scripts\python.exe -m pytest tests/test_backend -q
+
+# Tại src/frontend
+npm run typecheck
+npm run build
+```
+
+Nếu Gemini API key không hợp lệ hoặc Gemini không phản hồi, Nova vẫn trả lời ở chế độ dự phòng và giao diện hiển thị Gemini đang offline. Cần `GOOGLE_API_KEY` hoặc `GEMINI_API_KEY` hợp lệ để nhận phản hồi thực sự sinh bởi mô hình.
+
+#### 4. Xử lý lỗi cache Next.js
+
+Dự án tách cache development (`.next-dev`) và production (`.next`) để có thể chạy `npm run build` trong lúc dev server đang hoạt động mà không làm mất webpack chunks.
+
+Frontend dùng font hệ thống cục bộ, nên cả `npm run dev` và `npm run build` không cần tải Google Fonts từ mạng.
+
+Nếu dev server từng bị dừng đột ngột và hiển thị `Cannot find module './<chunk>.js'`, dừng frontend, xóa riêng hai thư mục cache rồi chạy lại:
+
+```powershell
+cd src\frontend
+Remove-Item -Recurse -Force .next,.next-dev -ErrorAction SilentlyContinue
+npm run dev
+```
+
+Hai thư mục này chỉ chứa dữ liệu build sinh tự động, không chứa source code hoặc dữ liệu người dùng.
+
 ## 🎯 Template này dùng để làm gì?
 
 Khi tham gia AI20K Build Phase, mỗi đội cần xây dựng một AI Agent hoàn chỉnh — từ kiến trúc, code, test, đến deploy. Thay vì bắt đầu từ con số không, template này cung cấp:

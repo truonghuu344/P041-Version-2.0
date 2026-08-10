@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.backend.config import get_settings
 from src.backend.core.security import InvalidAccessTokenError, decode_access_token
 from src.backend.db.database import get_db_session
-from src.backend.db.models import User
+from src.backend.db.models import User, UserRole
 
 
 def _access_token_from_request(request: Request) -> str | None:
@@ -48,3 +48,12 @@ async def get_current_user(
             detail="Account is disabled",
         )
     return user
+
+
+async def get_current_admin(current_user: User = Depends(get_current_user)) -> User:
+    if current_user.role is not UserRole.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Administrator access required",
+        )
+    return current_user

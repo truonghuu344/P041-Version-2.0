@@ -88,6 +88,58 @@ class User(TimestampMixin, Base):
     )
 
 
+class ChatConversation(TimestampMixin, Base):
+    __tablename__ = "chat_conversations"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    title: Mapped[str] = mapped_column(String(160))
+
+    messages: Mapped[list[ChatMessage]] = relationship(
+        back_populates="conversation",
+        cascade="all, delete-orphan",
+        order_by="ChatMessage.created_at",
+    )
+
+
+class ChatMessage(Base):
+    __tablename__ = "chat_messages"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    conversation_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("chat_conversations.id", ondelete="CASCADE"), index=True
+    )
+    role: Mapped[str] = mapped_column(String(20))
+    content: Mapped[str] = mapped_column(Text)
+    provider: Mapped[str | None] = mapped_column(String(80))
+    model: Mapped[str | None] = mapped_column(String(120))
+    llm_succeeded: Mapped[bool | None] = mapped_column(Boolean)
+    suggested_actions_json: Mapped[list[dict[str, Any]] | None] = mapped_column(json_type)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    conversation: Mapped[ChatConversation] = relationship(back_populates="messages")
+
+
+class AIAuditLog(Base):
+    __tablename__ = "ai_audit_logs"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    conversation_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("chat_conversations.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    prompt: Mapped[str] = mapped_column(Text)
+    response: Mapped[str] = mapped_column(Text)
+    provider: Mapped[str] = mapped_column(String(80))
+    model: Mapped[str] = mapped_column(String(120))
+    llm_succeeded: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
+    error_code: Mapped[str | None] = mapped_column(String(160))
+    current_page: Mapped[str | None] = mapped_column(String(50))
+    latency_ms: Mapped[int] = mapped_column(Integer)
+    tools_used_json: Mapped[list[str] | None] = mapped_column(json_type)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
 class Student(TimestampMixin, Base):
     __tablename__ = "students"
 

@@ -11,6 +11,16 @@ from src.backend.models.analysis import (
     ResumeSuggestion,
     SuggestionDecisionRequest,
 )
+from src.backend.models.assistant import (
+    AssistantChatRequest,
+    AssistantChatResponse,
+    AssistantHistoryMessage,
+    AssistantStatusResponse,
+    ConversationDetailResponse,
+    ConversationMessageResponse,
+    ConversationSummaryResponse,
+    SuggestedAction,
+)
 from src.backend.models.auth import (
     AdminUserCreateRequest,
     AdminUserUpdateRequest,
@@ -55,6 +65,10 @@ __all__ = [
     "AdminUserCreateRequest",
     "AdminUserUpdateRequest",
     "AuthResponse",
+    "AssistantChatRequest",
+    "AssistantChatResponse",
+    "AssistantHistoryMessage",
+    "AssistantStatusResponse",
     "CVBulkDeleteRequest",
     "CVBulkDeleteResponse",
     "CVEntry",
@@ -65,6 +79,9 @@ __all__ = [
     "CounselorFeedbackKind",
     "CounselorFeedbackRequest",
     "CounselorFeedbackResponse",
+    "ConversationDetailResponse",
+    "ConversationMessageResponse",
+    "ConversationSummaryResponse",
     "CustomJobDescriptionRequest",
     "GapAnalysisRequest",
     "GapAnalysisResponse",
@@ -88,6 +105,7 @@ __all__ = [
     "ResumeSuggestion",
     "STARScores",
     "SuggestionDecisionRequest",
+    "SuggestedAction",
     "TimestampedResponse",
     "UserResponse",
 ]
