@@ -67,8 +67,14 @@ class User(TimestampMixin, Base):
     google_subject: Mapped[str | None] = mapped_column(String(255), unique=True, nullable=True)
     full_name: Mapped[str] = mapped_column(String(255))
     role: Mapped[UserRole] = mapped_column(
-        Enum(UserRole, name="user_role", native_enum=False),
+        Enum(
+            UserRole,
+            name="user_role",
+            native_enum=False,
+            values_callable=lambda members: [member.value for member in members],
+        ),
         default=UserRole.STUDENT,
+        server_default=UserRole.STUDENT.value,
         index=True,
     )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
@@ -158,8 +164,14 @@ class JobDescription(TimestampMixin, Base):
     description_text: Mapped[str] = mapped_column(Text)
     required_skills: Mapped[list[str]] = mapped_column(json_type, default=list)
     source_type: Mapped[JobDescriptionSource] = mapped_column(
-        Enum(JobDescriptionSource, name="job_description_source", native_enum=False),
+        Enum(
+            JobDescriptionSource,
+            name="job_description_source",
+            native_enum=False,
+            values_callable=lambda members: [member.value for member in members],
+        ),
         default=JobDescriptionSource.EXTERNAL,
+        server_default=JobDescriptionSource.EXTERNAL.value,
     )
     vector_id: Mapped[str | None] = mapped_column(String(255), unique=True)
 
@@ -211,11 +223,17 @@ class InterviewSession(TimestampMixin, Base):
     job_description_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("job_descriptions.id", ondelete="RESTRICT"), index=True
     )
-    total_questions: Mapped[int] = mapped_column(Integer, default=5)
-    current_step: Mapped[int] = mapped_column(Integer, default=0)
+    total_questions: Mapped[int] = mapped_column(Integer, default=5, server_default="5")
+    current_step: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     status: Mapped[InterviewStatus] = mapped_column(
-        Enum(InterviewStatus, name="interview_status", native_enum=False),
+        Enum(
+            InterviewStatus,
+            name="interview_status",
+            native_enum=False,
+            values_callable=lambda members: [member.value for member in members],
+        ),
         default=InterviewStatus.CREATED,
+        server_default=InterviewStatus.CREATED.value,
         index=True,
     )
     overall_score: Mapped[float | None] = mapped_column(Float)
