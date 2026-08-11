@@ -761,27 +761,6 @@ export default function Page() {
                 </div>
               </div>
             </div>
-            <div className="vessel-card manual-cv-card">
-              <div className="console-header">
-                <div className="console-icon console-icon-purple">✍️</div>
-                <div><h3 className="console-title">TẠO CV TỪ BIỂU MẪU</h3><p className="console-subtitle">Dành cho sinh viên chưa có file CV; mọi nội dung do bạn tự xác nhận.</p></div>
-              </div>
-              <form id="manual-cv-form" className="manual-cv-form">
-                <div className="manual-cv-grid">
-                  <input id="manual-cv-title" className="form-input" placeholder="Tên CV" required />
-                  <input id="manual-cv-name" className="form-input" placeholder="Họ và tên" required />
-                  <input id="manual-cv-email" type="email" className="form-input" placeholder="Email" required />
-                  <input id="manual-cv-phone" className="form-input" placeholder="Số điện thoại" />
-                  <select id="manual-cv-template" className="form-input"><option value="classic">Classic ATS</option><option value="modern">Modern ATS</option><option value="compact">Compact ATS</option></select>
-                  <input id="manual-cv-skills" className="form-input" placeholder="Kỹ năng, cách nhau bởi dấu phẩy" required />
-                </div>
-                <textarea id="manual-cv-summary" className="form-input" placeholder="Tóm tắt nghề nghiệp"></textarea>
-                <textarea id="manual-cv-education" className="form-input" placeholder="Học vấn: mỗi dòng là một mục"></textarea>
-                <textarea id="manual-cv-experience" className="form-input" placeholder="Kinh nghiệm: mỗi dòng là một mục"></textarea>
-                <textarea id="manual-cv-projects" className="form-input" placeholder="Dự án: mỗi dòng là một mục"></textarea>
-                <button type="submit" className="ship-btn-primary">Tạo CV &amp; xem trong Manifest</button>
-              </form>
-            </div>
           </div>
         </div>
       </section>
