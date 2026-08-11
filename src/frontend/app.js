@@ -67,7 +67,9 @@ class ApiClient {
 
       return data;
     } catch (err) {
-      console.error(`API Error [${endpoint}]:`, err);
+      if (!options.silent && (!err.status || err.status >= 500)) {
+        console.error(`API Error [${endpoint}]:`, err);
+      }
       if (err instanceof TypeError && /failed to fetch/i.test(err.message)) {
         throw new Error('Không thể kết nối máy chủ xử lý CV. Hãy kiểm tra FastAPI đang chạy ở cổng 8000.');
       }
@@ -96,9 +98,20 @@ class ApiClient {
   }
 
   static async getMe() {
-    const user = await this.request('/auth/me');
-    this.setUser(user);
-    return user;
+    try {
+      const user = await this.request('/auth/me', { silent: true });
+      if (user) {
+        this.setUser(user);
+      }
+      return user;
+    } catch (err) {
+      if (err && err.status === 401) {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('user_info');
+        return null;
+      }
+      throw err;
+    }
   }
 
   static async googleAuth(credential, role = 'student') {
@@ -285,9 +298,6 @@ class ApiClient {
   static getAssistantFallbackUrl(endpoint) {
     const configuredBase = window.__NOVA_API_BASE_URL__;
     if (configuredBase) return `${configuredBase.replace(/\/$/, '')}${endpoint}`;
-    if (['localhost', '127.0.0.1'].includes(window.location.hostname)) {
-      return `http://127.0.0.1:8001/api/v1${endpoint}`;
-    }
     return '';
   }
 
@@ -297,8 +307,6 @@ class ApiClient {
       try {
         return await this.request(localNovaUrl, options);
       } catch (err) {
-        // Nếu Nova local phản hồi lỗi nghiệp vụ/xác thực thì giữ nguyên lỗi đó.
-        // Chỉ quay về same-origin khi cổng local chưa chạy hoặc chưa có endpoint.
         if (err.status && ![404, 405].includes(err.status)) throw err;
       }
     }
@@ -306,7 +314,11 @@ class ApiClient {
   }
 
   static async getAssistantStatus() {
-    return await this.requestAssistant('/assistant/status');
+    try {
+      return await this.requestAssistant('/assistant/status', { silent: true });
+    } catch (_err) {
+      return { configured: false, weather_configured: false, model: 'Offline' };
+    }
   }
 
   static async chatWithAssistant(message, history = [], currentPage = 'dashboard', conversationId = null) {

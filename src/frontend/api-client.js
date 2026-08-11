@@ -63,7 +63,9 @@ export class ApiClient {
 
       return data;
     } catch (err) {
-      console.error(`API Error [${endpoint}]:`, err);
+      if (!options.silent && (!err.status || err.status >= 500)) {
+        console.error(`API Error [${endpoint}]:`, err);
+      }
       if (err instanceof TypeError && /failed to fetch/i.test(err.message)) {
         throw new Error('Không thể kết nối máy chủ xử lý CV. Hãy kiểm tra FastAPI đang chạy ở cổng 8000.');
       }
@@ -97,9 +99,20 @@ export class ApiClient {
   }
 
   static async getMe() {
-    const user = await this.request('/auth/me');
-    this.setUser(user);
-    return user;
+    try {
+      const user = await this.request('/auth/me', { silent: true });
+      if (user) {
+        this.setUser(user);
+      }
+      return user;
+    } catch (err) {
+      if (err && err.status === 401) {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('user_info');
+        return null;
+      }
+      throw err;
+    }
   }
 
   // --- CV APIs ---

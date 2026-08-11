@@ -1,24 +1,10 @@
-def main():
-    from fastapi import FastAPI
-    from fastapi.middleware.cors import CORSMiddleware
-
-    app = FastAPI()
-
-    # Danh sách domain Frontend được phép truy cập
-    origins = [
-        "http://localhost:3000",  # Mặc định của Next.js / React
-        "http://127.0.0.1:3000",
-        # Thêm domain production khi deploy (vd: "https://my-frontend.com")
-    ]
-
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=origins,       # Hoặc ["*"] cho phép tất cả domain trong lúc test
-        allow_credentials=True,      # Cho phép truyền cookie/authorization header
-        allow_methods=["*"],          # Cho phép tất cả HTTP methods (GET, POST, PUT, DELETE,...)
-    allow_headers=["*"],          # Cho phép tất cả headers
-)
-
+"""
+Main entrypoint for Career Assistant X backend.
+Exports `app` from `src.main` so `uvicorn main:app`, `uvicorn src.main:app`, and `python main.py` all work seamlessly.
+"""
+import uvicorn
+from src.main import app
 
 if __name__ == "__main__":
-    main()
+    uvicorn.run("src.main:app", host="0.0.0.0", port=8000, reload=True)
+
