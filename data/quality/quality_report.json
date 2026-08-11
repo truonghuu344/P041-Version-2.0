@@ -1,0 +1,34 @@
+{
+  "timestamp": "2026-08-07T03:29:49Z",
+  "total_records": 91,
+  "schema_validation": {
+    "valid_records": 91,
+    "valid_rate_pct": 100.0,
+    "schema_errors_count": 0
+  },
+  "quality_metrics": {
+    "missing_company_count": 0,
+    "missing_company_pct": 0.0,
+    "empty_location_count": 0,
+    "empty_location_pct": 0.0,
+    "bloated_location_count": 0,
+    "bloated_location_pct": 0.0,
+    "negotiable_salary_count": 36,
+    "negotiable_salary_pct": 39.56,
+    "empty_skills_count": 3,
+    "empty_skills_pct": 3.3
+  },
+  "sources_distribution": {
+    "LinkedIn": 36,
+    "Joboko": 54,
+    "ITviec": 1
+  },
+  "domains_distribution": {
+    "Backend": 19,
+    "Frontend": 27,
+    "AI/Data": 19,
+    "Mobile": 1,
+    "QA/QC": 15,
+    "DevOps": 10
+  }
+}
