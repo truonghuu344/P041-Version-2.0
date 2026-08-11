@@ -39,7 +39,7 @@ class Settings(BaseSettings):
     llm_temperature: float = Field(default=1.0, ge=0.0, le=2.0)
     llm_timeout_seconds: float = Field(default=45, ge=5, le=120)
     llm_max_retries: int = Field(default=1, ge=0, le=3)
-    cv_parser_mode: Literal["local", "gemini"] = "local"
+    cv_parser_mode: Literal["local", "gemini"] = "gemini"
     weather_api_key: str = ""
 
     # Database

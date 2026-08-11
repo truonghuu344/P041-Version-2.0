@@ -63,7 +63,7 @@ def _manual_cv_raw_text(payload: ManualCVCreate) -> str:
 async def upload_cv(
     file: UploadFile = File(...),
     title: str = Form(default=""),
-    use_llm: bool = Form(default=False),
+    use_llm: bool = Form(default=True),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> CVOut:
@@ -306,11 +306,11 @@ async def get_cv_agent_status(
 @router.post("/{cv_id}/analyze", response_model=CVOut)
 async def reanalyze_cv(
     cv_id: str,
-    use_llm: bool = Form(default=False),
+    use_llm: bool = Form(default=True),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> CVOut:
-    """Chạy lại CV Agent; caller phải chủ động đặt use_llm=true để gửi dữ liệu tới LLM."""
+    """Chạy lại CV Agent; mặc định dùng Gemini và luôn qua guardrail kiểm chứng."""
     stmt = select(CV).where(CV.id == cv_id, CV.user_id == current_user.id)
     result = await db.execute(stmt)
     cv = result.scalar_one_or_none()

@@ -7,12 +7,14 @@ PAGE_JS = (FRONTEND_ROOT / "app" / "page.tsx").read_text(encoding="utf-8")
 STYLE_CSS = (FRONTEND_ROOT / "style.css").read_text(encoding="utf-8")
 
 
-def test_cv_bulk_delete_controls_and_api_are_wired():
-    assert 'id="btn-delete-selected-cvs"' in PAGE_JS
-    assert 'id="cv-select-all"' in PAGE_JS
-    assert "ApiClient.bulkDeleteCVs" in APP_JS
-    assert "selectedCVIds" in APP_JS
-    assert ".cv-bulk-delete" in STYLE_CSS
+def test_cv_and_jd_selection_render_analysis_results_in_place():
+    assert 'id="cv-analysis-cv-select"' in PAGE_JS
+    assert 'id="cv-analysis-jd-select"' in PAGE_JS
+    assert 'id="cv-analysis-results-card"' in PAGE_JS
+    assert 'id="cv-analysis-result-content"' in PAGE_JS
+    assert "ApiClient.runGapAnalysis(selectedCvId, selectedJdId)" in APP_JS
+    assert "renderInlineCVAnalysis(analysis, selectedCvId, selectedJdId)" in APP_JS
+    assert ".cv-analysis-results-card" in STYLE_CSS
 
 
 def test_nova_widget_has_accessible_open_close_controls():

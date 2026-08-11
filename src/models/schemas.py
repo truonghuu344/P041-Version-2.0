@@ -359,6 +359,10 @@ class CounselorStudentOverview(BaseModel):
     completed_interview_count: int
     average_star_score: float
     recent_feedback: list[CounselorFeedbackOut] = Field(default_factory=list)
+    cvs: list[CVOut] = Field(default_factory=list)
+    analyses: list[GapAnalysisResponse] = Field(default_factory=list)
+    interviews: list[InterviewSessionSummaryOut] = Field(default_factory=list)
+
 
 
 # --- Enterprise Schemas ---

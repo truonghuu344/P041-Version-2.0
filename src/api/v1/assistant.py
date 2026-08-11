@@ -120,10 +120,14 @@ async def get_conversation(
     current_user: User = Depends(get_current_user),
 ) -> ConversationDetailOut:
     conversation = await _owned_conversation(db, conversation_id, current_user.id)
+    sorted_messages = sorted(
+        conversation.messages,
+        key=lambda m: (m.created_at, 0 if m.role == "user" else 1),
+    )
     return ConversationDetailOut(
         id=conversation.id,
         title=conversation.title,
-        messages=[_message_out(message) for message in conversation.messages],
+        messages=[_message_out(message) for message in sorted_messages],
         created_at=conversation.created_at,
         updated_at=conversation.updated_at,
     )
@@ -148,9 +152,13 @@ async def assistant_chat(
 ) -> AssistantChatResponse:
     if payload.conversation_id:
         conversation = await _owned_conversation(db, payload.conversation_id, current_user.id)
+        sorted_messages = sorted(
+            conversation.messages,
+            key=lambda m: (m.created_at, 0 if m.role == "user" else 1),
+        )
         history = [
             {"role": message.role, "content": message.content}
-            for message in conversation.messages[-12:]
+            for message in sorted_messages[-12:]
         ]
     else:
         conversation = ChatConversation(
@@ -223,7 +231,7 @@ async def assistant_chat(
         model=model,
         llm_succeeded=llm_succeeded,
         suggested_actions_json=suggested_actions,
-        created_at=message_time + timedelta(microseconds=1),
+        created_at=message_time + timedelta(milliseconds=5),
     )
     conversation.updated_at = datetime.now(UTC)
     db.add_all(

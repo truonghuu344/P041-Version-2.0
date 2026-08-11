@@ -10,6 +10,7 @@ from src.core.security import get_current_user
 from src.db.database import get_db
 from src.db.models import (
     CV,
+    CounselorAssignment,
     InterviewFeedback,
     InterviewQuestion,
     InterviewReport,
@@ -348,18 +349,33 @@ async def get_interview_report(
 ) -> InterviewReportOut:
     """Lấy báo cáo kết quả phỏng vấn thử được chấm theo Rubric STAR."""
     stmt = (
-        select(InterviewReport)
-        .join(InterviewSession)
-        .where(InterviewReport.session_id == session_id, InterviewSession.user_id == current_user.id)
+        select(InterviewReport, InterviewSession)
+        .join(InterviewSession, InterviewSession.id == InterviewReport.session_id)
+        .where(InterviewReport.session_id == session_id)
     )
     result = await db.execute(stmt)
-    report = result.scalar_one_or_none()
+    row = result.first()
 
-    if not report:
+    if not row:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Báo cáo phỏng vấn chưa sẵn sàng hoặc phiên phỏng vấn chưa hoàn thành",
         )
+
+    report, session = row
+    if session.user_id != current_user.id:
+        if current_user.role == "counselor":
+            assignment = await db.scalar(
+                select(CounselorAssignment).where(
+                    CounselorAssignment.counselor_id == current_user.id,
+                    CounselorAssignment.student_id == session.user_id,
+                    CounselorAssignment.status == "active",
+                )
+            )
+            if not assignment:
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Không có quyền truy cập báo cáo này.")
+        else:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Không có quyền truy cập báo cáo này.")
 
     return InterviewReportOut(
         id=report.id,

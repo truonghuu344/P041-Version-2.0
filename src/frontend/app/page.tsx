@@ -14,110 +14,6 @@ export default function Page() {
       <div className="nebula-left" aria-hidden="true"></div>
       <div className="nebula-right" aria-hidden="true"></div>
 
-      {/* 🌌 Cinematic Deep Space Far Planets (Dark Mode) */}
-      <div className="dark-planets-container" id="dark-planets-container" aria-hidden="true">
-        {/* Saturn (Top-Left Edge - Distant & Cropped) */}
-        <div className="dark-planet planet-saturn" id="planet-saturn">
-          <svg className="planet-svg" viewBox="0 0 200 160" fill="none">
-            <defs>
-              <linearGradient id="saturnBody" x1="20%" y1="20%" x2="80%" y2="80%">
-                <stop offset="0%" stopColor="#d2c4b0"/>
-                <stop offset="40%" stopColor="#aa9680"/>
-                <stop offset="75%" stopColor="#786450"/>
-                <stop offset="100%" stopColor="#2a1e14"/>
-              </linearGradient>
-              <linearGradient id="saturnRing" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="rgba(190, 170, 145, 0.7)"/>
-                <stop offset="50%" stopColor="rgba(140, 120, 95, 0.4)"/>
-                <stop offset="100%" stopColor="rgba(80, 65, 50, 0.2)"/>
-              </linearGradient>
-              {/* Unified Top-Left Light Source Shadow */}
-              <radialGradient id="saturnUnifiedShadow" cx="22%" cy="22%" r="78%">
-                <stop offset="0%" stopColor="#ffffff" stopOpacity="0.2"/>
-                <stop offset="35%" stopColor="#000000" stopOpacity="0"/>
-                <stop offset="70%" stopColor="#04050d" stopOpacity="0.65"/>
-                <stop offset="100%" stopColor="#02030a" stopOpacity="0.95"/>
-              </radialGradient>
-            </defs>
-            <g transform="rotate(-30 100 80)">
-              {/* Back Ring */}
-              <ellipse cx="100" cy="80" rx="90" ry="24" stroke="url(#saturnRing)" strokeWidth="10" fill="none" opacity="0.5"/>
-              {/* Planet Body */}
-              <circle cx="100" cy="80" r="38" fill="url(#saturnBody)"/>
-              <path d="M 64 72 Q 100 78 136 72 Q 100 66 64 72" fill="#786450" opacity="0.35"/>
-              <path d="M 65 88 Q 100 94 135 88 Q 100 82 65 88" fill="#503c28" opacity="0.4"/>
-              {/* Unified Shadow */}
-              <circle cx="100" cy="80" r="38" fill="url(#saturnUnifiedShadow)"/>
-              {/* Front Ring */}
-              <path d="M 10 80 A 90 24 0 0 0 190 80" stroke="url(#saturnRing)" strokeWidth="10" fill="none"/>
-            </g>
-          </svg>
-        </div>
-
-        {/* Neptune (mid-distance, placed beside the hero focal point) */}
-        <div className="dark-planet planet-neptune" id="planet-neptune">
-          <svg className="planet-svg" viewBox="0 0 160 160" fill="none">
-            <defs>
-              <radialGradient id="neptuneBody" cx="28%" cy="24%" r="76%">
-                <stop offset="0%" stopColor="#b9f0ff"/>
-                <stop offset="28%" stopColor="#5eb5ff"/>
-                <stop offset="62%" stopColor="#245dc8"/>
-                <stop offset="100%" stopColor="#071744"/>
-              </radialGradient>
-              <radialGradient id="neptuneShadow" cx="24%" cy="22%" r="80%">
-                <stop offset="0%" stopColor="#ffffff" stopOpacity="0.28"/>
-                <stop offset="35%" stopColor="#000000" stopOpacity="0"/>
-                <stop offset="72%" stopColor="#020825" stopOpacity="0.6"/>
-                <stop offset="100%" stopColor="#010312" stopOpacity="0.92"/>
-              </radialGradient>
-              <radialGradient id="neptuneHaze" cx="50%" cy="50%" r="50%">
-                <stop offset="65%" stopColor="#54b7ff" stopOpacity="0.24"/>
-                <stop offset="100%" stopColor="#54b7ff" stopOpacity="0"/>
-              </radialGradient>
-            </defs>
-            <circle cx="80" cy="80" r="76" fill="url(#neptuneHaze)"/>
-            <circle cx="80" cy="80" r="60" fill="url(#neptuneBody)"/>
-            <path d="M 22 58 Q 80 70 138 58 Q 80 48 22 58" fill="#b2ecff" opacity="0.26"/>
-            <path d="M 20 78 Q 80 89 140 78 Q 80 68 20 78" fill="#123d9d" opacity="0.46"/>
-            <path d="M 25 98 Q 80 106 135 98 Q 80 89 25 98" fill="#68c8ff" opacity="0.2"/>
-            <ellipse cx="105" cy="73" rx="10" ry="6" fill="#d4f6ff" opacity="0.16"/>
-            <circle cx="80" cy="80" r="60" fill="url(#neptuneShadow)"/>
-          </svg>
-        </div>
-
-        {/* Mars (Bottom-Right Edge - Distant & Cropped) */}
-        <div className="dark-planet planet-mars" id="planet-mars">
-          <svg className="planet-svg" viewBox="0 0 150 150" fill="none">
-            <defs>
-              <radialGradient id="marsBody" x1="20%" y1="20%" x2="80%" y2="80%">
-                <stop offset="0%" stopColor="#d88454"/>
-                <stop offset="35%" stopColor="#b05028"/>
-                <stop offset="70%" stopColor="#782410"/>
-                <stop offset="100%" stopColor="#2a0802"/>
-              </radialGradient>
-              {/* Unified Top-Left Light Source Shadow */}
-              <radialGradient id="marsUnifiedShadow" cx="22%" cy="22%" r="78%">
-                <stop offset="0%" stopColor="#ffffff" stopOpacity="0.2"/>
-                <stop offset="35%" stopColor="#000000" stopOpacity="0"/>
-                <stop offset="70%" stopColor="#04050d" stopOpacity="0.65"/>
-                <stop offset="100%" stopColor="#02030a" stopOpacity="0.96"/>
-              </radialGradient>
-              <radialGradient id="marsHaze" cx="50%" cy="50%" r="50%">
-                <stop offset="65%" stopColor="#b05028" stopOpacity="0.2"/>
-                <stop offset="100%" stopColor="#b05028" stopOpacity="0"/>
-              </radialGradient>
-            </defs>
-            <circle cx="75" cy="75" r="72" fill="url(#marsHaze)"/>
-            <circle cx="75" cy="75" r="54" fill="url(#marsBody)"/>
-            {/* Subtle Surface Texture */}
-            <path d="M 35 60 Q 75 50 105 70 Q 70 85 35 60" fill="#441005" opacity="0.45"/>
-            <path d="M 55 85 Q 95 75 115 100 Q 75 110 55 85" fill="#2d0500" opacity="0.5"/>
-            {/* Unified Shadow */}
-            <circle cx="75" cy="75" r="54" fill="url(#marsUnifiedShadow)"/>
-          </svg>
-        </div>
-      </div>
-
       {/* Universe Morning Theme Layered Atmosphere Container (Light Mode) */}
       <div className="galaxy-blur-container" id="galaxy-blur-container" aria-hidden="true">
         <div className="bg-layer-gradient"></div>
@@ -136,7 +32,7 @@ export default function Page() {
           </a>
           <nav className="nav-links" id="nav-links">
             <a href="#" className="nav-link active" id="nav-dashboard"><span className="nav-text" data-i18n="nav-dashboard">Trang chủ</span></a>
-            <a href="#" className="nav-link" id="nav-cv"><span className="nav-text" data-i18n="nav-cv">Hồ sơ CV</span></a>
+            <a href="#" className="nav-link" id="nav-cv"><span className="nav-text" data-i18n="nav-cv">Phân tích CV</span></a>
             <a href="#" className="nav-link" id="nav-jobs"><span className="nav-text" data-i18n="nav-jobs">Danh sách JD</span></a>
             <a href="#" className="nav-link" id="nav-interview"><span className="nav-text" data-i18n="nav-interview">Phòng phỏng vấn</span></a>
             <a href="#" className="nav-link" id="nav-history" hidden><span className="nav-text" data-i18n="nav-history">Lịch sử &amp; Báo cáo</span></a>
@@ -588,11 +484,19 @@ export default function Page() {
                 <span className="pulse-dot"></span>
                 <span className="vessel-badge-text">WHITE SPACESHIP COMMAND DECK</span>
               </div>
-              <h1 className="vessel-title">TRẠM TẢI LÊN & QUẢN LÝ HỒ SƠ CV VŨ TRỤ</h1>
-              <div className="vessel-status-pills">
-                <span className="status-pill"><i className="pill-dot green"></i> SYSTEM ONLINE</span>
-                <span className="status-pill" id="cv-agent-runtime-status"><i className="pill-dot cyan"></i> ĐANG KIỂM TRA AI</span>
-                <span className="status-pill"><i className="pill-dot purple"></i> ATS VERIFIED</span>
+              <div className="vessel-header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+                <div>
+                  <h1 className="vessel-title">TRẠM PHÂN TÍCH &amp; QUẢN LÝ HỒ SƠ CV</h1>
+                  <div className="vessel-status-pills">
+                    <span className="status-pill"><i className="pill-dot green"></i> SYSTEM ONLINE</span>
+                    <span className="status-pill" id="cv-agent-runtime-status"><i className="pill-dot cyan"></i> ĐANG KIỂM TRA AI</span>
+                    <span className="status-pill"><i className="pill-dot purple"></i> 3 TEMPLATES AVAILABLE</span>
+                  </div>
+                </div>
+                <button type="button" id="btn-open-template-gallery" className="create-cv-template-cta">
+                  <span className="create-cv-template-cta-icon" aria-hidden="true">✨</span>
+                  <span><strong>TẠO CV MỚI</strong><small>Chọn 1 trong 3 template</small></span>
+                </button>
               </div>
             </div>
 
@@ -606,12 +510,25 @@ export default function Page() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="console-title">TRẠM QUÉT CV (SCANNER DECK)</h3>
-                    <p className="console-subtitle">Tải lên file CV (.pdf, .docx) để AI trích xuất thông tin tự động</p>
+                    <h3 className="console-title">CV DÙNG ĐỂ PHÂN TÍCH</h3>
+                    <p className="console-subtitle">Chọn CV đã lưu hoặc tải CV mới để Gemini AI Agent phân tích theo JD</p>
                   </div>
                 </div>
 
                 <form id="cv-page-upload-form" className="spaceship-form">
+                  <div className="cv-choice-block">
+                    <label className="ship-label" htmlFor="cv-analysis-cv-select">Chọn CV đã lưu <span className="required-mark">*</span></label>
+                    <div className="jd-select-wrap">
+                      <select id="cv-analysis-cv-select" className="ship-input" aria-label="Chọn CV cần phân tích">
+                        <option value="">Chọn một CV đã lưu</option>
+                      </select>
+                      <span className="jd-select-chevron" aria-hidden="true">⌄</span>
+                    </div>
+                    <p id="cv-selected-cv-hint" className="jd-selection-hint">Chọn CV trong kho hoặc tải file mới ngay bên dưới.</p>
+                  </div>
+
+                  <div className="jd-choice-divider"><span>HOẶC TẢI CV MỚI</span></div>
+
                   <div className="form-group">
                     <label className="ship-label" htmlFor="cv-page-title-input">Tên gợi nhớ CV (Tùy chọn)</label>
                     <div className="ship-input-wrap">
@@ -634,28 +551,29 @@ export default function Page() {
                     </div>
                   </div>
 
-                  <label className="llm-consent-card" htmlFor="cv-use-llm">
-                    <input type="checkbox" id="cv-use-llm" />
+                  <div className="llm-consent-card llm-always-on" role="status">
+                    <span className="llm-always-on-icon" aria-hidden="true">✦</span>
                     <span className="llm-consent-copy">
-                      <strong>Dùng Google Gemini để phân tích chuyên sâu</strong>
-                      <small>CV sẽ được gửi tới <span id="cv-agent-model">LLM đã cấu hình</span> cho lần phân tích này. Bỏ chọn để chỉ xử lý cục bộ.</small>
+                      <strong>Google Gemini + AI Agent luôn được bật</strong>
+                      <small><span id="cv-agent-model">LLM đã cấu hình</span> sẽ parse CV, kiểm chứng dữ liệu và phân tích theo JD bạn chọn.</small>
                     </span>
-                    <span className="llm-consent-badge">TÙY CHỌN</span>
-                  </label>
+                    <span className="llm-consent-badge">TỰ ĐỘNG</span>
+                  </div>
 
                   <div id="cv-agent-progress" className="agent-progress" hidden>
                     <span data-agent-step="upload">1. Tải file</span>
                     <span data-agent-step="extract">2. Trích text</span>
-                    <span data-agent-step="llm">3. Gọi LLM</span>
+                    <span data-agent-step="llm">3. Gemini parse</span>
                     <span data-agent-step="guardrail">4. Kiểm chứng</span>
-                    <span data-agent-step="save">5. Lưu hồ sơ</span>
+                    <span data-agent-step="match">5. So khớp JD</span>
+                    <span data-agent-step="save">6. Hoàn tất</span>
                   </div>
 
                   <button type="submit" className="ship-btn-primary" id="btn-page-do-upload">
                     <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
                       <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
-                    TẢI LÊN & PARSE CV BẰNG AI ENGINE
+                    PHÂN TÍCH CV THEO JD BẰNG GEMINI AI AGENT
                   </button>
                 </form>
 
@@ -669,97 +587,135 @@ export default function Page() {
                 </div>
               </div>
 
-              <div className="vessel-card manifest-card">
+              <div className="vessel-card jd-context-card">
                 <div className="console-header">
-                  <div className="console-icon console-icon-purple">
+                  <div className="console-icon console-icon-jd">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                      <path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" stroke="#8b5cf6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M7 3h8l4 4v14H7z" stroke="#0f766e" strokeWidth="1.8" strokeLinejoin="round"/>
+                      <path d="M15 3v5h5M10 12h6M10 16h6" stroke="#0f766e" strokeWidth="1.8" strokeLinecap="round"/>
                     </svg>
                   </div>
                   <div>
-                    <h3 className="console-title">DANH SÁCH MANIFEST CV ĐÃ LƯU</h3>
-                    <p className="console-subtitle">Xem, quản lý và kiểm tra chi tiết các bản CV trong kho dữ liệu tàu</p>
+                    <h3 className="console-title">JD MỤC TIÊU ĐỂ PHÂN TÍCH</h3>
+                    <p className="console-subtitle">Chọn JD đã có hoặc tải JD mới. AI Agent sẽ luôn so khớp CV với JD này.</p>
                   </div>
                 </div>
 
-                <div id="cv-bulk-toolbar" className="cv-bulk-toolbar" hidden>
-                  <label className="cv-select-all">
-                    <input type="checkbox" id="cv-select-all" />
-                    <span className="cv-checkbox-visual" aria-hidden="true"></span>
-                    <span>Chọn tất cả</span>
+                <div className="jd-choice-block">
+                  <label className="ship-label" htmlFor="cv-analysis-jd-select">Chọn JD đã lưu <span className="required-mark">*</span></label>
+                  <div className="jd-select-wrap">
+                    <select id="cv-analysis-jd-select" className="ship-input" required aria-label="Chọn JD mục tiêu">
+                      <option value="">Chọn một JD để phân tích CV</option>
+                    </select>
+                    <span className="jd-select-chevron" aria-hidden="true">⌄</span>
+                  </div>
+                  <p id="cv-selected-jd-hint" className="jd-selection-hint">JD là bắt buộc để AI Agent phân tích đúng vị trí ứng tuyển.</p>
+                </div>
+
+                <div className="jd-choice-divider"><span>HOẶC TẢI JD MỚI</span></div>
+
+                <form id="cv-jd-upload-form" className="cv-jd-upload-form">
+                  <div className="form-group">
+                    <label className="ship-label" htmlFor="cv-jd-title-input">Tên vị trí <span className="field-note">(có thể để trống)</span></label>
+                    <input type="text" id="cv-jd-title-input" className="ship-input" placeholder="Tự lấy theo tên file" />
+                  </div>
+                  <label className="cv-jd-file-drop" htmlFor="cv-jd-file-input">
+                    <span className="cv-jd-file-icon" aria-hidden="true">📄</span>
+                    <span><strong>Chọn file JD</strong><small id="cv-jd-file-name">PDF, DOCX hoặc TXT · tối đa 5 MB</small></span>
                   </label>
-                  <span id="cv-selected-count" className="cv-selected-count">Chưa chọn CV</span>
-                  <button type="button" id="btn-delete-selected-cvs" className="cv-bulk-delete" disabled>
-                    <span aria-hidden="true">🗑</span> Xóa đã chọn
-                  </button>
+                  <input type="file" id="cv-jd-file-input" className="visually-hidden-file" accept=".pdf,.docx,.txt" />
+                  <button type="submit" className="ship-btn-secondary cv-jd-upload-button">Tải lên &amp; chọn JD này</button>
+                </form>
+
+              </div>
+            </div>
+
+            <div className="vessel-card cv-analysis-results-card" id="cv-analysis-results-card" aria-live="polite">
+              <div className="console-header cv-results-header">
+                <div className="console-icon console-icon-analysis">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M4 19V9m6 10V5m6 14v-7m4 7H2" stroke="#0f766e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="console-title">KẾT QUẢ PHÂN TÍCH CV THEO JD</h3>
+                  <p className="console-subtitle">Gemini AI Agent đánh giá độ phù hợp, khoảng trống kỹ năng và việc cần ưu tiên</p>
+                </div>
+              </div>
+
+              <div id="cv-analysis-empty-state" className="cv-analysis-empty-state">
+                <span className="cv-analysis-empty-icon" aria-hidden="true">✦</span>
+                <h4>Chưa có kết quả phân tích</h4>
+                <p>Chọn CV, chọn JD mục tiêu rồi bấm <strong>Phân tích CV theo JD</strong>. Kết quả sẽ hiển thị tại đây.</p>
+              </div>
+
+              <div id="cv-analysis-result-content" className="cv-analysis-result-content" hidden>
+                <div className="cv-result-overview">
+                  <div className="cv-result-score-ring">
+                    <strong id="cv-result-match-score">--%</strong>
+                    <span>MATCH SCORE</span>
+                  </div>
+                  <div className="cv-result-summary-block">
+                    <span className="analysis-result-kicker">GEMINI AI AGENT · PHÂN TÍCH HOÀN TẤT</span>
+                    <h4 id="cv-result-context">CV · JD</h4>
+                    <p id="cv-result-summary"></p>
+                  </div>
                 </div>
 
-                <div id="cv-page-list-container" className="cv-manifest-list">
-                  <div className="empty-manifest">
-                    <p>Đang tải dữ liệu CV từ kho dữ liệu tàu vũ trụ...</p>
-                  </div>
+                <div className="cv-result-skills-grid">
+                  <section className="cv-result-panel is-matched">
+                    <h5><span aria-hidden="true">✓</span> Kỹ năng phù hợp</h5>
+                    <div id="cv-result-matching-skills" className="cv-result-tags"></div>
+                  </section>
+                  <section className="cv-result-panel is-missing">
+                    <h5><span aria-hidden="true">!</span> Kỹ năng cần bổ sung</h5>
+                    <div id="cv-result-missing-skills" className="cv-result-tags"></div>
+                  </section>
                 </div>
 
-                <div id="cv-detail-inspector" className="cv-detail-deck" style={{ display: 'none' }}>
-                  <div className="inspector-header">
-                    <span className="inspector-badge">AI CV INSPECTOR MONITOR</span>
-                    <button className="btn-close-inspector" id="btn-close-cv-detail">&times;</button>
-                  </div>
-                  <h4 id="inspector-cv-title" className="inspector-title">CV Software Engineer</h4>
-                  <p id="inspector-cv-meta" className="inspector-meta">Tạo lúc: --/--/---- | Trạng thái: Ready</p>
+                <div className="cv-result-detail-grid">
+                  <section className="cv-result-panel">
+                    <h5>Việc cần ưu tiên</h5>
+                    <div id="cv-result-priority-actions" className="cv-result-action-list"></div>
+                  </section>
+                  <section className="cv-result-panel">
+                    <h5>Lộ trình học đề xuất</h5>
+                    <div id="cv-result-learning-actions" className="cv-result-action-list"></div>
+                  </section>
+                </div>
 
-                  <div className="agent-runtime-panel">
-                    <div><span>Agent runtime</span><strong id="inspector-agent-runtime">Chưa có dữ liệu</strong></div>
-                    <div><span>Mô hình</span><strong id="inspector-agent-model">—</strong></div>
-                    <div><span>ATS quality</span><strong id="inspector-ats-score">—</strong></div>
-                    <div><span>Guardrail</span><strong id="inspector-guardrail">—</strong></div>
-                  </div>
+                <button type="button" id="btn-open-full-gap-result" className="ship-btn-secondary cv-result-detail-button">Xem bản phân tích chi tiết</button>
+              </div>
+            </div>
 
-                  <div className="inspector-body">
-                    <div className="inspector-section">
-                      <p className="section-label">📌 THÔNG TIN TRÍCH XUẤT</p>
-                      <div id="inspector-personal-info" className="info-grid"></div>
-                    </div>
-
-                    <div className="inspector-section">
-                      <p className="section-label">⚡ HARD SKILLS</p>
-                      <div id="inspector-skills-cloud" className="skills-cloud"></div>
-                    </div>
-
-                    <div className="inspector-section">
-                      <p className="section-label">🤝 SOFT SKILLS</p>
-                      <div id="inspector-soft-skills-cloud" className="skills-cloud"></div>
-                    </div>
-
-                    <div className="inspector-section">
-                      <p className="section-label">💼 TÓM TẮT NỘI DUNG CV</p>
-                      <div id="inspector-raw-preview" className="content-preview-box"></div>
-                    </div>
-
-                    <div className="inspector-section">
-                      <p className="section-label">📚 HỌC VẤN · KINH NGHIỆM · DỰ ÁN</p>
-                      <div id="inspector-evidence-records" className="evidence-records"></div>
-                    </div>
-
-                    <div className="inspector-section" id="inspector-missing-section">
-                      <p className="section-label">⚠️ THÔNG TIN CẦN BỔ SUNG</p>
-                      <div id="inspector-missing-info" className="missing-info"></div>
-                    </div>
-
-                    <div className="inspector-actions">
-                      <button id="btn-inspector-reanalyze" className="ship-btn-secondary">
-                        ✨ Phân tích lại bằng LLM
-                      </button>
-                      <button id="btn-inspector-interview" className="ship-btn-success">
-                        🎙️ Luyện Phỏng Vấn STAR
-                      </button>
-                    </div>
+              <div className="vessel-card manual-cv-card" id="manual-cv-card" hidden>
+                <div className="console-header">
+                  <div className="console-icon console-icon-purple"><span aria-hidden="true">✎</span></div>
+                  <div>
+                    <h3 className="console-title">TẠO CV MỚI TỪ TEMPLATE ĐÃ CHỌN</h3>
+                    <p className="console-subtitle">Chỉ nhập thông tin có thật. Bạn có thể kiểm tra và xuất PDF sau khi lưu.</p>
                   </div>
                 </div>
+                <form id="manual-cv-form" className="manual-cv-form">
+                  <input type="hidden" id="manual-cv-template" value="classic" />
+                  <div className="manual-cv-grid">
+                    <div className="form-group"><label className="ship-label" htmlFor="manual-cv-title">Tên CV</label><input id="manual-cv-title" className="ship-input" placeholder="CV Frontend Developer 2026" required /></div>
+                    <div className="form-group"><label className="ship-label" htmlFor="manual-cv-name">Họ và tên</label><input id="manual-cv-name" className="ship-input" required /></div>
+                    <div className="form-group"><label className="ship-label" htmlFor="manual-cv-email">Email</label><input id="manual-cv-email" type="email" className="ship-input" /></div>
+                    <div className="form-group"><label className="ship-label" htmlFor="manual-cv-phone">Số điện thoại</label><input id="manual-cv-phone" className="ship-input" /></div>
+                  </div>
+                  <div className="form-group"><label className="ship-label" htmlFor="manual-cv-summary">Giới thiệu ngắn</label><textarea id="manual-cv-summary" className="ship-input" placeholder="Mục tiêu nghề nghiệp và thế mạnh nổi bật"></textarea></div>
+                  <div className="form-group"><label className="ship-label" htmlFor="manual-cv-skills">Kỹ năng</label><input id="manual-cv-skills" className="ship-input" placeholder="Python, React, SQL (ngăn cách bằng dấu phẩy)" /></div>
+                  <div className="manual-cv-grid">
+                    <div className="form-group"><label className="ship-label" htmlFor="manual-cv-education">Học vấn</label><textarea id="manual-cv-education" className="ship-input" placeholder="Mỗi nội dung một dòng"></textarea></div>
+                    <div className="form-group"><label className="ship-label" htmlFor="manual-cv-experience">Kinh nghiệm</label><textarea id="manual-cv-experience" className="ship-input" placeholder="Mỗi nội dung một dòng"></textarea></div>
+                  </div>
+                  <div className="form-group"><label className="ship-label" htmlFor="manual-cv-projects">Dự án</label><textarea id="manual-cv-projects" className="ship-input" placeholder="Mỗi dự án một dòng"></textarea></div>
+                  <button type="submit" className="ship-btn-primary">LƯU CV THEO TEMPLATE ĐÃ CHỌN</button>
+                </form>
               </div>
             </div>
           </div>
-        </div>
       </section>
 
       {/* ===== 3. VIEW: THƯ VIỆN JOBS ===== */}
@@ -908,6 +864,103 @@ export default function Page() {
                     <button type="submit" className="btn-primary full-width">Lưu JD từ nội dung</button>
                   </form>
                 </section>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== 5. VIEW: GAP ANALYSIS ===== */}
+      <section className="app-view" id="view-gap">
+        <div className="page-container">
+          <div className="page-header">
+            <div className="page-badge badge-pink">DECK DELTA // NAVIGATION DECK</div>
+            <h1 className="page-title">🎯 Phân Tích Match Score &amp; Lộ Trình Nâng Cấp Kỹ Năng</h1>
+            <p className="page-sub">So khớp CV với JD mục tiêu &amp; đề xuất tối ưu câu từ Chân Thật (Anti-Hallucination)</p>
+          </div>
+
+          <div className="trajectory-roadmap-card">
+            <div className="roadmap-header">
+              <span className="pulse-dot cyan"></span>
+              <h3 className="roadmap-title">QUỸ ĐẠO BỔ SUNG KỸ NĂNG MỤC TIÊU (CAREER MILESTONE ROADMAP)</h3>
+            </div>
+            <div className="trajectory-steps">
+              <div className="t-step step-done">
+                <div className="step-num">01</div>
+                <div className="step-content">
+                  <span className="step-label">Nền Tảng Đã Có</span>
+                  <span className="step-title">Python &amp; Web Dev Fundamentals</span>
+                </div>
+              </div>
+              <div className="t-step step-current">
+                <div className="step-num">02</div>
+                <div className="step-content">
+                  <span className="step-label">Kỹ Năng Đang Bổ Sung</span>
+                  <span className="step-title">FastAPI Backend &amp; Docker Deployment</span>
+                </div>
+              </div>
+              <div className="t-step step-next">
+                <div className="step-num">03</div>
+                <div className="step-content">
+                  <span className="step-label">Milestone Tiếp Theo</span>
+                  <span className="step-title">LangGraph Agent &amp; System Architecture</span>
+                </div>
+              </div>
+              <div className="t-step step-target">
+                <div className="step-num">04</div>
+                <div className="step-content">
+                  <span className="step-label">Đích Đến Mục Tiêu</span>
+                  <span className="step-title">Senior AI &amp; Fullstack Specialist</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="gap-workspace">
+            <div className="gap-card">
+              <div className="form-row gap-selection-grid margin-bottom">
+                <div className="form-group flex-1">
+                  <label className="form-label">Chọn CV:</label>
+                  <div className="gap-select-shell">
+                    <span className="gap-select-icon" aria-hidden="true">📄</span>
+                    <select id="page-gap-select-cv" className="form-input gap-select" aria-label="Chọn CV để phân tích"></select>
+                    <span className="gap-select-chevron" aria-hidden="true">⌄</span>
+                  </div>
+                </div>
+                <div className="form-group flex-1">
+                  <label className="form-label">Chọn JD Mục Tiêu:</label>
+                  <div className="gap-select-shell">
+                    <span className="gap-select-icon" aria-hidden="true">🎯</span>
+                    <select id="page-gap-select-jd" className="form-input gap-select" aria-label="Chọn JD mục tiêu"></select>
+                    <span className="gap-select-chevron" aria-hidden="true">⌄</span>
+                  </div>
+                </div>
+              </div>
+              <button id="page-btn-run-gap" className="btn-primary full-width gap-analysis-submit">
+                <span className="gap-submit-icon" aria-hidden="true">✦</span>
+                <span>Chạy Phân Tích Khớp Hồ Sơ CV - JD</span>
+              </button>
+            </div>
+
+            <div id="page-gap-results-container" className="gap-results-card" style={{ display: 'none' }}>
+              <div className="score-header">
+                <span className="score-title">Tỷ Lệ Phù Hợp (Match Score):</span>
+                <span id="page-gap-match-score-badge" className="badge badge-ok match-score-badge">0%</span>
+              </div>
+
+              <div className="gap-result-block">
+                <p className="block-title title-green">✅ Kỹ năng đáp ứng tốt (Matching Skills):</p>
+                <div id="page-gap-matching-skills" className="tags-row"></div>
+              </div>
+
+              <div className="gap-result-block">
+                <p className="block-title title-red">⚠️ Kỹ năng còn thiếu (Missing Skills):</p>
+                <div id="page-gap-missing-skills" className="tags-row"></div>
+              </div>
+
+              <div className="gap-result-block">
+                <p className="block-title title-purple">💡 Đề xuất chỉnh sửa câu từ chuẩn ATS (Anti-Hallucination):</p>
+                <div id="page-gap-suggestions-list" className="suggestions-stack"></div>
               </div>
             </div>
           </div>
@@ -1734,6 +1787,59 @@ export default function Page() {
           <div className="delete-confirm-actions">
             <button className="delete-confirm-btn-cancel" id="delete-confirm-cancel">Hủy bỏ</button>
             <button className="delete-confirm-btn-delete" id="delete-confirm-ok">Xóa Người Dùng</button>
+          </div>
+        </div>
+      </div>
+      {/* ═══ 3-CV TEMPLATES SELECTION GALLERY MODAL ═══ */}
+      <div className="modal-overlay" id="cv-template-modal-overlay" style={{ display: 'none', zIndex: 9999 }}>
+        <div className="archive-modal-content" style={{ maxWidth: '920px', width: '94%' }}>
+          <div className="archive-modal-header">
+            <div>
+              <h2 style={{ margin: 0, fontSize: '20px', color: '#00e5ff' }}>🎨 CHỌN TEMPLATE CV PHÙ HỢP CỦA BẠN</h2>
+              <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#94a3b8' }}>Mỗi template có bố cục cấu trúc thiết kế hoàn toàn khác nhau cho từng ngành nghề</p>
+            </div>
+            <button className="archive-modal-close" id="btn-close-template-modal" type="button">&times;</button>
+          </div>
+
+          <div className="template-gallery-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px', marginTop: '16px' }}>
+            {/* Template 1: Modern 2-Column */}
+            <div className="template-card" style={{ background: 'rgba(15, 23, 42, 0.7)', border: '1px solid rgba(0, 229, 255, 0.3)', borderRadius: '14px', padding: '16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '12px' }}>
+              <div>
+                <div className="template-card-header" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                  <span className="archive-tag tag-cv">HỒ SƠ 2 CỘT</span>
+                  <span className="badge badge-ok">PHỔ BIẾN NHẤT</span>
+                </div>
+                <h3 className="template-title" style={{ fontSize: '16px', color: '#fff', margin: '6px 0' }}>1. Modern Two-Column (Hồ Sơ 2 Cột Hiện Đại)</h3>
+                <p className="template-desc" style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: '1.4' }}>Bố cục 2 cột phân chia cột trái (Thông tin, Kỹ năng, Học vấn) &amp; cột phải (Mục tiêu, Kinh nghiệm, Dự án). Accent Blue.</p>
+              </div>
+              <button type="button" className="archive-btn-view btn-use-template" data-template="modern" style={{ width: '100%', padding: '10px', fontSize: '13px', background: '#2563eb', color: '#fff', borderColor: '#3b82f6' }}>Dùng Mẫu 2 Cột ➔</button>
+            </div>
+
+            {/* Template 2: Classic ATS Single Column */}
+            <div className="template-card" style={{ background: 'rgba(15, 23, 42, 0.7)', border: '1px solid rgba(255, 255, 255, 0.15)', borderRadius: '14px', padding: '16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '12px' }}>
+              <div>
+                <div className="template-card-header" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                  <span className="archive-tag tag-optimized">ATS STANDARD</span>
+                  <span className="badge badge-ok" style={{ background: 'rgba(0, 229, 255, 0.2)', color: '#00e5ff' }}>CHUẨN DOANH NGHIỆP</span>
+                </div>
+                <h3 className="template-title" style={{ fontSize: '16px', color: '#fff', margin: '6px 0' }}>2. Classic ATS Standard (Hồ Sơ Cổ Điển 1 Cột)</h3>
+                <p className="template-desc" style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: '1.4' }}>Bố cục 1 cột truyền thống căn giữa từ trên xuống dưới với đường kẻ kẻ thanh lịch. Tối ưu 100% cho máy quét ATS.</p>
+              </div>
+              <button type="button" className="archive-btn-view btn-use-template" data-template="classic" style={{ width: '100%', padding: '10px', fontSize: '13px', background: '#334155', color: '#fff', borderColor: '#64748b' }}>Dùng Mẫu ATS ➔</button>
+            </div>
+
+            {/* Template 3: Creative Tech Minimalist */}
+            <div className="template-card" style={{ background: 'rgba(15, 23, 42, 0.7)', border: '1px solid rgba(13, 148, 136, 0.4)', borderRadius: '14px', padding: '16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '12px' }}>
+              <div>
+                <div className="template-card-header" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                  <span className="archive-tag tag-interview">CREATIVE TECH</span>
+                  <span className="badge badge-ok" style={{ background: 'rgba(13, 148, 136, 0.2)', color: '#2dd4bf' }}>SÁNG TẠO</span>
+                </div>
+                <h3 className="template-title" style={{ fontSize: '16px', color: '#fff', margin: '6px 0' }}>3. Creative Tech Timeline (Hồ Sơ Sáng Tạo &amp; Tech)</h3>
+                <p className="template-desc" style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: '1.4' }}>Header dạng Banner cá nhân hóa, khối Kỹ năng hiển thị dạng Badges / Tag Cloud, Kinh nghiệm theo timeline thời gian dọc.</p>
+              </div>
+              <button type="button" className="archive-btn-view btn-use-template" data-template="compact" style={{ width: '100%', padding: '10px', fontSize: '13px', background: '#0d9488', color: '#fff', borderColor: '#14b8a6' }}>Dùng Mẫu Sáng Tạo ➔</button>
+            </div>
           </div>
         </div>
       </div>

@@ -116,7 +116,7 @@ export class ApiClient {
   }
 
   // --- CV APIs ---
-  static async uploadCV(file, title = '', useLLM = false) {
+  static async uploadCV(file, title = '', useLLM = true) {
     const formData = new FormData();
     formData.append('file', file);
     if (title) formData.append('title', title);
