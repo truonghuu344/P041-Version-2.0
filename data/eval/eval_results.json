@@ -1,0 +1,26 @@
+{
+    "timestamp": "2026-08-11T12:09:32.601139",
+    "metrics": {
+        "cvs_processed": 100,
+        "jds_processed": 57,
+        "average_cv_skills_word_count": 7.7,
+        "average_jd_req_word_count": 103.26,
+        "average_cv_experience_years": 2.34
+    },
+    "test_cases": [
+        {
+            "id": "TC_01",
+            "type": "Cross-industry",
+            "description": "Test CV Sales vs JD IT",
+            "expected_score": "< 30%",
+            "status": "Ready for Backend Testing"
+        },
+        {
+            "id": "TC_02",
+            "type": "Skill Gap",
+            "description": "Test CV IT thiếu Node.js vs JD Node.js",
+            "expected_score": "< 60%",
+            "status": "Ready for Backend Testing"
+        }
+    ]
+}

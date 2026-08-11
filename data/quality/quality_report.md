@@ -1,48 +1,33 @@
-# 📊 Data Quality & Observability Report
+# 📊 Báo cáo Đánh giá Dữ liệu (CV & JD Evaluation Report)
+*Cập nhật lần cuối: 2026-08-11 12:09:32*
 
-> **Thời gian tạo báo cáo:** `2026-08-07T03:29:49Z`  
-> **Tổng số bản ghi kiểm định:** `91`
+## 1. Đánh giá Tập dữ liệu CV (Hồ sơ ứng viên)
+- **Tổng số lượng**: 100 CVs đã được làm sạch.
+- **Độ dài trung bình cột Kỹ năng (Skills)**: 8 từ / CV.
+- **Số năm kinh nghiệm trung bình**: 2.3 năm.
+- **Top 5 Ngành nghề/Vị trí phổ biến nhất trong tập CV**:
+- **Cloud Architect**: 5 CVs
+- **Cybersecurity Engineer**: 4 CVs
+- **Prompt Engineer**: 4 CVs
+- **Data Scientist**: 4 CVs
+- **Quantum Computing Specialist**: 4 CVs
 
----
+*Nhận xét CV*: Tập CV có độ đa dạng vị trí tốt, hỗ trợ kiểm thử case "CV trái ngành".
 
-## 🛡️ 1. Kiểm định Schema Compliance (Pydantic Validator)
+## 2. Đánh giá Tập dữ liệu JD (Mô tả công việc)
+- **Tổng số lượng**: 57 JDs đã được làm sạch.
+- **Độ dài trung bình yêu cầu (Requirements)**: 103 từ / JD.
+- **Số lượng kỹ năng trung bình yêu cầu**: 2.8 kỹ năng / JD.
+- **Top 5 Vị trí tuyển dụng phổ biến nhất**:
+- **[HN] Công ty TNHH Admatic Tuyển Dụng Cộng Tác Viên Lập Trình Web-PHP-Laravel 2017**: 1 JDs
+- **[HCM] Unik Technology Tuyển Dụng Developers 2017**: 1 JDs
+- **[HN] SCUTI tuyển dụng Senior React JS Developer lương $800-$1200**: 1 JDs
+- **[HN] TUYỂN THỰC TẬP SINH JAVA !!!!!**: 1 JDs
+- **[HN] THỰC TẬP SINH JAVA**: 1 JDs
 
-| Chỉ số (Metric) | Số lượng bản ghi | Tỷ lệ (%) | Trạng thái |
-| :--- | :---: | :---: | :---: |
-| **Bản ghi hợp lệ (Schema Valid)** | `91` | `100.0%` | ✅ ĐẠT |
-| **Bản ghi vi phạm Schema** | `0` | `0.0%` | - |
+*Nhận xét JD*: Toàn bộ JDs tập trung mạnh vào mảng IT, lý tưởng để làm mốc đối chiếu với các CV Sales/HR nhằm phát hiện Skill Gap.
 
----
-
-## 📈 2. Chỉ số Chất lượng Chi tiết (Data Quality Metrics)
-
-| Chỉ số Đánh giá | Bản ghi vi phạm / Thiếu | Tỷ lệ (%) | Mục tiêu tiêu chuẩn | Đánh giá |
-| :--- | :---: | :---: | :---: | :---: |
-| **Thiếu Tên công ty (`company_name`)** | `0` | `0.0%` | `< 5%` | ✅ XUẤT SẮC |
-| **Trống Địa điểm (`location: []`)** | `0` | `0.0%` | `< 5%` | ✅ XUẤT SẮC |
-| **Rác/Phình Địa điểm (>3 thành phố)** | `0` | `0.0%` | `0%` | ✅ HOÀN HẢO |
-| **Mức lương Thỏa thuận / Default** | `36` | `39.56%` | `< 80%` | ✅ CHẤP NHẬN |
-| **Trống Kỹ năng (`skills: []`)** | `3` | `3.3%` | `< 2%` | ❌ NGUY CƠ |
-
----
-
-## 🌐 3. Phân bố Dữ liệu Theo Nguồn (Source Distribution)
-
-| Nguồn Thu thập (Source) | Số lượng JD | Tỷ lệ (%) |
-| :--- | :---: | :---: |
-| **LinkedIn** | `36` | `39.6%` |
-| **Joboko** | `54` | `59.3%` |
-| **ITviec** | `1` | `1.1%` |
-
----
-
-## 🏷️ 4. Phân bố Dữ liệu Theo Nhóm Ngành (Domain Category)
-
-| Nhóm Ngành (Domain) | Số lượng JD | Tỷ lệ (%) |
-| :--- | :---: | :---: |
-| **Backend** | `19` | `20.9%` |
-| **Frontend** | `27` | `29.7%` |
-| **AI/Data** | `19` | `20.9%` |
-| **Mobile** | `1` | `1.1%` |
-| **QA/QC** | `15` | `16.5%` |
-| **DevOps** | `10` | `11.0%` |
+## 3. Khuyến nghị cho Mô hình Reranker
+Hệ thống Backend cần chạy qua 2 Test Case chính:
+1. **CV Trái Ngành**: Reranker phải đọc Context và lọc ra được các CV Sales/HR khi apply vào các Job IT.
+2. **Thiếu Skill**: Reranker phải trừ điểm nếu CV thiếu các kỹ năng cứng trong JD (VD: JD yêu cầu 5 kỹ năng nhưng CV chỉ có 2).
