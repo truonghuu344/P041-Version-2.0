@@ -58,3 +58,8 @@ out/
 # AI logs — tracked structure, ignored content
 .ai-log/*.jsonl
 .ai-log/archive/
+
+.claude
+
+# Personal Claude Code work journal — local only, not part of BTC's AI-usage logging
+scripts/claude_memory_hook.py

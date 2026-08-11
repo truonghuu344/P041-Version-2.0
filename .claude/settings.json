@@ -7,6 +7,11 @@
             "type": "command",
             "command": "bash scripts/_pyrun.sh scripts/log_hook.py --tool=claude",
             "shell": "bash"
+          },
+          {
+            "type": "command",
+            "command": "bash scripts/_pyrun.sh scripts/claude_memory_hook.py 2>/dev/null || true",
+            "shell": "bash"
           }
         ]
       }
@@ -18,6 +23,11 @@
           {
             "type": "command",
             "command": "bash scripts/_pyrun.sh scripts/log_hook.py --tool=claude",
+            "shell": "bash"
+          },
+          {
+            "type": "command",
+            "command": "bash scripts/_pyrun.sh scripts/claude_memory_hook.py 2>/dev/null || true",
             "shell": "bash"
           }
         ]
