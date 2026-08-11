@@ -1,3 +1,5 @@
+version: "3.8"
+
 services:
   backend:
     build:
@@ -15,16 +17,3 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      
-  db:
-    image: pgvector/pgvector:pg16
-    container_name: ats_postgres
-    environment:
-      POSTGRES_USER: ats_user
-      POSTGRES_PASSWORD: ats_password
-      POSTGRES_DB: ats_db
-    ports:
-      - "5432:5432"
-    volumes:
-      - ./data/postgres_data:/var/lib/postgresql/data
-    restart: unless-stopped

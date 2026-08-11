@@ -25,11 +25,8 @@ class Settings(BaseSettings):
     model_name: str = "gpt-4o-mini"
     llm_temperature: float = Field(default=0.7, ge=0.0, le=2.0)
 
-    # Database
-    database_url: str = "sqlite:///./data/app.db"
-
-    # Vector Store
-    chroma_persist_dir: str = "./data/chroma"
+    # Database (PostgreSQL)
+    database_url: str = "postgresql://user:password@localhost:5432/db_name"
 
 
 @lru_cache
