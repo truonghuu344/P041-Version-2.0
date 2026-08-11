@@ -3837,7 +3837,6 @@ TÊN CÔNG TY:
   if (cvClose) cvClose.addEventListener('click', closeCVModal);
 
   document.getElementById('icon-cv-btn')?.addEventListener('click', openCVModal);
-  document.getElementById('btn-consult')?.addEventListener('click', openCVModal);
 
   async function loadCVList() {
     if (!cvListContainer) return;
@@ -4114,7 +4113,6 @@ TÊN CÔNG TY:
   if (intClose) intClose.addEventListener('click', closeInterviewModal);
 
   document.getElementById('icon-megaphone-btn')?.addEventListener('click', openInterviewModal);
-  document.getElementById('btn-try-free')?.addEventListener('click', openInterviewModal);
   document.getElementById('feature-deep-interview')?.addEventListener('click', openInterviewModal);
 
   async function populateInterviewOptions() {
