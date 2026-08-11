@@ -679,7 +679,7 @@ body {
 
 .agent-card {
   width: 100%;
-  max-width: 600px;
+  max-width: 880px;
   background: rgba(12, 14, 44, 0.88);
   border: 1.5px solid rgba(124, 77, 255, 0.4);
   border-radius: var(--radius-xl);
@@ -757,7 +757,7 @@ body {
 
 .features-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
 }
 
@@ -772,6 +772,10 @@ body {
   cursor: pointer;
   backdrop-filter: blur(10px);
   transition: background 0.25s, border-color 0.25s, transform 0.25s, box-shadow 0.25s;
+}
+
+.feature-item > div:last-child {
+  min-width: 0;
 }
 .feature-item:hover {
   background: rgba(124,77,255,0.18);
@@ -822,6 +826,21 @@ body {
 }
 
 /* ===== RESPONSIVE ===== */
+@media (max-width: 900px) {
+  .agent-card {
+    max-width: 680px;
+    flex-direction: column;
+  }
+
+  .agent-visual {
+    width: auto;
+  }
+
+  .agent-info {
+    width: 100%;
+  }
+}
+
 @media (max-width: 640px) {
   .nav-links { display: none; }
   .btn-login { display: none; }
@@ -835,6 +854,7 @@ body {
   .agent-card { flex-direction: column; padding: 24px 20px; gap: 20px; }
   .agent-visual { width: auto; }
   .agent-title { font-size: 18px; }
+  .features-grid { grid-template-columns: 1fr; }
 
   .icon-row { gap: 14px; }
   .icon-btn { width: 54px; height: 54px; }
