@@ -1,7 +1,60 @@
 # Career Assistant Backend
 
-Backend của Career Assistant X sử dụng FastAPI, SQLAlchemy async, PostgreSQL và
-Alembic. Thư mục này được xây dựng độc lập với giao diện tại `src/frontend`.
+Backend của Career Assistant X sử dụng FastAPI, SQLAlchemy async, PostgreSQL và Alembic. Thư mục này được xây dựng độc lập với giao diện tại `src/frontend`.
+
+## 🛠️ Công Nghệ & Tech Stack (Technology Stack)
+
+Hệ thống Backend được thiết kế dựa trên kiến trúc bất đồng bộ (async), ưu tiên hiệu năng cao, bảo mật và khả năng tích hợp AI Agent mạnh mẽ.
+
+### 1. Môi trường Thực thi & Web Framework (Core & Web API)
+| Công nghệ / Thư viện | Phiên bản | Vai trò & Mục đích |
+| :--- | :--- | :--- |
+| **Python** | `3.11+` | Ngôn ngữ lập trình chính cho Backend |
+| **FastAPI** | `>=0.115.0` | High-performance Web Framework hỗ trợ async native & OpenAPI (Swagger) auto-docs |
+| **Uvicorn** | `>=0.34.0` | ASGI Server chuẩn công nghiệp cho FastAPI |
+| **Pydantic** | `>=2.10.0` | Data validation, serialization & strict typing |
+| **Pydantic Settings** | `>=2.7.0` | Quản lý cấu hình ứng dụng và biến môi trường (`.env`) |
+
+### 2. Cơ Sở Dữ Liệu & Vector Search (Database & Vector Store)
+| Công nghệ / Thư viện | Phiên bản | Vai trò & Mục đích |
+| :--- | :--- | :--- |
+| **PostgreSQL** | `16` (Docker) | Relational Database chính lưu trữ Users, Resumes, JDs, Interviews |
+| **pgvector** | Extension (`pg16`) / Lib `>=0.2.1` | Lưu trữ Vector Embeddings và thực hiện semantic search / similarity search |
+| **SQLAlchemy** | `>=2.0.0` | ORM với Async Engine & Session pool bất đồng bộ |
+| **Asyncpg** | `>=0.30.0` | PostgreSQL DB Driver bất đồng bộ (Async Driver) |
+| **Alembic** | `>=1.14.0` | Quản lý và thực thi Database Migrations |
+| **Psycopg2-binary** | `>=2.9.0` | Database driver đồng bộ (phục vụ migrations / scripts) |
+
+### 3. Xác Thực & Bảo Mật (Authentication & Security)
+| Công nghệ / Thư viện | Phiên bản | Vai trò & Mục đích |
+| :--- | :--- | :--- |
+| **PyJWT** | `>=2.10.0` | Tạo và xác thực JSON Web Token (JWT) trong HttpOnly cookies / Authorization headers |
+| **Bcrypt / Scrypt** | `>=4.2.0` | Mã hóa và băm mật khẩu an toàn |
+| **Google Auth** | `>=2.38.0` | Verify Google OAuth2 ID Token từ frontend |
+| **Email Validator** | `>=2.2.0` | Validate định dạng email đăng ký |
+
+### 4. Hệ Thống AI & Multi-Agent Framework
+| Công nghệ / Thư viện | Phiên bản | Vai trò & Mục đích |
+| :--- | :--- | :--- |
+| **OpenAI SDK** | `>=2.53.0` | Tích hợp LLMs (GPT-4o, GPT-4o-mini) cho phân tích CV, JD và tạo câu hỏi phỏng vấn |
+| **LangChain** | `>=0.3.0` | Framework tích hợp LLM & prompt engineering |
+| **LangGraph** | `>=0.2.0` | Stateful Multi-Agent Orchestration (điều phối luồng phỏng vấn, tư vấn career) |
+| **Sentence-Transformers** | `>=3.0.0` | Sinh vector embedding cho CV/JD ở môi trường local / custom models |
+| **Scikit-learn** & **NumPy** | `>=1.3.0` / `>=1.26.0` | Tính toán ma trận và độ tương đồng Cosine (Cosine Similarity) |
+
+### 5. Utilities & Web Scraping
+| Công nghệ / Thư viện | Phiên bản | Vai trò & Mục đích |
+| :--- | :--- | :--- |
+| **BeautifulSoup4** | `>=4.12.0` | Parse & bóc tách dữ liệu từ các đường dẫn tuyển dụng / JD |
+| **Python-Multipart** | `>=0.0.9` | Parse form-data và file upload (đọc file CV PDF/DOCX) |
+| **HTTPX** | `>=0.28.0` | Async HTTP Client gửi request tới external APIs |
+
+### 6. Công Cụ Phát Triển, Testing & Containerization
+| Công nghệ / Thư viện | Phiên bản | Vai trò & Mục đích |
+| :--- | :--- | :--- |
+| **Docker & Docker Compose** | Multi-stage build | Đóng gói môi trường Backend & chạy PostgreSQL 16 pgvector |
+| **Ruff** | `>=0.8.0` | High-speed Linter & Formatter cho Python code quality |
+| **Pytest & Pytest-Asyncio**| `>=8.0.0` / `>=0.24.0` | Framework viết unit test và integration test async |
 
 ## Trạng thái hiện tại
 
