@@ -1,0 +1,1768 @@
+[
+  {
+    "cv_id": "CV-001",
+    "candidate_name": "Nguyen Van A",
+    "source": "Simulated",
+    "category": "Backend Engineer / Software Engineer Intern",
+    "skills": [
+      "Java",
+      "Spring Boot",
+      "Python",
+      "SQL",
+      "MySQL",
+      "RESTful API",
+      "Git",
+      "Docker",
+      "Algorithms",
+      "Data Structure"
+    ],
+    "top_matches": [
+      {
+        "cv_id": "CV-001",
+        "candidate_name": "Nguyen Van A",
+        "job_id": "JD-092",
+        "job_title": "Penetration Tester - Intern",
+        "company_name": "Bouygues Construction IT Vietnam",
+        "total_ats_score": 80.5,
+        "fit_status": "RẤT PHÙ HỢP (High Match)",
+        "badge_color": "Green",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 90.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      },
+      {
+        "cv_id": "CV-001",
+        "candidate_name": "Nguyen Van A",
+        "job_id": "JD-094",
+        "job_title": "Trainee 2026 QA/Tester",
+        "company_name": "AvePoint",
+        "total_ats_score": 80.5,
+        "fit_status": "RẤT PHÙ HỢP (High Match)",
+        "badge_color": "Green",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 90.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      },
+      {
+        "cv_id": "CV-001",
+        "candidate_name": "Nguyen Van A",
+        "job_id": "JD-004",
+        "job_title": "Thực tập sinhBackend Developer",
+        "company_name": "Công ty Cổ phần HouseNow",
+        "total_ats_score": 76.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 60.0,
+          "nice_skills_score": 100.0,
+          "domain_score": 90.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [
+          "java",
+          "mysql",
+          "restful api"
+        ],
+        "missing_must_have_skills": [
+          "nodejs",
+          "postgresql"
+        ]
+      }
+    ]
+  },
+  {
+    "cv_id": "CV-002",
+    "candidate_name": "Tran Thi B",
+    "source": "Simulated",
+    "category": "Security Software Engineer Intern",
+    "skills": [
+      "Security Engineering",
+      "Python",
+      "Golang",
+      "PHP",
+      "Network Analysis",
+      "VPN",
+      "Proxy",
+      "DNS",
+      "AI",
+      "Software Engineering"
+    ],
+    "top_matches": [
+      {
+        "cv_id": "CV-002",
+        "candidate_name": "Tran Thi B",
+        "job_id": "JD-048",
+        "job_title": "AI EngineerIntern",
+        "company_name": "CÔNG TY TNHH AI POWER",
+        "total_ats_score": 96.5,
+        "fit_status": "RẤT PHÙ HỢP (High Match)",
+        "badge_color": "Green",
+        "breakdown": {
+          "hard_skills_score": 100.0,
+          "nice_skills_score": 100.0,
+          "domain_score": 90.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [
+          "python"
+        ],
+        "missing_must_have_skills": []
+      },
+      {
+        "cv_id": "CV-002",
+        "candidate_name": "Tran Thi B",
+        "job_id": "JD-098",
+        "job_title": "Security Software Engineer Intern",
+        "company_name": "GeoComply",
+        "total_ats_score": 96.5,
+        "fit_status": "RẤT PHÙ HỢP (High Match)",
+        "badge_color": "Green",
+        "breakdown": {
+          "hard_skills_score": 100.0,
+          "nice_skills_score": 100.0,
+          "domain_score": 90.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [
+          "ai",
+          "software engineering"
+        ],
+        "missing_must_have_skills": []
+      },
+      {
+        "cv_id": "CV-002",
+        "candidate_name": "Tran Thi B",
+        "job_id": "JD-052",
+        "job_title": "Thực Tập Sinh AIContent Creator Intern",
+        "company_name": "Công Ty TNHH Sinh Học Nông Nghiệp Rồng Vàng",
+        "total_ats_score": 90.5,
+        "fit_status": "RẤT PHÙ HỢP (High Match)",
+        "badge_color": "Green",
+        "breakdown": {
+          "hard_skills_score": 100.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 90.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [
+          "ai"
+        ],
+        "missing_must_have_skills": []
+      }
+    ]
+  },
+  {
+    "cv_id": "CV-003",
+    "candidate_name": "Le Hoang C",
+    "source": "Simulated",
+    "category": "Frontend Developer",
+    "skills": [
+      "Frontend",
+      "HTML",
+      "CSS",
+      "JavaScript",
+      "TypeScript",
+      "ReactJS",
+      "VueJS",
+      "RESTful API",
+      "UI/UX"
+    ],
+    "top_matches": [
+      {
+        "cv_id": "CV-003",
+        "candidate_name": "Le Hoang C",
+        "job_id": "JD-011",
+        "job_title": "Thực Tập SinhFrontend Developer",
+        "company_name": "Công Ty Cổ Phần Ftf-Edugroup",
+        "total_ats_score": 90.5,
+        "fit_status": "RẤT PHÙ HỢP (High Match)",
+        "badge_color": "Green",
+        "breakdown": {
+          "hard_skills_score": 100.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 90.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [
+          "javascript"
+        ],
+        "missing_must_have_skills": []
+      },
+      {
+        "cv_id": "CV-003",
+        "candidate_name": "Le Hoang C",
+        "job_id": "JD-020",
+        "job_title": "[Junior]Mobile Developer(Flutter)",
+        "company_name": "CÔNG TY TNHH ANFIN",
+        "total_ats_score": 80.5,
+        "fit_status": "RẤT PHÙ HỢP (High Match)",
+        "badge_color": "Green",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 90.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      },
+      {
+        "cv_id": "CV-003",
+        "candidate_name": "Le Hoang C",
+        "job_id": "JD-092",
+        "job_title": "Penetration Tester - Intern",
+        "company_name": "Bouygues Construction IT Vietnam",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      }
+    ]
+  },
+  {
+    "cv_id": "CV-004",
+    "candidate_name": "Pham Minh D",
+    "source": "Simulated",
+    "category": "QA / Tester Intern",
+    "skills": [
+      "QA",
+      "QC",
+      "Manual Testing",
+      "Automation",
+      "Selenium",
+      "Postman",
+      "Tester",
+      "Bug Tracking",
+      "Python"
+    ],
+    "top_matches": [
+      {
+        "cv_id": "CV-004",
+        "candidate_name": "Pham Minh D",
+        "job_id": "JD-027",
+        "job_title": "Thực tập sinh Tester/Quality Assurance có lương hỗ trợ",
+        "company_name": "CÔNG TY CỔ PHẦN CÔNG NGHỆ VÀ DỊCH VỤ CODLUCK",
+        "total_ats_score": 90.5,
+        "fit_status": "RẤT PHÙ HỢP (High Match)",
+        "badge_color": "Green",
+        "breakdown": {
+          "hard_skills_score": 100.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 90.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [
+          "qa",
+          "tester"
+        ],
+        "missing_must_have_skills": []
+      },
+      {
+        "cv_id": "CV-004",
+        "candidate_name": "Pham Minh D",
+        "job_id": "JD-029",
+        "job_title": "QA/TesterIntern",
+        "company_name": "Công ty Cổ phần HouseNow",
+        "total_ats_score": 90.5,
+        "fit_status": "RẤT PHÙ HỢP (High Match)",
+        "badge_color": "Green",
+        "breakdown": {
+          "hard_skills_score": 100.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 90.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [
+          "manual testing",
+          "qa",
+          "tester"
+        ],
+        "missing_must_have_skills": []
+      },
+      {
+        "cv_id": "CV-004",
+        "candidate_name": "Pham Minh D",
+        "job_id": "JD-030",
+        "job_title": "[LTH] QC/TESTERINTERN",
+        "company_name": "Công ty cổ phần giao nhận và vận chuyển indo trần",
+        "total_ats_score": 90.5,
+        "fit_status": "RẤT PHÙ HỢP (High Match)",
+        "badge_color": "Green",
+        "breakdown": {
+          "hard_skills_score": 100.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 90.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [
+          "manual testing",
+          "qc",
+          "tester"
+        ],
+        "missing_must_have_skills": []
+      }
+    ]
+  },
+  {
+    "cv_id": "CV-005",
+    "candidate_name": "Vo Quoc E",
+    "source": "Simulated",
+    "category": "Junior CloudOps / SysOps Engineer",
+    "skills": [
+      "Linux",
+      "Docker",
+      "Kubernetes",
+      "CI/CD",
+      "AWS",
+      "GCP",
+      "SysOps",
+      "DevOps",
+      "Bash Scripting",
+      "Python"
+    ],
+    "top_matches": [
+      {
+        "cv_id": "CV-005",
+        "candidate_name": "Vo Quoc E",
+        "job_id": "JD-042",
+        "job_title": "Google Cloud Infrastructure SE (Junior/Middle)",
+        "company_name": "Công ty Cổ phần HBLAB",
+        "total_ats_score": 90.5,
+        "fit_status": "RẤT PHÙ HỢP (High Match)",
+        "badge_color": "Green",
+        "breakdown": {
+          "hard_skills_score": 100.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 90.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [
+          "gcp"
+        ],
+        "missing_must_have_skills": []
+      },
+      {
+        "cv_id": "CV-005",
+        "candidate_name": "Vo Quoc E",
+        "job_id": "JD-020",
+        "job_title": "[Junior]Mobile Developer(Flutter)",
+        "company_name": "CÔNG TY TNHH ANFIN",
+        "total_ats_score": 80.5,
+        "fit_status": "RẤT PHÙ HỢP (High Match)",
+        "badge_color": "Green",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 90.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      },
+      {
+        "cv_id": "CV-005",
+        "candidate_name": "Vo Quoc E",
+        "job_id": "JD-094",
+        "job_title": "Trainee 2026 QA/Tester",
+        "company_name": "AvePoint",
+        "total_ats_score": 80.5,
+        "fit_status": "RẤT PHÙ HỢP (High Match)",
+        "badge_color": "Green",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 90.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      }
+    ]
+  },
+  {
+    "cv_id": "CV-KAG-68240723",
+    "candidate_name": "Kaggle Candidate 68240723",
+    "source": "Kaggle/GitHub Resume.csv",
+    "category": "DESIGNER",
+    "skills": [
+      "Oracle"
+    ],
+    "top_matches": [
+      {
+        "cv_id": "CV-KAG-68240723",
+        "candidate_name": "Kaggle Candidate 68240723",
+        "job_id": "JD-020",
+        "job_title": "[Junior]Mobile Developer(Flutter)",
+        "company_name": "CÔNG TY TNHH ANFIN",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      },
+      {
+        "cv_id": "CV-KAG-68240723",
+        "candidate_name": "Kaggle Candidate 68240723",
+        "job_id": "JD-092",
+        "job_title": "Penetration Tester - Intern",
+        "company_name": "Bouygues Construction IT Vietnam",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      },
+      {
+        "cv_id": "CV-KAG-68240723",
+        "candidate_name": "Kaggle Candidate 68240723",
+        "job_id": "JD-094",
+        "job_title": "Trainee 2026 QA/Tester",
+        "company_name": "AvePoint",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      }
+    ]
+  },
+  {
+    "cv_id": "CV-KAG-29147100",
+    "candidate_name": "Kaggle Candidate 29147100",
+    "source": "Kaggle/GitHub Resume.csv",
+    "category": "DESIGNER",
+    "skills": [
+      "HTML"
+    ],
+    "top_matches": [
+      {
+        "cv_id": "CV-KAG-29147100",
+        "candidate_name": "Kaggle Candidate 29147100",
+        "job_id": "JD-020",
+        "job_title": "[Junior]Mobile Developer(Flutter)",
+        "company_name": "CÔNG TY TNHH ANFIN",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      },
+      {
+        "cv_id": "CV-KAG-29147100",
+        "candidate_name": "Kaggle Candidate 29147100",
+        "job_id": "JD-092",
+        "job_title": "Penetration Tester - Intern",
+        "company_name": "Bouygues Construction IT Vietnam",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      },
+      {
+        "cv_id": "CV-KAG-29147100",
+        "candidate_name": "Kaggle Candidate 29147100",
+        "job_id": "JD-094",
+        "job_title": "Trainee 2026 QA/Tester",
+        "company_name": "AvePoint",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      }
+    ]
+  },
+  {
+    "cv_id": "CV-KAG-25061645",
+    "candidate_name": "Kaggle Candidate 25061645",
+    "source": "Kaggle/GitHub Resume.csv",
+    "category": "DESIGNER",
+    "skills": [
+      "CSS",
+      "HTML"
+    ],
+    "top_matches": [
+      {
+        "cv_id": "CV-KAG-25061645",
+        "candidate_name": "Kaggle Candidate 25061645",
+        "job_id": "JD-020",
+        "job_title": "[Junior]Mobile Developer(Flutter)",
+        "company_name": "CÔNG TY TNHH ANFIN",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      },
+      {
+        "cv_id": "CV-KAG-25061645",
+        "candidate_name": "Kaggle Candidate 25061645",
+        "job_id": "JD-092",
+        "job_title": "Penetration Tester - Intern",
+        "company_name": "Bouygues Construction IT Vietnam",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      },
+      {
+        "cv_id": "CV-KAG-25061645",
+        "candidate_name": "Kaggle Candidate 25061645",
+        "job_id": "JD-094",
+        "job_title": "Trainee 2026 QA/Tester",
+        "company_name": "AvePoint",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      }
+    ]
+  },
+  {
+    "cv_id": "CV-KAG-11919526",
+    "candidate_name": "Kaggle Candidate 11919526",
+    "source": "Kaggle/GitHub Resume.csv",
+    "category": "DESIGNER",
+    "skills": [
+      "C",
+      "HTML",
+      "JavaScript",
+      "Oracle",
+      "SQL",
+      "Security",
+      "Unix"
+    ],
+    "top_matches": [
+      {
+        "cv_id": "CV-KAG-11919526",
+        "candidate_name": "Kaggle Candidate 11919526",
+        "job_id": "JD-011",
+        "job_title": "Thực Tập SinhFrontend Developer",
+        "company_name": "Công Ty Cổ Phần Ftf-Edugroup",
+        "total_ats_score": 82.5,
+        "fit_status": "RẤT PHÙ HỢP (High Match)",
+        "badge_color": "Green",
+        "breakdown": {
+          "hard_skills_score": 100.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [
+          "javascript"
+        ],
+        "missing_must_have_skills": []
+      },
+      {
+        "cv_id": "CV-KAG-11919526",
+        "candidate_name": "Kaggle Candidate 11919526",
+        "job_id": "JD-020",
+        "job_title": "[Junior]Mobile Developer(Flutter)",
+        "company_name": "CÔNG TY TNHH ANFIN",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      },
+      {
+        "cv_id": "CV-KAG-11919526",
+        "candidate_name": "Kaggle Candidate 11919526",
+        "job_id": "JD-092",
+        "job_title": "Penetration Tester - Intern",
+        "company_name": "Bouygues Construction IT Vietnam",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      }
+    ]
+  },
+  {
+    "cv_id": "CV-KAG-81011612",
+    "candidate_name": "Kaggle Candidate 81011612",
+    "source": "Kaggle/GitHub Resume.csv",
+    "category": "DESIGNER",
+    "skills": [
+      "HTML",
+      "SQL",
+      "SQL Server"
+    ],
+    "top_matches": [
+      {
+        "cv_id": "CV-KAG-81011612",
+        "candidate_name": "Kaggle Candidate 81011612",
+        "job_id": "JD-020",
+        "job_title": "[Junior]Mobile Developer(Flutter)",
+        "company_name": "CÔNG TY TNHH ANFIN",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      },
+      {
+        "cv_id": "CV-KAG-81011612",
+        "candidate_name": "Kaggle Candidate 81011612",
+        "job_id": "JD-092",
+        "job_title": "Penetration Tester - Intern",
+        "company_name": "Bouygues Construction IT Vietnam",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      },
+      {
+        "cv_id": "CV-KAG-81011612",
+        "candidate_name": "Kaggle Candidate 81011612",
+        "job_id": "JD-094",
+        "job_title": "Trainee 2026 QA/Tester",
+        "company_name": "AvePoint",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      }
+    ]
+  },
+  {
+    "cv_id": "CV-KAG-35990852",
+    "candidate_name": "Kaggle Candidate 35990852",
+    "source": "Kaggle/GitHub Resume.csv",
+    "category": "DESIGNER",
+    "skills": [
+      "C",
+      "HTML",
+      "JavaScript",
+      "MySQL",
+      "PHP",
+      "QA",
+      "SQL",
+      "SQL Server",
+      "Security"
+    ],
+    "top_matches": [
+      {
+        "cv_id": "CV-KAG-35990852",
+        "candidate_name": "Kaggle Candidate 35990852",
+        "job_id": "JD-039",
+        "job_title": "[HCM] Công Ty Công nghệ Golden Owl Solutions Tuyển DụngThực Tập SinhJS Full-stack/DevOps/Ruby on Rails/PHP/UI/UX Designer/Điều phối Full-time 2026",
+        "company_name": "Công Ty Công Nghệ Golden Owl Solutions",
+        "total_ats_score": 90.5,
+        "fit_status": "RẤT PHÙ HỢP (High Match)",
+        "badge_color": "Green",
+        "breakdown": {
+          "hard_skills_score": 100.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 90.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [
+          "php"
+        ],
+        "missing_must_have_skills": []
+      },
+      {
+        "cv_id": "CV-KAG-35990852",
+        "candidate_name": "Kaggle Candidate 35990852",
+        "job_id": "JD-011",
+        "job_title": "Thực Tập SinhFrontend Developer",
+        "company_name": "Công Ty Cổ Phần Ftf-Edugroup",
+        "total_ats_score": 82.5,
+        "fit_status": "RẤT PHÙ HỢP (High Match)",
+        "badge_color": "Green",
+        "breakdown": {
+          "hard_skills_score": 100.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [
+          "javascript"
+        ],
+        "missing_must_have_skills": []
+      },
+      {
+        "cv_id": "CV-KAG-35990852",
+        "candidate_name": "Kaggle Candidate 35990852",
+        "job_id": "JD-020",
+        "job_title": "[Junior]Mobile Developer(Flutter)",
+        "company_name": "CÔNG TY TNHH ANFIN",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      }
+    ]
+  },
+  {
+    "cv_id": "CV-KAG-90066849",
+    "candidate_name": "Kaggle Candidate 90066849",
+    "source": "Kaggle/GitHub Resume.csv",
+    "category": "DESIGNER",
+    "skills": [
+      "Go",
+      "Security"
+    ],
+    "top_matches": [
+      {
+        "cv_id": "CV-KAG-90066849",
+        "candidate_name": "Kaggle Candidate 90066849",
+        "job_id": "JD-020",
+        "job_title": "[Junior]Mobile Developer(Flutter)",
+        "company_name": "CÔNG TY TNHH ANFIN",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      },
+      {
+        "cv_id": "CV-KAG-90066849",
+        "candidate_name": "Kaggle Candidate 90066849",
+        "job_id": "JD-092",
+        "job_title": "Penetration Tester - Intern",
+        "company_name": "Bouygues Construction IT Vietnam",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      },
+      {
+        "cv_id": "CV-KAG-90066849",
+        "candidate_name": "Kaggle Candidate 90066849",
+        "job_id": "JD-094",
+        "job_title": "Trainee 2026 QA/Tester",
+        "company_name": "AvePoint",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      }
+    ]
+  },
+  {
+    "cv_id": "CV-KAG-85101052",
+    "candidate_name": "Kaggle Candidate 85101052",
+    "source": "Kaggle/GitHub Resume.csv",
+    "category": "DESIGNER",
+    "skills": [
+      "Automation",
+      "Bootstrap",
+      "C",
+      "Express",
+      "Git",
+      "Java",
+      "MySQL",
+      "Oracle",
+      "SQL",
+      "Spring"
+    ],
+    "top_matches": [
+      {
+        "cv_id": "CV-KAG-85101052",
+        "candidate_name": "Kaggle Candidate 85101052",
+        "job_id": "JD-096",
+        "job_title": "Test Process and Equipment Engineer Intern",
+        "company_name": "Intel",
+        "total_ats_score": 78.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 100.0,
+          "nice_skills_score": 50.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [
+          "automation"
+        ],
+        "missing_must_have_skills": []
+      },
+      {
+        "cv_id": "CV-KAG-85101052",
+        "candidate_name": "Kaggle Candidate 85101052",
+        "job_id": "JD-003",
+        "job_title": "Thực tập sinh Java",
+        "company_name": "CÔNG TY TNHH BZCOM",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [
+          "c",
+          "git",
+          "java",
+          "sql"
+        ],
+        "missing_must_have_skills": [
+          "javascript"
+        ]
+      },
+      {
+        "cv_id": "CV-KAG-85101052",
+        "candidate_name": "Kaggle Candidate 85101052",
+        "job_id": "JD-020",
+        "job_title": "[Junior]Mobile Developer(Flutter)",
+        "company_name": "CÔNG TY TNHH ANFIN",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      }
+    ]
+  },
+  {
+    "cv_id": "CV-KAG-22567495",
+    "candidate_name": "Kaggle Candidate 22567495",
+    "source": "Kaggle/GitHub Resume.csv",
+    "category": "DESIGNER",
+    "skills": [
+      "Security"
+    ],
+    "top_matches": [
+      {
+        "cv_id": "CV-KAG-22567495",
+        "candidate_name": "Kaggle Candidate 22567495",
+        "job_id": "JD-020",
+        "job_title": "[Junior]Mobile Developer(Flutter)",
+        "company_name": "CÔNG TY TNHH ANFIN",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      },
+      {
+        "cv_id": "CV-KAG-22567495",
+        "candidate_name": "Kaggle Candidate 22567495",
+        "job_id": "JD-092",
+        "job_title": "Penetration Tester - Intern",
+        "company_name": "Bouygues Construction IT Vietnam",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      },
+      {
+        "cv_id": "CV-KAG-22567495",
+        "candidate_name": "Kaggle Candidate 22567495",
+        "job_id": "JD-094",
+        "job_title": "Trainee 2026 QA/Tester",
+        "company_name": "AvePoint",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      }
+    ]
+  },
+  {
+    "cv_id": "CV-KAG-10751444",
+    "candidate_name": "Kaggle Candidate 10751444",
+    "source": "Kaggle/GitHub Resume.csv",
+    "category": "DESIGNER",
+    "skills": [
+      "C",
+      "Linux",
+      "Python",
+      "Spring"
+    ],
+    "top_matches": [
+      {
+        "cv_id": "CV-KAG-10751444",
+        "candidate_name": "Kaggle Candidate 10751444",
+        "job_id": "JD-020",
+        "job_title": "[Junior]Mobile Developer(Flutter)",
+        "company_name": "CÔNG TY TNHH ANFIN",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      },
+      {
+        "cv_id": "CV-KAG-10751444",
+        "candidate_name": "Kaggle Candidate 10751444",
+        "job_id": "JD-092",
+        "job_title": "Penetration Tester - Intern",
+        "company_name": "Bouygues Construction IT Vietnam",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      },
+      {
+        "cv_id": "CV-KAG-10751444",
+        "candidate_name": "Kaggle Candidate 10751444",
+        "job_id": "JD-094",
+        "job_title": "Trainee 2026 QA/Tester",
+        "company_name": "AvePoint",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      }
+    ]
+  },
+  {
+    "cv_id": "CV-KAG-12415691",
+    "candidate_name": "Kaggle Candidate 12415691",
+    "source": "Kaggle/GitHub Resume.csv",
+    "category": "DESIGNER",
+    "skills": [
+      "C",
+      "CSS",
+      "DNS",
+      "Express",
+      "Java",
+      "Linux",
+      "MySQL",
+      "Oracle",
+      "PHP",
+      "Python",
+      "SQL",
+      "Security",
+      "Unix"
+    ],
+    "top_matches": [
+      {
+        "cv_id": "CV-KAG-12415691",
+        "candidate_name": "Kaggle Candidate 12415691",
+        "job_id": "JD-039",
+        "job_title": "[HCM] Công Ty Công nghệ Golden Owl Solutions Tuyển DụngThực Tập SinhJS Full-stack/DevOps/Ruby on Rails/PHP/UI/UX Designer/Điều phối Full-time 2026",
+        "company_name": "Công Ty Công Nghệ Golden Owl Solutions",
+        "total_ats_score": 90.5,
+        "fit_status": "RẤT PHÙ HỢP (High Match)",
+        "badge_color": "Green",
+        "breakdown": {
+          "hard_skills_score": 100.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 90.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [
+          "php"
+        ],
+        "missing_must_have_skills": []
+      },
+      {
+        "cv_id": "CV-KAG-12415691",
+        "candidate_name": "Kaggle Candidate 12415691",
+        "job_id": "JD-020",
+        "job_title": "[Junior]Mobile Developer(Flutter)",
+        "company_name": "CÔNG TY TNHH ANFIN",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      },
+      {
+        "cv_id": "CV-KAG-12415691",
+        "candidate_name": "Kaggle Candidate 12415691",
+        "job_id": "JD-092",
+        "job_title": "Penetration Tester - Intern",
+        "company_name": "Bouygues Construction IT Vietnam",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      }
+    ]
+  },
+  {
+    "cv_id": "CV-KAG-21705160",
+    "candidate_name": "Kaggle Candidate 21705160",
+    "source": "Kaggle/GitHub Resume.csv",
+    "category": "DESIGNER",
+    "skills": [
+      "Spring"
+    ],
+    "top_matches": [
+      {
+        "cv_id": "CV-KAG-21705160",
+        "candidate_name": "Kaggle Candidate 21705160",
+        "job_id": "JD-020",
+        "job_title": "[Junior]Mobile Developer(Flutter)",
+        "company_name": "CÔNG TY TNHH ANFIN",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      },
+      {
+        "cv_id": "CV-KAG-21705160",
+        "candidate_name": "Kaggle Candidate 21705160",
+        "job_id": "JD-092",
+        "job_title": "Penetration Tester - Intern",
+        "company_name": "Bouygues Construction IT Vietnam",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      },
+      {
+        "cv_id": "CV-KAG-21705160",
+        "candidate_name": "Kaggle Candidate 21705160",
+        "job_id": "JD-094",
+        "job_title": "Trainee 2026 QA/Tester",
+        "company_name": "AvePoint",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      }
+    ]
+  },
+  {
+    "cv_id": "CV-KAG-26496059",
+    "candidate_name": "Kaggle Candidate 26496059",
+    "source": "Kaggle/GitHub Resume.csv",
+    "category": "DESIGNER",
+    "skills": [
+      "Automation",
+      "CSS",
+      "HTML"
+    ],
+    "top_matches": [
+      {
+        "cv_id": "CV-KAG-26496059",
+        "candidate_name": "Kaggle Candidate 26496059",
+        "job_id": "JD-020",
+        "job_title": "[Junior]Mobile Developer(Flutter)",
+        "company_name": "CÔNG TY TNHH ANFIN",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      },
+      {
+        "cv_id": "CV-KAG-26496059",
+        "candidate_name": "Kaggle Candidate 26496059",
+        "job_id": "JD-092",
+        "job_title": "Penetration Tester - Intern",
+        "company_name": "Bouygues Construction IT Vietnam",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      },
+      {
+        "cv_id": "CV-KAG-26496059",
+        "candidate_name": "Kaggle Candidate 26496059",
+        "job_id": "JD-094",
+        "job_title": "Trainee 2026 QA/Tester",
+        "company_name": "AvePoint",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      }
+    ]
+  },
+  {
+    "cv_id": "CV-KAG-29524570",
+    "candidate_name": "Kaggle Candidate 29524570",
+    "source": "Kaggle/GitHub Resume.csv",
+    "category": "DESIGNER",
+    "skills": [
+      "Algorithms",
+      "C",
+      "HTML",
+      "Oracle",
+      "SQL"
+    ],
+    "top_matches": [
+      {
+        "cv_id": "CV-KAG-29524570",
+        "candidate_name": "Kaggle Candidate 29524570",
+        "job_id": "JD-020",
+        "job_title": "[Junior]Mobile Developer(Flutter)",
+        "company_name": "CÔNG TY TNHH ANFIN",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      },
+      {
+        "cv_id": "CV-KAG-29524570",
+        "candidate_name": "Kaggle Candidate 29524570",
+        "job_id": "JD-092",
+        "job_title": "Penetration Tester - Intern",
+        "company_name": "Bouygues Construction IT Vietnam",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      },
+      {
+        "cv_id": "CV-KAG-29524570",
+        "candidate_name": "Kaggle Candidate 29524570",
+        "job_id": "JD-094",
+        "job_title": "Trainee 2026 QA/Tester",
+        "company_name": "AvePoint",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      }
+    ]
+  },
+  {
+    "cv_id": "CV-KAG-13557622",
+    "candidate_name": "Kaggle Candidate 13557622",
+    "source": "Kaggle/GitHub Resume.csv",
+    "category": "DESIGNER",
+    "skills": [
+      "Tester"
+    ],
+    "top_matches": [
+      {
+        "cv_id": "CV-KAG-13557622",
+        "candidate_name": "Kaggle Candidate 13557622",
+        "job_id": "JD-020",
+        "job_title": "[Junior]Mobile Developer(Flutter)",
+        "company_name": "CÔNG TY TNHH ANFIN",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      },
+      {
+        "cv_id": "CV-KAG-13557622",
+        "candidate_name": "Kaggle Candidate 13557622",
+        "job_id": "JD-092",
+        "job_title": "Penetration Tester - Intern",
+        "company_name": "Bouygues Construction IT Vietnam",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      },
+      {
+        "cv_id": "CV-KAG-13557622",
+        "candidate_name": "Kaggle Candidate 13557622",
+        "job_id": "JD-094",
+        "job_title": "Trainee 2026 QA/Tester",
+        "company_name": "AvePoint",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      }
+    ]
+  },
+  {
+    "cv_id": "CV-KAG-41506705",
+    "candidate_name": "Kaggle Candidate 41506705",
+    "source": "Kaggle/GitHub Resume.csv",
+    "category": "DESIGNER",
+    "skills": [
+      "Linux"
+    ],
+    "top_matches": [
+      {
+        "cv_id": "CV-KAG-41506705",
+        "candidate_name": "Kaggle Candidate 41506705",
+        "job_id": "JD-020",
+        "job_title": "[Junior]Mobile Developer(Flutter)",
+        "company_name": "CÔNG TY TNHH ANFIN",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      },
+      {
+        "cv_id": "CV-KAG-41506705",
+        "candidate_name": "Kaggle Candidate 41506705",
+        "job_id": "JD-092",
+        "job_title": "Penetration Tester - Intern",
+        "company_name": "Bouygues Construction IT Vietnam",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      },
+      {
+        "cv_id": "CV-KAG-41506705",
+        "candidate_name": "Kaggle Candidate 41506705",
+        "job_id": "JD-094",
+        "job_title": "Trainee 2026 QA/Tester",
+        "company_name": "AvePoint",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      }
+    ]
+  },
+  {
+    "cv_id": "CV-KAG-44185767",
+    "candidate_name": "Kaggle Candidate 44185767",
+    "source": "Kaggle/GitHub Resume.csv",
+    "category": "DESIGNER",
+    "skills": [
+      "C",
+      "Network",
+      "QA",
+      "Security"
+    ],
+    "top_matches": [
+      {
+        "cv_id": "CV-KAG-44185767",
+        "candidate_name": "Kaggle Candidate 44185767",
+        "job_id": "JD-020",
+        "job_title": "[Junior]Mobile Developer(Flutter)",
+        "company_name": "CÔNG TY TNHH ANFIN",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      },
+      {
+        "cv_id": "CV-KAG-44185767",
+        "candidate_name": "Kaggle Candidate 44185767",
+        "job_id": "JD-092",
+        "job_title": "Penetration Tester - Intern",
+        "company_name": "Bouygues Construction IT Vietnam",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      },
+      {
+        "cv_id": "CV-KAG-44185767",
+        "candidate_name": "Kaggle Candidate 44185767",
+        "job_id": "JD-094",
+        "job_title": "Trainee 2026 QA/Tester",
+        "company_name": "AvePoint",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      }
+    ]
+  },
+  {
+    "cv_id": "CV-KAG-14014749",
+    "candidate_name": "Kaggle Candidate 14014749",
+    "source": "Kaggle/GitHub Resume.csv",
+    "category": "DESIGNER",
+    "skills": [
+      "C"
+    ],
+    "top_matches": [
+      {
+        "cv_id": "CV-KAG-14014749",
+        "candidate_name": "Kaggle Candidate 14014749",
+        "job_id": "JD-020",
+        "job_title": "[Junior]Mobile Developer(Flutter)",
+        "company_name": "CÔNG TY TNHH ANFIN",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      },
+      {
+        "cv_id": "CV-KAG-14014749",
+        "candidate_name": "Kaggle Candidate 14014749",
+        "job_id": "JD-092",
+        "job_title": "Penetration Tester - Intern",
+        "company_name": "Bouygues Construction IT Vietnam",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      },
+      {
+        "cv_id": "CV-KAG-14014749",
+        "candidate_name": "Kaggle Candidate 14014749",
+        "job_id": "JD-094",
+        "job_title": "Trainee 2026 QA/Tester",
+        "company_name": "AvePoint",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      }
+    ]
+  },
+  {
+    "cv_id": "CV-KAG-25422388",
+    "candidate_name": "Kaggle Candidate 25422388",
+    "source": "Kaggle/GitHub Resume.csv",
+    "category": "DESIGNER",
+    "skills": [
+      "CSS",
+      "HTML"
+    ],
+    "top_matches": [
+      {
+        "cv_id": "CV-KAG-25422388",
+        "candidate_name": "Kaggle Candidate 25422388",
+        "job_id": "JD-020",
+        "job_title": "[Junior]Mobile Developer(Flutter)",
+        "company_name": "CÔNG TY TNHH ANFIN",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      },
+      {
+        "cv_id": "CV-KAG-25422388",
+        "candidate_name": "Kaggle Candidate 25422388",
+        "job_id": "JD-092",
+        "job_title": "Penetration Tester - Intern",
+        "company_name": "Bouygues Construction IT Vietnam",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      },
+      {
+        "cv_id": "CV-KAG-25422388",
+        "candidate_name": "Kaggle Candidate 25422388",
+        "job_id": "JD-094",
+        "job_title": "Trainee 2026 QA/Tester",
+        "company_name": "AvePoint",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      }
+    ]
+  },
+  {
+    "cv_id": "CV-KAG-67582956",
+    "candidate_name": "Kaggle Candidate 67582956",
+    "source": "Kaggle/GitHub Resume.csv",
+    "category": "DESIGNER",
+    "skills": [
+      "C"
+    ],
+    "top_matches": [
+      {
+        "cv_id": "CV-KAG-67582956",
+        "candidate_name": "Kaggle Candidate 67582956",
+        "job_id": "JD-020",
+        "job_title": "[Junior]Mobile Developer(Flutter)",
+        "company_name": "CÔNG TY TNHH ANFIN",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      },
+      {
+        "cv_id": "CV-KAG-67582956",
+        "candidate_name": "Kaggle Candidate 67582956",
+        "job_id": "JD-092",
+        "job_title": "Penetration Tester - Intern",
+        "company_name": "Bouygues Construction IT Vietnam",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      },
+      {
+        "cv_id": "CV-KAG-67582956",
+        "candidate_name": "Kaggle Candidate 67582956",
+        "job_id": "JD-094",
+        "job_title": "Trainee 2026 QA/Tester",
+        "company_name": "AvePoint",
+        "total_ats_score": 72.5,
+        "fit_status": "TƯƠNG ĐỐI PHÙ HỢP (Moderate Match)",
+        "badge_color": "Yellow",
+        "breakdown": {
+          "hard_skills_score": 80.0,
+          "nice_skills_score": 70.0,
+          "domain_score": 50.0,
+          "experience_score": 85.0
+        },
+        "matched_must_have_skills": [],
+        "missing_must_have_skills": []
+      }
+    ]
+  }
+]

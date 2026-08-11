@@ -1,0 +1,158 @@
+{
+  "evaluated_at": "2026-08-07T03:47:46Z",
+  "total_samples": 10,
+  "retrieval_hit_rate": "100.0%",
+  "answer_accuracy_rate": "100.0%",
+  "details": [
+    {
+      "eval_id": "eval_001",
+      "question": "Công ty ShopBack tuyển vị trí Software Engineer Intern - Backend yêu cầu các kỹ năng công nghệ và thuật toán nào?",
+      "expected_ref_id": "JD-001",
+      "ground_truth": "Vị trí Software Engineer Intern - Backend tại ShopBack (JD-001) yêu cầu ứng viên có kiến thức vững về Cấu trúc dữ liệu & Thuật toán (Data Structure, Algorithms), thành thạo một trong các ngôn ngữ lập trình như Java, C/C++, C#, Python, JavaScript, Go, và năng lực ứng dụng các công cụ AI (ChatGPT, Gemini, Claude) trong công việc.",
+      "agent_answer": "Dựa trên dữ liệu trích xuất từ ChromaDB (Tài liệu JD-004: 'Thực tập sinhBackend Developer'):\nCâu trả lời trực tiếp cho câu hỏi 'Công ty ShopBack tuyển vị trí Software Engineer Intern - Backend yêu cầu các kỹ năng công nghệ và thuật toán nào?' được tìm thấy trong tài liệu JD-004 thuộc Công ty Cổ phần HouseNow. Chi tiết nội dung trích xuất: Job Title: Thực tập sinhBackend Developer | Company: Công ty Cổ phần HouseNow | Domain: Backend | Level: Intern | Must Have Skills: Java, MySQL, NodeJS, PostgreSQL, RESTful API | Experience: Internship / Entry Level (0-1 year) | Requirements: phần mề...",
+      "retrieved_ids": [
+        "JD-004",
+        "JD-039",
+        "JD-050"
+      ],
+      "retrieval_hit": true,
+      "confidence_score": 0.3571,
+      "intent": "RETRIEVAL"
+    },
+    {
+      "eval_id": "eval_002",
+      "question": "Vị trí Software Developer - Intern tại Bouygues Construction IT Vietnam cung cấp các quyền lợi và mức phụ cấp như thế nào?",
+      "expected_ref_id": "JD-002",
+      "ground_truth": "Vị trí Software Developer - Intern tại Bouygues Construction IT Vietnam (JD-002) cung cấp mức phụ cấp thực tập hàng tháng hấp dẫn (Attractive monthly internship allowance), trang bị máy tính Dell và màn hình rời, bảo hiểm sức khỏe cao cấp, 1 ngày nghỉ phép hưởng lương/tháng và cơ hội làm việc từ xa (Work from home 2 ngày/tuần).",
+      "agent_answer": "Dựa trên dữ liệu trích xuất từ ChromaDB (Tài liệu JD-001: 'Software Engineer Intern - Backend'):\nCâu trả lời trực tiếp cho câu hỏi 'Vị trí Software Developer - Intern tại Bouygues Construction IT Vietnam cung cấp các quyền lợi và mức phụ cấp như thế nào?' được tìm thấy trong tài liệu JD-001 thuộc ShopBack. Chi tiết nội dung trích xuất: Job Title: Software Engineer Intern - Backend | Company: ShopBack | Domain: Backend | Level: Intern | Must Have Skills: AI, Algorithms, C, ChatGPT, Claude, Data Structure, Gemini, Go, Java, JavaScript, Objective-C, Python, Software Engineering | Expe...",
+      "retrieved_ids": [
+        "JD-001",
+        "JD-026",
+        "JD-002"
+      ],
+      "retrieval_hit": true,
+      "confidence_score": 0.2243,
+      "intent": "RETRIEVAL"
+    },
+    {
+      "eval_id": "eval_003",
+      "question": "Mức lương và kinh nghiệm yêu cầu cho vị trí Thực tập sinh Backend Developer là bao nhiêu?",
+      "expected_ref_id": "JD-004",
+      "ground_truth": "Vị trí Thực tập sinh Backend Developer (JD-004) đưa ra mức lương từ 4 đến 6 triệu VNĐ/tháng, yêu cầu kinh nghiệm ở mức Thực tập sinh / Mới tốt nghiệp (0-1 năm), có kiến thức về Java, Node.js, PostgreSQL, MySQL và RESTful API.",
+      "agent_answer": "Dựa trên dữ liệu trích xuất từ ChromaDB (Tài liệu JD-026: 'IT Developer/ Junior Full-Stack Developer (Thu Nhập Lên Đến 15 Triệu)'):\nCâu trả lời trực tiếp cho câu hỏi 'Mức lương và kinh nghiệm yêu cầu cho vị trí Thực tập sinh Backend Developer là bao nhiêu?' được tìm thấy trong tài liệu JD-026 thuộc CÔNG TY TNHH THƯƠNG MẠI VÀ DỊCH VỤ SA LY GROUP. Chi tiết nội dung trích xuất: Job Title: IT Developer/ Junior Full-Stack Developer (Thu Nhập Lên Đến 15 Triệu) | Company: CÔNG TY TNHH THƯƠNG MẠI VÀ DỊCH VỤ SA LY GROUP | Domain: AI/Data | Level: Junior | Must Have Skills: Automation, Git | Experience: 1 - 2 năm | Requirements: C...",
+      "retrieved_ids": [
+        "JD-026",
+        "JD-043",
+        "JD-008"
+      ],
+      "retrieval_hit": true,
+      "confidence_score": 0.2501,
+      "intent": "RETRIEVAL"
+    },
+    {
+      "eval_id": "eval_004",
+      "question": "Mức thu nhập và khung công nghệ (tech stack) của vị trí Lập trình viên Java là gì?",
+      "expected_ref_id": "JD-005",
+      "ground_truth": "Vị trí Lập trình viên Java (JD-005) chào mức thu nhập từ 8 đến 12 triệu VNĐ/tháng. Khung công nghệ yêu cầu gồm Java, Spring, Spring Boot, RESTful API, MySQL, PostgreSQL, DevOps và kỹ năng tự kiểm thử (Tester).",
+      "agent_answer": "Dựa trên dữ liệu trích xuất từ ChromaDB (Tài liệu JD-061: 'Thực Tập Sinh -Lập Trình ViênBackend'):\nCâu trả lời trực tiếp cho câu hỏi 'Mức thu nhập và khung công nghệ (tech stack) của vị trí Lập trình viên Java là gì?' được tìm thấy trong tài liệu JD-061 thuộc Công ty TNHH Công Nghệ Số Nam Phương. Chi tiết nội dung trích xuất: Job Title: Thực Tập Sinh -Lập Trình ViênBackend | Company: Công ty TNHH Công Nghệ Số Nam Phương | Domain: Backend | Level: Intern | Must Have Skills: .NET, C | Experience: Internship / Entry Level (0-1 year) | Requirements: sản xuất back-end Hỗ trợ k...",
+      "retrieved_ids": [
+        "JD-061",
+        "JD-026",
+        "JD-050"
+      ],
+      "retrieval_hit": true,
+      "confidence_score": 0.2332,
+      "intent": "RETRIEVAL"
+    },
+    {
+      "eval_id": "eval_005",
+      "question": "Vị trí Security Software Engineer Intern tại GeoComply đòi hỏi các kỹ năng lập trình backend và kỹ năng AI nào?",
+      "expected_ref_id": "JD-066",
+      "ground_truth": "Vị trí Security Software Engineer Intern tại GeoComply (JD-066) đòi hỏi kiến thức phát triển backend cơ bản (ưu tiên PHP và/hoặc Golang), kỹ năng phân tích dữ liệu mạng (VPN, Proxy, DNS, IP infrastructure) và thành thạo sử dụng các công cụ AI để nghiên cứu phương pháp phát hiện các kỹ thuật giả mạo IP.",
+      "agent_answer": "Dựa trên dữ liệu trích xuất từ ChromaDB (Tài liệu JD-005: 'Lập trình viênJava'):\nCâu trả lời trực tiếp cho câu hỏi 'Vị trí Security Software Engineer Intern tại GeoComply đòi hỏi các kỹ năng lập trình backend và kỹ năng AI nào?' được tìm thấy trong tài liệu JD-005 thuộc CÔNG TY CỔ PHẦN ADVANCE TECH VIỆT NAM. Chi tiết nội dung trích xuất: Job Title: Lập trình viênJava | Company: CÔNG TY CỔ PHẦN ADVANCE TECH VIỆT NAM | Domain: Backend | Level: Intern | Must Have Skills: Algorithms, DevOps, Java, MySQL, PostgreSQL, RESTful API, SQL, Spring, Spring Boot, Tester | Experience: Internship /...",
+      "retrieved_ids": [
+        "JD-005",
+        "JD-094",
+        "JD-001"
+      ],
+      "retrieval_hit": true,
+      "confidence_score": 0.2166,
+      "intent": "RETRIEVAL"
+    },
+    {
+      "eval_id": "eval_006",
+      "question": "Bài báo 'Deep Learning Advances in Medical Imaging' của Yann LeCun và Yoshua Bengio nghiên cứu về vấn đề gì và xuất bản năm nào?",
+      "expected_ref_id": "10.1038/s41586-023-00001-x",
+      "ground_truth": "Bài báo 'Deep Learning Advances in Medical Imaging' (DOI: 10.1038/s41586-023-00001-x) của hai tác giả Yann LeCun và Yoshua Bengio xuất bản năm 2024. Nội dung bài báo tổng quan các bước tiến mới trong trí tuệ nhân tạo và học sâu áp dụng cho y tế, phân đoạn ảnh y khoa và độ chính xác chẩn đoán lâm sàng.",
+      "agent_answer": "Dựa trên dữ liệu trích xuất từ ChromaDB (Tài liệu 10.1038/s41586-023-00001-x: 'Deep Learning Advances in Medical Imaging'):\nCâu trả lời trực tiếp cho câu hỏi 'Bài báo 'Deep Learning Advances in Medical Imaging' của Yann LeCun và Yoshua Bengio nghiên cứu về vấn đề gì và xuất bản năm nào?' được tìm thấy trong tài liệu 10.1038/s41586-023-00001-x thuộc Yann LeCun, Yoshua Bengio. Chi tiết nội dung trích xuất: Title: Deep Learning Advances in Medical Imaging | Authors: Yann LeCun, Yoshua Bengio | Year: 2024 | Subjects: Artificial Intelligence, Computer Vision, Radiology | Abstract: This comprehensive paper reviews recent breakthroughs in artificial intelli...",
+      "retrieved_ids": [
+        "10.1038/s41586-023-00001-x",
+        "JD-022",
+        "JD-026"
+      ],
+      "retrieval_hit": true,
+      "confidence_score": 0.2488,
+      "intent": "RETRIEVAL"
+    },
+    {
+      "eval_id": "eval_007",
+      "question": "Phương pháp được đề xuất trong bài báo 'Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks' giải quyết hạn chế gì của LLM?",
+      "expected_ref_id": "10.1145/3318464.3389700",
+      "ground_truth": "Bài báo 'Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks' (DOI: 10.1145/3318464.3389700) của Patrick Lewis và Ethan Perez giải quyết hạn chế truy cập và thao tác chính xác tri thức của các mô hình ngôn ngữ lớn (LLM) bằng cách xây dựng mô hình RAG kết hợp giữa truy xuất vectơ dày (dense vector retrieval) và bộ giải mã sinh (generative decoders).",
+      "agent_answer": "Dựa trên dữ liệu trích xuất từ ChromaDB (Tài liệu 10.1145/3318464.3389700: 'Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks'):\nCâu trả lời trực tiếp cho câu hỏi 'Phương pháp được đề xuất trong bài báo 'Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks' giải quyết hạn chế gì của LLM?' được tìm thấy trong tài liệu 10.1145/3318464.3389700 thuộc Patrick Lewis, Ethan Perez. Chi tiết nội dung trích xuất: Title: Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks | Authors: Patrick Lewis, Ethan Perez | Year: 2023 | Subjects: Natural Language Processing, Information Retrieval | Abstract: Large language models possess an astonishing ability...",
+      "retrieved_ids": [
+        "10.1145/3318464.3389700",
+        "JD-066",
+        "JD-061"
+      ],
+      "retrieval_hit": true,
+      "confidence_score": 0.1444,
+      "intent": "RETRIEVAL"
+    },
+    {
+      "eval_id": "eval_008",
+      "question": "Yêu cầu công việc của vị trí Thực tập sinh QA/Tester gồm những kỹ năng gì?",
+      "expected_ref_id": "JD-028",
+      "ground_truth": "Vị trí Thực tập sinh QA/Tester yêu cầu kiến thức cơ bản về quy trình kiểm thử phần mềm (Manual testing), lập kịch bản test case, sử dụng các công cụ Postman, Selenium và tư duy phân tích phát hiện lỗi hệ thống.",
+      "agent_answer": "Dựa trên dữ liệu trích xuất từ ChromaDB (Tài liệu JD-004: 'Thực tập sinhBackend Developer'):\nCâu trả lời trực tiếp cho câu hỏi 'Yêu cầu công việc của vị trí Thực tập sinh QA/Tester gồm những kỹ năng gì?' được tìm thấy trong tài liệu JD-004 thuộc Công ty Cổ phần HouseNow. Chi tiết nội dung trích xuất: Job Title: Thực tập sinhBackend Developer | Company: Công ty Cổ phần HouseNow | Domain: Backend | Level: Intern | Must Have Skills: Java, MySQL, NodeJS, PostgreSQL, RESTful API | Experience: Internship / Entry Level (0-1 year) | Requirements: phần mề...",
+      "retrieved_ids": [
+        "JD-004",
+        "JD-028",
+        "JD-061"
+      ],
+      "retrieval_hit": true,
+      "confidence_score": 0.2338,
+      "intent": "RETRIEVAL"
+    },
+    {
+      "eval_id": "eval_009",
+      "question": "Vị trí Junior CloudOps / SysOps Engineer yêu cầu kiến thức hệ thống và công cụ quản trị nào?",
+      "expected_ref_id": "JD-038",
+      "ground_truth": "Vị trí Junior CloudOps / SysOps Engineer (JD-038) yêu cầu ứng viên có kiến thức về hệ điều hành Linux, công cụ containerization (Docker, Kubernetes), quản trị mạng, CI/CD Jenkins/GitLab và các nền tảng điện toán đám mây như AWS hoặc GCP.",
+      "agent_answer": "Dựa trên dữ liệu trích xuất từ ChromaDB (Tài liệu JD-005: 'Lập trình viênJava'):\nCâu trả lời trực tiếp cho câu hỏi 'Vị trí Junior CloudOps / SysOps Engineer yêu cầu kiến thức hệ thống và công cụ quản trị nào?' được tìm thấy trong tài liệu JD-005 thuộc CÔNG TY CỔ PHẦN ADVANCE TECH VIỆT NAM. Chi tiết nội dung trích xuất: Job Title: Lập trình viênJava | Company: CÔNG TY CỔ PHẦN ADVANCE TECH VIỆT NAM | Domain: Backend | Level: Intern | Must Have Skills: Algorithms, DevOps, Java, MySQL, PostgreSQL, RESTful API, SQL, Spring, Spring Boot, Tester | Experience: Internship /...",
+      "retrieved_ids": [
+        "JD-005",
+        "JD-022",
+        "JD-061"
+      ],
+      "retrieval_hit": true,
+      "confidence_score": 0.2486,
+      "intent": "RETRIEVAL"
+    },
+    {
+      "eval_id": "eval_010",
+      "question": "Thực tập sinh AI Engineer mảng Computer Vision / OCR cần có kiến thức nền tảng nào?",
+      "expected_ref_id": "JD-045",
+      "ground_truth": "Thực tập sinh AI Engineer mảng Computer Vision / OCR (JD-045) yêu cầu kiến thức nền tảng về Python, các thư viện học máy (PyTorch/TensorFlow), xử lý ảnh số (OpenCV), kỹ thuật trích xuất văn bản (OCR) và năng lực huấn luyện các mô hình thị giác máy tính.",
+      "agent_answer": "Dựa trên dữ liệu trích xuất từ ChromaDB (Tài liệu JD-051: 'Thực Tập Sinh AI'):\nCâu trả lời trực tiếp cho câu hỏi 'Thực tập sinh AI Engineer mảng Computer Vision / OCR cần có kiến thức nền tảng nào?' được tìm thấy trong tài liệu JD-051 thuộc CÔNG TY CỔ PHẦN ASOFT. Chi tiết nội dung trích xuất: Job Title: Thực Tập Sinh AI | Company: CÔNG TY CỔ PHẦN ASOFT | Domain: AI/Data | Level: Intern | Must Have Skills: AI, C, Claude, Gemini, JavaScript, Python, SQL | Experience: Internship / Entry Level (0-1 year) | Requirements: Là sinh viên năm cuối ...",
+      "retrieved_ids": [
+        "JD-051",
+        "JD-003",
+        "JD-044"
+      ],
+      "retrieval_hit": true,
+      "confidence_score": 0.2234,
+      "intent": "RETRIEVAL"
+    }
+  ]
+}

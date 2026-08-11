@@ -1,0 +1,83 @@
+[
+  {
+    "cv_id": "CV-001",
+    "candidate_name": "Nguyen Van A",
+    "target_role": "Backend Engineer / Software Engineer Intern",
+    "summary": "Sinh viên năm 4 chuyên ngành Khoa học Máy tính. Có kinh nghiệm lập trình backend với Java, Spring Boot, Python, SQL và RESTful API. Từng làm dự án cá nhân về Microservices và tích hợp AI APIs (ChatGPT, Gemini).",
+    "skills": ["Java", "Spring Boot", "Python", "SQL", "MySQL", "RESTful API", "Git", "Docker", "Algorithms", "Data Structure"],
+    "experience": [
+      {
+        "role": "Backend Developer Intern",
+        "company": "FPT Software",
+        "duration": "6 months",
+        "description": "Phát triển RESTful API bằng Java Spring Boot và MySQL. Tối ưu hóa truy vấn SQL."
+      }
+    ],
+    "education": "Đại học Bách Khoa - Cử nhân Khoa học Máy tính (GPA: 3.5/4.0)",
+    "certifications": ["AWS Certified Cloud Practitioner"]
+  },
+  {
+    "cv_id": "CV-002",
+    "candidate_name": "Tran Thi B",
+    "target_role": "Security Software Engineer Intern",
+    "summary": "Sinh viên ngành An toàn Thông tin. Đam mê vị trí Security Software Engineering, phát hiện giả mạo IP, phân tích lưu lượng mạng (VPN, Proxy, DNS) và lập trình Python/Golang/PHP.",
+    "skills": ["Security Engineering", "Python", "Golang", "PHP", "Network Analysis", "VPN", "Proxy", "DNS", "AI", "Software Engineering"],
+    "experience": [
+      {
+        "role": "Security Research Intern",
+        "company": "VNG Corporation",
+        "duration": "4 months",
+        "description": "Nghiên cứu các công cụ AI phát hiện IP gian lận và thử nghiệm script Python phân tích log mạng."
+      }
+    ],
+    "education": "Đại học Công nghệ Thông tin - Cử nhân An toàn Thông tin"
+  },
+  {
+    "cv_id": "CV-003",
+    "candidate_name": "Le Hoang C",
+    "target_role": "Frontend Developer",
+    "summary": "Lập trình viên Frontend 2 năm kinh nghiệm thành thạo HTML5, CSS3, JavaScript, ReactJS, TypeScript và RESTful API integration.",
+    "skills": ["Frontend", "HTML", "CSS", "JavaScript", "TypeScript", "ReactJS", "VueJS", "RESTful API", "UI/UX"],
+    "experience": [
+      {
+        "role": "Junior Frontend Developer",
+        "company": "Zalo Group",
+        "duration": "2 years",
+        "description": "Xây dựng giao diện ứng dụng web responsive bằng ReactJS và TailwindCSS."
+      }
+    ],
+    "education": "Đại học Khoa học Tự nhiên - Cử nhân Công nghệ Thông tin"
+  },
+  {
+    "cv_id": "CV-004",
+    "candidate_name": "Pham Minh D",
+    "target_role": "QA / Tester Intern",
+    "summary": "Thực tập sinh QA/QC có nền tảng về Manual Testing, viết kịch bản test case, API testing bằng Postman và Automation testing bằng Selenium Python.",
+    "skills": ["QA", "QC", "Manual Testing", "Automation", "Selenium", "Postman", "Tester", "Bug Tracking", "Python"],
+    "experience": [
+      {
+        "role": "QA Intern",
+        "company": "CMC Global",
+        "duration": "3 months",
+        "description": "Viết test case và thực thi kiểm thử chức năng cho hệ thống E-commerce."
+      }
+    ],
+    "education": "Đại học Sư phạm Kỹ thuật - Cử nhân Công nghệ Phần mềm"
+  },
+  {
+    "cv_id": "CV-005",
+    "candidate_name": "Vo Quoc E",
+    "target_role": "Junior CloudOps / SysOps Engineer",
+    "summary": "Junior CloudOps Engineer am hiểu hệ điều hành Linux, Docker, Kubernetes, CI/CD Jenkins/GitLab và điện toán đám mây AWS/GCP.",
+    "skills": ["Linux", "Docker", "Kubernetes", "CI/CD", "AWS", "GCP", "SysOps", "DevOps", "Bash Scripting", "Python"],
+    "experience": [
+      {
+        "role": "System Admin Trainee",
+        "company": "Viettel IDC",
+        "duration": "1 year",
+        "description": "Quản trị máy chủ Linux, thiết lập pipeline CI/CD và triển khai ứng dụng trên Docker."
+      }
+    ],
+    "education": "Đại học Bưu chính Viễn thông - Cử nhân Mạng máy tính"
+  }
+]
