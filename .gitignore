@@ -38,6 +38,7 @@ data/raw/
 
 # Chroma DB (using PostgreSQL instead)
 chroma_db/
+qdrant_storage/
 
 # Logs
 logs/

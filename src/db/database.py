@@ -77,6 +77,8 @@ async def init_db() -> None:
                 await conn.execute(
                     text("UPDATE job_descriptions SET is_published = TRUE WHERE is_system = TRUE")
                 )
+                await conn.execute(text("ALTER TABLE cv_chunks ADD COLUMN IF NOT EXISTS embedding_model VARCHAR(255)"))
+                await conn.execute(text("ALTER TABLE cv_chunks ADD COLUMN IF NOT EXISTS embedding_json JSON"))
             # create_all không thêm index mới vào bảng đã tồn tại. Lệnh này
             # bảo vệ invariant một-admin cho cả PostgreSQL và SQLite.
             await conn.execute(

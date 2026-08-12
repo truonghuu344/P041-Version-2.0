@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     app_env: Literal["development", "production", "test"] = "development"
     app_port: int = Field(default=8000, ge=1, le=65535)
     app_host: str = "0.0.0.0"
+    app_timezone: str = "Asia/Ho_Chi_Minh"
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
     cors_origins: str = "*"
 
@@ -28,7 +29,13 @@ class Settings(BaseSettings):
     jwt_token_version: int = 2
     access_token_expire_minutes: int = 10080
     api_rate_limit_per_minute: int = Field(default=120, ge=10, le=10_000)
-    max_request_body_mb: int = Field(default=12, ge=1, le=100)
+    max_request_body_mb: int = Field(default=22, ge=1, le=100)
+    document_max_file_size_mb: int = Field(default=20, ge=1, le=100)
+    document_max_pages: int = Field(default=20, ge=1, le=100)
+    malware_scan_mode: Literal["auto", "required", "disabled"] = "auto"
+    clamav_host: str = "localhost"
+    clamav_port: int = Field(default=3310, ge=1, le=65535)
+    clamav_timeout_seconds: float = Field(default=5, ge=1, le=60)
 
     # Email / password reset OTP. Use a Gmail App Password, never an account password.
     smtp_host: str = "smtp.gmail.com"
@@ -55,8 +62,33 @@ class Settings(BaseSettings):
     # Database
     database_url: str = "postgresql+asyncpg://postgres:postgrespassword@localhost:5432/career_assistant_db"
 
-    # Vector Store
-    chroma_persist_dir: str = "./data/chroma"
+    # Vector Store / Market JD RAG
+    qdrant_enabled: bool = False
+    qdrant_url: str = "http://localhost:6333"
+    qdrant_api_key: str = ""
+    qdrant_collection: str = "market_job_descriptions"
+    qdrant_embedding_provider: Literal["auto", "gemini", "hashing"] = "auto"
+    qdrant_embedding_model: str = "gemini-embedding-2"
+    qdrant_vector_size: int = Field(default=768, ge=128, le=3072)
+    qdrant_timeout_seconds: float = Field(default=10, ge=1, le=120)
+    qdrant_sync_on_startup: bool = True
+    qdrant_auto_sync: bool = True
+
+    # CV-JD Matching v1 (Requirement -> BM25/Vector -> RRF -> Evidence -> Rubric)
+    cv_jd_embedding_provider: Literal["auto", "gemini", "hashing"] = "auto"
+    cv_jd_embedding_model: str = "gemini-embedding-2"
+    cv_jd_embedding_dimensions: int = Field(default=768, ge=128, le=3072)
+    cv_jd_bm25_top_k: int = Field(default=20, ge=1, le=100)
+    cv_jd_semantic_top_k: int = Field(default=20, ge=1, le=100)
+    cv_jd_semantic_min_score: float = Field(default=0.45, ge=0.0, le=1.0)
+    cv_jd_rrf_k: int = Field(default=60, ge=1, le=1000)
+    cv_jd_hybrid_top_k: int = Field(default=10, ge=1, le=100)
+    cv_jd_evidence_max_per_requirement: int = Field(default=3, ge=1, le=10)
+    cv_jd_score_decimal_places: int = Field(default=1, ge=0, le=4)
+    cv_jd_extraction_min_confidence: float = Field(default=0.50, ge=0.0, le=1.0)
+    cv_jd_rating_poor_max: float = Field(default=49.9, ge=0.0, le=100.0)
+    cv_jd_rating_average_max: float = Field(default=69.9, ge=0.0, le=100.0)
+    cv_jd_rating_good_max: float = Field(default=84.9, ge=0.0, le=100.0)
 
     @property
     def google_genai_api_key(self) -> str:

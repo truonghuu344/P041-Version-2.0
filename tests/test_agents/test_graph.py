@@ -38,6 +38,9 @@ async def test_gap_analysis_agent_uses_cv_evidence_and_blocks_missing_skills(dis
     )
 
     assert result["integrity_guardrail"] == "passed"
+    assert result["pipeline_version"] == "1.0"
+    assert result["requirement_evidence"]
+    assert 0 <= result["confidence_score"] <= 1
     assert set(result["hard_skills_matching"]) == {"Python", "FastAPI"}
     assert set(result["hard_skills_missing"]) == {"Docker", "PostgreSQL"}
     assert 0 <= result["match_score"] <= 100

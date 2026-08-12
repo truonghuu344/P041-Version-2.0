@@ -6,15 +6,17 @@ from time import perf_counter
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from fastapi.responses import StreamingResponse
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config import get_settings
+from src.core.errors import PipelineError, pipeline_error_from_message
 from src.core.security import get_current_user
 from src.db.database import get_db
-from src.db.models import CV, CVAnalysis, CVOptimizationDecision, UsageEvent, User
+from src.db.models import CV, CVAnalysis, CVOptimizationDecision, DocumentArtifact, UsageEvent, User
 from src.models.schemas import CVBulkDeleteRequest, CVBulkDeleteResponse, CVOut, ManualCVCreate
-from src.services.cv_parser import extract_text_from_docx, extract_text_from_pdf, parse_cv_to_structured_json
+from src.services.cv_parser import extract_text_from_document, parse_cv_to_structured_json
+from src.services.file_security import FileSecurityError, scan_uploaded_file
 from src.services.pdf_export import build_cv_pdf
 
 router = APIRouter(prefix="/cvs", tags=["CV Management"])
@@ -99,45 +101,47 @@ async def upload_cv(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> CVOut:
-    """Upload CV (dạng .pdf hoặc .docx), trích xuất văn bản & tự động parse thành cấu trúc JSON."""
+    """Upload CV PDF/DOCX/JPG/JPEG/PNG, parse/OCR và trích xuất JSON có cấu trúc."""
     started_at = perf_counter()
     filename = file.filename.lower()
-    if not (filename.endswith(".pdf") or filename.endswith(".docx")):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Định dạng file không hỗ trợ. Vui lòng upload file PDF (.pdf) hoặc Word (.docx)",
+    supported = (".pdf", ".docx", ".jpg", ".jpeg", ".png")
+    if not filename.endswith(supported):
+        raise PipelineError(
+            "UPLOAD_002",
+            "Định dạng file không hỗ trợ. Dùng PDF, DOCX, JPG, JPEG hoặc PNG.",
+            status_code=400,
         )
 
     content_bytes = await file.read()
-    if len(content_bytes) > 10 * 1024 * 1024:  # 10 MB limit
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Dung lượng file vượt quá giới hạn cho phép (tối đa 10 MB)",
-        )
+    max_file_mb = get_settings().document_max_file_size_mb
+    if len(content_bytes) > max_file_mb * 1024 * 1024:
+        raise PipelineError("UPLOAD_001", f"Dung lượng file vượt quá {max_file_mb} MB.", status_code=400)
+    try:
+        await scan_uploaded_file(filename, content_bytes)
+    except FileSecurityError as exc:
+        raise pipeline_error_from_message(str(exc), "UPLOAD_003", status_code=400) from exc
 
     # Extract text based on file type
     try:
-        if filename.endswith(".pdf"):
-            raw_text = extract_text_from_pdf(content_bytes)
-        else:
-            raw_text = extract_text_from_docx(content_bytes)
+        raw_text = await extract_text_from_document(content_bytes, filename, file.content_type or "")
     except ValueError as exc:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc)) from exc
+        raise pipeline_error_from_message(str(exc), "PARSER_001", status_code=422) from exc
 
     if not raw_text:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Không thể trích xuất văn bản từ file upload. Vui lòng kiểm tra lại nội dung file",
+        raise PipelineError(
+            "PARSER_002",
+            "Không thể trích xuất văn bản từ file upload. Vui lòng kiểm tra lại nội dung file.",
+            status_code=400,
         )
 
     # Structured JSON Parsing via LLM/Fallback
     try:
         parsed_json = await parse_cv_to_structured_json(raw_text, use_llm=use_llm)
     except ValueError as exc:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc)) from exc
+        raise pipeline_error_from_message(str(exc), "EXTRACTION_001", status_code=422) from exc
 
     # Chỉ lưu file sau khi đã xác nhận có thể trích xuất và parse, tránh file rác khi lỗi.
-    file_ext = ".pdf" if filename.endswith(".pdf") else ".docx"
+    file_ext = os.path.splitext(filename)[1]
     saved_filename = f"{uuid.uuid4().hex}{file_ext}"
     saved_filepath = os.path.join(UPLOAD_DIR, saved_filename)
     with open(saved_filepath, "wb") as f:
@@ -318,15 +322,19 @@ async def bulk_delete_cvs(
 ) -> CVBulkDeleteResponse:
     """Xóa nhiều CV thuộc người dùng hiện tại trong cùng một transaction."""
     requested_ids = list(dict.fromkeys(payload.cv_ids))
-    result = await db.execute(
-        select(CV).where(CV.user_id == current_user.id, CV.id.in_(requested_ids))
-    )
+    result = await db.execute(select(CV).where(CV.user_id == current_user.id, CV.id.in_(requested_ids)))
     cvs = result.scalars().all()
     if not cvs:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Không tìm thấy CV hợp lệ để xóa")
 
     deleted_ids = [cv.id for cv in cvs]
     saved_filepaths = [cv.file_path for cv in cvs]
+    await db.execute(
+        delete(DocumentArtifact).where(
+            DocumentArtifact.document_type == "CV",
+            DocumentArtifact.source_entity_id.in_(deleted_ids),
+        )
+    )
     for cv in cvs:
         await db.delete(cv)
     await db.commit()
@@ -419,6 +427,12 @@ async def delete_cv(
         )
 
     saved_filepath = cv.file_path
+    await db.execute(
+        delete(DocumentArtifact).where(
+            DocumentArtifact.document_type == "CV",
+            DocumentArtifact.source_entity_id == cv.id,
+        )
+    )
     await db.delete(cv)
     await db.commit()
 

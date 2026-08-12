@@ -12,6 +12,7 @@ google-auth>=2.35.0            # Google OAuth token verification
 reportlab>=4.0.0               # Tạo file PDF CV export
 python-docx>=1.1.0             # Đọc file Word CV (.docx)
 pypdf>=5.0.0                   # Đọc file PDF CV (.pdf)
+pymupdf>=1.24.0                # Render từng trang PDF scan trước khi OCR
 
 
 # ==========================================
@@ -38,15 +39,21 @@ langchain>=0.3.0
 langchain-community>=0.3.0
 langchain-google-genai>=4.0.0
 langgraph>=0.2.0                # Xử lý luồng hội thoại phỏng vấn AI phức tạp
+google-genai>=1.0.0
+qdrant-client>=1.15.0,<2.0.0
 
 # Database (uncomment as needed)
 # sqlalchemy>=2.0.0
 # alembic>=1.14.0
 # psycopg2-binary>=2.9.0
 
+<<<<<<< HEAD
 # Vector Store
 pgvector>=0.2.0
 sentence-transformers>=2.2.0
+=======
+# Vector Store: Qdrant lưu và truy xuất JD thị trường
+>>>>>>> 9f4ac042a3ecb6bfd71ff85a6cab3f07893b59ee
 
 # Dev tools
 ruff>=0.8.0

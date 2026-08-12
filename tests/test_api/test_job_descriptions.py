@@ -88,7 +88,7 @@ async def test_jd_upload_rejects_unsupported_file(client):
         files={"file": ("job.exe", b"not a job description", "application/octet-stream")},
     )
     assert response.status_code == 400
-    assert "PDF, DOCX hoặc TXT" in response.json()["detail"]
+    assert response.json()["error"]["code"] == "UPLOAD_002"
 
 
 @pytest.mark.asyncio

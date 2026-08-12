@@ -1,0 +1,150 @@
+[
+  {
+    "case_id": "high_backend",
+    "cv_text": "Backend Developer. Xây dựng REST API bằng Python, FastAPI, PostgreSQL và Docker trong dự án.",
+    "cv_parsed": {
+      "skills": ["Python", "FastAPI", "PostgreSQL", "Docker", "REST API"],
+      "projects": [{"id": "p1", "description": "Xây dựng REST API bằng Python, FastAPI, PostgreSQL và Docker."}],
+      "ats_quality": {"score": 90}
+    },
+    "jd_title": "Junior Backend Developer",
+    "jd_requirements": "Yêu cầu Python, FastAPI, PostgreSQL, Docker và REST API.",
+    "expected_level": "high_match",
+    "expected_matching": ["Python", "FastAPI", "PostgreSQL", "Docker", "REST API"],
+    "expected_missing": []
+  },
+  {
+    "case_id": "partial_database_alias",
+    "cv_text": "Xây dựng RESTful API bằng JS và MySQL.",
+    "cv_parsed": {"skills": ["JS", "MySQL"]},
+    "jd_title": "Backend Developer",
+    "jd_requirements": "Yêu cầu JavaScript, REST API và PostgreSQL.",
+    "expected_level": "application_ready",
+    "expected_matching": ["JavaScript", "REST API"],
+    "expected_partial": ["PostgreSQL"]
+  },
+  {
+    "case_id": "low_missing_core_stack",
+    "cv_text": "Sinh viên sử dụng Python để phân tích dữ liệu.",
+    "cv_parsed": {"skills": ["Python"], "projects": [{"description": "Đồ án Python phân tích dữ liệu"}]},
+    "jd_title": "DevOps Engineer",
+    "jd_requirements": "Bắt buộc Docker, Kubernetes, Linux và CI/CD.",
+    "expected_level": "low_match",
+    "expected_matching": [],
+    "expected_missing": ["Docker", "Kubernetes", "Linux", "CI/CD"],
+    "max_score": 49
+  },
+  {
+    "case_id": "unknown_soft_skill",
+    "cv_text": "Phát triển ứng dụng bằng Python.",
+    "cv_parsed": {"skills": ["Python"]},
+    "jd_title": "Python Developer",
+    "jd_requirements": "Yêu cầu Python và kỹ năng giao tiếp tốt.",
+    "expected_matching": ["Python"],
+    "expected_unknown_soft": true
+  },
+  {
+    "case_id": "nice_to_have_not_gate",
+    "cv_text": "Backend Developer. Phát triển API bằng Python và FastAPI.",
+    "cv_parsed": {"skills": ["Python", "FastAPI"], "experience": [{"description": "Phát triển API bằng Python và FastAPI"}]},
+    "jd_title": "Backend Developer",
+    "jd_requirements": "Bắt buộc Python và FastAPI. Docker là một lợi thế.",
+    "expected_matching": ["Python", "FastAPI"],
+    "expected_missing": ["Docker"],
+    "expected_must_coverage": 1.0
+  },
+  {
+    "case_id": "normalized_aws_alias",
+    "cv_text": "Triển khai hệ thống trên Amazon Web Services trong dự án fintech.",
+    "cv_parsed": {"skills": ["Amazon Web Services"], "projects": [{"description": "Triển khai hệ thống trên Amazon Web Services."}]},
+    "jd_title": "Cloud Engineer",
+    "jd_requirements": "AWS là kỹ năng bắt buộc.",
+    "expected_matching": ["AWS"],
+    "expected_missing": []
+  },
+  {
+    "case_id": "normalized_postgres_alias",
+    "cv_text": "Developed transaction services backed by Postgres.",
+    "cv_parsed": {"skills": ["Postgres"], "experience": [{"description": "Developed transaction services backed by Postgres."}]},
+    "jd_title": "Backend Engineer",
+    "jd_requirements": "PostgreSQL is required.",
+    "expected_matching": ["PostgreSQL"],
+    "expected_missing": []
+  },
+  {
+    "case_id": "java_not_javascript",
+    "cv_text": "Built browser interfaces with JavaScript and React.",
+    "cv_parsed": {"skills": ["JavaScript", "React"]},
+    "jd_title": "Java Engineer",
+    "jd_requirements": "Java is required.",
+    "expected_matching": [],
+    "expected_missing": ["Java"],
+    "max_score": 49.9
+  },
+  {
+    "case_id": "cpp_not_csharp",
+    "cv_text": "Built APIs with C# and .NET.",
+    "cv_parsed": {"skills": ["C#", ".NET"]},
+    "jd_title": "Systems Engineer",
+    "jd_requirements": "C++ is mandatory.",
+    "expected_matching": [],
+    "expected_missing": ["C++"],
+    "max_score": 49.9
+  },
+  {
+    "case_id": "related_database_partial",
+    "cv_text": "Designed schemas and indexes with MySQL.",
+    "cv_parsed": {"skills": ["MySQL"], "experience": [{"description": "Designed schemas and indexes with MySQL."}]},
+    "jd_title": "Data Engineer",
+    "jd_requirements": "PostgreSQL is required.",
+    "expected_matching": [],
+    "expected_partial": ["PostgreSQL"]
+  },
+  {
+    "case_id": "docker_kubernetes_partial",
+    "cv_text": "Operated production workloads on Kubernetes.",
+    "cv_parsed": {"skills": ["Kubernetes"], "experience": [{"description": "Operated production workloads on Kubernetes."}]},
+    "jd_title": "DevOps Engineer",
+    "jd_requirements": "Docker is required.",
+    "expected_matching": [],
+    "expected_partial": ["Docker"]
+  },
+  {
+    "case_id": "required_preferred_duplicate",
+    "cv_text": "Developed services using Python.",
+    "cv_parsed": {"skills": ["Python"], "projects": [{"description": "Developed services using Python."}]},
+    "jd_title": "Python Developer",
+    "jd_requirements": "Python is required. Python is also preferred for automation.",
+    "expected_matching": ["Python"],
+    "expected_missing": [],
+    "expected_must_coverage": 1.0
+  },
+  {
+    "case_id": "frontend_exact_stack",
+    "cv_text": "Built accessible interfaces with TypeScript, React, HTML and CSS.",
+    "cv_parsed": {"skills": ["TypeScript", "React", "HTML", "CSS"], "projects": [{"description": "Built accessible interfaces with TypeScript, React, HTML and CSS."}]},
+    "jd_title": "Frontend Engineer",
+    "jd_requirements": "Required TypeScript, React, HTML and CSS.",
+    "expected_matching": ["TypeScript", "React", "HTML", "CSS"],
+    "expected_missing": []
+  },
+  {
+    "case_id": "preferred_cloud_missing",
+    "cv_text": "Built backend APIs using Python and FastAPI.",
+    "cv_parsed": {"skills": ["Python", "FastAPI"], "experience": [{"description": "Built backend APIs using Python and FastAPI."}]},
+    "jd_title": "Backend Engineer",
+    "jd_requirements": "Python and FastAPI are required. AWS is nice to have.",
+    "expected_matching": ["Python", "FastAPI"],
+    "expected_missing": ["AWS"],
+    "expected_must_coverage": 1.0
+  },
+  {
+    "case_id": "no_skills_only_responsibility",
+    "cv_text": "Designed and maintained REST APIs for internal products.",
+    "cv_parsed": {"experience": [{"description": "Designed and maintained REST APIs for internal products."}]},
+    "jd_title": "Software Engineer",
+    "jd_requirements": "Design and maintain internal APIs for product teams.",
+    "expected_matching": [],
+    "expected_missing": []
+  }
+]

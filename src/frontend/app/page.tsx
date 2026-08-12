@@ -49,7 +49,6 @@ export default function Page() {
             <a href="#" className="nav-link" id="nav-jobs"><span className="nav-text" data-i18n="nav-jobs">Danh sách JD</span></a>
             <a href="#" className="nav-link" id="nav-interview"><span className="nav-text" data-i18n="nav-interview">Phòng phỏng vấn</span></a>
             <a href="#" className="nav-link" id="nav-history" hidden><span className="nav-text" data-i18n="nav-history">Lịch sử &amp; Báo cáo</span></a>
-            <a href="#" className="nav-link" id="nav-gap" hidden><span className="nav-text" data-i18n="nav-gap">Gap Analysis</span></a>
             <a href="#" className="nav-link role-only-link" id="nav-counselor" hidden><span className="nav-text">Sinh viên của tôi</span></a>
             <a href="#" className="nav-link role-only-link" id="nav-counselor-reports" hidden><span className="nav-text">Báo cáo</span></a>
             <a href="#" className="nav-link role-only-link" id="nav-enterprise" hidden><span className="nav-text">Dashboard</span></a>
@@ -519,7 +518,7 @@ export default function Page() {
                 <form id="cv-page-upload-form" className="spaceship-form">
                   <div className="cv-choice-block">
                     <label className="ship-label" htmlFor="cv-analysis-cv-select">Chọn CV đã lưu <span className="required-mark">*</span></label>
-                    <div className="jd-select-wrap gap-select-shell cv-jd-select-shell cv-analysis-select-shell">
+                    <div className="jd-select-wrap gap-select-shell cv-jd-select-shell">
                       <span className="gap-select-icon" aria-hidden="true">CV</span>
                       <select id="cv-analysis-cv-select" className="ship-input gap-select" aria-label="Chọn CV cần phân tích">
                         <option value="">Chọn một CV đã lưu</option>
@@ -547,8 +546,8 @@ export default function Page() {
                         </svg>
                       </div>
                       <p className="dropzone-text">Kéo thả file CV vào đây hoặc <span className="highlight-text">bấm để chọn file</span></p>
-                      <p className="dropzone-sub">Hỗ trợ định dạng PDF, DOCX (Tối đa 10MB)</p>
-                      <input type="file" id="cv-page-file-input" accept=".pdf,.docx" style={{ display: 'none' }} />
+                      <p className="dropzone-sub">Hỗ trợ PDF, DOCX, JPG, JPEG, PNG (tối đa 20 MB)</p>
+                      <input type="file" id="cv-page-file-input" accept=".pdf,.docx,.jpg,.jpeg,.png" style={{ display: 'none' }} />
                       <span id="selected-file-name" className="selected-file-badge" style={{ display: 'none' }}></span>
                     </div>
                   </div>
@@ -605,7 +604,7 @@ export default function Page() {
 
                 <div className="jd-choice-block">
                   <label className="ship-label" htmlFor="cv-analysis-jd-select">Chọn JD trong data hoặc JD đã lưu <span className="required-mark">*</span></label>
-                  <div className="jd-select-wrap gap-select-shell cv-jd-select-shell cv-analysis-select-shell">
+                  <div className="jd-select-wrap gap-select-shell cv-jd-select-shell">
                     <span className="gap-select-icon" aria-hidden="true">JD</span>
                     <select id="cv-analysis-jd-select" className="ship-input gap-select" required aria-label="Chọn JD mục tiêu">
                       <option value="">Chọn một JD để phân tích CV</option>
@@ -624,9 +623,9 @@ export default function Page() {
                   </div>
                   <label className="cv-jd-file-drop" htmlFor="cv-jd-file-input">
                     <span className="cv-jd-file-icon" aria-hidden="true">📄</span>
-                    <span><strong>Chọn file JD</strong><small id="cv-jd-file-name">PDF, DOCX hoặc TXT · tối đa 5 MB</small></span>
+                    <span><strong>Chọn file JD</strong><small id="cv-jd-file-name">PDF, DOCX, TXT hoặc ảnh · tối đa 20 MB</small></span>
                   </label>
-                  <input type="file" id="cv-jd-file-input" className="visually-hidden-file" accept=".pdf,.docx,.txt" />
+                  <input type="file" id="cv-jd-file-input" className="visually-hidden-file" accept=".pdf,.docx,.txt,.jpg,.jpeg,.png" />
                   <button type="submit" className="ship-btn-secondary cv-jd-upload-button">Tải lên &amp; chọn JD này</button>
                 </form>
 
@@ -662,6 +661,7 @@ export default function Page() {
                     <span className="analysis-result-kicker">GEMINI AI AGENT · PHÂN TÍCH HOÀN TẤT</span>
                     <h4 id="cv-result-context">CV · JD</h4>
                     <p id="cv-result-summary"></p>
+                    <div id="cv-result-confidence-summary" className="cv-result-confidence-summary"></div>
                   </div>
                 </div>
 
@@ -685,9 +685,64 @@ export default function Page() {
                     <h5>Lộ trình học đề xuất</h5>
                     <div id="cv-result-learning-actions" className="cv-result-action-list"></div>
                   </section>
+                  <section className="cv-result-panel is-partial">
+                    <h5><span aria-hidden="true">△</span> Đáp ứng một phần</h5>
+                    <div id="cv-result-partial-skills" className="cv-result-tags"></div>
+                  </section>
                 </div>
 
-                <button type="button" id="btn-open-full-gap-result" className="ship-btn-secondary cv-result-detail-button">Xem bản phân tích chi tiết</button>
+                <section className="cv-result-deep-dive" aria-labelledby="cv-result-deep-dive-title">
+                  <div className="cv-result-deep-dive-header">
+                    <div>
+                      <span className="analysis-result-kicker">BÁO CÁO ATS CHI TIẾT · JD HIỆN TẠI</span>
+                      <h5 id="cv-result-deep-dive-title">Bằng chứng, lỗ hổng và kế hoạch hành động</h5>
+                    </div>
+                    <span id="cv-result-guardrail-status" className="cv-result-guardrail">✓ Anti-hallucination</span>
+                  </div>
+
+                  <div id="cv-result-score-breakdown" className="cv-result-score-breakdown"></div>
+
+                  <section className="cv-result-panel cv-result-evidence-panel">
+                    <h5>Rubric và điểm có trọng số</h5>
+                    <div id="cv-result-criteria" className="cv-result-criteria-list"></div>
+                    <div id="cv-result-warnings" className="cv-result-warnings"></div>
+                  </section>
+
+                  <section className="cv-result-panel cv-result-evidence-panel">
+                    <h5>Ma trận yêu cầu – bằng chứng</h5>
+                    <div id="cv-result-requirement-evidence" className="cv-result-evidence-list"></div>
+                  </section>
+
+                  <div className="cv-result-deep-grid">
+                    <section className="cv-result-panel">
+                      <h5>Kỹ năng mềm còn thiếu bằng chứng</h5>
+                      <div id="cv-result-soft-skills" className="cv-result-tags"></div>
+                    </section>
+                    <section className="cv-result-panel">
+                      <h5>Khuyến nghị theo từng mục CV</h5>
+                      <div id="cv-result-section-recommendations" className="cv-result-action-list"></div>
+                    </section>
+                    <section className="cv-result-panel">
+                      <h5>Chứng chỉ nên cân nhắc</h5>
+                      <div id="cv-result-certifications" className="cv-result-action-list"></div>
+                    </section>
+                    <section className="cv-result-panel">
+                      <h5>Dự án portfolio đề xuất</h5>
+                      <div id="cv-result-projects" className="cv-result-action-list"></div>
+                    </section>
+                  </div>
+
+                  <section className="cv-result-panel cv-result-rewrite-panel">
+                    <h5>Gợi ý viết lại có bằng chứng</h5>
+                    <div id="cv-result-suggestions-preview" className="cv-result-action-list"></div>
+                    <p className="cv-result-integrity-note">Mọi kỹ năng còn thiếu chỉ xuất hiện trong lộ trình học; hệ thống không tự chèn kinh nghiệm, dự án hoặc số liệu chưa có vào CV.</p>
+                  </section>
+                </section>
+
+                <div className="cv-result-cta-row">
+                  <button type="button" id="btn-compare-multi-position" className="ship-btn-secondary cv-result-detail-button">So sánh CV với nhiều vị trí</button>
+                  <button type="button" id="btn-start-interview-from-analysis" className="ship-btn-primary cv-result-detail-button">Luyện phỏng vấn theo JD này</button>
+                </div>
               </div>
             </div>
 
@@ -858,7 +913,7 @@ export default function Page() {
                     <span className="jd-create-icon">📤</span>
                     <div>
                       <h3>Tải file JD theo mẫu</h3>
-                      <p>Hỗ trợ PDF, DOCX hoặc TXT, tối đa 5 MB.</p>
+                      <p>Hỗ trợ PDF, DOCX, TXT, JPG, JPEG hoặc PNG, tối đa 20 MB.</p>
                     </div>
                   </div>
                   <button type="button" id="page-download-jd-template" className="jd-template-button">⬇ Tải mẫu JD (.txt)</button>
@@ -880,9 +935,9 @@ export default function Page() {
                     <label className="jd-file-drop" htmlFor="page-upload-jd-file">
                       <span className="jd-file-drop-icon">📄</span>
                       <strong>Chọn file JD đã điền</strong>
-                      <span id="page-upload-jd-file-name">PDF, DOCX hoặc TXT</span>
+                      <span id="page-upload-jd-file-name">PDF, DOCX, TXT hoặc ảnh</span>
                     </label>
-                    <input type="file" id="page-upload-jd-file" className="visually-hidden-file" accept=".pdf,.docx,.txt" required />
+                    <input type="file" id="page-upload-jd-file" className="visually-hidden-file" accept=".pdf,.docx,.txt,.jpg,.jpeg,.png" required />
                     <button type="submit" className="btn-primary full-width">Tải lên &amp; lưu JD</button>
                   </form>
                 </section>
@@ -925,6 +980,7 @@ export default function Page() {
         </div>
       </section>
 
+<<<<<<< HEAD
       {/* ===== 5. VIEW: GAP ANALYSIS ===== */}
       <section className="app-view" id="view-gap">
         <div className="page-container">
@@ -1047,6 +1103,8 @@ export default function Page() {
         </div>
       </section>
 
+=======
+>>>>>>> 9f4ac042a3ecb6bfd71ff85a6cab3f07893b59ee
       {/* ===== 4. VIEW: PHỎNG VẤN STAR ===== */}
       <section className="app-view" id="view-interview">
         <div className="page-container">
@@ -1316,6 +1374,10 @@ export default function Page() {
       <section className="app-view" id="view-counselor">
         <div className="page-container">
           <div className="page-header"><div className="page-badge">HUMAN-IN-THE-LOOP</div><h1 className="page-title">🎓 Dashboard Cố Vấn</h1><p className="page-sub">Chỉ hiển thị sinh viên đã chủ động cấp quyền.</p></div>
+          <section className="counselor-kpi-section" aria-labelledby="counselor-kpi-title">
+            <div><h3 id="counselor-kpi-title">KPI chất lượng sản phẩm</h3><p>Hiển thị dữ liệu thực tế; hệ thống không tự tuyên bố KPI nếu chưa đủ dữ liệu.</p></div>
+            <div id="counselor-kpi-overview" className="counselor-kpi-overview"><p className="gap-empty">Đang tải KPI...</p></div>
+          </section>
           <div className="role-dashboard-grid">
             <section className="role-panel"><h3>Sinh viên được phân công</h3><div id="counselor-student-list" className="hitl-list"></div></section>
             <section className="role-panel role-menu-target" id="counselor-student-detail"><h3>Báo cáo tiến độ sinh viên</h3><p className="gap-empty">Chọn một sinh viên để xem CV, Gap Analysis và lịch sử STAR.</p></section>
@@ -1557,8 +1619,8 @@ export default function Page() {
               <input type="text" id="cv-title-input" className="form-input" placeholder="Ví dụ: CV Backend Developer 2026" />
             </div>
             <div className="form-group">
-              <label className="form-label" data-i18n="label-cv-file">Chọn File CV (.pdf hoặc .docx, max 10MB)</label>
-              <input type="file" id="cv-file-input" className="form-input" accept=".pdf,.docx" required />
+              <label className="form-label" data-i18n="label-cv-file">Chọn CV (PDF, DOCX hoặc ảnh, tối đa 20 MB)</label>
+              <input type="file" id="cv-file-input" className="form-input" accept=".pdf,.docx,.jpg,.jpeg,.png" required />
             </div>
             <button type="submit" className="btn-primary" style={{ width: '100%' }} data-i18n="btn-cv-upload">Tải Lên & Parse CV</button>
           </form>
@@ -1587,7 +1649,7 @@ export default function Page() {
                 <span className="jd-create-icon">📤</span>
                 <div>
                   <h3>Tải file JD theo mẫu</h3>
-                  <p>PDF, DOCX hoặc TXT — tối đa 5 MB.</p>
+                  <p>PDF, DOCX, TXT, JPG, JPEG hoặc PNG — tối đa 20 MB.</p>
                 </div>
               </div>
               <button type="button" id="download-jd-template" className="jd-template-button">⬇ Tải mẫu JD (.txt)</button>
@@ -1609,9 +1671,9 @@ export default function Page() {
                 <label className="jd-file-drop compact" htmlFor="upload-jd-file">
                   <span className="jd-file-drop-icon">📄</span>
                   <strong>Chọn file JD</strong>
-                  <span id="upload-jd-file-name">PDF, DOCX hoặc TXT</span>
+                  <span id="upload-jd-file-name">PDF, DOCX, TXT hoặc ảnh</span>
                 </label>
-                <input type="file" id="upload-jd-file" className="visually-hidden-file" accept=".pdf,.docx,.txt" required />
+                <input type="file" id="upload-jd-file" className="visually-hidden-file" accept=".pdf,.docx,.txt,.jpg,.jpeg,.png" required />
                 <button type="submit" className="btn-primary" style={{ width: '100%' }}>Tải lên &amp; lưu JD</button>
               </form>
             </div>

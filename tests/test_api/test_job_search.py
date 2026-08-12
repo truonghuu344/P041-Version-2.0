@@ -20,6 +20,7 @@ async def test_student_can_search_enterprise_jobs(client):
     payload = response.json()
     assert payload["total"] >= 1
     assert payload["matched_by_cv"] is False
+    assert payload["retrieval_mode"] in {"catalog", "qdrant", "keyword_fallback"}
     assert any(job["company"] == "ShopBack" for job in payload["jobs"])
 
 

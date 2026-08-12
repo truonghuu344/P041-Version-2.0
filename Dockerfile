@@ -27,8 +27,10 @@ RUN apt-get update \
 
 COPY --from=builder /install /usr/local
 COPY --chown=appuser:appuser src ./src
+COPY --chown=appuser:appuser data/clean/jds_clean.json ./data/clean/jds_clean.json
+COPY --chown=appuser:appuser data/jds/raw ./data/jds/raw
 
-RUN mkdir -p /app/data && chown -R appuser:appuser /app
+RUN mkdir -p /app/data/uploads && chown -R appuser:appuser /app
 
 USER appuser
 

@@ -1,5 +1,7 @@
 /* ============================================================
    CAREER COPILOT X – app.js
+/* ============================================================
+   CAREER COPILOT X – app.js
    Deep Space Starfield + Shooting Stars Animation Engine
    FastAPI Backend Integration (PostgreSQL)
    ============================================================ */
@@ -10,12 +12,15 @@ const API_BASE_URL = window.__CAREER_API_BASE_URL__ || '/api/v1';
 
 class ApiClient {
   static getToken() {
-    return null;
+    return localStorage.getItem('access_token');
   }
 
-  static setToken(_token) {
-    // JWT phiên đăng nhập do backend giữ trong cookie HttpOnly.
-    localStorage.removeItem('access_token');
+  static setToken(token) {
+    if (token) {
+      localStorage.setItem('access_token', token);
+    } else {
+      localStorage.removeItem('access_token');
+    }
   }
 
   static getUser() {
@@ -304,6 +309,7 @@ class ApiClient {
   }
   static async listAssignedStudents() { return await this.request('/counselor/students'); }
   static async getStudentOverview(studentId) { return await this.request(`/counselor/students/${studentId}`); }
+  static async getProductMetrics() { return await this.request('/metrics/product'); }
   static async sendCounselorFeedback(studentId, content, kind = 'comment') {
     return await this.request(`/counselor/students/${studentId}/feedback`, {
       method: 'POST', body: JSON.stringify({ content, kind }),
@@ -359,6 +365,7 @@ class ApiClient {
         message,
         history,
         current_page: currentPage,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || null,
         conversation_id: conversationId,
       }),
     };
@@ -1018,7 +1025,7 @@ function startAppLogic() {
   /* ============================================================
      🚀 ROUTER & SPACESHIP SINGLE PAGE VIEW SWITCHER
   ============================================================ */
-  const ALL_VIEWS = ['dashboard', 'cv', 'find-jobs', 'jobs', 'interview', 'gap', 'history', 'profile', 'counselor', 'enterprise', 'admin'];
+  const ALL_VIEWS = ['dashboard', 'cv', 'find-jobs', 'jobs', 'interview', 'history', 'profile', 'counselor', 'enterprise', 'admin'];
   const ROLE_HOME_VIEWS = Object.freeze({
     student: 'dashboard',
     counselor: 'counselor',
@@ -1032,7 +1039,7 @@ function startAppLogic() {
     enterprise: ['nav-enterprise', 'nav-jobs', 'nav-enterprise-applications'],
     admin: ['nav-admin']
   });
-  const ALL_ROLE_NAV_IDS = [...new Set(Object.values(ROLE_NAV_ITEMS).flat().concat('nav-gap'))];
+  const ALL_ROLE_NAV_IDS = [...new Set(Object.values(ROLE_NAV_ITEMS).flat())];
   const ROLE_DASHBOARD_VIEWS = new Set(Object.values(ROLE_HOME_VIEWS));
   let currentViewName = 'dashboard';
 
@@ -1056,7 +1063,6 @@ function startAppLogic() {
     'find-jobs': 'DECK BETA // AI JOB DISCOVERY',
     jobs: 'DECK BETA // CAREER MAP',
     interview: 'DECK GAMMA // SIMULATION CHAMBER',
-    gap: 'DECK DELTA // NAVIGATION DECK',
     history: 'DECK EPSILON // MISSION ARCHIVE',
     profile: 'DECK ZETA // CREW TERMINAL',
     counselor: 'HITL DECK // COUNSELOR',
@@ -1072,7 +1078,7 @@ function startAppLogic() {
       showToast('Bạn đã được chuyển về dashboard phù hợp với vai trò.', 'info');
     }
 
-    const VIEW_ORDER = ['dashboard', 'cv', 'find-jobs', 'jobs', 'interview', 'gap', 'history', 'profile', 'counselor', 'enterprise', 'admin'];
+    const VIEW_ORDER = ['dashboard', 'cv', 'find-jobs', 'jobs', 'interview', 'history', 'profile', 'counselor', 'enterprise', 'admin'];
     const currentIndex = VIEW_ORDER.indexOf(currentViewName);
     const targetIndex = VIEW_ORDER.indexOf(targetViewName);
     const direction = targetIndex >= currentIndex ? 'right' : 'left';
@@ -1135,8 +1141,6 @@ function startAppLogic() {
     } else if (targetViewName === 'interview') {
       populatePageInterviewOptions();
       startAudioWaveformAnim();
-    } else if (targetViewName === 'gap') {
-      populatePageGapOptions();
     } else if (targetViewName === 'history') {
       loadMissionArchive();
     } else if (targetViewName === 'profile') {
@@ -1804,11 +1808,6 @@ function startAppLogic() {
     switchView('interview');
   });
 
-  document.getElementById('nav-gap')?.addEventListener('click', (e) => {
-    e.preventDefault();
-    switchView('gap');
-  });
-
   document.getElementById('nav-history')?.addEventListener('click', (e) => {
     e.preventDefault();
     switchView('history');
@@ -1872,7 +1871,6 @@ function startAppLogic() {
   document.getElementById('feature-interview')?.addEventListener('click', () => switchView('interview'));
   document.getElementById('feature-deep-interview')?.addEventListener('click', () => switchView('interview'));
 
-  document.getElementById('icon-search-btn')?.addEventListener('click', () => switchView('gap'));
   document.getElementById('feature-optimize')?.addEventListener('click', () => switchView('cv'));
 
   /* ============================================================
@@ -2098,47 +2096,191 @@ function startAppLogic() {
     latestCVAnalysisContext = { analysis, cvId, jdId };
     const score = Number(analysis.match_score || 0);
     const matched = Array.isArray(analysis.hard_skills_matching) ? analysis.hard_skills_matching : [];
-    const missing = Array.isArray(analysis.hard_skills_missing) ? analysis.hard_skills_missing : [];
+    const partial = Array.isArray(analysis.hard_skills_partial) ? analysis.hard_skills_partial : [];
+    const missingRaw = Array.isArray(analysis.hard_skills_missing) ? analysis.hard_skills_missing : [];
+    const missing = missingRaw.filter(skill => !partial.includes(skill));
+    const softGaps = Array.isArray(analysis.soft_skills_gap) ? analysis.soft_skills_gap : [];
     const priorityActions = Array.isArray(analysis.priority_actions) ? analysis.priority_actions : [];
     const learningActions = Array.isArray(analysis.learning_recommendations) ? analysis.learning_recommendations : [];
+    const sectionRecommendations = Array.isArray(analysis.cv_section_recommendations) ? analysis.cv_section_recommendations : [];
+    const certifications = Array.isArray(analysis.certification_recommendations) ? analysis.certification_recommendations : [];
+    const projects = Array.isArray(analysis.project_recommendations) ? analysis.project_recommendations : [];
+    const suggestions = Array.isArray(analysis.suggestions) ? analysis.suggestions : [];
     const cvLabel = [...(cvAnalysisCvSelect?.options || [])].find(option => option.value === String(cvId))?.textContent || 'CV đã chọn';
     const jdLabel = [...(cvAnalysisJdSelect?.options || [])].find(option => option.value === String(jdId))?.textContent || 'JD đã chọn';
     const scoreEl = document.getElementById('cv-result-match-score');
     const scoreRing = scoreEl?.closest('.cv-result-score-ring');
 
+    const setText = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+    const setHTML = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
+
     if (scoreEl) scoreEl.textContent = `${score.toFixed(1)}%`;
     scoreRing?.style.setProperty('--match-score', `${Math.max(0, Math.min(100, score)) * 3.6}deg`);
+<<<<<<< HEAD
 
     const missingIds = [];
     applyDomField('cv-result-context', 'textContent', `${cvLabel}  ↔  ${jdLabel}`, missingIds);
     applyDomField('cv-result-summary', 'textContent', analysis.executive_summary
       || `CV khớp ${matched.length} kỹ năng và cần bổ sung ${missing.length} kỹ năng theo JD.`, missingIds);
+=======
+    setText('cv-result-context', `${cvLabel}  ↔  ${jdLabel}`);
+    setText('cv-result-summary', analysis.executive_summary || `CV khớp ${matched.length} kỹ năng và cần bổ sung ${missing.length} kỹ năng theo JD.`);
+    
+    const confidenceSummary = document.getElementById('cv-result-confidence-summary');
+    if (confidenceSummary) {
+      const matchLabels = {
+        high_match: 'Match cao',
+        application_ready: 'Có thể ứng tuyển',
+        partial_match: 'Match một phần',
+        low_match: 'Match thấp',
+        insufficient_data: 'Chưa đủ dữ liệu',
+      };
+      setHTML('cv-result-confidence-summary', `
+        <span>${escapeHtml(matchLabels[analysis.match_level] || analysis.match_level || 'Đang đánh giá')}</span>
+        <span>Xếp loại ${escapeHtml(analysis.rating || '—')}</span>
+        <span>Độ tin cậy ${Math.round(Number(analysis.confidence_score || 0) * 100)}%</span>
+        <span>Must-have ${Math.round(Number(analysis.must_have_coverage || 0) * 100)}%</span>
+        ${analysis.mandatory_requirement_failed ? '<span>⚠ Thiếu yêu cầu bắt buộc</span>' : ''}
+      `);
+    }
+>>>>>>> 9f4ac042a3ecb6bfd71ff85a6cab3f07893b59ee
 
     const renderSkills = (items, variant) => items.length
       ? items.map(item => `<span class="cv-result-tag ${variant}">${escapeHtml(item)}</span>`).join('')
       : '<span class="cv-result-empty">Không có dữ liệu.</span>';
+<<<<<<< HEAD
     applyDomField('cv-result-matching-skills', 'innerHTML', renderSkills(matched, 'matched'), missingIds);
     applyDomField('cv-result-missing-skills', 'innerHTML', renderSkills(missing, 'missing'), missingIds);
 
     applyDomField('cv-result-priority-actions', 'innerHTML', priorityActions.length
+=======
+    
+    setHTML('cv-result-matching-skills', renderSkills(matched, 'matched'));
+    setHTML('cv-result-missing-skills', renderSkills(missing, 'missing'));
+    setHTML('cv-result-partial-skills', renderSkills(partial, 'partial'));
+
+    setHTML('cv-result-priority-actions', priorityActions.length
+>>>>>>> 9f4ac042a3ecb6bfd71ff85a6cab3f07893b59ee
       ? priorityActions.slice(0, 4).map((item, index) => {
         const title = typeof item === 'string' ? item : (item.gap || item.action || `Ưu tiên ${index + 1}`);
         const detail = typeof item === 'string' ? '' : (item.action || item.why_it_matters || '');
         return `<article class="cv-result-action"><span>${escapeHtml(item.priority || index + 1)}</span><div><strong>${escapeHtml(title)}</strong>${detail && detail !== title ? `<p>${escapeHtml(detail)}</p>` : ''}</div></article>`;
       }).join('')
+<<<<<<< HEAD
       : '<p class="cv-result-empty">Chưa phát hiện khoảng trống ưu tiên.</p>', missingIds);
 
     applyDomField('cv-result-learning-actions', 'innerHTML', learningActions.length
+=======
+      : '<p class="cv-result-empty">Chưa phát hiện khoảng trống ưu tiên.</p>');
+
+    setHTML('cv-result-learning-actions', learningActions.length
+>>>>>>> 9f4ac042a3ecb6bfd71ff85a6cab3f07893b59ee
       ? learningActions.slice(0, 4).map((item, index) => {
         const title = typeof item === 'string' ? item : (item.skill || item.learning_goal || `Gợi ý ${index + 1}`);
         const detail = typeof item === 'string' ? '' : (item.learning_goal || item.practice || '');
         return `<article class="cv-result-action learning"><span>${index + 1}</span><div><strong>${escapeHtml(title)}</strong>${detail && detail !== title ? `<p>${escapeHtml(detail)}</p>` : ''}</div></article>`;
       }).join('')
+<<<<<<< HEAD
       : '<p class="cv-result-empty">Chưa cần lộ trình học bổ sung.</p>', missingIds);
 
     if (missingIds.length) {
       console.error(`[renderInlineCVAnalysis] Không tìm thấy ${missingIds.length} phần tử DOM để hiển thị kết quả CV Analysis: ${missingIds.join(', ')}`);
       showToast(`⚠️ Kết quả đã tính nhưng giao diện thiếu vùng hiển thị (${missingIds.join(', ')}). Vui lòng tải lại trang.`, 'error');
+=======
+      : '<p class="cv-result-empty">Chưa cần lộ trình học bổ sung.</p>');
+
+    const scoreLabels = {
+      hard_skills: 'Kỹ năng cứng',
+      nice_to_have: 'Kỹ năng mềm',
+      domain_fit: 'Phù hợp lĩnh vực',
+      experience_fit: 'Bằng chứng kinh nghiệm',
+      must_have_skills: 'Kỹ năng bắt buộc',
+      experience_seniority: 'Kinh nghiệm & cấp bậc',
+      responsibilities: 'Trách nhiệm công việc',
+      nice_to_have_skills: 'Kỹ năng ưu tiên',
+      role_domain_fit: 'Vai trò & lĩnh vực',
+      education_certification: 'Học vấn & chứng chỉ',
+      soft_skills: 'Kỹ năng mềm',
+      required_skill: 'Kỹ năng bắt buộc',
+      experience: 'Kinh nghiệm liên quan',
+      education: 'Học vấn',
+      preferred_skill: 'Kỹ năng ưu tiên',
+      domain: 'Kinh nghiệm lĩnh vực',
+    };
+    const scoreBreakdown = Object.entries(analysis.score_breakdown || {});
+    setHTML('cv-result-score-breakdown', scoreBreakdown.length
+      ? scoreBreakdown.map(([key, value]) => `
+        <article><span>${escapeHtml(scoreLabels[key] || key)}</span><strong>${Number(value).toFixed(1)}%</strong><i style="--score-width:${Math.max(0, Math.min(100, Number(value)))}%"></i></article>
+      `).join('')
+      : '<p class="cv-result-empty">Chưa có dữ liệu phân rã điểm.</p>');
+
+    const criteria = Array.isArray(analysis.criteria) ? analysis.criteria : [];
+    const criteriaList = document.getElementById('cv-result-criteria');
+    if (criteriaList) {
+      const criterionLabels = {
+        CRIT_REQUIRED_SKILL: 'Kỹ năng bắt buộc',
+        CRIT_EXPERIENCE: 'Kinh nghiệm liên quan',
+        CRIT_EDUCATION: 'Học vấn',
+        CRIT_PREFERRED_SKILL: 'Kỹ năng ưu tiên',
+        CRIT_DOMAIN: 'Kinh nghiệm lĩnh vực',
+      };
+      criteriaList.innerHTML = criteria.length
+        ? criteria.map(item => `<article>
+          <div><strong>${escapeHtml(criterionLabels[item.criterion_id] || item.criterion_id)}</strong><small>${escapeHtml(item.status || '')}</small></div>
+          <span>${Number(item.raw_score || 0).toFixed(1)} × ${Number(item.weight || 0).toFixed(1)}%</span>
+          <b>${Number(item.weighted_score || 0).toFixed(1)} điểm</b>
+          <p>${escapeHtml(item.reason || '')}</p>
+        </article>`).join('')
+        : '<p class="cv-result-empty">JD chưa tạo được criterion có thể chấm điểm.</p>';
+    }
+    const warnings = Array.isArray(analysis.warnings) ? analysis.warnings : [];
+    setHTML('cv-result-warnings', warnings.map(item => `<p>⚠ ${escapeHtml(item)}</p>`).join(''));
+
+    const evidenceMatrix = Array.isArray(analysis.requirement_evidence) ? analysis.requirement_evidence : [];
+    const evidenceList = document.getElementById('cv-result-requirement-evidence');
+    if (evidenceList) {
+      const statusLabels = { matched: 'Đã đáp ứng', partial: 'Một phần', missing: 'Chưa có', unknown: 'Chưa rõ' };
+      evidenceList.innerHTML = evidenceMatrix.length
+        ? evidenceMatrix.map(item => {
+          const sources = Array.isArray(item.evidence) ? item.evidence : [];
+          const quotes = sources.length
+            ? sources.slice(0, 2).map(source => `<p>“${escapeHtml(source.quote)}” <small>· ${escapeHtml(source.section)} · BM25 ${source.bm25_score == null ? '—' : Number(source.bm25_score).toFixed(3)} · Semantic ${source.semantic_score == null ? '—' : Number(source.semantic_score).toFixed(3)} · RRF ${source.fusion_score == null ? '—' : Number(source.fusion_score).toFixed(5)}</small></p>`).join('')
+            : `<p>${escapeHtml(item.reason || 'Chưa tìm thấy bằng chứng trong CV.')}</p>`;
+          return `<article class="cv-result-evidence-item">
+            <div><strong>${escapeHtml(item.requirement)}</strong><small>${escapeHtml(item.requirement_type)} · trọng số ${Number(item.importance || 0).toFixed(0)}</small><br><span class="cv-result-evidence-status ${escapeHtml(item.status)}">${escapeHtml(statusLabels[item.status] || item.status)}</span></div>
+            <div>${quotes}<small>Confidence ${Math.round(Number(item.confidence || 0) * 100)}% · ${escapeHtml(item.reason || '')}</small></div>
+          </article>`;
+        }).join('')
+        : '<p class="cv-result-empty">JD chưa có yêu cầu đủ rõ để lập ma trận bằng chứng.</p>';
+    }
+
+    setHTML('cv-result-soft-skills', renderSkills(softGaps, 'missing'));
+    setHTML('cv-result-section-recommendations', sectionRecommendations.length
+      ? sectionRecommendations.slice(0, 4).map(item => `
+        <article class="cv-result-action learning"><span>§</span><div><strong>${escapeHtml(item.section)}</strong><p>${escapeHtml(item.recommendation)}</p></div></article>
+      `).join('')
+      : '<p class="cv-result-empty">Chưa có mục CV cần chỉnh thêm.</p>');
+    setHTML('cv-result-certifications', certifications.length
+      ? certifications.slice(0, 3).map((item, index) => `
+        <article class="cv-result-action learning"><span>${index + 1}</span><div><strong>${escapeHtml(item.name)}</strong><p>${escapeHtml(item.provider)} · ${escapeHtml(item.reason)}</p></div></article>
+      `).join('')
+      : '<p class="cv-result-empty">JD không yêu cầu chứng chỉ rõ ràng.</p>');
+    setHTML('cv-result-projects', projects.length
+      ? projects.slice(0, 3).map((item, index) => `
+        <article class="cv-result-action"><span>${index + 1}</span><div><strong>${escapeHtml(item.title)}</strong><p>${escapeHtml(item.objective)} · Chưa hoàn thành</p></div></article>
+      `).join('')
+      : '<p class="cv-result-empty">Chưa cần đề xuất dự án mới.</p>');
+    setHTML('cv-result-suggestions-preview', suggestions.length
+      ? suggestions.slice(0, 3).map((item, index) => `
+        <article class="cv-result-rewrite"><span>${index + 1}</span><div><small>Gốc: ${escapeHtml(item.original_text)}</small><strong>${escapeHtml(item.suggested_improvement)}</strong><p>${escapeHtml(item.reason)}</p></div></article>
+      `).join('')
+      : '<p class="cv-result-empty">Không có câu viết lại đủ bằng chứng.</p>');
+    const guardrail = document.getElementById('cv-result-guardrail-status');
+    if (guardrail) {
+      const passed = (analysis.integrity_guardrail || 'passed') === 'passed';
+      guardrail.textContent = passed ? '✓ Guardrail đã kiểm chứng' : '! Cần người dùng kiểm tra';
+      guardrail.classList.toggle('is-warning', !passed);
+>>>>>>> 9f4ac042a3ecb6bfd71ff85a6cab3f07893b59ee
     }
 
     if (cvAnalysisEmptyState) cvAnalysisEmptyState.hidden = true;
@@ -2159,7 +2301,7 @@ function startAppLogic() {
     }
     const file = cvJdFileInput?.files?.[0];
     if (!file) {
-      showToast('Vui lòng chọn file JD dạng PDF, DOCX hoặc TXT.', 'warning');
+      showToast('Vui lòng chọn file JD dạng PDF, DOCX, TXT hoặc ảnh.', 'warning');
       return;
     }
     const button = cvJdUploadForm.querySelector('button[type="submit"]');
@@ -2168,7 +2310,7 @@ function startAppLogic() {
       button.textContent = 'Đang tải và trích xuất JD...';
       const jd = await ApiClient.uploadJD(file, document.getElementById('cv-jd-title-input')?.value.trim() || '');
       cvJdUploadForm.reset();
-      if (cvJdFileName) cvJdFileName.textContent = 'PDF, DOCX hoặc TXT · tối đa 5 MB';
+      if (cvJdFileName) cvJdFileName.textContent = 'PDF, DOCX, TXT hoặc ảnh · tối đa 20 MB';
       await loadCVJDOptions(jd.id);
       showToast('✅ JD đã được tải lên và chọn làm mục tiêu.', 'success');
     } catch (err) {
@@ -2320,15 +2462,24 @@ function startAppLogic() {
     }
   }
 
-  document.getElementById('btn-open-full-gap-result')?.addEventListener('click', async () => {
+  document.getElementById('btn-compare-multi-position')?.addEventListener('click', async () => {
     if (!latestCVAnalysisContext) return;
-    switchView('gap');
-    await populatePageGapOptions();
-    if (pageSelectGapCv) pageSelectGapCv.value = latestCVAnalysisContext.cvId;
-    if (pageSelectGapJd) pageSelectGapJd.value = latestCVAnalysisContext.jdId;
-    enhanceGapSelect(pageSelectGapCv);
-    enhanceGapSelect(pageSelectGapJd);
-    pageBtnRunGap?.click();
+    switchView('find-jobs');
+    activeJobSearchCV = latestCVAnalysisContext.cvId;
+    await loadJobSearchCVOptions();
+    if (jobSearchCVSelect) jobSearchCVSelect.value = activeJobSearchCV;
+    if (jobMatchCVButton) jobMatchCVButton.disabled = false;
+    await loadJobSearchResults({ cvId: activeJobSearchCV });
+  });
+
+  document.getElementById('btn-start-interview-from-analysis')?.addEventListener('click', async () => {
+    if (!latestCVAnalysisContext) return;
+    switchView('interview');
+    await populatePageInterviewOptions();
+    if (pageSelectIntCv) pageSelectIntCv.value = latestCVAnalysisContext.cvId;
+    if (pageSelectIntJd) pageSelectIntJd.value = latestCVAnalysisContext.jdId;
+    enhanceGapSelect(pageSelectIntCv);
+    enhanceGapSelect(pageSelectIntJd);
   });
 
   if (cvPageListContainer) {
@@ -2371,7 +2522,6 @@ function startAppLogic() {
           if (inspectorDeck) inspectorDeck.style.display = 'none';
         }
         await loadSpaceshipCVList();
-        await populatePageGapOptions();
         showToast(`🗑️ Đã xóa CV ${cv.title || 'CV Hồ sơ'}`, 'success');
       } catch (err) {
         deleteButton.disabled = false;
@@ -2433,7 +2583,6 @@ function startAppLogic() {
       }
       selectedCVIds.clear();
       await loadSpaceshipCVList();
-      await populatePageGapOptions();
       showToast(`🗑️ Đã xóa ${result.deleted_count || selectedCVs.length} CV`, 'success');
     } catch (err) {
       showToast(`❌ Không thể xóa các CV đã chọn: ${err.message}`, 'error');
@@ -2540,7 +2689,7 @@ function startAppLogic() {
   }
 
   document.getElementById('btn-inspector-gap')?.addEventListener('click', () => {
-    switchView('gap');
+    openGapModal();
   });
 
   document.getElementById('btn-inspector-interview')?.addEventListener('click', () => {
@@ -2589,7 +2738,7 @@ TÊN CÔNG TY:
 
   function bindJDFileName(input, label) {
     input?.addEventListener('change', () => {
-      label.textContent = input.files?.[0]?.name || 'PDF, DOCX hoặc TXT';
+      label.textContent = input.files?.[0]?.name || 'PDF, DOCX, TXT hoặc ảnh';
     });
   }
 
@@ -2923,7 +3072,7 @@ TÊN CÔNG TY:
       e.preventDefault();
       const file = pageUploadJdFile?.files?.[0];
       if (!file) {
-        showToast('Vui lòng chọn file JD dạng PDF, DOCX hoặc TXT.', 'warning');
+        showToast('Vui lòng chọn file JD dạng PDF, DOCX, TXT hoặc ảnh.', 'warning');
         return;
       }
       const submitButton = pageUploadJdForm.querySelector('button[type="submit"]');
@@ -2938,7 +3087,7 @@ TÊN CÔNG TY:
         );
         showToast('🎉 Đã tải lên và lưu Job Description!', 'success');
         pageUploadJdForm.reset();
-        document.getElementById('page-upload-jd-file-name').textContent = 'PDF, DOCX hoặc TXT';
+        document.getElementById('page-upload-jd-file-name').textContent = 'PDF, DOCX, TXT hoặc ảnh';
         pageBtnTabSys?.click();
         await loadPageJDList();
       } catch (err) {
@@ -3154,7 +3303,31 @@ TÊN CÔNG TY:
           s => `<span class="badge badge-need">${escapeHtml(s)}</span>`
         ).join('') || `<span style="font-size:11px;color:var(--text-muted);">Không có dữ liệu</span>`, missingIds);
 
+<<<<<<< HEAD
         applyDomField('page-gap-executive-summary', 'textContent', res.executive_summary || '', missingIds);
+=======
+        document.getElementById('page-gap-soft-skills').innerHTML = (res.soft_skills_gap || []).map(
+          s => `<span class="badge badge-warn">${escapeHtml(s)}</span>`
+        ).join('') || `<span style="font-size:11px;color:var(--text-muted);">CV đã có bằng chứng cho các kỹ năng mềm nhận diện được.</span>`;
+
+        const pageScoreLabels = {
+          hard_skills: 'Kỹ năng cứng',
+          nice_to_have: 'Kỹ năng mềm',
+          domain_fit: 'Phù hợp lĩnh vực',
+          experience_fit: 'Bằng chứng kinh nghiệm',
+        };
+        const scoreEntries = Object.entries(res.score_breakdown || {});
+        document.getElementById('page-gap-score-breakdown').innerHTML = scoreEntries.length
+          ? scoreEntries.map(([key, value]) => `
+            <article class="gap-score-item">
+              <div><span>${escapeHtml(pageScoreLabels[key] || key)}</span><strong>${Number(value).toFixed(1)}%</strong></div>
+              <div class="gap-score-track"><i style="width:${Math.max(0, Math.min(100, Number(value)))}%"></i></div>
+            </article>
+          `).join('')
+          : '<p class="gap-empty">Chưa có dữ liệu phân rã điểm.</p>';
+
+        document.getElementById('page-gap-executive-summary').textContent = res.executive_summary || '';
+>>>>>>> 9f4ac042a3ecb6bfd71ff85a6cab3f07893b59ee
 
         applyDomField('page-gap-priority-actions', 'innerHTML', (res.priority_actions || []).map(item => `
           <article class="gap-plan-item priority-item">
@@ -3235,6 +3408,15 @@ TÊN CÔNG TY:
         });
         const exportBar = document.getElementById('page-cv-export-bar');
         if (exportBar) exportBar.hidden = false;
+
+        const guardrailStatus = document.getElementById('page-gap-guardrail-status');
+        if (guardrailStatus) {
+          const passed = (res.integrity_guardrail || 'passed') === 'passed';
+          guardrailStatus.classList.toggle('is-warning', !passed);
+          guardrailStatus.querySelector('strong').textContent = passed
+            ? '✓ Guardrail kiểm chứng bằng chứng đã đạt'
+            : '! Kết quả cần được kiểm tra thêm';
+        }
 
         if (pageGapResultsContainer) pageGapResultsContainer.style.display = 'block';
         if (!missingIds.length) {
@@ -3474,9 +3656,23 @@ TÊN CÔNG TY:
     const list = document.getElementById('counselor-student-list');
     if (!list) return;
     try {
-      const assignments = await ApiClient.listAssignedStudents();
+      const [assignments, metrics] = await Promise.all([
+        ApiClient.listAssignedStudents(),
+        ApiClient.getProductMetrics().catch(() => null),
+      ]);
       list.innerHTML = assignments.map(item => `<button class="hitl-item hitl-student" data-id="${escapeHtml(item.student_id)}"><span><strong>${escapeHtml(item.student_name)}</strong><small>${escapeHtml(item.student_email)}</small></span><span>›</span></button>`).join('') || '<p class="gap-empty">Chưa có sinh viên cấp quyền.</p>';
       list.querySelectorAll('.hitl-student').forEach(button => button.addEventListener('click', () => loadCounselorStudent(button.dataset.id)));
+      const kpi = document.getElementById('counselor-kpi-overview');
+      if (kpi && metrics) {
+        const adoptionMet = Boolean(metrics.adoption_target_met);
+        const csatKnown = metrics.average_csat != null;
+        const csatMet = metrics.csat_target_met === true;
+        kpi.innerHTML = `
+          <article class="counselor-kpi-card ${adoptionMet ? 'is-met' : 'is-pending'}"><small>Tỷ lệ sử dụng</small><strong>${Number(metrics.adoption_rate).toFixed(1)}%</strong><span>Mục tiêu ≥ ${Number(metrics.adoption_target || 60).toFixed(0)}% · ${adoptionMet ? 'Đạt' : 'Chưa đạt'}</span></article>
+          <article class="counselor-kpi-card ${csatMet ? 'is-met' : 'is-pending'}"><small>CSAT phỏng vấn</small><strong>${csatKnown ? Number(metrics.average_csat).toFixed(1) + '/5' : 'Chưa có'}</strong><span>Mục tiêu ≥ ${Number(metrics.csat_target || 4).toFixed(1)}/5 · ${csatKnown ? (csatMet ? 'Đạt' : 'Chưa đạt') : 'Chờ dữ liệu'}</span></article>
+          <article class="counselor-kpi-card"><small>Phiên hoàn thành</small><strong>${Number(metrics.completed_interviews || 0)}</strong><span>Điểm STAR TB ${metrics.average_interview_score != null ? Number(metrics.average_interview_score).toFixed(1) : '—'}</span></article>
+        `;
+      }
     } catch (err) { list.innerHTML = `<p class="gap-empty">${escapeHtml(err.message)}</p>`; }
   }
 
@@ -3782,6 +3978,13 @@ TÊN CÔNG TY:
           <span>${data.average_star_score}<small>Điểm TB</small></span>
         </div>
 
+        <section class="counselor-progress-summary" aria-label="Tiến bộ phỏng vấn và CSAT">
+          <div><small>Lần đầu</small><strong>${data.first_interview_score != null ? Number(data.first_interview_score).toFixed(1) : '—'}</strong><span>/100 STAR</span></div>
+          <div><small>Gần nhất</small><strong>${data.latest_interview_score != null ? Number(data.latest_interview_score).toFixed(1) : '—'}</strong><span>/100 STAR</span></div>
+          <div class="${Number(data.interview_score_delta || 0) >= 0 ? 'is-positive' : 'is-negative'}"><small>Thay đổi</small><strong>${data.interview_score_delta != null ? `${Number(data.interview_score_delta) >= 0 ? '+' : ''}${Number(data.interview_score_delta).toFixed(1)}` : '—'}</strong><span>điểm trước/sau</span></div>
+          <div><small>CSAT sinh viên</small><strong>${data.average_csat != null ? Number(data.average_csat).toFixed(1) : '—'}</strong><span>/5</span></div>
+        </section>
+
         <div class="student-progress-block">
           <h4>📄 Danh Sách CV Của Sinh Viên</h4>
           <div class="student-items-list">${cvsHtml}</div>
@@ -3912,7 +4115,6 @@ TÊN CÔNG TY:
       selectedFileBadge.textContent = '';
       selectedFileBadge.style.display = 'none';
     }
-    document.getElementById('page-gap-results-container')?.style.setProperty('display', 'none');
     document.getElementById('cv-detail-inspector')?.style.setProperty('display', 'none');
     document.getElementById('page-interview-chat')?.style.setProperty('display', 'none');
     document.getElementById('page-interview-report')?.style.setProperty('display', 'none');
@@ -4837,7 +5039,7 @@ TÊN CÔNG TY:
       const fileInput = document.getElementById('cv-file-input');
       const titleInput = document.getElementById('cv-title-input');
       if (!fileInput.files[0]) {
-        showToast('Vui lòng chọn file CV dạng .pdf hoặc .docx', 'warning');
+        showToast('Vui lòng chọn CV dạng PDF, DOCX, JPG, JPEG hoặc PNG', 'warning');
         return;
       }
 
@@ -4947,7 +5149,7 @@ TÊN CÔNG TY:
       e.preventDefault();
       const file = uploadJdFile?.files?.[0];
       if (!file) {
-        showToast('Vui lòng chọn file JD dạng PDF, DOCX hoặc TXT.', 'warning');
+        showToast('Vui lòng chọn file JD dạng PDF, DOCX, TXT hoặc ảnh.', 'warning');
         return;
       }
       const submitButton = uploadJdForm.querySelector('button[type="submit"]');
@@ -4962,7 +5164,7 @@ TÊN CÔNG TY:
         );
         showToast('🎉 Đã tải lên và lưu Job Description!', 'success');
         uploadJdForm.reset();
-        document.getElementById('upload-jd-file-name').textContent = 'PDF, DOCX hoặc TXT';
+        document.getElementById('upload-jd-file-name').textContent = 'PDF, DOCX, TXT hoặc ảnh';
         btnTabSysJd?.click();
         await loadJDList();
       } catch (err) {

@@ -33,6 +33,8 @@ class GapAnalysisState(TypedDict, total=False):
     cv_parsed_json: dict[str, Any]
     jd_title: str
     jd_requirements: str
+    jd_parsed_json: dict[str, Any]
+    rubric: dict[str, Any]
     evidence: dict[str, Any]
     draft_result: dict[str, Any]
     gap_analysis_result: dict[str, Any]
@@ -84,6 +86,7 @@ class CareerAssistantState(TypedDict, total=False):
     intent: str
     suggested_actions: list[dict[str, str]]
     weather_context: dict[str, Any]
+    datetime_context: dict[str, Any]
     tools_used: list[str]
     response: str
     provider: str
