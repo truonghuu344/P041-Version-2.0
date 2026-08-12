@@ -84,6 +84,7 @@ class CareerAssistantState(TypedDict, total=False):
     intent: str
     suggested_actions: list[dict[str, str]]
     weather_context: dict[str, Any]
+    datetime_context: dict[str, Any]
     tools_used: list[str]
     response: str
     provider: str

@@ -10,10 +10,26 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.graph import END, StateGraph
 
 from src.agents.state import CareerAssistantState
+from src.agents.tools.datetime_tool import get_current_datetime
 from src.agents.tools.weather_tool import get_weather
 from src.config import get_settings
 
 logger = logging.getLogger(__name__)
+
+_DATETIME_PATTERNS = (
+    r"\b(?:mấy|bao nhiêu)\s*giờ\b",
+    r"\bgiờ\s+(?:là\s+)?(?:mấy|bao nhiêu)\b",
+    r"\bgiờ\s+(?:hiện tại|bây giờ)\b",
+    r"\bngày\s+giờ\s+(?:hiện tại|bây giờ)\b",
+    r"\bhôm nay\s+(?:là\s+)?(?:ngày|thứ)\b",
+    r"\b(?:ngày|thứ)\s+(?:mấy|bao nhiêu|hôm nay)\b",
+    r"\bcurrent\s+(?:date|time)\b",
+    r"\b(?:date\s+and\s+time|what(?:'s|\s+is)\s+the\s+time|what\s+time|what\s+(?:day|date)\s+is\s+it|today'?s\s+date)\b",
+)
+
+
+def _is_datetime_request(message: str) -> bool:
+    return any(re.search(pattern, message, flags=re.IGNORECASE) for pattern in _DATETIME_PATTERNS)
 
 
 def _plan_assistant_action(state: CareerAssistantState) -> dict[str, Any]:
@@ -23,6 +39,9 @@ def _plan_assistant_action(state: CareerAssistantState) -> dict[str, Any]:
 
     if any(term in message for term in ("thời tiết", "weather", "nhiệt độ", "dự báo", "trời mưa", "trời nắng")):
         return {"intent": "weather", "suggested_actions": []}
+
+    if _is_datetime_request(message):
+        return {"intent": "datetime", "suggested_actions": []}
 
     if any(term in message for term in ("phỏng vấn", "interview", "star")):
         intent = "interview"
@@ -88,6 +107,36 @@ async def _load_weather_context(state: CareerAssistantState) -> dict[str, Any]:
     )
     tool_name = str(weather_data.get("source") or "weather_api").casefold()
     return {"weather_context": weather_data, "tools_used": [tool_name]}
+
+
+async def _respond_with_current_datetime(state: CareerAssistantState) -> dict[str, Any]:
+    settings = get_settings()
+    requested_timezone = str(state.get("user_context", {}).get("timezone") or settings.app_timezone)
+    value = await get_current_datetime.ainvoke({"timezone_name": requested_timezone})
+    if value.get("status") != "ok":
+        return {
+            "datetime_context": value,
+            "tools_used": ["system_clock"],
+            "provider": "system_clock",
+            "model": "deterministic_datetime",
+            "llm_succeeded": False,
+            "response": "Mình chưa đọc được đồng hồ hệ thống. Vui lòng thử lại sau.",
+            "error": "datetime_tool_error",
+        }
+
+    response = (
+        f"Hiện tại là {value['time']}, {value['weekday']}, ngày {value['date']} "
+        f"(múi giờ {value['timezone']}, UTC{value['utc_offset']})."
+    )
+    return {
+        "datetime_context": value,
+        "tools_used": ["system_clock"],
+        "provider": "system_clock",
+        "model": "deterministic_datetime",
+        # Trường này biểu thị request assistant thành công; nhánh ngày giờ không cần gọi LLM.
+        "llm_succeeded": True,
+        "response": response,
+    }
 
 
 def _content_to_text(content: Any) -> str:
@@ -194,14 +243,16 @@ def _build_career_assistant_graph():
     graph = StateGraph(CareerAssistantState)
     graph.add_node("plan", _plan_assistant_action)
     graph.add_node("weather", _load_weather_context)
+    graph.add_node("datetime", _respond_with_current_datetime)
     graph.add_node("respond", _respond_with_gemini)
     graph.set_entry_point("plan")
     graph.add_conditional_edges(
         "plan",
-        lambda state: "weather" if state.get("intent") == "weather" else "respond",
-        {"weather": "weather", "respond": "respond"},
+        lambda state: state.get("intent") if state.get("intent") in {"weather", "datetime"} else "respond",
+        {"weather": "weather", "datetime": "datetime", "respond": "respond"},
     )
     graph.add_edge("weather", "respond")
+    graph.add_edge("datetime", END)
     graph.add_edge("respond", END)
     return graph.compile()
 

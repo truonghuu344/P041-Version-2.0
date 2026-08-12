@@ -78,6 +78,7 @@ async def analyze_cv_jd_gap(
             "project_recommendations": analysis_result.get("project_recommendations", []),
             "cv_section_recommendations": analysis_result.get("cv_section_recommendations", []),
             "score_breakdown": analysis_result.get("score_breakdown", {}),
+            "integrity_guardrail": analysis_result.get("integrity_guardrail", "passed"),
         },
         optimized_suggestions_json=analysis_result.get("suggestions", []),
     )
@@ -109,6 +110,7 @@ async def analyze_cv_jd_gap(
         project_recommendations=analysis_result.get("project_recommendations", []),
         cv_section_recommendations=analysis_result.get("cv_section_recommendations", []),
         score_breakdown=analysis_result.get("score_breakdown", {}),
+        integrity_guardrail=analysis_result.get("integrity_guardrail", "passed"),
         created_at=new_analysis.created_at,
     )
 
@@ -143,6 +145,7 @@ async def get_analysis_history(
                 project_recommendations=gap_data.get("project_recommendations", []),
                 cv_section_recommendations=gap_data.get("cv_section_recommendations", []),
                 score_breakdown=gap_data.get("score_breakdown", {}),
+                integrity_guardrail=gap_data.get("integrity_guardrail", "passed"),
                 created_at=item.created_at,
             )
         )
