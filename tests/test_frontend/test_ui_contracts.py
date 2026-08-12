@@ -144,6 +144,33 @@ def test_google_quicksand_is_self_hosted_and_used_as_the_shared_font():
         assert (FRONTEND_ROOT / "public" / "fonts" / font_file).is_file()
 
 
+def test_create_cv_gallery_offers_three_distinct_downloadable_templates():
+    assert 'id="btn-open-template-gallery"' in PAGE_JS
+    assert 'id="cv-template-modal-overlay"' in PAGE_JS
+    assert "onClick={() => setIsTemplateGalleryOpen(true)}" in PAGE_JS
+    assert "className={`modal-overlay${isTemplateGalleryOpen ? ' open' : ''}`}" in PAGE_JS
+    assert "const selectCVTemplate" in PAGE_JS
+    assert "setSelectedCVTemplate(templateName)" in PAGE_JS
+    assert 'hidden={!selectedCVTemplate}' in PAGE_JS
+    assert PAGE_JS.count('className="template-download-btn"') == 3
+    assert PAGE_JS.count('href="/api/v1/cvs/templates/') == 3
+    assert 'className="template-preview template-preview-modern"' in PAGE_JS
+    assert 'className="template-preview template-preview-classic"' in PAGE_JS
+    assert 'className="template-preview template-preview-creative"' in PAGE_JS
+    assert ".template-gallery-grid" in STYLE_CSS
+
+
+def test_cv_target_jd_supports_data_catalog_or_file_upload():
+    assert "ApiClient.searchJobs('', '', 100)" in APP_JS
+    assert "ApiClient.selectCatalogJD(sourceId)" in APP_JS
+    assert "JD DOANH NGHIỆP TRONG DATA/JDS" in APP_JS
+    assert 'className="jd-select-wrap gap-select-shell cv-jd-select-shell"' in PAGE_JS
+    assert "gap-select-search" in APP_JS
+    assert ".cv-jd-select-shell .gap-select-menu" in STYLE_CSS
+    assert 'id="cv-jd-upload-form"' in PAGE_JS
+    assert 'accept=".pdf,.docx,.txt"' in PAGE_JS
+
+
 def test_auth_role_dropdown_and_google_button_are_responsive_custom_controls():
     assert 'className="auth-role-select"' in PAGE_JS
     assert 'className="auth-role-native"' in PAGE_JS

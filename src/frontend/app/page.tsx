@@ -1,12 +1,24 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+
+type CVTemplateName = 'modern' | 'classic' | 'compact';
 
 export default function Page() {
+  const [isTemplateGalleryOpen, setIsTemplateGalleryOpen] = useState(false);
+  const [selectedCVTemplate, setSelectedCVTemplate] = useState<CVTemplateName | null>(null);
+
   useEffect(() => {
     // Import app.js dynamically on client side
     import('../app.js');
   }, []);
+
+  const selectCVTemplate = (templateName: CVTemplateName) => {
+    setSelectedCVTemplate(templateName);
+    setIsTemplateGalleryOpen(false);
+    const manualForm = document.getElementById('manual-cv-form');
+    window.requestAnimationFrame(() => manualForm?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+  };
 
   return (
     <>
@@ -482,7 +494,7 @@ export default function Page() {
                     <span className="status-pill"><i className="pill-dot purple"></i> 3 TEMPLATES AVAILABLE</span>
                   </div>
                 </div>
-                <button type="button" id="btn-open-template-gallery" className="create-cv-template-cta">
+                <button type="button" id="btn-open-template-gallery" className="create-cv-template-cta" onClick={() => setIsTemplateGalleryOpen(true)} aria-haspopup="dialog" aria-controls="cv-template-modal-overlay">
                   <span className="create-cv-template-cta-icon" aria-hidden="true">✨</span>
                   <span><strong>TẠO CV MỚI</strong><small>Chọn 1 trong 3 template</small></span>
                 </button>
@@ -586,17 +598,18 @@ export default function Page() {
                   </div>
                   <div>
                     <h3 className="console-title">JD MỤC TIÊU ĐỂ PHÂN TÍCH</h3>
-                    <p className="console-subtitle">Chọn JD đã có hoặc tải JD mới. AI Agent sẽ luôn so khớp CV với JD này.</p>
+                    <p className="console-subtitle">Chọn JD doanh nghiệp trong data/jds, JD đã lưu hoặc tải JD mới. AI Agent sẽ luôn so khớp CV với JD này.</p>
                   </div>
                 </div>
 
                 <div className="jd-choice-block">
-                  <label className="ship-label" htmlFor="cv-analysis-jd-select">Chọn JD đã lưu <span className="required-mark">*</span></label>
-                  <div className="jd-select-wrap">
-                    <select id="cv-analysis-jd-select" className="ship-input" required aria-label="Chọn JD mục tiêu">
+                  <label className="ship-label" htmlFor="cv-analysis-jd-select">Chọn JD trong data hoặc JD đã lưu <span className="required-mark">*</span></label>
+                  <div className="jd-select-wrap gap-select-shell cv-jd-select-shell">
+                    <span className="gap-select-icon" aria-hidden="true">JD</span>
+                    <select id="cv-analysis-jd-select" className="ship-input gap-select" required aria-label="Chọn JD mục tiêu">
                       <option value="">Chọn một JD để phân tích CV</option>
                     </select>
-                    <span className="jd-select-chevron" aria-hidden="true">⌄</span>
+                    <span className="jd-select-chevron gap-select-chevron" aria-hidden="true">⌄</span>
                   </div>
                   <p id="cv-selected-jd-hint" className="jd-selection-hint">JD là bắt buộc để AI Agent phân tích đúng vị trí ứng tuyển.</p>
                 </div>
@@ -677,7 +690,7 @@ export default function Page() {
               </div>
             </div>
 
-              <div className="vessel-card manual-cv-card" id="manual-cv-card" hidden>
+              <div className="vessel-card manual-cv-card" id="manual-cv-card" hidden={!selectedCVTemplate}>
                 <div className="console-header">
                   <div className="console-icon console-icon-purple"><span aria-hidden="true">✎</span></div>
                   <div>
@@ -686,7 +699,7 @@ export default function Page() {
                   </div>
                 </div>
                 <form id="manual-cv-form" className="manual-cv-form">
-                  <input type="hidden" id="manual-cv-template" value="classic" />
+                  <input type="hidden" id="manual-cv-template" value={selectedCVTemplate || 'classic'} readOnly />
                   <div className="manual-cv-grid">
                     <div className="form-group"><label className="ship-label" htmlFor="manual-cv-title">Tên CV</label><input id="manual-cv-title" className="ship-input" placeholder="CV Frontend Developer 2026" required /></div>
                     <div className="form-group"><label className="ship-label" htmlFor="manual-cv-name">Họ và tên</label><input id="manual-cv-name" className="ship-input" required /></div>
@@ -1887,55 +1900,87 @@ export default function Page() {
         </div>
       </div>
       {/* ═══ 3-CV TEMPLATES SELECTION GALLERY MODAL ═══ */}
-      <div className="modal-overlay" id="cv-template-modal-overlay" style={{ display: 'none', zIndex: 9999 }}>
+      <div
+        className={`modal-overlay${isTemplateGalleryOpen ? ' open' : ''}`}
+        id="cv-template-modal-overlay"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="cv-template-modal-title"
+        aria-hidden={!isTemplateGalleryOpen}
+        style={{ display: isTemplateGalleryOpen ? 'flex' : 'none', zIndex: 9999 }}
+        onMouseDown={(event) => {
+          if (event.target === event.currentTarget) setIsTemplateGalleryOpen(false);
+        }}
+      >
         <div className="archive-modal-content" style={{ maxWidth: '920px', width: '94%' }}>
           <div className="archive-modal-header">
             <div>
-              <h2 style={{ margin: 0, fontSize: '20px', color: '#00e5ff' }}>🎨 CHỌN TEMPLATE CV PHÙ HỢP CỦA BẠN</h2>
+              <h2 id="cv-template-modal-title" style={{ margin: 0, fontSize: '20px', color: '#00e5ff' }}>🎨 CHỌN TEMPLATE CV PHÙ HỢP CỦA BẠN</h2>
               <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#94a3b8' }}>Mỗi template có bố cục cấu trúc thiết kế hoàn toàn khác nhau cho từng ngành nghề</p>
             </div>
-            <button className="archive-modal-close" id="btn-close-template-modal" type="button">&times;</button>
+            <button className="archive-modal-close" id="btn-close-template-modal" type="button" onClick={() => setIsTemplateGalleryOpen(false)} aria-label="Đóng thư viện template">&times;</button>
           </div>
 
-          <div className="template-gallery-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px', marginTop: '16px' }}>
+          <div className="template-gallery-grid">
             {/* Template 1: Modern 2-Column */}
-            <div className="template-card" style={{ background: 'rgba(15, 23, 42, 0.7)', border: '1px solid rgba(0, 229, 255, 0.3)', borderRadius: '14px', padding: '16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '12px' }}>
-              <div>
-                <div className="template-card-header" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+            <article className="template-card template-card-modern">
+              <div className="template-preview template-preview-modern" aria-label="Xem trước CV bố cục hai cột">
+                <div className="preview-sidebar"><i></i><i></i><i></i><i></i><i></i></div>
+                <div className="preview-main"><b></b><i></i><i></i><span></span><i></i><i></i><span></span><i></i><i></i></div>
+              </div>
+              <div className="template-card-content">
+                <div className="template-card-header">
                   <span className="archive-tag tag-cv">HỒ SƠ 2 CỘT</span>
                   <span className="badge badge-ok">PHỔ BIẾN NHẤT</span>
                 </div>
-                <h3 className="template-title" style={{ fontSize: '16px', color: '#fff', margin: '6px 0' }}>1. Modern Two-Column (Hồ Sơ 2 Cột Hiện Đại)</h3>
-                <p className="template-desc" style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: '1.4' }}>Bố cục 2 cột phân chia cột trái (Thông tin, Kỹ năng, Học vấn) &amp; cột phải (Mục tiêu, Kinh nghiệm, Dự án). Accent Blue.</p>
+                <h3 className="template-title">Modern Two-Column</h3>
+                <p className="template-desc">Hai cột rõ ràng: thông tin, kỹ năng và học vấn bên trái; mục tiêu, kinh nghiệm và dự án bên phải.</p>
               </div>
-              <button type="button" className="archive-btn-view btn-use-template" data-template="modern" style={{ width: '100%', padding: '10px', fontSize: '13px', background: '#2563eb', color: '#fff', borderColor: '#3b82f6' }}>Dùng Mẫu 2 Cột ➔</button>
-            </div>
+              <div className="template-card-actions">
+                <a className="template-download-btn" href="/api/v1/cvs/templates/modern/download?v=2" download="cv-template-modern.pdf">↓ Tải mẫu PDF</a>
+                <button type="button" className="template-use-btn" onClick={() => selectCVTemplate('modern')}>Dùng mẫu này →</button>
+              </div>
+            </article>
 
             {/* Template 2: Classic ATS Single Column */}
-            <div className="template-card" style={{ background: 'rgba(15, 23, 42, 0.7)', border: '1px solid rgba(255, 255, 255, 0.15)', borderRadius: '14px', padding: '16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '12px' }}>
-              <div>
-                <div className="template-card-header" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                  <span className="archive-tag tag-optimized">ATS STANDARD</span>
-                  <span className="badge badge-ok" style={{ background: 'rgba(0, 229, 255, 0.2)', color: '#00e5ff' }}>CHUẨN DOANH NGHIỆP</span>
-                </div>
-                <h3 className="template-title" style={{ fontSize: '16px', color: '#fff', margin: '6px 0' }}>2. Classic ATS Standard (Hồ Sơ Cổ Điển 1 Cột)</h3>
-                <p className="template-desc" style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: '1.4' }}>Bố cục 1 cột truyền thống căn giữa từ trên xuống dưới với đường kẻ kẻ thanh lịch. Tối ưu 100% cho máy quét ATS.</p>
+            <article className="template-card template-card-classic">
+              <div className="template-preview template-preview-classic" aria-label="Xem trước CV ATS bố cục một cột">
+                <b></b><em></em><span></span><i></i><i></i><span></span><i></i><i></i><span></span><i></i><i></i>
               </div>
-              <button type="button" className="archive-btn-view btn-use-template" data-template="classic" style={{ width: '100%', padding: '10px', fontSize: '13px', background: '#334155', color: '#fff', borderColor: '#64748b' }}>Dùng Mẫu ATS ➔</button>
-            </div>
+              <div className="template-card-content">
+                <div className="template-card-header">
+                  <span className="archive-tag tag-optimized">ATS STANDARD</span>
+                  <span className="badge badge-ok template-badge-blue">CHUẨN DOANH NGHIỆP</span>
+                </div>
+                <h3 className="template-title">Classic ATS Standard</h3>
+                <p className="template-desc">Một cột theo thứ tự thời gian, tiêu đề rõ ràng và ít yếu tố trang trí để hệ thống ATS dễ đọc.</p>
+              </div>
+              <div className="template-card-actions">
+                <a className="template-download-btn" href="/api/v1/cvs/templates/classic/download?v=2" download="cv-template-classic-ats.pdf">↓ Tải mẫu PDF</a>
+                <button type="button" className="template-use-btn" onClick={() => selectCVTemplate('classic')}>Dùng mẫu này →</button>
+              </div>
+            </article>
 
             {/* Template 3: Creative Tech Minimalist */}
-            <div className="template-card" style={{ background: 'rgba(15, 23, 42, 0.7)', border: '1px solid rgba(13, 148, 136, 0.4)', borderRadius: '14px', padding: '16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '12px' }}>
-              <div>
-                <div className="template-card-header" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                  <span className="archive-tag tag-interview">CREATIVE TECH</span>
-                  <span className="badge badge-ok" style={{ background: 'rgba(13, 148, 136, 0.2)', color: '#2dd4bf' }}>SÁNG TẠO</span>
-                </div>
-                <h3 className="template-title" style={{ fontSize: '16px', color: '#fff', margin: '6px 0' }}>3. Creative Tech Timeline (Hồ Sơ Sáng Tạo &amp; Tech)</h3>
-                <p className="template-desc" style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: '1.4' }}>Header dạng Banner cá nhân hóa, khối Kỹ năng hiển thị dạng Badges / Tag Cloud, Kinh nghiệm theo timeline thời gian dọc.</p>
+            <article className="template-card template-card-creative">
+              <div className="template-preview template-preview-creative" aria-label="Xem trước CV Creative Tech dạng timeline">
+                <div className="preview-banner"><b></b><i></i></div>
+                <div className="preview-tags"><i></i><i></i><i></i></div>
+                <div className="preview-timeline"><span></span><i></i><span></span><i></i><span></span><i></i></div>
               </div>
-              <button type="button" className="archive-btn-view btn-use-template" data-template="compact" style={{ width: '100%', padding: '10px', fontSize: '13px', background: '#0d9488', color: '#fff', borderColor: '#14b8a6' }}>Dùng Mẫu Sáng Tạo ➔</button>
-            </div>
+              <div className="template-card-content">
+                <div className="template-card-header">
+                  <span className="archive-tag tag-interview">CREATIVE TECH</span>
+                  <span className="badge badge-ok template-badge-teal">SÁNG TẠO</span>
+                </div>
+                <h3 className="template-title">Creative Tech Timeline</h3>
+                <p className="template-desc">Banner cá nhân, kỹ năng dạng thẻ và kinh nghiệm theo timeline; phù hợp hồ sơ công nghệ và sáng tạo.</p>
+              </div>
+              <div className="template-card-actions">
+                <a className="template-download-btn" href="/api/v1/cvs/templates/compact/download?v=2" download="cv-template-creative-tech.pdf">↓ Tải mẫu PDF</a>
+                <button type="button" className="template-use-btn" onClick={() => selectCVTemplate('compact')}>Dùng mẫu này →</button>
+              </div>
+            </article>
           </div>
         </div>
       </div>

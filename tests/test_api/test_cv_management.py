@@ -160,3 +160,41 @@ async def test_cv_agent_status_never_exposes_api_key(client, monkeypatch):
     assert response.json()["configured"] is True
     assert response.json()["model"] == "gemini-test"
     assert "super-secret-key" not in response.text
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("template_name", "filename"),
+    [
+        ("modern", "cv-template-modern.pdf"),
+        ("classic", "cv-template-classic-ats.pdf"),
+        ("compact", "cv-template-creative-tech.pdf"),
+    ],
+)
+async def test_cv_templates_can_be_downloaded_without_authentication(client, template_name, filename):
+    response = await client.get(f"/api/v1/cvs/templates/{template_name}/download")
+
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/pdf"
+    assert filename in response.headers["content-disposition"]
+    assert response.headers["cache-control"] == "no-store, max-age=0"
+    assert response.content.startswith(b"%PDF")
+    assert len(response.content) > 1_000
+
+
+@pytest.mark.asyncio
+async def test_unknown_cv_template_returns_not_found(client):
+    response = await client.get("/api/v1/cvs/templates/unknown/download")
+
+    assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_cv_template_downloads_are_three_distinct_pdf_layouts(client):
+    responses = [
+        await client.get(f"/api/v1/cvs/templates/{template}/download")
+        for template in ("modern", "classic", "compact")
+    ]
+
+    assert all(response.status_code == 200 for response in responses)
+    assert len({response.content for response in responses}) == 3
