@@ -63,5 +63,6 @@ out/
 
 # AI logs — tracked structure, ignored content
 .ai-log/*.jsonl
+.ai-log/codex-state.json
 .ai-log/archive/
 .vercel
