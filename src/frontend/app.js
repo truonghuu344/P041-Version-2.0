@@ -1195,6 +1195,7 @@ function startAppLogic() {
       'gauge-interview-label': 'STAR Score (82/100)',
       'gauge-direction-label': 'Tiến Độ Tối Ưu',
       'chart-title': 'Lịch sử đánh giá phỏng vấn & tối ưu hồ sơ',
+<<<<<<< HEAD
       'agent-title': 'Agent AI – Trí Tuệ<br />Nhân Tạo hỗ trợ',
       'feat-opt-name': 'Phân tích CV',
       'feat-opt-desc': 'Tối ưu theo JD',
@@ -1202,6 +1203,19 @@ function startAppLogic() {
       'feat-int-desc': 'STAR Rubric',
       'feat-match-name': 'Danh sách JD',
       'feat-match-desc': 'Việc làm phù hợp',
+=======
+      'agent-title': 'CV Assistant',
+      'feat-opt-name': 'Tự động',
+      'feat-opt-desc': 'tối ưu CV',
+      'feat-int-name': 'Phỏng vấn',
+      'feat-int-desc': 'STAR Rubric',
+      'feat-match-name': 'Match Score',
+      'feat-match-desc': 'Gap Analysis',
+      'feat-custom-name': 'Tạo Custom',
+      'feat-custom-desc': 'Job Description',
+      'feat-chatbot-name': 'Chatbot',
+      'feat-chatbot-desc': 'Trợ lý nghề nghiệp AI',
+>>>>>>> dce2081f0be2eca0c0425bbbfda841ad1bdebaed
       'quick-access-badge': '✨ TRUY CẬP NHANH CÁC TÍNH NĂNG CỐT LÕI',
       'icon-label-cv': '📄 CV Scanner',
       'icon-label-jd': '💼 Thư viện JD',
@@ -1288,6 +1302,7 @@ function startAppLogic() {
       'gauge-interview-label': 'STAR Score (82/100)',
       'gauge-direction-label': 'Optimal Progress',
       'chart-title': 'Interview evaluation history & resume optimization',
+<<<<<<< HEAD
       'agent-title': 'AI Agent – Powered by<br />Artificial Intelligence',
       'feat-opt-name': 'CV Analysis',
       'feat-opt-desc': 'Optimize for JD',
@@ -1295,6 +1310,19 @@ function startAppLogic() {
       'feat-int-desc': 'STAR Rubric',
       'feat-match-name': 'JD List',
       'feat-match-desc': 'Matching jobs',
+=======
+      'agent-title': 'CV Assistant',
+      'feat-opt-name': 'Automatic',
+      'feat-opt-desc': 'CV Optimization',
+      'feat-int-name': 'Interview',
+      'feat-int-desc': 'STAR Rubric',
+      'feat-match-name': 'Match Score',
+      'feat-match-desc': 'Gap Analysis',
+      'feat-custom-name': 'Custom Job',
+      'feat-custom-desc': 'Description',
+      'feat-chatbot-name': 'Chatbot',
+      'feat-chatbot-desc': 'AI career assistant',
+>>>>>>> dce2081f0be2eca0c0425bbbfda841ad1bdebaed
       'quick-access-badge': '✨ QUICK ACCESS TO CORE FEATURES',
       'icon-label-cv': '📄 CV Scanner',
       'icon-label-jd': '💼 JD Library',
@@ -1381,6 +1409,7 @@ function startAppLogic() {
       'gauge-interview-label': 'STARスコア (82/100)',
       'gauge-direction-label': '最適化進捗',
       'chart-title': '面接評価およびCV最適化履歴',
+<<<<<<< HEAD
       'agent-title': 'AIエージェント –<br />人工知能支援システム',
       'feat-opt-name': 'CV分析',
       'feat-opt-desc': '求人票別最適化',
@@ -1388,6 +1417,19 @@ function startAppLogic() {
       'feat-int-desc': 'STAR基準',
       'feat-match-name': '求人票一覧',
       'feat-match-desc': 'マッチする求人',
+=======
+      'agent-title': 'CV Assistant',
+      'feat-opt-name': '自動化',
+      'feat-opt-desc': 'CV最適化',
+      'feat-int-name': '面接練習',
+      'feat-int-desc': 'STAR基準',
+      'feat-match-name': 'マッチスコア',
+      'feat-match-desc': 'ギャップ分析',
+      'feat-custom-name': 'カスタム作成',
+      'feat-custom-desc': '求人票 (JD)',
+      'feat-chatbot-name': 'チャットボット',
+      'feat-chatbot-desc': 'AIキャリアアシスタント',
+>>>>>>> dce2081f0be2eca0c0425bbbfda841ad1bdebaed
       'quick-access-badge': '✨ コア機能へのクイックアクセス',
       'icon-label-cv': '📄 CVスキャナー',
       'icon-label-jd': '💼 求人ライブラリ',
@@ -1474,6 +1516,7 @@ function startAppLogic() {
       'gauge-interview-label': 'STAR 점수 (82/100)',
       'gauge-direction-label': '최적화 진행률',
       'chart-title': '면접 평가 및 프로필 최적화 이력',
+<<<<<<< HEAD
       'agent-title': 'AI 에이전트 –<br />인공지능 지원 시스템',
       'feat-opt-name': 'CV 분석',
       'feat-opt-desc': 'JD 맞춤 최적화',
@@ -1481,6 +1524,19 @@ function startAppLogic() {
       'feat-int-desc': 'STAR 루브릭',
       'feat-match-name': 'JD 목록',
       'feat-match-desc': '맞춤 채용 공고',
+=======
+      'agent-title': 'CV Assistant',
+      'feat-opt-name': '자동화',
+      'feat-opt-desc': 'CV 최적화',
+      'feat-int-name': '면접 연습',
+      'feat-int-desc': 'STAR 루브릭',
+      'feat-match-name': '매칭 점수',
+      'feat-match-desc': '갭 분석',
+      'feat-custom-name': '커스텀 생성',
+      'feat-custom-desc': '직무 기술서 (JD)',
+      'feat-chatbot-name': '챗봇',
+      'feat-chatbot-desc': 'AI 커리어 어시스턴트',
+>>>>>>> dce2081f0be2eca0c0425bbbfda841ad1bdebaed
       'quick-access-badge': '✨ 핵심 기능 빠른 액세스',
       'icon-label-cv': '📄 CV 스캐너',
       'icon-label-jd': '💼 JD 라이브러리',
@@ -1567,6 +1623,7 @@ function startAppLogic() {
       'gauge-interview-label': 'STAR 得分 (82/100)',
       'gauge-direction-label': '优化进度',
       'chart-title': '面试评估与简历优化历史记录',
+<<<<<<< HEAD
       'agent-title': 'AI 智能助手 –<br />人工智能辅助',
       'feat-opt-name': '简历分析',
       'feat-opt-desc': '按职位描述优化',
@@ -1574,6 +1631,19 @@ function startAppLogic() {
       'feat-int-desc': 'STAR 标准',
       'feat-match-name': '职位列表',
       'feat-match-desc': '匹配职位',
+=======
+      'agent-title': 'CV Assistant',
+      'feat-opt-name': '自动',
+      'feat-opt-desc': '简历优化',
+      'feat-int-name': '面试',
+      'feat-int-desc': 'STAR 标准',
+      'feat-match-name': '匹配得分',
+      'feat-match-desc': '差距分析',
+      'feat-custom-name': '自定义',
+      'feat-custom-desc': '职位描述 (JD)',
+      'feat-chatbot-name': '聊天机器人',
+      'feat-chatbot-desc': 'AI 职业助手',
+>>>>>>> dce2081f0be2eca0c0425bbbfda841ad1bdebaed
       'quick-access-badge': '✨ 核心功能快速入口',
       'icon-label-cv': '📄 简历扫描',
       'icon-label-jd': '💼 职位库',
@@ -1838,16 +1908,28 @@ function startAppLogic() {
   // Action Buttons View Switch Triggers
   document.getElementById('icon-cv-btn')?.addEventListener('click', () => switchView('cv'));
   document.getElementById('btn-consult')?.addEventListener('click', () => switchView('cv'));
+  document.getElementById('feature-cv')?.addEventListener('click', () => switchView('cv'));
 
   document.getElementById('icon-location-btn')?.addEventListener('click', () => switchView('jobs'));
+<<<<<<< HEAD
   document.getElementById('feature-keywords')?.addEventListener('click', () => switchView('find-jobs'));
+=======
+  document.getElementById('feature-chatbot')?.addEventListener('click', () => {
+    const chatPanel = document.getElementById('ai-companion-chat');
+    if (chatPanel?.hidden) document.getElementById('ai-companion-avatar')?.click();
+    document.getElementById('ai-companion-input')?.focus();
+  });
+>>>>>>> dce2081f0be2eca0c0425bbbfda841ad1bdebaed
 
   document.getElementById('icon-megaphone-btn')?.addEventListener('click', () => switchView('interview'));
   document.getElementById('btn-try-free')?.addEventListener('click', () => switchView('interview'));
-  document.getElementById('feature-deep-interview')?.addEventListener('click', () => switchView('interview'));
+  document.getElementById('feature-interview')?.addEventListener('click', () => switchView('interview'));
 
   document.getElementById('icon-search-btn')?.addEventListener('click', () => switchView('gap'));
+<<<<<<< HEAD
   document.getElementById('feature-optimize')?.addEventListener('click', () => switchView('cv'));
+=======
+>>>>>>> dce2081f0be2eca0c0425bbbfda841ad1bdebaed
 
   /* ============================================================
      🌌 WHITE SPACESHIP CV UPLOAD & MANAGEMENT LOGIC
@@ -4245,7 +4327,7 @@ TÊN CÔNG TY:
       if (fullnameGroup) fullnameGroup.style.display = 'block';
       if (roleGroup) roleGroup.style.display = 'block';
       if (authTitle) authTitle.textContent = dict['auth-title-reg'] || 'Tạo tài khoản mới';
-      if (authSub) authSub.textContent = dict['auth-sub-reg'] || 'Tham gia Career Assistant X để tối ưu CV & phỏng vấn';
+      if (authSub) authSub.textContent = dict['auth-sub-reg'] || 'Tham gia CV Assistant để tối ưu CV & phỏng vấn';
       if (btnSubmitLabel) btnSubmitLabel.textContent = dict['btn-submit-reg'] || 'Đăng ký tài khoản';
     } else {
       tabLogin?.classList.add('active'); if (tabLogin) tabLogin.style.color = '#fff';
@@ -5261,7 +5343,7 @@ TÊN CÔNG TY:
 
   initAICompanion();
 
-  console.log('🚀 Career Copilot X – Space canvas & Deep space background active!');
+  console.log('🚀 CV Assistant – Space canvas & Deep space background active!');
 }
 
 if (document.readyState === 'loading') {
