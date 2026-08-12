@@ -244,10 +244,10 @@ export default function Page() {
 
             <div className="agent-info" id="agent-info">
               <h2 className="agent-title" id="agent-title" data-i18n="agent-title" data-i18n-html="true">
-                Agent AI – Trí Tuệ<br />Nhân Tạo hỗ trợ
+                CV Assistant
               </h2>
               <div className="features-grid" id="features-grid">
-                <div className="feature-item" id="feature-optimize">
+                <div className="feature-item" id="feature-cv">
                   <div className="feature-icon">
                     <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
                       <path d="M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
@@ -255,42 +255,31 @@ export default function Page() {
                     </svg>
                   </div>
                   <div>
-                    <p className="feature-name" data-i18n="feat-opt-name">Tự động</p>
+                    <p className="feature-name" data-i18n="nav-cv">Phân tích CV</p>
                     <p className="feature-desc" data-i18n="feat-opt-desc">tối ưu CV</p>
                   </div>
                 </div>
-                <div className="feature-item" id="feature-deep-interview">
+                <div className="feature-item" id="feature-chatbot">
+                  <div className="feature-icon feature-icon-blue">
+                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
+                      <path d="M20 15a3 3 0 0 1-3 3H9l-5 3v-6a3 3 0 0 1-1-2.24V7a3 3 0 0 1 3-3h11a3 3 0 0 1 3 3v8z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+                      <path d="M8 10h.01M12 10h.01M16 10h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="feature-name" data-i18n="feat-chatbot-name">Chatbot</p>
+                    <p className="feature-desc" data-i18n="feat-chatbot-desc">Trợ lý nghề nghiệp AI</p>
+                  </div>
+                </div>
+                <div className="feature-item" id="feature-interview">
                   <div className="feature-icon feature-icon-purple">
                     <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
                       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
                     </svg>
                   </div>
                   <div>
-                    <p className="feature-name" data-i18n="feat-int-name">Phỏng vấn</p>
+                    <p className="feature-name" data-i18n="nav-interview">Phòng phỏng vấn</p>
                     <p className="feature-desc" data-i18n="feat-int-desc">STAR Rubric</p>
-                  </div>
-                </div>
-                <div className="feature-item" id="feature-keywords">
-                  <div className="feature-icon feature-icon-pink">
-                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
-                      <path d="M5 3l14 9-14 9V3z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="feature-name" data-i18n="feat-match-name">Match Score</p>
-                    <p className="feature-desc" data-i18n="feat-match-desc">Gap Analysis</p>
-                  </div>
-                </div>
-                <div className="feature-item" id="feature-career">
-                  <div className="feature-icon feature-icon-blue">
-                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
-                      <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="1.5"/>
-                      <path d="M7 8h10M7 12h7M7 16h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="feature-name" data-i18n="feat-custom-name">Tạo Custom</p>
-                    <p className="feature-desc" data-i18n="feat-custom-desc">Job Description</p>
                   </div>
                 </div>
               </div>
@@ -406,7 +395,7 @@ export default function Page() {
           <div className="testimonials-wrap">
             <div className="section-header center-header">
               <span className="section-tag" data-i18n="testi-tag">💬 CÂU CHUYỆN THÀNH CÔNG</span>
-              <h2 className="section-title-large" data-i18n="testi-title">Ứng Viên Nói Gì Về Career Assistant X?</h2>
+              <h2 className="section-title-large" data-i18n="testi-title">Ứng Viên Nói Gì Về CV Assistant?</h2>
               <p className="section-subtitle" data-i18n="testi-sub">Hàng ngàn ứng viên đã chinh phục được công việc mơ ước nhờ sự đồng hành của AI Agent</p>
             </div>
 

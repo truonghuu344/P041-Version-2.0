@@ -1184,7 +1184,7 @@ function startAppLogic() {
       'gauge-interview-label': 'STAR Score (82/100)',
       'gauge-direction-label': 'Tiến Độ Tối Ưu',
       'chart-title': 'Lịch sử đánh giá phỏng vấn & tối ưu hồ sơ',
-      'agent-title': 'Agent AI – Trí Tuệ<br />Nhân Tạo hỗ trợ',
+      'agent-title': 'CV Assistant',
       'feat-opt-name': 'Tự động',
       'feat-opt-desc': 'tối ưu CV',
       'feat-int-name': 'Phỏng vấn',
@@ -1193,6 +1193,8 @@ function startAppLogic() {
       'feat-match-desc': 'Gap Analysis',
       'feat-custom-name': 'Tạo Custom',
       'feat-custom-desc': 'Job Description',
+      'feat-chatbot-name': 'Chatbot',
+      'feat-chatbot-desc': 'Trợ lý nghề nghiệp AI',
       'quick-access-badge': '✨ TRUY CẬP NHANH CÁC TÍNH NĂNG CỐT LÕI',
       'icon-label-cv': '📄 CV Scanner',
       'icon-label-jd': '💼 Thư viện JD',
@@ -1240,7 +1242,7 @@ function startAppLogic() {
       'stat-rating-label': 'Đánh Giá Từ 5,000+ Ứng Viên',
       'stat-speed-label': 'Thời Gian Phân Tích Match Score',
       'testi-tag': '💬 CÂU CHUYỆN THÀNH CÔNG',
-      'testi-title': 'Ứng Viên Nói Gì Về Career Assistant X?',
+      'testi-title': 'Ứng Viên Nói Gì Về CV Assistant?',
       'testi-sub': 'Hàng ngàn ứng viên đã chinh phục được công việc mơ ước nhờ sự đồng hành của AI Agent',
       'testi-user1-text': '"Nhờ Gap Analysis mà tôi biết chính xác CV mình thiếu những từ khóa ATS nào đối với vị trí Senior Frontend. AI còn tự động tối ưu câu từ vô cùng chân thật!"',
       'testi-user1-role': 'Senior Frontend Engineer @ Top Tech Corp',
@@ -1278,7 +1280,7 @@ function startAppLogic() {
       'gauge-interview-label': 'STAR Score (82/100)',
       'gauge-direction-label': 'Optimal Progress',
       'chart-title': 'Interview evaluation history & resume optimization',
-      'agent-title': 'AI Agent – Powered by<br />Artificial Intelligence',
+      'agent-title': 'CV Assistant',
       'feat-opt-name': 'Automatic',
       'feat-opt-desc': 'CV Optimization',
       'feat-int-name': 'Interview',
@@ -1287,6 +1289,8 @@ function startAppLogic() {
       'feat-match-desc': 'Gap Analysis',
       'feat-custom-name': 'Custom Job',
       'feat-custom-desc': 'Description',
+      'feat-chatbot-name': 'Chatbot',
+      'feat-chatbot-desc': 'AI career assistant',
       'quick-access-badge': '✨ QUICK ACCESS TO CORE FEATURES',
       'icon-label-cv': '📄 CV Scanner',
       'icon-label-jd': '💼 JD Library',
@@ -1334,7 +1338,7 @@ function startAppLogic() {
       'stat-rating-label': 'Rating from 5,000+ Candidates',
       'stat-speed-label': 'Match Score Analysis Time',
       'testi-tag': '💬 SUCCESS STORIES',
-      'testi-title': 'What Candidates Say About Career Assistant X',
+      'testi-title': 'What Candidates Say About CV Assistant',
       'testi-sub': 'Thousands of candidates landed their dream job with AI Agent assistance',
       'testi-user1-text': '"Thanks to Gap Analysis, I knew exactly which ATS keywords my CV was missing for the Senior Frontend role. AI rewrote it authentically without fluff!"',
       'testi-user1-role': 'Senior Frontend Engineer @ Top Tech Corp',
@@ -1372,7 +1376,7 @@ function startAppLogic() {
       'gauge-interview-label': 'STARスコア (82/100)',
       'gauge-direction-label': '最適化進捗',
       'chart-title': '面接評価およびCV最適化履歴',
-      'agent-title': 'AIエージェント –<br />人工知能支援システム',
+      'agent-title': 'CV Assistant',
       'feat-opt-name': '自動化',
       'feat-opt-desc': 'CV最適化',
       'feat-int-name': '面接練習',
@@ -1381,6 +1385,8 @@ function startAppLogic() {
       'feat-match-desc': 'ギャップ分析',
       'feat-custom-name': 'カスタム作成',
       'feat-custom-desc': '求人票 (JD)',
+      'feat-chatbot-name': 'チャットボット',
+      'feat-chatbot-desc': 'AIキャリアアシスタント',
       'quick-access-badge': '✨ コア機能へのクイックアクセス',
       'icon-label-cv': '📄 CVスキャナー',
       'icon-label-jd': '💼 求人ライブラリ',
@@ -1428,7 +1434,7 @@ function startAppLogic() {
       'stat-rating-label': '5,000名以上のユーザー評価',
       'stat-speed-label': '適合度分析スピード',
       'testi-tag': '💬 成功事例・受講者の声',
-      'testi-title': 'Career Assistant Xの評判と評価',
+      'testi-title': 'CV Assistantの評判と評価',
       'testi-sub': 'AIエージェントと共に夢の職種への転職を成功させたユーザーの声',
       'testi-user1-text': '「ギャップ分析のおかげで、Senior Frontendポジションに必要なATSキーワードが明確になりました。AIの修正文も非常に誠実で魅力的です！」',
       'testi-user1-role': 'Senior Frontend Engineer @ Top Tech Corp',
@@ -1466,7 +1472,7 @@ function startAppLogic() {
       'gauge-interview-label': 'STAR 점수 (82/100)',
       'gauge-direction-label': '최적화 진행률',
       'chart-title': '면접 평가 및 프로필 최적화 이력',
-      'agent-title': 'AI 에이전트 –<br />인공지능 지원 시스템',
+      'agent-title': 'CV Assistant',
       'feat-opt-name': '자동화',
       'feat-opt-desc': 'CV 최적화',
       'feat-int-name': '면접 연습',
@@ -1475,6 +1481,8 @@ function startAppLogic() {
       'feat-match-desc': '갭 분석',
       'feat-custom-name': '커스텀 생성',
       'feat-custom-desc': '직무 기술서 (JD)',
+      'feat-chatbot-name': '챗봇',
+      'feat-chatbot-desc': 'AI 커리어 어시스턴트',
       'quick-access-badge': '✨ 핵심 기능 빠른 액세스',
       'icon-label-cv': '📄 CV 스캐너',
       'icon-label-jd': '💼 JD 라이브러리',
@@ -1522,7 +1530,7 @@ function startAppLogic() {
       'stat-rating-label': '5,000+ 지원자의 평점',
       'stat-speed-label': '매칭 분석 소요 시간',
       'testi-tag': '💬 합격 후기',
-      'testi-title': '지원자들이 말하는 Career Assistant X',
+      'testi-title': '지원자들이 말하는 CV Assistant',
       'testi-sub': '수천 명의 지원자가 AI 에이전트와 함께 꿈의 기업에 합격했습니다',
       'testi-user1-text': '"갭 분석 덕분에 Senior Frontend 직무에 부족했던 ATS 키워드를 정확히 파악했습니다. AI 최적화 문장도 과장 없이 솔직하고 매끄러웠습니다!"',
       'testi-user1-role': 'Senior Frontend Engineer @ Top Tech Corp',
@@ -1560,7 +1568,7 @@ function startAppLogic() {
       'gauge-interview-label': 'STAR 得分 (82/100)',
       'gauge-direction-label': '优化进度',
       'chart-title': '面试评估与简历优化历史记录',
-      'agent-title': 'AI 智能助手 –<br />人工智能辅助',
+      'agent-title': 'CV Assistant',
       'feat-opt-name': '自动',
       'feat-opt-desc': '简历优化',
       'feat-int-name': '面试',
@@ -1569,6 +1577,8 @@ function startAppLogic() {
       'feat-match-desc': '差距分析',
       'feat-custom-name': '自定义',
       'feat-custom-desc': '职位描述 (JD)',
+      'feat-chatbot-name': '聊天机器人',
+      'feat-chatbot-desc': 'AI 职业助手',
       'quick-access-badge': '✨ 核心功能快速入口',
       'icon-label-cv': '📄 简历扫描',
       'icon-label-jd': '💼 职位库',
@@ -1616,7 +1626,7 @@ function startAppLogic() {
       'stat-rating-label': '5,000+ 求职者五星好评',
       'stat-speed-label': '匹配得分分析耗时',
       'testi-tag': '💬 成功求职故事',
-      'testi-title': '求职者如何评价 Career Assistant X？',
+      'testi-title': '求职者如何评价 CV Assistant？',
       'testi-sub': '数以千计的求职者在 AI 助手的陪伴下成功斩获心仪 Offer',
       'testi-user1-text': '“多亏了 Gap Analysis 差距分析，我准确知道了 Senior Frontend 岗位简历缺少的 ATS 关键词。AI 自动润色语言既真实又专业！”',
       'testi-user1-role': 'Senior Frontend Engineer @ Top Tech Corp',
@@ -1828,17 +1838,20 @@ function startAppLogic() {
   // Action Buttons View Switch Triggers
   document.getElementById('icon-cv-btn')?.addEventListener('click', () => switchView('cv'));
   document.getElementById('btn-consult')?.addEventListener('click', () => switchView('cv'));
+  document.getElementById('feature-cv')?.addEventListener('click', () => switchView('cv'));
 
   document.getElementById('icon-location-btn')?.addEventListener('click', () => switchView('jobs'));
-  document.getElementById('feature-career')?.addEventListener('click', () => switchView('jobs'));
+  document.getElementById('feature-chatbot')?.addEventListener('click', () => {
+    const chatPanel = document.getElementById('ai-companion-chat');
+    if (chatPanel?.hidden) document.getElementById('ai-companion-avatar')?.click();
+    document.getElementById('ai-companion-input')?.focus();
+  });
 
   document.getElementById('icon-megaphone-btn')?.addEventListener('click', () => switchView('interview'));
   document.getElementById('btn-try-free')?.addEventListener('click', () => switchView('interview'));
-  document.getElementById('feature-deep-interview')?.addEventListener('click', () => switchView('interview'));
+  document.getElementById('feature-interview')?.addEventListener('click', () => switchView('interview'));
 
   document.getElementById('icon-search-btn')?.addEventListener('click', () => switchView('gap'));
-  document.getElementById('feature-optimize')?.addEventListener('click', () => switchView('gap'));
-  document.getElementById('feature-keywords')?.addEventListener('click', () => switchView('gap'));
 
   /* ============================================================
      🌌 WHITE SPACESHIP CV UPLOAD & MANAGEMENT LOGIC
@@ -4106,7 +4119,7 @@ TÊN CÔNG TY:
       if (fullnameGroup) fullnameGroup.style.display = 'block';
       if (roleGroup) roleGroup.style.display = 'block';
       if (authTitle) authTitle.textContent = dict['auth-title-reg'] || 'Tạo tài khoản mới';
-      if (authSub) authSub.textContent = dict['auth-sub-reg'] || 'Tham gia Career Assistant X để tối ưu CV & phỏng vấn';
+      if (authSub) authSub.textContent = dict['auth-sub-reg'] || 'Tham gia CV Assistant để tối ưu CV & phỏng vấn';
       if (btnSubmitLabel) btnSubmitLabel.textContent = dict['btn-submit-reg'] || 'Đăng ký tài khoản';
     } else {
       tabLogin?.classList.add('active'); if (tabLogin) tabLogin.style.color = '#fff';
@@ -5122,7 +5135,7 @@ TÊN CÔNG TY:
 
   initAICompanion();
 
-  console.log('🚀 Career Copilot X – Space canvas & Deep space background active!');
+  console.log('🚀 CV Assistant – Space canvas & Deep space background active!');
 }
 
 if (document.readyState === 'loading') {
