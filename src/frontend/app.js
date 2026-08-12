@@ -1104,6 +1104,9 @@ function startAppLogic() {
     });
 
     currentViewName = targetViewName;
+    document.querySelectorAll('[data-mobile-view]').forEach(button => {
+      button.classList.toggle('active', button.dataset.mobileView === targetViewName);
+    });
 
     // Nova nằm ngoài các app-view và luôn khả dụng trên mọi trang/role.
     const novaCompanion = document.getElementById('ai-companion');
@@ -1177,21 +1180,21 @@ function startAppLogic() {
      - zh: 中文
      ============================================================ */
   const LANG_DATA = {
-    vi: { code: 'VIE', flag: '🇻🇳', name: 'Tiếng Việt' },
-    en: { code: 'ENG', flag: '🇺🇸', name: 'English' },
-    ja: { code: 'JPN', flag: '🇯🇵', name: '日本語' },
-    ko: { code: 'KOR', flag: '🇰🇷', name: '한국어' },
-    zh: { code: 'ZHO', flag: '🇨🇳', name: '中文' },
+    vi: { code: 'VI', flag: '', name: 'Tiếng Việt' },
+    en: { code: 'EN', flag: '', name: 'English' },
+    ja: { code: 'JP', flag: '', name: '日本語' },
+    ko: { code: 'KR', flag: '', name: '한국어' },
+    zh: { code: 'CN', flag: '', name: '中文' },
   };
 
   const TRANSLATIONS = {
     vi: {
-      'nav-dashboard': 'Trang chủ',
-      'nav-cv': 'Phân tích CV',
-      'nav-find-jobs': 'Tìm việc',
+      'nav-dashboard': 'Tổng quan',
+      'nav-cv': 'CV của tôi',
+      'nav-find-jobs': 'Việc phù hợp',
       'nav-jobs': 'Danh sách JD',
-      'nav-interview': 'Phòng phỏng vấn',
-      'nav-history': 'Lịch sử & Báo cáo',
+      'nav-interview': 'Luyện phỏng vấn',
+      'nav-history': 'Tiến độ',
       'nav-gap': 'Gap Analysis',
       'btn-login': 'Đăng nhập',
       'btn-logout': 'Đăng xuất',
@@ -1279,12 +1282,12 @@ function startAppLogic() {
       'testi-user3-role': 'AI Research Specialist @ Global Hub'
     },
     en: {
-      'nav-dashboard': 'Home',
-      'nav-cv': 'CV Profiles',
-      'nav-find-jobs': 'Find Jobs',
+      'nav-dashboard': 'Overview',
+      'nav-cv': 'My CV',
+      'nav-find-jobs': 'Matched jobs',
       'nav-jobs': 'JD List',
-      'nav-interview': 'Interview Room',
-      'nav-history': 'History & Reports',
+      'nav-interview': 'Interview practice',
+      'nav-history': 'Progress',
       'nav-gap': 'Gap Analysis',
       'btn-login': 'Log in',
       'btn-logout': 'Log out',
@@ -1666,7 +1669,6 @@ function startAppLogic() {
       localStorage.setItem('career_copilot_lang', lang);
       document.documentElement.lang = lang;
 
-      if (currentFlag) currentFlag.textContent = LANG_DATA[lang].flag;
       if (currentCode) currentCode.textContent = LANG_DATA[lang].code;
 
       document.querySelectorAll('.lang-option').forEach(opt => {
@@ -1677,7 +1679,7 @@ function startAppLogic() {
         }
       });
 
-      const dict = TRANSLATIONS[lang] || TRANSLATIONS.vi;
+      const dict = TRANSLATIONS[lang] || {};
       document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
         if (dict[key] !== undefined) {
@@ -1686,6 +1688,8 @@ function startAppLogic() {
           } else {
             el.textContent = dict[key];
           }
+        } else if (process.env.NODE_ENV !== 'production') {
+          console.warn(`[i18n] Missing translation for "${key}" in locale "${lang}".`);
         }
       });
 
@@ -3841,11 +3845,29 @@ TÊN CÔNG TY:
       }
       if (authContainer) {
         authContainer.innerHTML = `
-          <div style="display:flex;align-items:center;gap:10px;">
-            <span style="font-size:12px;color:var(--text-dim);">${user.full_name || user.email}</span>
-            <button class="btn-outline" id="btn-logout" style="padding:6px 12px;font-size:12px;">Đăng xuất</button>
+          <div class="candidate-account-menu" id="candidate-account-menu">
+            <button class="candidate-avatar-trigger" id="candidate-avatar-trigger" aria-haspopup="true" aria-expanded="false">
+              <span class="candidate-avatar-initial">${escapeHtml((user.full_name || user.email || 'N').trim().charAt(0).toUpperCase())}</span>
+              <span class="candidate-avatar-chevron">⌄</span>
+            </button>
+            <div class="candidate-account-dropdown" id="candidate-account-dropdown">
+              <button type="button" data-account-action="profile">Hồ sơ cá nhân</button>
+              <button type="button" data-account-action="settings">Cài đặt</button>
+              <div class="candidate-account-divider"></div>
+              <button type="button" class="candidate-logout" id="btn-logout">Đăng xuất</button>
+            </div>
           </div>
         `;
+        const accountMenu = document.getElementById('candidate-account-menu');
+        const accountTrigger = document.getElementById('candidate-avatar-trigger');
+        accountTrigger?.addEventListener('click', () => {
+          const open = accountMenu?.classList.toggle('open');
+          accountTrigger.setAttribute('aria-expanded', String(Boolean(open)));
+        });
+        accountMenu?.querySelectorAll('[data-account-action]').forEach(button => button.addEventListener('click', () => {
+          accountMenu.classList.remove('open');
+          switchView('profile');
+        }));
         document.getElementById('btn-logout').addEventListener('click', () => {
           performLogout();
         });
