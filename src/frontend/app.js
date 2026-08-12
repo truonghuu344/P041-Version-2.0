@@ -97,6 +97,20 @@ class ApiClient {
     });
   }
 
+  static async requestPasswordReset(email) {
+    return await this.request('/auth/password-reset/request', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+  }
+
+  static async confirmPasswordReset(email, otp, newPassword) {
+    return await this.request('/auth/password-reset/confirm', {
+      method: 'POST',
+      body: JSON.stringify({ email, otp, new_password: newPassword }),
+    });
+  }
+
   static async getMe() {
     try {
       const user = await this.request('/auth/me', { silent: true });
@@ -1195,7 +1209,6 @@ function startAppLogic() {
       'gauge-interview-label': 'STAR Score (82/100)',
       'gauge-direction-label': 'Tiến Độ Tối Ưu',
       'chart-title': 'Lịch sử đánh giá phỏng vấn & tối ưu hồ sơ',
-<<<<<<< HEAD
       'agent-title': 'Agent AI – Trí Tuệ<br />Nhân Tạo hỗ trợ',
       'feat-opt-name': 'Phân tích CV',
       'feat-opt-desc': 'Tối ưu theo JD',
@@ -1203,7 +1216,6 @@ function startAppLogic() {
       'feat-int-desc': 'STAR Rubric',
       'feat-match-name': 'Danh sách JD',
       'feat-match-desc': 'Việc làm phù hợp',
-=======
       'agent-title': 'CV Assistant',
       'feat-opt-name': 'Tự động',
       'feat-opt-desc': 'tối ưu CV',
@@ -1215,7 +1227,6 @@ function startAppLogic() {
       'feat-custom-desc': 'Job Description',
       'feat-chatbot-name': 'Chatbot',
       'feat-chatbot-desc': 'Trợ lý nghề nghiệp AI',
->>>>>>> dce2081f0be2eca0c0425bbbfda841ad1bdebaed
       'quick-access-badge': '✨ TRUY CẬP NHANH CÁC TÍNH NĂNG CỐT LÕI',
       'icon-label-cv': '📄 CV Scanner',
       'icon-label-jd': '💼 Thư viện JD',
@@ -1302,7 +1313,6 @@ function startAppLogic() {
       'gauge-interview-label': 'STAR Score (82/100)',
       'gauge-direction-label': 'Optimal Progress',
       'chart-title': 'Interview evaluation history & resume optimization',
-<<<<<<< HEAD
       'agent-title': 'AI Agent – Powered by<br />Artificial Intelligence',
       'feat-opt-name': 'CV Analysis',
       'feat-opt-desc': 'Optimize for JD',
@@ -1310,7 +1320,6 @@ function startAppLogic() {
       'feat-int-desc': 'STAR Rubric',
       'feat-match-name': 'JD List',
       'feat-match-desc': 'Matching jobs',
-=======
       'agent-title': 'CV Assistant',
       'feat-opt-name': 'Automatic',
       'feat-opt-desc': 'CV Optimization',
@@ -1322,7 +1331,6 @@ function startAppLogic() {
       'feat-custom-desc': 'Description',
       'feat-chatbot-name': 'Chatbot',
       'feat-chatbot-desc': 'AI career assistant',
->>>>>>> dce2081f0be2eca0c0425bbbfda841ad1bdebaed
       'quick-access-badge': '✨ QUICK ACCESS TO CORE FEATURES',
       'icon-label-cv': '📄 CV Scanner',
       'icon-label-jd': '💼 JD Library',
@@ -1409,7 +1417,6 @@ function startAppLogic() {
       'gauge-interview-label': 'STARスコア (82/100)',
       'gauge-direction-label': '最適化進捗',
       'chart-title': '面接評価およびCV最適化履歴',
-<<<<<<< HEAD
       'agent-title': 'AIエージェント –<br />人工知能支援システム',
       'feat-opt-name': 'CV分析',
       'feat-opt-desc': '求人票別最適化',
@@ -1417,7 +1424,6 @@ function startAppLogic() {
       'feat-int-desc': 'STAR基準',
       'feat-match-name': '求人票一覧',
       'feat-match-desc': 'マッチする求人',
-=======
       'agent-title': 'CV Assistant',
       'feat-opt-name': '自動化',
       'feat-opt-desc': 'CV最適化',
@@ -1429,7 +1435,6 @@ function startAppLogic() {
       'feat-custom-desc': '求人票 (JD)',
       'feat-chatbot-name': 'チャットボット',
       'feat-chatbot-desc': 'AIキャリアアシスタント',
->>>>>>> dce2081f0be2eca0c0425bbbfda841ad1bdebaed
       'quick-access-badge': '✨ コア機能へのクイックアクセス',
       'icon-label-cv': '📄 CVスキャナー',
       'icon-label-jd': '💼 求人ライブラリ',
@@ -1516,7 +1521,6 @@ function startAppLogic() {
       'gauge-interview-label': 'STAR 점수 (82/100)',
       'gauge-direction-label': '최적화 진행률',
       'chart-title': '면접 평가 및 프로필 최적화 이력',
-<<<<<<< HEAD
       'agent-title': 'AI 에이전트 –<br />인공지능 지원 시스템',
       'feat-opt-name': 'CV 분석',
       'feat-opt-desc': 'JD 맞춤 최적화',
@@ -1524,7 +1528,6 @@ function startAppLogic() {
       'feat-int-desc': 'STAR 루브릭',
       'feat-match-name': 'JD 목록',
       'feat-match-desc': '맞춤 채용 공고',
-=======
       'agent-title': 'CV Assistant',
       'feat-opt-name': '자동화',
       'feat-opt-desc': 'CV 최적화',
@@ -1536,7 +1539,6 @@ function startAppLogic() {
       'feat-custom-desc': '직무 기술서 (JD)',
       'feat-chatbot-name': '챗봇',
       'feat-chatbot-desc': 'AI 커리어 어시스턴트',
->>>>>>> dce2081f0be2eca0c0425bbbfda841ad1bdebaed
       'quick-access-badge': '✨ 핵심 기능 빠른 액세스',
       'icon-label-cv': '📄 CV 스캐너',
       'icon-label-jd': '💼 JD 라이브러리',
@@ -1623,7 +1625,6 @@ function startAppLogic() {
       'gauge-interview-label': 'STAR 得分 (82/100)',
       'gauge-direction-label': '优化进度',
       'chart-title': '面试评估与简历优化历史记录',
-<<<<<<< HEAD
       'agent-title': 'AI 智能助手 –<br />人工智能辅助',
       'feat-opt-name': '简历分析',
       'feat-opt-desc': '按职位描述优化',
@@ -1631,7 +1632,6 @@ function startAppLogic() {
       'feat-int-desc': 'STAR 标准',
       'feat-match-name': '职位列表',
       'feat-match-desc': '匹配职位',
-=======
       'agent-title': 'CV Assistant',
       'feat-opt-name': '自动',
       'feat-opt-desc': '简历优化',
@@ -1643,7 +1643,6 @@ function startAppLogic() {
       'feat-custom-desc': '职位描述 (JD)',
       'feat-chatbot-name': '聊天机器人',
       'feat-chatbot-desc': 'AI 职业助手',
->>>>>>> dce2081f0be2eca0c0425bbbfda841ad1bdebaed
       'quick-access-badge': '✨ 核心功能快速入口',
       'icon-label-cv': '📄 简历扫描',
       'icon-label-jd': '💼 职位库',
@@ -1911,25 +1910,20 @@ function startAppLogic() {
   document.getElementById('feature-cv')?.addEventListener('click', () => switchView('cv'));
 
   document.getElementById('icon-location-btn')?.addEventListener('click', () => switchView('jobs'));
-<<<<<<< HEAD
   document.getElementById('feature-keywords')?.addEventListener('click', () => switchView('find-jobs'));
-=======
   document.getElementById('feature-chatbot')?.addEventListener('click', () => {
     const chatPanel = document.getElementById('ai-companion-chat');
     if (chatPanel?.hidden) document.getElementById('ai-companion-avatar')?.click();
     document.getElementById('ai-companion-input')?.focus();
   });
->>>>>>> dce2081f0be2eca0c0425bbbfda841ad1bdebaed
 
   document.getElementById('icon-megaphone-btn')?.addEventListener('click', () => switchView('interview'));
   document.getElementById('btn-try-free')?.addEventListener('click', () => switchView('interview'));
   document.getElementById('feature-interview')?.addEventListener('click', () => switchView('interview'));
+  document.getElementById('feature-deep-interview')?.addEventListener('click', () => switchView('interview'));
 
   document.getElementById('icon-search-btn')?.addEventListener('click', () => switchView('gap'));
-<<<<<<< HEAD
   document.getElementById('feature-optimize')?.addEventListener('click', () => switchView('cv'));
-=======
->>>>>>> dce2081f0be2eca0c0425bbbfda841ad1bdebaed
 
   /* ============================================================
      🌌 WHITE SPACESHIP CV UPLOAD & MANAGEMENT LOGIC
@@ -4300,10 +4294,20 @@ TÊN CÔNG TY:
   const authSub = document.getElementById('auth-sub');
   const btnSubmitLabel = document.getElementById('btn-submit-label');
   const loginForm = document.getElementById('login-form');
+  const forgotPasswordButton = document.getElementById('btn-forgot-password');
+  const passwordResetOverlay = document.getElementById('password-reset-overlay');
+  const passwordResetCloseButton = document.getElementById('password-reset-close');
+  const passwordResetForm = document.getElementById('password-reset-form');
+  const passwordResetBackButton = document.getElementById('btn-password-reset-back');
+  const passwordResetSubmitButton = document.getElementById('btn-password-reset-submit');
+  const passwordResetHelp = document.getElementById('password-reset-help');
+  const resetOtpGroup = document.getElementById('reset-otp-group');
+  const resetNewPasswordGroup = document.getElementById('reset-new-password-group');
   const googleButtonHost = document.getElementById('google-signin-button');
   const googleAuthHelp = document.getElementById('google-auth-help');
 
   let isRegisterMode = false;
+  let passwordResetOtpRequested = false;
   let googleIdentityInitialized = false;
 
   function openAuthModal() {
@@ -4317,6 +4321,7 @@ TÊN CÔNG TY:
   if (authClose) authClose.addEventListener('click', closeAuthModal);
 
   function setAuthMode(register) {
+    if (forgotPasswordButton) forgotPasswordButton.hidden = register;
     isRegisterMode = register;
     const currentLang = localStorage.getItem('career_copilot_lang') || 'vi';
     const dict = TRANSLATIONS[currentLang] || TRANSLATIONS.vi;
@@ -4343,6 +4348,84 @@ TÊN CÔNG TY:
 
   if (tabLogin) tabLogin.addEventListener('click', () => setAuthMode(false));
   if (tabRegister) tabRegister.addEventListener('click', () => setAuthMode(true));
+
+  function resetPasswordInlineLegacy(enabled) {
+    if (!passwordResetForm || !loginForm) return;
+    passwordResetForm.hidden = !enabled;
+    loginForm.hidden = enabled;
+    if (forgotPasswordButton) forgotPasswordButton.hidden = enabled;
+    if (tabLogin?.parentElement) tabLogin.parentElement.hidden = enabled;
+    document.querySelector('.google-auth-wrap')?.toggleAttribute('hidden', enabled);
+    if (!enabled) {
+      if (tabLogin?.parentElement) tabLogin.parentElement.hidden = false;
+      document.querySelector('.google-auth-wrap')?.removeAttribute('hidden');
+      passwordResetOtpRequested = false;
+      resetOtpGroup.hidden = true;
+      resetNewPasswordGroup.hidden = true;
+      passwordResetSubmitButton.textContent = 'Gửi mã OTP';
+      passwordResetHelp.textContent = 'Nhập email để nhận mã OTP qua Gmail.';
+      passwordResetForm.reset();
+    }
+  }
+
+  function setPasswordResetMode(enabled) {
+    if (!passwordResetForm || !passwordResetOverlay) return;
+    passwordResetOverlay.classList.toggle('open', enabled);
+    if (enabled) {
+      closeAuthModal();
+      document.getElementById('reset-email')?.focus();
+      return;
+    }
+
+    passwordResetOtpRequested = false;
+    resetOtpGroup.hidden = true;
+    resetNewPasswordGroup.hidden = true;
+    passwordResetSubmitButton.textContent = 'Gửi mã OTP';
+    passwordResetHelp.textContent = 'Nhập email để nhận mã OTP qua Gmail.';
+    passwordResetForm.reset();
+  }
+
+  forgotPasswordButton?.addEventListener('click', () => setPasswordResetMode(true));
+  passwordResetBackButton?.addEventListener('click', () => setPasswordResetMode(false));
+  passwordResetBackButton?.addEventListener('click', () => {
+    setAuthMode(false);
+    openAuthModal();
+  });
+  passwordResetCloseButton?.addEventListener('click', () => setPasswordResetMode(false));
+
+  passwordResetForm?.addEventListener('submit', async event => {
+    event.preventDefault();
+    const email = document.getElementById('reset-email')?.value.trim();
+    if (!email) return;
+    try {
+      if (!passwordResetOtpRequested) {
+        await ApiClient.requestPasswordReset(email);
+        passwordResetOtpRequested = true;
+        resetOtpGroup.hidden = false;
+        resetNewPasswordGroup.hidden = false;
+        passwordResetSubmitButton.textContent = 'Xác nhận và đặt lại mật khẩu';
+        passwordResetHelp.textContent = 'Nếu email tồn tại, mã OTP đã được gửi. Mã có hiệu lực trong 10 phút.';
+        showToast('Kiểm tra hộp thư Gmail để lấy mã OTP.', 'success');
+        document.getElementById('reset-otp')?.focus();
+        return;
+      }
+      const otp = document.getElementById('reset-otp')?.value.trim();
+      const newPassword = document.getElementById('reset-new-password')?.value;
+      if (!/^\d{6}$/.test(otp || '') || !newPassword || newPassword.length < 8) {
+        showToast('Nhập OTP gồm 6 số và mật khẩu mới ít nhất 8 ký tự.', 'error');
+        return;
+      }
+      const result = await ApiClient.confirmPasswordReset(email, otp, newPassword);
+      showToast(result.message || 'Đặt lại mật khẩu thành công.', 'success');
+      setPasswordResetMode(false);
+      setAuthMode(false);
+      openAuthModal();
+      document.getElementById('input-email').value = email;
+      document.getElementById('input-password')?.focus();
+    } catch (err) {
+      showToast(`❌ ${err.message}`, 'error');
+    }
+  });
 
   function enhanceAuthRoleSelect() {
     const select = document.getElementById('input-role');

@@ -256,7 +256,6 @@ export default function Page() {
                     </svg>
                   </div>
                   <div>
-<<<<<<< HEAD
                     <p className="feature-name" data-i18n="feat-opt-name">Phân tích CV</p>
                     <p className="feature-desc" data-i18n="feat-opt-desc">Tối ưu theo JD</p>
                   </div>
@@ -283,11 +282,8 @@ export default function Page() {
                     <p className="feature-desc" data-i18n="feat-int-desc">STAR Rubric</p>
                   </div>
                 </div>
-=======
                     <p className="feature-name" data-i18n="nav-cv">Phân tích CV</p>
                     <p className="feature-desc" data-i18n="feat-opt-desc">tối ưu CV</p>
-                  </div>
-                </div>
                 <div className="feature-item" id="feature-chatbot">
                   <div className="feature-icon feature-icon-blue">
                     <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
@@ -311,7 +307,6 @@ export default function Page() {
                     <p className="feature-desc" data-i18n="feat-int-desc">STAR Rubric</p>
                   </div>
                 </div>
->>>>>>> dce2081f0be2eca0c0425bbbfda841ad1bdebaed
               </div>
             </div>
           </div>
@@ -1476,6 +1471,34 @@ export default function Page() {
             <button type="submit" className="btn-submit" id="btn-submit">
               <span id="btn-submit-label" data-i18n="btn-submit-login">Đăng nhập</span>
             </button>
+          </form>
+          <button type="button" id="btn-forgot-password" className="auth-forgot-password">Quên mật khẩu?</button>
+        </div>
+      </div>
+
+      <div className="modal-overlay" id="password-reset-overlay" role="dialog" aria-modal="true" aria-labelledby="password-reset-title">
+        <div className="modal-card password-reset-card">
+          <button type="button" className="modal-close" id="password-reset-close" aria-label="Đóng">&times;</button>
+          <div className="modal-header">
+            <h2 className="modal-title" id="password-reset-title">Đặt lại mật khẩu</h2>
+            <p className="modal-sub">Nhập email, nhận OTP qua Gmail và tạo mật khẩu mới.</p>
+          </div>
+          <form className="login-form" id="password-reset-form">
+            <p className="auth-reset-help" id="password-reset-help">Nhập email để nhận mã OTP qua Gmail.</p>
+            <div className="form-group">
+              <label className="form-label" htmlFor="reset-email">Email</label>
+              <input type="email" id="reset-email" className="form-input" placeholder="you@example.com" required />
+            </div>
+            <div className="form-group" id="reset-otp-group" hidden>
+              <label className="form-label" htmlFor="reset-otp">Mã OTP gồm 6 số</label>
+              <input type="text" id="reset-otp" className="form-input" inputMode="numeric" pattern="[0-9]{6}" maxLength={6} placeholder="123456" />
+            </div>
+            <div className="form-group" id="reset-new-password-group" hidden>
+              <label className="form-label" htmlFor="reset-new-password">Mật khẩu mới</label>
+              <input type="password" id="reset-new-password" className="form-input" minLength={8} placeholder="Ít nhất 8 ký tự" />
+            </div>
+            <button type="submit" className="btn-submit" id="btn-password-reset-submit">Gửi mã OTP</button>
+            <button type="button" id="btn-password-reset-back" className="auth-forgot-password">Quay lại đăng nhập</button>
           </form>
         </div>
       </div>

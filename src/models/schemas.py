@@ -24,6 +24,16 @@ class UserLogin(BaseModel):
     password: str
 
 
+class PasswordResetRequest(BaseModel):
+    email: EmailStr
+
+
+class PasswordResetConfirm(BaseModel):
+    email: EmailStr
+    otp: str = Field(..., pattern=r"^\d{6}$", description="Mã OTP gồm 6 chữ số")
+    new_password: str = Field(..., min_length=8, max_length=72)
+
+
 class GoogleAuthRequest(BaseModel):
     credential: str = Field(..., min_length=20, description="Google Identity Services ID token")
     role: Literal["student", "counselor", "enterprise"] = "student"
