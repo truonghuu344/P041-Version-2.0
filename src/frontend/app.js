@@ -206,6 +206,13 @@ class ApiClient {
     return await this.request('/jds');
   }
 
+  static async searchJobs(query = '', cvId = '', limit = 60) {
+    const params = new URLSearchParams({ limit: String(limit) });
+    if (query) params.set('q', query);
+    if (cvId) params.set('cv_id', cvId);
+    return await this.request(`/jobs?${params.toString()}`);
+  }
+
   static async createCustomJD(title, company, location, requirementsText) {
     return await this.request('/jds/custom', {
       method: 'POST',
@@ -987,7 +994,7 @@ function startAppLogic() {
   /* ============================================================
      🚀 ROUTER & SPACESHIP SINGLE PAGE VIEW SWITCHER
   ============================================================ */
-  const ALL_VIEWS = ['dashboard', 'cv', 'jobs', 'interview', 'gap', 'history', 'profile', 'counselor', 'enterprise', 'admin'];
+  const ALL_VIEWS = ['dashboard', 'cv', 'find-jobs', 'jobs', 'interview', 'gap', 'history', 'profile', 'counselor', 'enterprise', 'admin'];
   const ROLE_HOME_VIEWS = Object.freeze({
     student: 'dashboard',
     counselor: 'counselor',
@@ -996,7 +1003,7 @@ function startAppLogic() {
   });
   const ROLE_NAV_ITEMS = Object.freeze({
     guest: ['nav-dashboard'],
-    student: ['nav-dashboard', 'nav-cv', 'nav-interview', 'nav-history'],
+    student: ['nav-dashboard', 'nav-cv', 'nav-find-jobs', 'nav-interview', 'nav-history'],
     counselor: ['nav-counselor', 'nav-counselor-reports'],
     enterprise: ['nav-enterprise', 'nav-jobs', 'nav-enterprise-applications'],
     admin: ['nav-admin']
@@ -1022,6 +1029,7 @@ function startAppLogic() {
   const roomTitles = {
     dashboard: 'COMMAND DECK // HOME',
     cv: 'DECK ALPHA // RESUME LAB',
+    'find-jobs': 'DECK BETA // AI JOB DISCOVERY',
     jobs: 'DECK BETA // CAREER MAP',
     interview: 'DECK GAMMA // SIMULATION CHAMBER',
     gap: 'DECK DELTA // NAVIGATION DECK',
@@ -1040,7 +1048,7 @@ function startAppLogic() {
       showToast('Bạn đã được chuyển về dashboard phù hợp với vai trò.', 'info');
     }
 
-    const VIEW_ORDER = ['dashboard', 'cv', 'jobs', 'interview', 'gap', 'history', 'profile', 'counselor', 'enterprise', 'admin'];
+    const VIEW_ORDER = ['dashboard', 'cv', 'find-jobs', 'jobs', 'interview', 'gap', 'history', 'profile', 'counselor', 'enterprise', 'admin'];
     const currentIndex = VIEW_ORDER.indexOf(currentViewName);
     const targetIndex = VIEW_ORDER.indexOf(targetViewName);
     const direction = targetIndex >= currentIndex ? 'right' : 'left';
@@ -1095,6 +1103,8 @@ function startAppLogic() {
       loadSpaceshipCVList();
       loadCVAgentStatus();
       loadCVJDOptions();
+    } else if (targetViewName === 'find-jobs') {
+      initializeJobSearchView();
     } else if (targetViewName === 'jobs') {
       loadPageJDList();
       initStarMapNodes();
@@ -1158,6 +1168,7 @@ function startAppLogic() {
     vi: {
       'nav-dashboard': 'Trang chủ',
       'nav-cv': 'Phân tích CV',
+      'nav-find-jobs': 'Tìm việc',
       'nav-jobs': 'Danh sách JD',
       'nav-interview': 'Phòng phỏng vấn',
       'nav-history': 'Lịch sử & Báo cáo',
@@ -1184,7 +1195,16 @@ function startAppLogic() {
       'gauge-interview-label': 'STAR Score (82/100)',
       'gauge-direction-label': 'Tiến Độ Tối Ưu',
       'chart-title': 'Lịch sử đánh giá phỏng vấn & tối ưu hồ sơ',
+<<<<<<< HEAD
       'agent-title': 'Agent AI – Trí Tuệ<br />Nhân Tạo hỗ trợ',
+      'feat-opt-name': 'Phân tích CV',
+      'feat-opt-desc': 'Tối ưu theo JD',
+      'feat-int-name': 'Phòng phỏng vấn',
+      'feat-int-desc': 'STAR Rubric',
+      'feat-match-name': 'Danh sách JD',
+      'feat-match-desc': 'Việc làm phù hợp',
+=======
+      'agent-title': 'CV Assistant',
       'feat-opt-name': 'Tự động',
       'feat-opt-desc': 'tối ưu CV',
       'feat-int-name': 'Phỏng vấn',
@@ -1193,6 +1213,9 @@ function startAppLogic() {
       'feat-match-desc': 'Gap Analysis',
       'feat-custom-name': 'Tạo Custom',
       'feat-custom-desc': 'Job Description',
+      'feat-chatbot-name': 'Chatbot',
+      'feat-chatbot-desc': 'Trợ lý nghề nghiệp AI',
+>>>>>>> dce2081f0be2eca0c0425bbbfda841ad1bdebaed
       'quick-access-badge': '✨ TRUY CẬP NHANH CÁC TÍNH NĂNG CỐT LÕI',
       'icon-label-cv': '📄 CV Scanner',
       'icon-label-jd': '💼 Thư viện JD',
@@ -1240,7 +1263,7 @@ function startAppLogic() {
       'stat-rating-label': 'Đánh Giá Từ 5,000+ Ứng Viên',
       'stat-speed-label': 'Thời Gian Phân Tích Match Score',
       'testi-tag': '💬 CÂU CHUYỆN THÀNH CÔNG',
-      'testi-title': 'Ứng Viên Nói Gì Về Career Assistant X?',
+      'testi-title': 'Ứng Viên Nói Gì Về CV Assistant?',
       'testi-sub': 'Hàng ngàn ứng viên đã chinh phục được công việc mơ ước nhờ sự đồng hành của AI Agent',
       'testi-user1-text': '"Nhờ Gap Analysis mà tôi biết chính xác CV mình thiếu những từ khóa ATS nào đối với vị trí Senior Frontend. AI còn tự động tối ưu câu từ vô cùng chân thật!"',
       'testi-user1-role': 'Senior Frontend Engineer @ Top Tech Corp',
@@ -1252,6 +1275,7 @@ function startAppLogic() {
     en: {
       'nav-dashboard': 'Home',
       'nav-cv': 'CV Profiles',
+      'nav-find-jobs': 'Find Jobs',
       'nav-jobs': 'JD List',
       'nav-interview': 'Interview Room',
       'nav-history': 'History & Reports',
@@ -1278,7 +1302,16 @@ function startAppLogic() {
       'gauge-interview-label': 'STAR Score (82/100)',
       'gauge-direction-label': 'Optimal Progress',
       'chart-title': 'Interview evaluation history & resume optimization',
+<<<<<<< HEAD
       'agent-title': 'AI Agent – Powered by<br />Artificial Intelligence',
+      'feat-opt-name': 'CV Analysis',
+      'feat-opt-desc': 'Optimize for JD',
+      'feat-int-name': 'Interview Room',
+      'feat-int-desc': 'STAR Rubric',
+      'feat-match-name': 'JD List',
+      'feat-match-desc': 'Matching jobs',
+=======
+      'agent-title': 'CV Assistant',
       'feat-opt-name': 'Automatic',
       'feat-opt-desc': 'CV Optimization',
       'feat-int-name': 'Interview',
@@ -1287,6 +1320,9 @@ function startAppLogic() {
       'feat-match-desc': 'Gap Analysis',
       'feat-custom-name': 'Custom Job',
       'feat-custom-desc': 'Description',
+      'feat-chatbot-name': 'Chatbot',
+      'feat-chatbot-desc': 'AI career assistant',
+>>>>>>> dce2081f0be2eca0c0425bbbfda841ad1bdebaed
       'quick-access-badge': '✨ QUICK ACCESS TO CORE FEATURES',
       'icon-label-cv': '📄 CV Scanner',
       'icon-label-jd': '💼 JD Library',
@@ -1334,7 +1370,7 @@ function startAppLogic() {
       'stat-rating-label': 'Rating from 5,000+ Candidates',
       'stat-speed-label': 'Match Score Analysis Time',
       'testi-tag': '💬 SUCCESS STORIES',
-      'testi-title': 'What Candidates Say About Career Assistant X',
+      'testi-title': 'What Candidates Say About CV Assistant',
       'testi-sub': 'Thousands of candidates landed their dream job with AI Agent assistance',
       'testi-user1-text': '"Thanks to Gap Analysis, I knew exactly which ATS keywords my CV was missing for the Senior Frontend role. AI rewrote it authentically without fluff!"',
       'testi-user1-role': 'Senior Frontend Engineer @ Top Tech Corp',
@@ -1346,6 +1382,7 @@ function startAppLogic() {
     ja: {
       'nav-dashboard': 'ホーム',
       'nav-cv': 'CVプロフィール',
+      'nav-find-jobs': '求人を探す',
       'nav-jobs': 'JD一覧',
       'nav-interview': '面接ルーム',
       'nav-history': '履歴とレポート',
@@ -1372,7 +1409,16 @@ function startAppLogic() {
       'gauge-interview-label': 'STARスコア (82/100)',
       'gauge-direction-label': '最適化進捗',
       'chart-title': '面接評価およびCV最適化履歴',
+<<<<<<< HEAD
       'agent-title': 'AIエージェント –<br />人工知能支援システム',
+      'feat-opt-name': 'CV分析',
+      'feat-opt-desc': '求人票別最適化',
+      'feat-int-name': '面接ルーム',
+      'feat-int-desc': 'STAR基準',
+      'feat-match-name': '求人票一覧',
+      'feat-match-desc': 'マッチする求人',
+=======
+      'agent-title': 'CV Assistant',
       'feat-opt-name': '自動化',
       'feat-opt-desc': 'CV最適化',
       'feat-int-name': '面接練習',
@@ -1381,6 +1427,9 @@ function startAppLogic() {
       'feat-match-desc': 'ギャップ分析',
       'feat-custom-name': 'カスタム作成',
       'feat-custom-desc': '求人票 (JD)',
+      'feat-chatbot-name': 'チャットボット',
+      'feat-chatbot-desc': 'AIキャリアアシスタント',
+>>>>>>> dce2081f0be2eca0c0425bbbfda841ad1bdebaed
       'quick-access-badge': '✨ コア機能へのクイックアクセス',
       'icon-label-cv': '📄 CVスキャナー',
       'icon-label-jd': '💼 求人ライブラリ',
@@ -1428,7 +1477,7 @@ function startAppLogic() {
       'stat-rating-label': '5,000名以上のユーザー評価',
       'stat-speed-label': '適合度分析スピード',
       'testi-tag': '💬 成功事例・受講者の声',
-      'testi-title': 'Career Assistant Xの評判と評価',
+      'testi-title': 'CV Assistantの評判と評価',
       'testi-sub': 'AIエージェントと共に夢の職種への転職を成功させたユーザーの声',
       'testi-user1-text': '「ギャップ分析のおかげで、Senior Frontendポジションに必要なATSキーワードが明確になりました。AIの修正文も非常に誠実で魅力的です！」',
       'testi-user1-role': 'Senior Frontend Engineer @ Top Tech Corp',
@@ -1440,6 +1489,7 @@ function startAppLogic() {
     ko: {
       'nav-dashboard': '홈',
       'nav-cv': 'CV 프로필',
+      'nav-find-jobs': '채용 공고 찾기',
       'nav-jobs': 'JD 목록',
       'nav-interview': '면접실',
       'nav-history': '기록 및 보고서',
@@ -1466,7 +1516,16 @@ function startAppLogic() {
       'gauge-interview-label': 'STAR 점수 (82/100)',
       'gauge-direction-label': '최적화 진행률',
       'chart-title': '면접 평가 및 프로필 최적화 이력',
+<<<<<<< HEAD
       'agent-title': 'AI 에이전트 –<br />인공지능 지원 시스템',
+      'feat-opt-name': 'CV 분석',
+      'feat-opt-desc': 'JD 맞춤 최적화',
+      'feat-int-name': '면접실',
+      'feat-int-desc': 'STAR 루브릭',
+      'feat-match-name': 'JD 목록',
+      'feat-match-desc': '맞춤 채용 공고',
+=======
+      'agent-title': 'CV Assistant',
       'feat-opt-name': '자동화',
       'feat-opt-desc': 'CV 최적화',
       'feat-int-name': '면접 연습',
@@ -1475,6 +1534,9 @@ function startAppLogic() {
       'feat-match-desc': '갭 분석',
       'feat-custom-name': '커스텀 생성',
       'feat-custom-desc': '직무 기술서 (JD)',
+      'feat-chatbot-name': '챗봇',
+      'feat-chatbot-desc': 'AI 커리어 어시스턴트',
+>>>>>>> dce2081f0be2eca0c0425bbbfda841ad1bdebaed
       'quick-access-badge': '✨ 핵심 기능 빠른 액세스',
       'icon-label-cv': '📄 CV 스캐너',
       'icon-label-jd': '💼 JD 라이브러리',
@@ -1522,7 +1584,7 @@ function startAppLogic() {
       'stat-rating-label': '5,000+ 지원자의 평점',
       'stat-speed-label': '매칭 분석 소요 시간',
       'testi-tag': '💬 합격 후기',
-      'testi-title': '지원자들이 말하는 Career Assistant X',
+      'testi-title': '지원자들이 말하는 CV Assistant',
       'testi-sub': '수천 명의 지원자가 AI 에이전트와 함께 꿈의 기업에 합격했습니다',
       'testi-user1-text': '"갭 분석 덕분에 Senior Frontend 직무에 부족했던 ATS 키워드를 정확히 파악했습니다. AI 최적화 문장도 과장 없이 솔직하고 매끄러웠습니다!"',
       'testi-user1-role': 'Senior Frontend Engineer @ Top Tech Corp',
@@ -1534,6 +1596,7 @@ function startAppLogic() {
     zh: {
       'nav-dashboard': '首页',
       'nav-cv': '简历档案',
+      'nav-find-jobs': '寻找职位',
       'nav-jobs': 'JD 列表',
       'nav-interview': '面试室',
       'nav-history': '历史与报告',
@@ -1560,7 +1623,16 @@ function startAppLogic() {
       'gauge-interview-label': 'STAR 得分 (82/100)',
       'gauge-direction-label': '优化进度',
       'chart-title': '面试评估与简历优化历史记录',
+<<<<<<< HEAD
       'agent-title': 'AI 智能助手 –<br />人工智能辅助',
+      'feat-opt-name': '简历分析',
+      'feat-opt-desc': '按职位描述优化',
+      'feat-int-name': '面试室',
+      'feat-int-desc': 'STAR 标准',
+      'feat-match-name': '职位列表',
+      'feat-match-desc': '匹配职位',
+=======
+      'agent-title': 'CV Assistant',
       'feat-opt-name': '自动',
       'feat-opt-desc': '简历优化',
       'feat-int-name': '面试',
@@ -1569,6 +1641,9 @@ function startAppLogic() {
       'feat-match-desc': '差距分析',
       'feat-custom-name': '自定义',
       'feat-custom-desc': '职位描述 (JD)',
+      'feat-chatbot-name': '聊天机器人',
+      'feat-chatbot-desc': 'AI 职业助手',
+>>>>>>> dce2081f0be2eca0c0425bbbfda841ad1bdebaed
       'quick-access-badge': '✨ 核心功能快速入口',
       'icon-label-cv': '📄 简历扫描',
       'icon-label-jd': '💼 职位库',
@@ -1616,7 +1691,7 @@ function startAppLogic() {
       'stat-rating-label': '5,000+ 求职者五星好评',
       'stat-speed-label': '匹配得分分析耗时',
       'testi-tag': '💬 成功求职故事',
-      'testi-title': '求职者如何评价 Career Assistant X？',
+      'testi-title': '求职者如何评价 CV Assistant？',
       'testi-sub': '数以千计的求职者在 AI 助手的陪伴下成功斩获心仪 Offer',
       'testi-user1-text': '“多亏了 Gap Analysis 差距分析，我准确知道了 Senior Frontend 岗位简历缺少的 ATS 关键词。AI 自动润色语言既真实又专业！”',
       'testi-user1-role': 'Senior Frontend Engineer @ Top Tech Corp',
@@ -1760,6 +1835,11 @@ function startAppLogic() {
     switchView('cv');
   });
 
+  document.getElementById('nav-find-jobs')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    switchView('find-jobs');
+  });
+
   document.getElementById('nav-jobs')?.addEventListener('click', (e) => {
     e.preventDefault();
     switchView('jobs');
@@ -1828,17 +1908,28 @@ function startAppLogic() {
   // Action Buttons View Switch Triggers
   document.getElementById('icon-cv-btn')?.addEventListener('click', () => switchView('cv'));
   document.getElementById('btn-consult')?.addEventListener('click', () => switchView('cv'));
+  document.getElementById('feature-cv')?.addEventListener('click', () => switchView('cv'));
 
   document.getElementById('icon-location-btn')?.addEventListener('click', () => switchView('jobs'));
-  document.getElementById('feature-career')?.addEventListener('click', () => switchView('jobs'));
+<<<<<<< HEAD
+  document.getElementById('feature-keywords')?.addEventListener('click', () => switchView('find-jobs'));
+=======
+  document.getElementById('feature-chatbot')?.addEventListener('click', () => {
+    const chatPanel = document.getElementById('ai-companion-chat');
+    if (chatPanel?.hidden) document.getElementById('ai-companion-avatar')?.click();
+    document.getElementById('ai-companion-input')?.focus();
+  });
+>>>>>>> dce2081f0be2eca0c0425bbbfda841ad1bdebaed
 
   document.getElementById('icon-megaphone-btn')?.addEventListener('click', () => switchView('interview'));
   document.getElementById('btn-try-free')?.addEventListener('click', () => switchView('interview'));
-  document.getElementById('feature-deep-interview')?.addEventListener('click', () => switchView('interview'));
+  document.getElementById('feature-interview')?.addEventListener('click', () => switchView('interview'));
 
   document.getElementById('icon-search-btn')?.addEventListener('click', () => switchView('gap'));
-  document.getElementById('feature-optimize')?.addEventListener('click', () => switchView('gap'));
-  document.getElementById('feature-keywords')?.addEventListener('click', () => switchView('gap'));
+<<<<<<< HEAD
+  document.getElementById('feature-optimize')?.addEventListener('click', () => switchView('cv'));
+=======
+>>>>>>> dce2081f0be2eca0c0425bbbfda841ad1bdebaed
 
   /* ============================================================
      🌌 WHITE SPACESHIP CV UPLOAD & MANAGEMENT LOGIC
@@ -2520,6 +2611,136 @@ TÊN CÔNG TY:
       label.textContent = input.files?.[0]?.name || 'PDF, DOCX hoặc TXT';
     });
   }
+
+  const jobSearchForm = document.getElementById('job-search-form');
+  const jobSearchInput = document.getElementById('job-search-input');
+  const jobSearchCVSelect = document.getElementById('job-search-cv-select');
+  const jobMatchCVButton = document.getElementById('job-match-cv-btn');
+  const jobSearchResetButton = document.getElementById('job-search-reset-btn');
+  const jobSearchResults = document.getElementById('job-search-results');
+  const jobResultsSummary = document.getElementById('job-results-summary');
+  const jobResultsMode = document.getElementById('job-results-mode');
+  let activeJobSearchCV = '';
+
+  function renderJobCatalogCard(job) {
+    const skills = (job.skills || []).slice(0, 7);
+    const matched = new Set((job.matched_skills || []).map(skill => skill.toLocaleLowerCase()));
+    const hasMatchScore = Number.isFinite(Number(job.match_score));
+    const sourceLink = job.source_url
+      ? `<a class="job-source-link" href="${escapeHtml(job.source_url)}" target="_blank" rel="noopener noreferrer">Xem tin gốc ↗</a>`
+      : '';
+    return `
+      <article class="job-catalog-card ${hasMatchScore ? 'is-ai-ranked' : ''}">
+        <div class="job-catalog-topline">
+          <span class="job-company-mark">${escapeHtml((job.company || 'DN').slice(0, 2).toUpperCase())}</span>
+          <div class="job-catalog-heading">
+            <span class="job-catalog-source">${escapeHtml(job.source_id)} • ${escapeHtml(job.domain || 'Công nghệ')}</span>
+            <h3>${escapeHtml(job.title)}</h3>
+            <p>${escapeHtml(job.company)}</p>
+          </div>
+          ${hasMatchScore ? `<div class="job-match-score"><strong>${Number(job.match_score).toFixed(1)}%</strong><span>phù hợp</span></div>` : ''}
+        </div>
+        <div class="job-catalog-meta">
+          <span>⌖ ${escapeHtml(job.location)}</span>
+          <span>◷ ${escapeHtml(job.employment_type)}</span>
+          <span>◇ ${escapeHtml(job.remote_type)}</span>
+          <span>☆ ${escapeHtml(job.job_level)}</span>
+        </div>
+        <div class="job-skill-list">
+          ${skills.map(skill => `<span class="${matched.has(skill.toLocaleLowerCase()) ? 'is-matched' : ''}">${escapeHtml(skill)}</span>`).join('')}
+        </div>
+        ${hasMatchScore && job.matched_skills?.length ? `<p class="job-match-reason"><strong>AI nhận thấy phù hợp:</strong> ${escapeHtml(job.matched_skills.join(', '))}</p>` : ''}
+        <details class="job-catalog-details">
+          <summary>Xem mô tả công việc</summary>
+          <p>${escapeHtml(job.description || 'Chưa có mô tả chi tiết.')}</p>
+        </details>
+        <footer>${sourceLink}<span>Dữ liệu doanh nghiệp trong kho JD</span></footer>
+      </article>
+    `;
+  }
+
+  async function loadJobSearchCVOptions() {
+    if (!jobSearchCVSelect) return;
+    const user = ApiClient.getUser();
+    if (user?.role !== 'student') {
+      jobSearchCVSelect.innerHTML = '<option value="">Tính năng này dành cho tài khoản sinh viên</option>';
+      jobSearchCVSelect.disabled = true;
+      if (jobMatchCVButton) jobMatchCVButton.disabled = true;
+      return;
+    }
+    try {
+      const cvs = await ApiClient.listCVs();
+      jobSearchCVSelect.disabled = false;
+      jobSearchCVSelect.innerHTML = [
+        '<option value="">Chọn CV có sẵn của bạn</option>',
+        ...(cvs || []).map(cv => `<option value="${escapeHtml(cv.id)}">${escapeHtml(cv.title || 'CV chưa đặt tên')}</option>`),
+      ].join('');
+      if (activeJobSearchCV && cvs.some(cv => cv.id === activeJobSearchCV)) {
+        jobSearchCVSelect.value = activeJobSearchCV;
+      }
+      if (jobMatchCVButton) jobMatchCVButton.disabled = !jobSearchCVSelect.value;
+    } catch (err) {
+      jobSearchCVSelect.innerHTML = '<option value="">Không thể tải danh sách CV</option>';
+      if (jobMatchCVButton) jobMatchCVButton.disabled = true;
+    }
+  }
+
+  async function loadJobSearchResults({ cvId = activeJobSearchCV } = {}) {
+    if (!jobSearchResults) return;
+    const query = jobSearchInput?.value.trim() || '';
+    activeJobSearchCV = cvId || '';
+    jobSearchResults.innerHTML = '<div class="job-search-loading"><span></span><p>AI đang phân tích kho JD doanh nghiệp...</p></div>';
+    if (jobResultsSummary) jobResultsSummary.textContent = 'Đang tìm việc làm phù hợp...';
+    if (jobResultsMode) jobResultsMode.textContent = activeJobSearchCV ? 'AI xếp hạng theo CV' : 'Tất cả JD';
+    try {
+      const result = await ApiClient.searchJobs(query, activeJobSearchCV, 60);
+      const jobs = result.jobs || [];
+      if (jobResultsSummary) {
+        jobResultsSummary.textContent = result.matched_by_cv
+          ? `${jobs.length} JD phù hợp nhất với CV đã chọn`
+          : `${result.total} JD doanh nghiệp${query ? ` cho “${query}”` : ''}`;
+      }
+      jobSearchResults.innerHTML = jobs.length
+        ? jobs.map(renderJobCatalogCard).join('')
+        : `<div class="job-search-empty"><span>⌕</span><h3>Chưa tìm thấy JD phù hợp</h3><p>Thử từ khóa ngắn hơn hoặc xóa bộ lọc CV.</p></div>`;
+    } catch (err) {
+      const loginHint = err.status === 401 ? ' Hãy đăng nhập bằng tài khoản sinh viên.' : '';
+      if (jobResultsSummary) jobResultsSummary.textContent = 'Không thể tải kho JD';
+      jobSearchResults.innerHTML = `<div class="job-search-empty error"><span>!</span><h3>Không thể tải việc làm</h3><p>${escapeHtml(err.message)}${loginHint}</p></div>`;
+    }
+  }
+
+  async function initializeJobSearchView() {
+    await loadJobSearchCVOptions();
+    await loadJobSearchResults();
+  }
+
+  jobSearchCVSelect?.addEventListener('change', () => {
+    if (jobMatchCVButton) jobMatchCVButton.disabled = !jobSearchCVSelect.value;
+  });
+  jobSearchForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    await loadJobSearchResults();
+  });
+  jobMatchCVButton?.addEventListener('click', async () => {
+    const cvId = jobSearchCVSelect?.value || '';
+    if (!cvId) return;
+    jobMatchCVButton.disabled = true;
+    jobMatchCVButton.classList.add('is-loading');
+    try {
+      await loadJobSearchResults({ cvId });
+    } finally {
+      jobMatchCVButton.disabled = false;
+      jobMatchCVButton.classList.remove('is-loading');
+    }
+  });
+  jobSearchResetButton?.addEventListener('click', async () => {
+    activeJobSearchCV = '';
+    if (jobSearchInput) jobSearchInput.value = '';
+    if (jobSearchCVSelect) jobSearchCVSelect.value = '';
+    if (jobMatchCVButton) jobMatchCVButton.disabled = true;
+    await loadJobSearchResults({ cvId: '' });
+  });
 
   const pageJdListContainer = document.getElementById('page-jd-list-container');
   const pageBtnTabSys = document.getElementById('page-btn-tab-sys');
@@ -4106,7 +4327,7 @@ TÊN CÔNG TY:
       if (fullnameGroup) fullnameGroup.style.display = 'block';
       if (roleGroup) roleGroup.style.display = 'block';
       if (authTitle) authTitle.textContent = dict['auth-title-reg'] || 'Tạo tài khoản mới';
-      if (authSub) authSub.textContent = dict['auth-sub-reg'] || 'Tham gia Career Assistant X để tối ưu CV & phỏng vấn';
+      if (authSub) authSub.textContent = dict['auth-sub-reg'] || 'Tham gia CV Assistant để tối ưu CV & phỏng vấn';
       if (btnSubmitLabel) btnSubmitLabel.textContent = dict['btn-submit-reg'] || 'Đăng ký tài khoản';
     } else {
       tabLogin?.classList.add('active'); if (tabLogin) tabLogin.style.color = '#fff';
@@ -5122,7 +5343,7 @@ TÊN CÔNG TY:
 
   initAICompanion();
 
-  console.log('🚀 Career Copilot X – Space canvas & Deep space background active!');
+  console.log('🚀 CV Assistant – Space canvas & Deep space background active!');
 }
 
 if (document.readyState === 'loading') {

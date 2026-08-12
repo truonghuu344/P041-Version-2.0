@@ -33,6 +33,7 @@ export default function Page() {
           <nav className="nav-links" id="nav-links">
             <a href="#" className="nav-link active" id="nav-dashboard"><span className="nav-text" data-i18n="nav-dashboard">Trang chủ</span></a>
             <a href="#" className="nav-link" id="nav-cv"><span className="nav-text" data-i18n="nav-cv">Phân tích CV</span></a>
+            <a href="#" className="nav-link" id="nav-find-jobs"><span className="nav-text" data-i18n="nav-find-jobs">Tìm việc</span></a>
             <a href="#" className="nav-link" id="nav-jobs"><span className="nav-text" data-i18n="nav-jobs">Danh sách JD</span></a>
             <a href="#" className="nav-link" id="nav-interview"><span className="nav-text" data-i18n="nav-interview">Phòng phỏng vấn</span></a>
             <a href="#" className="nav-link" id="nav-history" hidden><span className="nav-text" data-i18n="nav-history">Lịch sử &amp; Báo cáo</span></a>
@@ -244,10 +245,10 @@ export default function Page() {
 
             <div className="agent-info" id="agent-info">
               <h2 className="agent-title" id="agent-title" data-i18n="agent-title" data-i18n-html="true">
-                Agent AI – Trí Tuệ<br />Nhân Tạo hỗ trợ
+                CV Assistant
               </h2>
               <div className="features-grid" id="features-grid">
-                <div className="feature-item" id="feature-optimize">
+                <div className="feature-item" id="feature-cv">
                   <div className="feature-icon">
                     <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
                       <path d="M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
@@ -255,19 +256,9 @@ export default function Page() {
                     </svg>
                   </div>
                   <div>
-                    <p className="feature-name" data-i18n="feat-opt-name">Tự động</p>
-                    <p className="feature-desc" data-i18n="feat-opt-desc">tối ưu CV</p>
-                  </div>
-                </div>
-                <div className="feature-item" id="feature-deep-interview">
-                  <div className="feature-icon feature-icon-purple">
-                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
-                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="feature-name" data-i18n="feat-int-name">Phỏng vấn</p>
-                    <p className="feature-desc" data-i18n="feat-int-desc">STAR Rubric</p>
+<<<<<<< HEAD
+                    <p className="feature-name" data-i18n="feat-opt-name">Phân tích CV</p>
+                    <p className="feature-desc" data-i18n="feat-opt-desc">Tối ưu theo JD</p>
                   </div>
                 </div>
                 <div className="feature-item" id="feature-keywords">
@@ -277,22 +268,50 @@ export default function Page() {
                     </svg>
                   </div>
                   <div>
-                    <p className="feature-name" data-i18n="feat-match-name">Match Score</p>
-                    <p className="feature-desc" data-i18n="feat-match-desc">Gap Analysis</p>
+                    <p className="feature-name" data-i18n="feat-match-name">Danh sách JD</p>
+                    <p className="feature-desc" data-i18n="feat-match-desc">Việc làm phù hợp</p>
                   </div>
                 </div>
-                <div className="feature-item" id="feature-career">
-                  <div className="feature-icon feature-icon-blue">
+                <div className="feature-item" id="feature-deep-interview">
+                  <div className="feature-icon feature-icon-purple">
                     <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
-                      <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="1.5"/>
-                      <path d="M7 8h10M7 12h7M7 16h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
                     </svg>
                   </div>
                   <div>
-                    <p className="feature-name" data-i18n="feat-custom-name">Tạo Custom</p>
-                    <p className="feature-desc" data-i18n="feat-custom-desc">Job Description</p>
+                    <p className="feature-name" data-i18n="feat-int-name">Phòng phỏng vấn</p>
+                    <p className="feature-desc" data-i18n="feat-int-desc">STAR Rubric</p>
                   </div>
                 </div>
+=======
+                    <p className="feature-name" data-i18n="nav-cv">Phân tích CV</p>
+                    <p className="feature-desc" data-i18n="feat-opt-desc">tối ưu CV</p>
+                  </div>
+                </div>
+                <div className="feature-item" id="feature-chatbot">
+                  <div className="feature-icon feature-icon-blue">
+                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
+                      <path d="M20 15a3 3 0 0 1-3 3H9l-5 3v-6a3 3 0 0 1-1-2.24V7a3 3 0 0 1 3-3h11a3 3 0 0 1 3 3v8z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+                      <path d="M8 10h.01M12 10h.01M16 10h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="feature-name" data-i18n="feat-chatbot-name">Chatbot</p>
+                    <p className="feature-desc" data-i18n="feat-chatbot-desc">Trợ lý nghề nghiệp AI</p>
+                  </div>
+                </div>
+                <div className="feature-item" id="feature-interview">
+                  <div className="feature-icon feature-icon-purple">
+                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="feature-name" data-i18n="nav-interview">Phòng phỏng vấn</p>
+                    <p className="feature-desc" data-i18n="feat-int-desc">STAR Rubric</p>
+                  </div>
+                </div>
+>>>>>>> dce2081f0be2eca0c0425bbbfda841ad1bdebaed
               </div>
             </div>
           </div>
@@ -406,7 +425,7 @@ export default function Page() {
           <div className="testimonials-wrap">
             <div className="section-header center-header">
               <span className="section-tag" data-i18n="testi-tag">💬 CÂU CHUYỆN THÀNH CÔNG</span>
-              <h2 className="section-title-large" data-i18n="testi-title">Ứng Viên Nói Gì Về Career Assistant X?</h2>
+              <h2 className="section-title-large" data-i18n="testi-title">Ứng Viên Nói Gì Về CV Assistant?</h2>
               <p className="section-subtitle" data-i18n="testi-sub">Hàng ngàn ứng viên đã chinh phục được công việc mơ ước nhờ sự đồng hành của AI Agent</p>
             </div>
 
@@ -718,7 +737,59 @@ export default function Page() {
           </div>
       </section>
 
-      {/* ===== 3. VIEW: THƯ VIỆN JOBS ===== */}
+      {/* ===== 3. VIEW: TÌM VIỆC ===== */}
+      <section className="app-view" id="view-find-jobs">
+        <div className="page-container job-search-page">
+          <div className="page-header job-search-heading">
+            <div className="page-badge">AI JOB DISCOVERY // ENTERPRISE CATALOG</div>
+            <h1 className="page-title">🔎 Tìm Việc Phù Hợp</h1>
+            <p className="page-sub">Khám phá JD thật từ doanh nghiệp và để AI xếp hạng công việc theo CV của bạn.</p>
+          </div>
+
+          <section className="job-search-console" aria-labelledby="job-search-console-title">
+            <div className="job-search-console-copy">
+              <span className="job-search-kicker">98+ JD DOANH NGHIỆP</span>
+              <h2 id="job-search-console-title">Tìm bằng từ khóa hoặc CV có sẵn</h2>
+              <p>AI chỉ dùng nội dung và kỹ năng có trong CV để xếp hạng, không tự thêm kinh nghiệm.</p>
+            </div>
+            <form id="job-search-form" className="job-search-form">
+              <label className="job-search-field" htmlFor="job-search-input">
+                <span>Tìm kiếm JD</span>
+                <span className="job-search-input-wrap">
+                  <span aria-hidden="true">⌕</span>
+                  <input id="job-search-input" type="search" placeholder="Ví dụ: Python, Frontend, ShopBack, Hà Nội..." autoComplete="off" />
+                </span>
+              </label>
+              <button type="submit" className="job-search-primary">Tìm kiếm</button>
+            </form>
+            <div className="job-cv-match-row">
+              <label htmlFor="job-search-cv-select">
+                <span>Tìm việc bằng CV</span>
+                <select id="job-search-cv-select" className="form-input">
+                  <option value="">Chọn CV có sẵn của bạn</option>
+                </select>
+              </label>
+              <button type="button" id="job-match-cv-btn" className="job-match-cv-btn" disabled>
+                <span aria-hidden="true">✦</span> AI lọc JD phù hợp
+              </button>
+              <button type="button" id="job-search-reset-btn" className="job-search-reset">Xóa bộ lọc</button>
+            </div>
+          </section>
+
+          <div className="job-results-toolbar">
+            <div>
+              <span className="pulse-dot green"></span>
+              <strong id="job-results-summary">Đang tải danh sách việc làm...</strong>
+            </div>
+            <span id="job-results-mode" className="job-results-mode">Tất cả JD</span>
+          </div>
+          <div id="job-search-results" className="job-search-results" aria-live="polite">
+            <div className="job-search-loading"><span></span><p>AI đang nạp dữ liệu JD doanh nghiệp...</p></div>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== 4. VIEW: THƯ VIỆN JOBS ===== */}
       <section className="app-view" id="view-jobs">
         <div className="page-container">
           <div className="page-header">
