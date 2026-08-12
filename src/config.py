@@ -30,6 +30,16 @@ class Settings(BaseSettings):
     api_rate_limit_per_minute: int = Field(default=120, ge=10, le=10_000)
     max_request_body_mb: int = Field(default=12, ge=1, le=100)
 
+    # Email / password reset OTP. Use a Gmail App Password, never an account password.
+    smtp_host: str = "smtp.gmail.com"
+    smtp_port: int = Field(default=587, ge=1, le=65535)
+    smtp_username: str = ""
+    smtp_password: str = ""
+    smtp_from_email: str = ""
+    password_reset_otp_expire_minutes: int = Field(default=10, ge=1, le=60)
+    password_reset_otp_max_attempts: int = Field(default=5, ge=1, le=10)
+    password_reset_otp_resend_seconds: int = Field(default=60, ge=0, le=3600)
+
     # LLM
     # Gemini Developer API. GOOGLE_API_KEY được hỗ trợ để tương thích với
     # tên biến môi trường chuẩn của SDK Google/LangChain.

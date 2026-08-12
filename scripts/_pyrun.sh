@@ -8,26 +8,35 @@
 # Exits 0 silently if no Python is found — hooks must never block the AI tool.
 set -u
 
-if command -v python3 >/dev/null 2>&1; then
-  PY=python3
-elif command -v python >/dev/null 2>&1; then
-  PY=python
-elif command -v py >/dev/null 2>&1; then
-  PY="py -3"
-else
-  # PATH lookup failed — probe standard Windows install locations.
-  PY=""
-  shopt -s nullglob 2>/dev/null || true
-  for cand in \
-    /c/Users/*/AppData/Local/Programs/Python/Python*/python.exe \
-    "/c/Program Files/Python"*/python.exe \
-    "/c/Program Files (x86)/Python"*/python.exe \
-    /c/Python*/python.exe; do
-    if [ -x "$cand" ]; then PY="$cand"; break; fi
-  done
-  shopt -u nullglob 2>/dev/null || true
-  [ -n "$PY" ] || exit 0
+# `command -v` is not enough on Windows: Microsoft Store aliases can exist on
+# PATH but fail with "Permission denied" from Git Bash. Probe the interpreter
+# before selecting it, then continue to the next candidate when it is broken.
+if command -v python3 >/dev/null 2>&1 \
+    && python3 -c "import sys" >/dev/null 2>&1; then
+  exec python3 "$@"
 fi
 
-# shellcheck disable=SC2086
-exec $PY "$@"
+if command -v python >/dev/null 2>&1 \
+    && python -c "import sys" >/dev/null 2>&1; then
+  exec python "$@"
+fi
+
+if command -v py >/dev/null 2>&1 \
+    && py -3 -c "import sys" >/dev/null 2>&1; then
+  exec py -3 "$@"
+fi
+
+# PATH lookup failed — probe standard Windows install locations.
+shopt -s nullglob 2>/dev/null || true
+for cand in \
+  /c/Users/*/AppData/Local/Programs/Python/Python*/python.exe \
+  "/c/Program Files/Python"*/python.exe \
+  "/c/Program Files (x86)/Python"*/python.exe \
+  /c/Python*/python.exe; do
+  if [ -x "$cand" ] && "$cand" -c "import sys" >/dev/null 2>&1; then
+    exec "$cand" "$@"
+  fi
+done
+shopt -u nullglob 2>/dev/null || true
+
+exit 0

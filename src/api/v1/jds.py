@@ -9,6 +9,7 @@ from src.db.database import get_db
 from src.db.models import JobDescription, User
 from src.models.schemas import JDCreate, JDOut
 from src.services.cv_parser import extract_text_from_docx, extract_text_from_pdf, sanitize_extracted_text
+from src.services.job_catalog import load_enterprise_job_catalog
 
 router = APIRouter(prefix="/jds", tags=["Job Description Management"])
 
@@ -103,6 +104,59 @@ async def list_jds(
     ).order_by(JobDescription.created_at.desc())
     result = await db.execute(stmt)
     return result.scalars().all()
+
+
+@router.post("/catalog/{source_id}/select", response_model=JDOut)
+async def select_catalog_jd(
+    source_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> JDOut:
+    """Chọn một JD doanh nghiệp trong data/jds và đưa vào luồng phân tích CV."""
+    del current_user  # Xác thực vẫn bắt buộc; JD được lưu là dữ liệu hệ thống dùng chung.
+    catalog_item = next(
+        (
+            item
+            for item in load_enterprise_job_catalog()
+            if str(item.get("source_id") or "").casefold() == source_id.casefold()
+        ),
+        None,
+    )
+    if not catalog_item:
+        raise HTTPException(status_code=404, detail="Không tìm thấy JD trong data/jds.")
+
+    existing_result = await db.execute(
+        select(JobDescription).where(JobDescription.is_system.is_(True))
+    )
+    for existing in existing_result.scalars().all():
+        normalized = existing.normalized_json or {}
+        if str(normalized.get("source_id") or "").casefold() == source_id.casefold():
+            return existing
+
+    description = str(catalog_item.get("description") or "").strip()
+    skills = [str(skill).strip() for skill in catalog_item.get("skills") or [] if str(skill).strip()]
+    requirements_text = description or f"Yêu cầu kỹ năng: {', '.join(skills)}"
+    selected_jd = JobDescription(
+        title=str(catalog_item.get("title") or "Vị trí chưa đặt tên").strip(),
+        company=str(catalog_item.get("company") or "Doanh nghiệp chưa xác định").strip(),
+        location=str(catalog_item.get("location") or "Chưa xác định").strip(),
+        requirements_text=requirements_text,
+        normalized_json={
+            "source": "data/jds",
+            "source_id": catalog_item["source_id"],
+            "skills": skills,
+            "job_level": catalog_item.get("job_level"),
+            "employment_type": catalog_item.get("employment_type"),
+            "remote_type": catalog_item.get("remote_type"),
+            "source_url": catalog_item.get("source_url"),
+        },
+        is_system=True,
+        is_published=True,
+    )
+    db.add(selected_jd)
+    await db.commit()
+    await db.refresh(selected_jd)
+    return selected_jd
 
 
 @router.post("/custom", response_model=JDOut, status_code=status.HTTP_201_CREATED)

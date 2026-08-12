@@ -41,3 +41,4 @@ dependencies = [
 ]
 [project.scripts]
 app = "src.main:app"
+    

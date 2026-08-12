@@ -97,6 +97,20 @@ class ApiClient {
     });
   }
 
+  static async requestPasswordReset(email) {
+    return await this.request('/auth/password-reset/request', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+  }
+
+  static async confirmPasswordReset(email, otp, newPassword) {
+    return await this.request('/auth/password-reset/confirm', {
+      method: 'POST',
+      body: JSON.stringify({ email, otp, new_password: newPassword }),
+    });
+  }
+
   static async getMe() {
     try {
       const user = await this.request('/auth/me', { silent: true });
@@ -206,6 +220,12 @@ class ApiClient {
     return await this.request('/jds');
   }
 
+  static async selectCatalogJD(sourceId) {
+    return await this.request(`/jds/catalog/${encodeURIComponent(sourceId)}/select`, {
+      method: 'POST',
+    });
+  }
+
   static async searchJobs(query = '', cvId = '', limit = 60) {
     const params = new URLSearchParams({ limit: String(limit) });
     if (query) params.set('q', query);
@@ -240,6 +260,10 @@ class ApiClient {
       method: 'POST',
       body: JSON.stringify({ cv_id: cvId, jd_id: jdId }),
     });
+  }
+
+  static async getAnalysisHistory() {
+    return await this.request('/analysis/history');
   }
 
   // --- Mock Interview APIs ---
@@ -1958,10 +1982,13 @@ function startAppLogic() {
     if (!cvSelectedJdHint || !cvAnalysisJdSelect) return;
     const selected = cvAnalysisJdSelect.options[cvAnalysisJdSelect.selectedIndex];
     if (cvAnalysisJdSelect.value && selected) {
-      cvSelectedJdHint.textContent = `✓ AI Agent sẽ phân tích theo: ${selected.textContent}`;
+      const selectedLabel = selected.textContent.trim();
+      cvSelectedJdHint.textContent = `✓ AI Agent sẽ phân tích theo: ${selectedLabel}`;
+      cvSelectedJdHint.title = selectedLabel;
       cvSelectedJdHint.classList.add('is-selected');
     } else {
       cvSelectedJdHint.textContent = 'JD là bắt buộc để AI Agent phân tích đúng vị trí ứng tuyển.';
+      cvSelectedJdHint.removeAttribute('title');
       cvSelectedJdHint.classList.remove('is-selected');
     }
   }
@@ -1983,26 +2010,87 @@ function startAppLogic() {
     if (!ApiClient.isAuthenticated()) {
       cvAnalysisJdSelect.innerHTML = '<option value="">Vui lòng đăng nhập để chọn JD</option>';
       cvAnalysisJdSelect.disabled = true;
+      enhanceGapSelect(cvAnalysisJdSelect);
       updateCVJDSelectionHint();
       return;
     }
     const previousValue = preferredJdId || cvAnalysisJdSelect.value;
     try {
-      const jds = await ApiClient.listJDs();
+      const [jds, catalogResult] = await Promise.all([
+        ApiClient.listJDs(),
+        ApiClient.searchJobs('', '', 100).catch(() => ({ jobs: [] })),
+      ]);
+      const catalogJobs = catalogResult.jobs || [];
+      const storedCatalogBySource = new Map(
+        (jds || [])
+          .filter(jd => jd.normalized_json?.source === 'data/jds' && jd.normalized_json?.source_id)
+          .map(jd => [String(jd.normalized_json.source_id), jd]),
+      );
+      const savedJDs = (jds || []).filter(jd => jd.normalized_json?.source !== 'data/jds');
+      const catalogOptions = catalogJobs.map(job => {
+        const storedJD = storedCatalogBySource.get(String(job.source_id));
+        const value = storedJD?.id || `catalog:${job.source_id}`;
+        return `<option value="${escapeHtml(value)}">${escapeHtml(job.title)} · ${escapeHtml(job.company || 'Doanh nghiệp')}</option>`;
+      });
+      const savedOptions = savedJDs.map(jd => `<option value="${escapeHtml(jd.id)}">${escapeHtml(jd.title)} · ${escapeHtml(jd.company || 'Chưa ghi công ty')}</option>`);
       cvAnalysisJdSelect.disabled = false;
       cvAnalysisJdSelect.innerHTML = [
         '<option value="">Chọn một JD để phân tích CV</option>',
-        ...(jds || []).map(jd => `<option value="${escapeHtml(jd.id)}">${escapeHtml(jd.title)} · ${escapeHtml(jd.company || 'Chưa ghi công ty')}</option>`),
+        ...(catalogOptions.length ? [`<optgroup label="JD DOANH NGHIỆP TRONG DATA/JDS (${catalogOptions.length})">${catalogOptions.join('')}</optgroup>`] : []),
+        ...(savedOptions.length ? [`<optgroup label="JD ĐÃ LƯU HOẶC HỆ THỐNG">${savedOptions.join('')}</optgroup>`] : []),
       ].join('');
       if ([...cvAnalysisJdSelect.options].some(option => option.value === previousValue)) {
         cvAnalysisJdSelect.value = previousValue;
       }
+      enhanceGapSelect(cvAnalysisJdSelect);
       updateCVJDSelectionHint();
     } catch (err) {
       cvAnalysisJdSelect.innerHTML = '<option value="">Không thể tải danh sách JD</option>';
       cvAnalysisJdSelect.disabled = true;
+      enhanceGapSelect(cvAnalysisJdSelect);
       showToast(`Không thể tải JD: ${err.message}`, 'error');
     }
+  }
+
+  async function handleCVJDSelectionChange() {
+    if (!cvAnalysisJdSelect) return;
+    const value = cvAnalysisJdSelect.value;
+    if (!value.startsWith('catalog:')) {
+      updateCVJDSelectionHint();
+      return;
+    }
+
+    const sourceId = value.slice('catalog:'.length);
+    cvAnalysisJdSelect.disabled = true;
+    if (cvSelectedJdHint) {
+      cvSelectedJdHint.textContent = 'Đang nạp JD doanh nghiệp từ data/jds...';
+      cvSelectedJdHint.classList.add('is-selected');
+    }
+    try {
+      const selectedJD = await ApiClient.selectCatalogJD(sourceId);
+      await loadCVJDOptions(selectedJD.id);
+      showToast('✅ Đã chọn JD doanh nghiệp từ data/jds.', 'success');
+    } catch (err) {
+      cvAnalysisJdSelect.value = '';
+      updateCVJDSelectionHint();
+      showToast(`❌ Không thể chọn JD trong data: ${err.message}`, 'error');
+    } finally {
+      cvAnalysisJdSelect.disabled = false;
+    }
+  }
+
+  // Gán textContent/innerHTML an toàn cho 1 phần tử DOM theo id.
+  // Nếu không tìm thấy phần tử: KHÔNG âm thầm bỏ qua — ghi vào mảng `missingIds`
+  // (để caller log console.error + showToast báo người dùng biết UI thiếu vùng hiển thị)
+  // thay vì để lỗi trôi qua trong im lặng như pattern `(getElementById(...) || {}).x = y` cũ.
+  function applyDomField(id, prop, value, missingIds) {
+    const el = document.getElementById(id);
+    if (!el) {
+      if (Array.isArray(missingIds)) missingIds.push(id);
+      return false;
+    }
+    el[prop] = value;
+    return true;
   }
 
   function renderInlineCVAnalysis(analysis, cvId, jdId) {
@@ -2020,31 +2108,38 @@ function startAppLogic() {
 
     if (scoreEl) scoreEl.textContent = `${score.toFixed(1)}%`;
     scoreRing?.style.setProperty('--match-score', `${Math.max(0, Math.min(100, score)) * 3.6}deg`);
-    document.getElementById('cv-result-context').textContent = `${cvLabel}  ↔  ${jdLabel}`;
-    document.getElementById('cv-result-summary').textContent = analysis.executive_summary
-      || `CV khớp ${matched.length} kỹ năng và cần bổ sung ${missing.length} kỹ năng theo JD.`;
+
+    const missingIds = [];
+    applyDomField('cv-result-context', 'textContent', `${cvLabel}  ↔  ${jdLabel}`, missingIds);
+    applyDomField('cv-result-summary', 'textContent', analysis.executive_summary
+      || `CV khớp ${matched.length} kỹ năng và cần bổ sung ${missing.length} kỹ năng theo JD.`, missingIds);
 
     const renderSkills = (items, variant) => items.length
       ? items.map(item => `<span class="cv-result-tag ${variant}">${escapeHtml(item)}</span>`).join('')
       : '<span class="cv-result-empty">Không có dữ liệu.</span>';
-    document.getElementById('cv-result-matching-skills').innerHTML = renderSkills(matched, 'matched');
-    document.getElementById('cv-result-missing-skills').innerHTML = renderSkills(missing, 'missing');
+    applyDomField('cv-result-matching-skills', 'innerHTML', renderSkills(matched, 'matched'), missingIds);
+    applyDomField('cv-result-missing-skills', 'innerHTML', renderSkills(missing, 'missing'), missingIds);
 
-    document.getElementById('cv-result-priority-actions').innerHTML = priorityActions.length
+    applyDomField('cv-result-priority-actions', 'innerHTML', priorityActions.length
       ? priorityActions.slice(0, 4).map((item, index) => {
         const title = typeof item === 'string' ? item : (item.gap || item.action || `Ưu tiên ${index + 1}`);
         const detail = typeof item === 'string' ? '' : (item.action || item.why_it_matters || '');
         return `<article class="cv-result-action"><span>${escapeHtml(item.priority || index + 1)}</span><div><strong>${escapeHtml(title)}</strong>${detail && detail !== title ? `<p>${escapeHtml(detail)}</p>` : ''}</div></article>`;
       }).join('')
-      : '<p class="cv-result-empty">Chưa phát hiện khoảng trống ưu tiên.</p>';
+      : '<p class="cv-result-empty">Chưa phát hiện khoảng trống ưu tiên.</p>', missingIds);
 
-    document.getElementById('cv-result-learning-actions').innerHTML = learningActions.length
+    applyDomField('cv-result-learning-actions', 'innerHTML', learningActions.length
       ? learningActions.slice(0, 4).map((item, index) => {
         const title = typeof item === 'string' ? item : (item.skill || item.learning_goal || `Gợi ý ${index + 1}`);
         const detail = typeof item === 'string' ? '' : (item.learning_goal || item.practice || '');
         return `<article class="cv-result-action learning"><span>${index + 1}</span><div><strong>${escapeHtml(title)}</strong>${detail && detail !== title ? `<p>${escapeHtml(detail)}</p>` : ''}</div></article>`;
       }).join('')
-      : '<p class="cv-result-empty">Chưa cần lộ trình học bổ sung.</p>';
+      : '<p class="cv-result-empty">Chưa cần lộ trình học bổ sung.</p>', missingIds);
+
+    if (missingIds.length) {
+      console.error(`[renderInlineCVAnalysis] Không tìm thấy ${missingIds.length} phần tử DOM để hiển thị kết quả CV Analysis: ${missingIds.join(', ')}`);
+      showToast(`⚠️ Kết quả đã tính nhưng giao diện thiếu vùng hiển thị (${missingIds.join(', ')}). Vui lòng tải lại trang.`, 'error');
+    }
 
     if (cvAnalysisEmptyState) cvAnalysisEmptyState.hidden = true;
     cvAnalysisResultContent.hidden = false;
@@ -2052,7 +2147,7 @@ function startAppLogic() {
   }
 
   cvAnalysisCvSelect?.addEventListener('change', updateCVSelectionHint);
-  cvAnalysisJdSelect?.addEventListener('change', updateCVJDSelectionHint);
+  cvAnalysisJdSelect?.addEventListener('change', handleCVJDSelectionChange);
   bindJDFileName(cvJdFileInput, cvJdFileName);
 
   cvJdUploadForm?.addEventListener('submit', async event => {
@@ -2198,6 +2293,7 @@ function startAppLogic() {
       loadedCVs = [];
       cvAnalysisCvSelect.innerHTML = '<option value="">Vui lòng đăng nhập để chọn CV</option>';
       cvAnalysisCvSelect.disabled = true;
+      enhanceGapSelect(cvAnalysisCvSelect);
       updateCVSelectionHint();
       return;
     }
@@ -2213,51 +2309,16 @@ function startAppLogic() {
       if ([...cvAnalysisCvSelect.options].some(option => option.value === previousValue)) {
         cvAnalysisCvSelect.value = previousValue;
       }
+      enhanceGapSelect(cvAnalysisCvSelect);
       updateCVSelectionHint();
     } catch (err) {
       cvAnalysisCvSelect.innerHTML = '<option value="">Không thể tải danh sách CV</option>';
       cvAnalysisCvSelect.disabled = true;
+      enhanceGapSelect(cvAnalysisCvSelect);
       updateCVSelectionHint();
       showToast(`Không thể tải CV: ${err.message}`, 'error');
     }
   }
-
-  // --- CV Template Gallery Modal Controls ---
-  const btnOpenTemplateGallery = document.getElementById('btn-open-template-gallery');
-  const templateModalOverlay = document.getElementById('cv-template-modal-overlay');
-  const btnCloseTemplateModal = document.getElementById('btn-close-template-modal');
-
-  btnOpenTemplateGallery?.addEventListener('click', () => {
-    if (templateModalOverlay) templateModalOverlay.style.display = 'flex';
-  });
-
-  btnCloseTemplateModal?.addEventListener('click', () => {
-    if (templateModalOverlay) templateModalOverlay.style.display = 'none';
-  });
-
-  templateModalOverlay?.addEventListener('click', (e) => {
-    if (e.target === templateModalOverlay) templateModalOverlay.style.display = 'none';
-  });
-
-  document.querySelectorAll('.btn-use-template').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const templateName = btn.dataset.template || 'classic';
-      const templateSelect = document.getElementById('manual-cv-template');
-      if (templateSelect) templateSelect.value = templateName;
-      if (templateModalOverlay) templateModalOverlay.style.display = 'none';
-
-      const templateLabels = {
-        modern: 'Modern Two-Column (Hồ Sơ 2 Cột)',
-        classic: 'Classic ATS Standard (Hồ Sơ Cổ Điển ATS)',
-        compact: 'Creative Tech Timeline (Hồ Sơ Sáng Tạo & Tech)',
-      };
-      showToast(`✨ Đã chọn mẫu: ${templateLabels[templateName] || templateName}! Hãy điền thông tin bên dưới để tạo CV.`, 'success');
-      const manualForm = document.getElementById('manual-cv-form');
-      const manualCard = document.getElementById('manual-cv-card');
-      if (manualCard) manualCard.hidden = false;
-      if (manualForm) manualForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    });
-  });
 
   document.getElementById('btn-open-full-gap-result')?.addEventListener('click', async () => {
     if (!latestCVAnalysisContext) return;
@@ -2793,6 +2854,70 @@ TÊN CÔNG TY:
     });
   }
 
+  function normalizeGapSearchText(value = '') {
+    return String(value)
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/đ/g, 'd')
+      .replace(/Đ/g, 'd')
+      .toLocaleLowerCase('vi')
+      .trim();
+  }
+
+  function gapEditDistanceWithin(left, right, maxDistance) {
+    if (Math.abs(left.length - right.length) > maxDistance) return false;
+    let previousRow = Array.from({ length: right.length + 1 }, (_, index) => index);
+
+    for (let leftIndex = 1; leftIndex <= left.length; leftIndex += 1) {
+      const currentRow = [leftIndex];
+      let smallestInRow = currentRow[0];
+      for (let rightIndex = 1; rightIndex <= right.length; rightIndex += 1) {
+        const substitutionCost = left[leftIndex - 1] === right[rightIndex - 1] ? 0 : 1;
+        const distance = Math.min(
+          currentRow[rightIndex - 1] + 1,
+          previousRow[rightIndex] + 1,
+          previousRow[rightIndex - 1] + substitutionCost,
+        );
+        currentRow.push(distance);
+        smallestInRow = Math.min(smallestInRow, distance);
+      }
+      if (smallestInRow > maxDistance) return false;
+      previousRow = currentRow;
+    }
+
+    return previousRow[right.length] <= maxDistance;
+  }
+
+  function looselyMatchesGapSearchToken(searchText, token) {
+    const words = searchText.split(/[^a-z0-9]+/).filter(Boolean);
+    if (words.some(word => word === token)) return true;
+    if (token.length <= 2) return words.some(word => word.startsWith(token));
+    if (searchText.includes(token) || words.some(word => word.startsWith(token))) return true;
+
+    const maxDistance = token.length <= 8 ? 1 : 2;
+    return words.some(word => (
+      Math.abs(token.length - word.length) <= maxDistance
+      && gapEditDistanceWithin(token, word, maxDistance)
+    ));
+  }
+
+  function positionGapSelectMenu(shell, menu) {
+    const trigger = shell?.querySelector('.gap-select-trigger');
+    if (!trigger || !menu) return;
+    const triggerRect = trigger.getBoundingClientRect();
+    const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+    const menuGap = 10;
+    const viewportPadding = 12;
+    const preferredHeight = Math.min(430, Math.round(viewportHeight * 0.58));
+    const roomBelow = Math.max(0, viewportHeight - triggerRect.bottom - menuGap - viewportPadding);
+    const roomAbove = Math.max(0, triggerRect.top - menuGap - viewportPadding);
+    const openUpward = roomBelow < Math.min(260, preferredHeight) && roomAbove > roomBelow;
+    const availableHeight = openUpward ? roomAbove : roomBelow;
+
+    shell.classList.toggle('opens-upward', openUpward);
+    menu.style.setProperty('--gap-select-menu-max-height', `${Math.max(120, Math.min(preferredHeight, availableHeight))}px`);
+  }
+
   if (pageUploadJdForm) {
     pageUploadJdForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -2858,6 +2983,10 @@ TÊN CÔNG TY:
         closeGapSelectMenus(shell);
         shell.classList.toggle('is-open', shouldOpen);
         trigger.setAttribute('aria-expanded', String(shouldOpen));
+        if (shouldOpen) {
+          positionGapSelectMenu(shell, menu);
+          window.setTimeout(() => menu.querySelector('.gap-select-search')?.focus(), 0);
+        }
       });
 
       trigger.addEventListener('keydown', event => {
@@ -2866,14 +2995,15 @@ TÊN CÔNG TY:
         closeGapSelectMenus(shell);
         shell.classList.add('is-open');
         trigger.setAttribute('aria-expanded', 'true');
-        const items = [...menu.querySelectorAll('.gap-select-menu-item:not(:disabled)')];
+        positionGapSelectMenu(shell, menu);
+        const items = [...menu.querySelectorAll('.gap-select-menu-item:not(:disabled):not([hidden])')];
         const selectedIndex = Math.max(0, items.findIndex(item => item.getAttribute('aria-selected') === 'true'));
         const targetIndex = event.key === 'ArrowUp' ? Math.max(0, selectedIndex - 1) : selectedIndex;
         items[targetIndex]?.focus();
       });
 
       menu.addEventListener('keydown', event => {
-        const items = [...menu.querySelectorAll('.gap-select-menu-item:not(:disabled)')];
+        const items = [...menu.querySelectorAll('.gap-select-menu-item:not(:disabled):not([hidden])')];
         const currentIndex = items.indexOf(document.activeElement);
         if (event.key === 'Escape') {
           event.preventDefault();
@@ -2892,22 +3022,37 @@ TÊN CÔNG TY:
     }
 
     const selectedOption = select.options[select.selectedIndex] || select.options[0];
-    const selectedParts = (selectedOption?.textContent || 'Chọn một mục').split(' • ');
-    trigger.querySelector('.gap-select-value-title').textContent = selectedParts.shift();
+    const selectedParts = (selectedOption?.textContent || 'Chọn một mục').split(/\s+[\u2022·]\s+/);
+    const selectedTitle = selectedParts.shift();
+    const selectedTitleElement = trigger.querySelector('.gap-select-value-title');
+    selectedTitleElement.textContent = selectedTitle;
+    selectedTitleElement.title = selectedTitle;
     const selectedMeta = trigger.querySelector('.gap-select-value-meta');
     selectedMeta.textContent = selectedParts.join(' • ');
+    selectedMeta.title = selectedMeta.textContent;
     selectedMeta.hidden = selectedParts.length === 0;
-    trigger.disabled = !selectedOption || selectedOption.disabled;
+    trigger.disabled = select.disabled || !selectedOption || selectedOption.disabled;
 
-    const badge = select.id.includes('cv') ? 'CV' : 'JD';
-    menu.innerHTML = [...select.options].map(option => {
-      const parts = option.textContent.split(' • ');
+    const isJDSelect = select.id.includes('jd');
+    const badge = isJDSelect ? 'JD' : 'CV';
+    const searchable = isJDSelect || select.options.length > 6;
+    let previousGroup = '';
+    const optionMarkup = [...select.options].map(option => {
+      const parts = option.textContent.split(/\s+[\u2022·]\s+/);
       const title = parts.shift();
       const meta = parts.join(' • ');
       const selected = option.value === select.value;
+      const group = option.parentElement?.tagName === 'OPTGROUP' ? option.parentElement.label : '';
+      const groupHeading = group && group !== previousGroup
+        ? `<div class="gap-select-group-label" data-select-group="${escapeHtml(group)}">${escapeHtml(group)}</div>`
+        : '';
+      previousGroup = group;
       return `
+        ${groupHeading}
         <button type="button" class="gap-select-menu-item${selected ? ' is-selected' : ''}"
           role="option" data-value="${escapeHtml(option.value)}" aria-selected="${selected}"
+          data-search-text="${escapeHtml(normalizeGapSearchText(`${title} ${meta}`))}"
+          data-option-group="${escapeHtml(group)}"
           ${option.disabled ? 'disabled' : ''}>
           <span class="gap-option-badge">${badge}</span>
           <span class="gap-option-copy">
@@ -2917,6 +3062,33 @@ TÊN CÔNG TY:
           <span class="gap-option-check" aria-hidden="true">✓</span>
         </button>`;
     }).join('');
+    menu.innerHTML = `
+      ${searchable ? `
+        <div class="gap-select-search-wrap">
+          <span aria-hidden="true">⌕</span>
+          <input class="gap-select-search" type="search" placeholder="${isJDSelect ? 'Tìm gần đúng theo vị trí, kỹ năng...' : 'Tìm gần đúng CV đã lưu...'}" aria-label="${isJDSelect ? 'Tìm gần đúng trong danh sách JD' : 'Tìm gần đúng trong danh sách CV'}" autocomplete="off" />
+        </div>` : ''}
+      <div class="gap-select-options">${optionMarkup}</div>
+      <p class="gap-select-no-results" hidden>Không tìm thấy ${isJDSelect ? 'JD' : 'CV'} phù hợp.</p>`;
+
+    const searchInput = menu.querySelector('.gap-select-search');
+    searchInput?.addEventListener('click', event => event.stopPropagation());
+    searchInput?.addEventListener('input', () => {
+      const queryTokens = normalizeGapSearchText(searchInput.value).split(/\s+/).filter(Boolean);
+      const items = [...menu.querySelectorAll('.gap-select-menu-item')];
+      items.forEach(item => {
+        item.hidden = queryTokens.length > 0
+          && !queryTokens.every(token => looselyMatchesGapSearchToken(item.dataset.searchText, token));
+      });
+      menu.querySelectorAll('.gap-select-group-label').forEach(label => {
+        const group = label.dataset.selectGroup;
+        label.hidden = !items.some(item => !item.hidden && item.dataset.optionGroup === group);
+      });
+      const hasVisibleItems = items.some(item => !item.hidden && !item.disabled);
+      const noResults = menu.querySelector('.gap-select-no-results');
+      if (noResults) noResults.hidden = hasVisibleItems;
+      menu.querySelector('.gap-select-menu-item:not([hidden]):not(:disabled)')?.scrollIntoView({ block: 'nearest' });
+    });
 
     menu.querySelectorAll('.gap-select-menu-item:not(:disabled)').forEach(item => {
       item.addEventListener('click', () => {
@@ -2935,6 +3107,13 @@ TÊN CÔNG TY:
     document.addEventListener('click', event => {
       if (!event.target.closest('.gap-select-shell')) closeGapSelectMenus();
     });
+    const repositionOpenGapSelect = () => {
+      document.querySelectorAll('.gap-select-shell.is-open').forEach(shell => {
+        positionGapSelectMenu(shell, shell.querySelector('.gap-select-menu'));
+      });
+    };
+    window.addEventListener('resize', repositionOpenGapSelect);
+    window.addEventListener('scroll', repositionOpenGapSelect, true);
   }
 
   async function populatePageGapOptions() {
@@ -2964,35 +3143,36 @@ TÊN CÔNG TY:
         const res = await ApiClient.runGapAnalysis(cvId, jdId);
         currentGapResult = res;
 
-        (document.getElementById('page-gap-match-score-badge') || {}).textContent = `${res.match_score.toFixed(1)}%`;
+        const missingIds = [];
+        applyDomField('page-gap-match-score-badge', 'textContent', `${res.match_score.toFixed(1)}%`, missingIds);
 
-        (document.getElementById('page-gap-matching-skills') || {}).innerHTML = (res.hard_skills_matching || []).map(
+        applyDomField('page-gap-matching-skills', 'innerHTML', (res.hard_skills_matching || []).map(
           s => `<span class="badge badge-ok">${escapeHtml(s)}</span>`
-        ).join('') || `<span style="font-size:11px;color:var(--text-muted);">Không có dữ liệu</span>`;
+        ).join('') || `<span style="font-size:11px;color:var(--text-muted);">Không có dữ liệu</span>`, missingIds);
 
-        (document.getElementById('page-gap-missing-skills') || {}).innerHTML = (res.hard_skills_missing || []).map(
+        applyDomField('page-gap-missing-skills', 'innerHTML', (res.hard_skills_missing || []).map(
           s => `<span class="badge badge-need">${escapeHtml(s)}</span>`
-        ).join('') || `<span style="font-size:11px;color:var(--text-muted);">Không có dữ liệu</span>`;
+        ).join('') || `<span style="font-size:11px;color:var(--text-muted);">Không có dữ liệu</span>`, missingIds);
 
-        (document.getElementById('page-gap-executive-summary') || {}).textContent = res.executive_summary || '';
+        applyDomField('page-gap-executive-summary', 'textContent', res.executive_summary || '', missingIds);
 
-        (document.getElementById('page-gap-priority-actions') || {}).innerHTML = (res.priority_actions || []).map(item => `
+        applyDomField('page-gap-priority-actions', 'innerHTML', (res.priority_actions || []).map(item => `
           <article class="gap-plan-item priority-item">
             <span class="gap-priority-number">${escapeHtml(item.priority)}</span>
             <div><h5>${escapeHtml(item.gap)}</h5><p>${escapeHtml(item.why_it_matters)}</p><strong>${escapeHtml(item.action)}</strong></div>
           </article>
-        `).join('') || '<p class="gap-empty">Không có khoảng cách ưu tiên.</p>';
+        `).join('') || '<p class="gap-empty">Không có khoảng cách ưu tiên.</p>', missingIds);
 
-        (document.getElementById('page-gap-learning-list') || {}).innerHTML = (res.learning_recommendations || []).map(item => `
+        applyDomField('page-gap-learning-list', 'innerHTML', (res.learning_recommendations || []).map(item => `
           <article class="gap-plan-item">
             <h5>${escapeHtml(item.skill)}</h5>
             <p>${escapeHtml(item.learning_goal)}</p>
             <div class="gap-mini-tags">${(item.topics || []).map(topic => `<span>${escapeHtml(topic)}</span>`).join('')}</div>
             <strong>Bài thực hành: ${escapeHtml(item.practice)}</strong>
           </article>
-        `).join('') || '<p class="gap-empty">Chưa có đề xuất học tập bổ sung.</p>';
+        `).join('') || '<p class="gap-empty">Chưa có đề xuất học tập bổ sung.</p>', missingIds);
 
-        (document.getElementById('page-gap-certifications-list') || {}).innerHTML = (res.certification_recommendations || []).map(item => `
+        applyDomField('page-gap-certifications-list', 'innerHTML', (res.certification_recommendations || []).map(item => `
           <article class="gap-plan-item certificate-item">
             <span class="gap-card-kicker">${escapeHtml(item.level)} · ${escapeHtml(item.provider)}</span>
             <h5>${escapeHtml(item.name)}</h5>
@@ -3000,9 +3180,9 @@ TÊN CÔNG TY:
             <div class="gap-mini-tags">${(item.related_skills || []).map(skill => `<span>${escapeHtml(skill)}</span>`).join('')}</div>
             <small>${escapeHtml(item.verification_note)}</small>
           </article>
-        `).join('') || '<p class="gap-empty">JD này chưa có chứng chỉ bắt buộc hoặc phù hợp rõ ràng.</p>';
+        `).join('') || '<p class="gap-empty">JD này chưa có chứng chỉ bắt buộc hoặc phù hợp rõ ràng.</p>', missingIds);
 
-        (document.getElementById('page-gap-projects-list') || {}).innerHTML = (res.project_recommendations || []).map(item => `
+        applyDomField('page-gap-projects-list', 'innerHTML', (res.project_recommendations || []).map(item => `
           <article class="gap-plan-item project-item">
             <span class="gap-card-kicker">ĐỀ XUẤT · CHƯA HOÀN THÀNH</span>
             <h5>${escapeHtml(item.title)}</h5>
@@ -3011,15 +3191,20 @@ TÊN CÔNG TY:
             <ul>${(item.deliverables || []).map(value => `<li>${escapeHtml(value)}</li>`).join('')}</ul>
             <div class="gap-bullet-template">${escapeHtml(item.cv_bullet_template)}</div>
           </article>
-        `).join('') || '<p class="gap-empty">Chưa cần thêm dự án mới; hãy tăng số liệu cho dự án hiện có.</p>';
+        `).join('') || '<p class="gap-empty">Chưa cần thêm dự án mới; hãy tăng số liệu cho dự án hiện có.</p>', missingIds);
 
-        (document.getElementById('page-gap-cv-sections-list') || {}).innerHTML = (res.cv_section_recommendations || []).map(item => `
+        applyDomField('page-gap-cv-sections-list', 'innerHTML', (res.cv_section_recommendations || []).map(item => `
           <article class="gap-plan-item compact-item">
             <h5>${escapeHtml(item.section)}</h5>
             <p><strong>Vấn đề:</strong> ${escapeHtml(item.issue)}</p>
             <p><strong>Nên sửa:</strong> ${escapeHtml(item.recommendation)}</p>
           </article>
-        `).join('') || '<p class="gap-empty">Không có mục CV cần bổ sung.</p>';
+        `).join('') || '<p class="gap-empty">Không có mục CV cần bổ sung.</p>', missingIds);
+
+        if (missingIds.length) {
+          console.error(`[pageBtnRunGap] Không tìm thấy ${missingIds.length} phần tử DOM để hiển thị kết quả Gap Analysis: ${missingIds.join(', ')}`);
+          showToast(`⚠️ Đã tính xong Gap Analysis nhưng giao diện thiếu vùng hiển thị (${missingIds.join(', ')}). Vui lòng tải lại trang và thử lại.`, 'error');
+        }
 
         const suggestionList = document.getElementById('page-gap-suggestions-list');
         if (!suggestionList) {
@@ -3052,7 +3237,9 @@ TÊN CÔNG TY:
         if (exportBar) exportBar.hidden = false;
 
         if (pageGapResultsContainer) pageGapResultsContainer.style.display = 'block';
-        showToast('🎉 Đã phân tích xong Gap Analysis!', 'success');
+        if (!missingIds.length) {
+          showToast('🎉 Đã phân tích xong Gap Analysis!', 'success');
+        }
       } catch (err) {
         showToast(`❌ Lỗi chạy Gap Analysis: ${err.message}`, 'error');
       }
@@ -4223,10 +4410,26 @@ TÊN CÔNG TY:
   const authSub = document.getElementById('auth-sub');
   const btnSubmitLabel = document.getElementById('btn-submit-label');
   const loginForm = document.getElementById('login-form');
+  const forgotPasswordButton = document.getElementById('btn-forgot-password');
+  const passwordResetOverlay = document.getElementById('password-reset-overlay');
+  const passwordResetCloseButton = document.getElementById('password-reset-close');
+  const passwordResetForm = document.getElementById('password-reset-form');
+  const resetStep1 = document.getElementById('reset-step-1');
+  const resetStep2 = document.getElementById('reset-step-2');
+  const resetStep3 = document.getElementById('reset-step-3');
+  const btnResetStep1 = document.getElementById('btn-reset-step-1');
+  const btnResetStep2 = document.getElementById('btn-reset-step-2');
+  const btnResetStep3 = document.getElementById('btn-reset-step-3');
+  const passwordResetBack1 = document.getElementById('btn-password-reset-back');
+  const passwordResetBack2 = document.getElementById('btn-password-reset-back-2');
+  const resetStep2Sub = document.getElementById('reset-step-2-sub');
+  const passwordResetTimer = document.getElementById('password-reset-timer');
   const googleButtonHost = document.getElementById('google-signin-button');
   const googleAuthHelp = document.getElementById('google-auth-help');
 
   let isRegisterMode = false;
+  let currentResetStep = 1;
+  let resetCountdownInterval = null;
   let googleIdentityInitialized = false;
 
   function openAuthModal() {
@@ -4240,6 +4443,7 @@ TÊN CÔNG TY:
   if (authClose) authClose.addEventListener('click', closeAuthModal);
 
   function setAuthMode(register) {
+    if (forgotPasswordButton) forgotPasswordButton.hidden = register;
     isRegisterMode = register;
     const currentLang = localStorage.getItem('career_copilot_lang') || 'vi';
     const dict = TRANSLATIONS[currentLang] || TRANSLATIONS.vi;
@@ -4266,6 +4470,130 @@ TÊN CÔNG TY:
 
   if (tabLogin) tabLogin.addEventListener('click', () => setAuthMode(false));
   if (tabRegister) tabRegister.addEventListener('click', () => setAuthMode(true));
+
+  function updateResetSteps() {
+    if (resetStep1) resetStep1.hidden = (currentResetStep !== 1);
+    if (resetStep2) resetStep2.hidden = (currentResetStep !== 2);
+    if (resetStep3) resetStep3.hidden = (currentResetStep !== 3);
+  }
+
+  function setPasswordResetMode(enabled) {
+    if (!passwordResetForm || !passwordResetOverlay) return;
+    passwordResetOverlay.classList.toggle('open', enabled);
+    if (enabled) {
+      closeAuthModal();
+      currentResetStep = 1;
+      updateResetSteps();
+      document.getElementById('reset-email')?.focus();
+      return;
+    }
+    passwordResetForm.reset();
+    clearInterval(resetCountdownInterval);
+  }
+
+  forgotPasswordButton?.addEventListener('click', () => setPasswordResetMode(true));
+  passwordResetBack1?.addEventListener('click', () => {
+    setPasswordResetMode(false);
+    setAuthMode(false);
+    openAuthModal();
+  });
+  passwordResetBack2?.addEventListener('click', () => {
+    currentResetStep = 1;
+    updateResetSteps();
+  });
+  passwordResetCloseButton?.addEventListener('click', () => setPasswordResetMode(false));
+
+  passwordResetForm?.addEventListener('submit', async event => {
+    event.preventDefault();
+    const email = document.getElementById('reset-email')?.value.trim();
+    if (!email) return;
+
+    if (currentResetStep === 1) {
+      try {
+        if (btnResetStep1) btnResetStep1.disabled = true;
+        await ApiClient.requestPasswordReset(email);
+        if (btnResetStep1) btnResetStep1.disabled = false;
+        
+        currentResetStep = 2;
+        updateResetSteps();
+        
+        if (resetStep2Sub) resetStep2Sub.textContent = `Mã 6 số đã được gửi đến ${email}.`;
+        
+        if (passwordResetTimer) {
+          passwordResetTimer.hidden = false;
+          let secondsLeft = 600; // 10 minutes
+          passwordResetTimer.textContent = `Mã hết hạn trong: 10:00`;
+          clearInterval(resetCountdownInterval);
+          resetCountdownInterval = setInterval(() => {
+            secondsLeft--;
+            if (secondsLeft <= 0) {
+              clearInterval(resetCountdownInterval);
+              passwordResetTimer.textContent = 'Mã OTP đã hết hạn.';
+              if (btnResetStep2) btnResetStep2.disabled = true;
+            } else {
+              const m = Math.floor(secondsLeft / 60);
+              const s = secondsLeft % 60;
+              passwordResetTimer.textContent = `Mã hết hạn trong: ${m}:${s.toString().padStart(2, '0')}`;
+            }
+          }, 1000);
+        }
+        
+        showToast('Kiểm tra hộp thư Gmail để lấy mã OTP.', 'success');
+        document.getElementById('reset-otp')?.focus();
+      } catch (err) {
+        if (btnResetStep1) btnResetStep1.disabled = false;
+        showToast(`❌ ${err.message}`, 'error');
+      }
+      return;
+    }
+
+    if (currentResetStep === 2) {
+      const otp = document.getElementById('reset-otp')?.value.trim();
+      if (!/^\d{6}$/.test(otp || '')) {
+        showToast('Vui lòng nhập mã OTP gồm 6 số.', 'error');
+        return;
+      }
+      currentResetStep = 3;
+      updateResetSteps();
+      document.getElementById('reset-new-password')?.focus();
+      return;
+    }
+
+    if (currentResetStep === 3) {
+      const otp = document.getElementById('reset-otp')?.value.trim();
+      const newPassword = document.getElementById('reset-new-password')?.value;
+      const confirmPassword = document.getElementById('reset-confirm-password')?.value;
+      
+      if (!newPassword || newPassword.length < 8) {
+        showToast('Mật khẩu mới phải có ít nhất 8 ký tự.', 'error');
+        return;
+      }
+      if (newPassword !== confirmPassword) {
+        showToast('Mật khẩu xác nhận không khớp.', 'error');
+        return;
+      }
+      
+      try {
+        if (btnResetStep3) btnResetStep3.disabled = true;
+        const result = await ApiClient.confirmPasswordReset(email, otp, newPassword);
+        showToast(result.message || 'Đặt lại mật khẩu thành công.', 'success');
+        setPasswordResetMode(false);
+        setAuthMode(false);
+        openAuthModal();
+        document.getElementById('input-email').value = email;
+        document.getElementById('input-password')?.focus();
+        if (btnResetStep3) btnResetStep3.disabled = false;
+      } catch (err) {
+        if (btnResetStep3) btnResetStep3.disabled = false;
+        showToast(`❌ ${err.message}`, 'error');
+        if (err.message.toLowerCase().includes('otp') || err.message.toLowerCase().includes('mã')) {
+          currentResetStep = 2;
+          updateResetSteps();
+          document.getElementById('reset-otp')?.focus();
+        }
+      }
+    }
+  });
 
   function enhanceAuthRoleSelect() {
     const select = document.getElementById('input-role');
