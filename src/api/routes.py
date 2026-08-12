@@ -10,6 +10,7 @@ from src.api.v1.cvs import router as cvs_router
 from src.api.v1.enterprise import router as enterprise_router
 from src.api.v1.interviews import router as interviews_router
 from src.api.v1.jds import router as jds_router
+from src.api.v1.jobs import router as jobs_router
 from src.api.v1.metrics import router as metrics_router
 from src.models.schemas import ChatRequest, ChatResponse
 
@@ -19,6 +20,7 @@ router = APIRouter()
 router.include_router(auth_router)
 router.include_router(cvs_router)
 router.include_router(jds_router)
+router.include_router(jobs_router)
 router.include_router(analysis_router)
 router.include_router(interviews_router)
 router.include_router(admin_router)

@@ -28,7 +28,6 @@ from src.models.schemas import (
     UserOut,
 )
 
-
 router = APIRouter(prefix="/counselor", tags=["Counselor HITL"])
 
 
