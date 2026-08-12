@@ -1479,26 +1479,53 @@ export default function Page() {
       <div className="modal-overlay" id="password-reset-overlay" role="dialog" aria-modal="true" aria-labelledby="password-reset-title">
         <div className="modal-card password-reset-card">
           <button type="button" className="modal-close" id="password-reset-close" aria-label="Đóng">&times;</button>
-          <div className="modal-header">
-            <h2 className="modal-title" id="password-reset-title">Đặt lại mật khẩu</h2>
-            <p className="modal-sub">Nhập email, nhận OTP qua Gmail và tạo mật khẩu mới.</p>
-          </div>
           <form className="login-form" id="password-reset-form">
-            <p className="auth-reset-help" id="password-reset-help">Nhập email để nhận mã OTP qua Gmail.</p>
-            <div className="form-group">
-              <label className="form-label" htmlFor="reset-email">Email</label>
-              <input type="email" id="reset-email" className="form-input" placeholder="you@example.com" required />
+            
+            {/* STEP 1: EMAIL */}
+            <div id="reset-step-1">
+              <div className="modal-header">
+                <h2 className="modal-title" id="password-reset-title">Quên mật khẩu</h2>
+                <p className="modal-sub">Nhập email của bạn để nhận mã OTP.</p>
+              </div>
+              <div className="form-group">
+                <label className="form-label" htmlFor="reset-email">Email</label>
+                <input type="email" id="reset-email" className="form-input" placeholder="you@example.com" required />
+              </div>
+              <button type="submit" className="btn-submit" id="btn-reset-step-1">Tiếp tục</button>
+              <button type="button" id="btn-password-reset-back" className="auth-forgot-password" style={{marginTop: '10px'}}>Quay lại đăng nhập</button>
             </div>
-            <div className="form-group" id="reset-otp-group" hidden>
-              <label className="form-label" htmlFor="reset-otp">Mã OTP gồm 6 số</label>
-              <input type="text" id="reset-otp" className="form-input" inputMode="numeric" pattern="[0-9]{6}" maxLength={6} placeholder="123456" />
+
+            {/* STEP 2: OTP */}
+            <div id="reset-step-2" hidden>
+              <div className="modal-header">
+                <h2 className="modal-title">Xác thực OTP</h2>
+                <p className="modal-sub" id="reset-step-2-sub">Mã 6 số đã được gửi đến email của bạn.</p>
+              </div>
+              <div className="form-group">
+                <input type="text" id="reset-otp" className="form-input" inputMode="numeric" pattern="[0-9]{6}" maxLength={6} placeholder="------" style={{textAlign: 'center', fontSize: '1.5rem', letterSpacing: '0.5em', fontWeight: 'bold'}} />
+              </div>
+              <p className="auth-reset-timer" id="password-reset-timer" style={{color: 'var(--primary-color)', fontSize: '0.9rem', marginBottom: '15px', textAlign: 'center'}}></p>
+              <button type="submit" className="btn-submit" id="btn-reset-step-2">Xác thực</button>
+              <button type="button" id="btn-password-reset-back-2" className="auth-forgot-password" style={{marginTop: '10px'}}>Nhập lại email</button>
             </div>
-            <div className="form-group" id="reset-new-password-group" hidden>
-              <label className="form-label" htmlFor="reset-new-password">Mật khẩu mới</label>
-              <input type="password" id="reset-new-password" className="form-input" minLength={8} placeholder="Ít nhất 8 ký tự" />
+
+            {/* STEP 3: NEW PASSWORD */}
+            <div id="reset-step-3" hidden>
+              <div className="modal-header">
+                <h2 className="modal-title">Tạo mật khẩu mới</h2>
+                <p className="modal-sub">Mật khẩu của bạn phải có tối thiểu 8 ký tự.</p>
+              </div>
+              <div className="form-group">
+                <label className="form-label" htmlFor="reset-new-password">Mật khẩu mới</label>
+                <input type="password" id="reset-new-password" className="form-input" minLength={8} placeholder="Ít nhất 8 ký tự" />
+              </div>
+              <div className="form-group">
+                <label className="form-label" htmlFor="reset-confirm-password">Xác nhận mật khẩu mới</label>
+                <input type="password" id="reset-confirm-password" className="form-input" minLength={8} placeholder="Nhập lại mật khẩu" />
+              </div>
+              <button type="submit" className="btn-submit" id="btn-reset-step-3">Cập nhật mật khẩu</button>
             </div>
-            <button type="submit" className="btn-submit" id="btn-password-reset-submit">Gửi mã OTP</button>
-            <button type="button" id="btn-password-reset-back" className="auth-forgot-password">Quay lại đăng nhập</button>
+
           </form>
         </div>
       </div>
