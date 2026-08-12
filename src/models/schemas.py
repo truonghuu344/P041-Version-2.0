@@ -473,3 +473,27 @@ class AdminAILogStatsOut(BaseModel):
     successful_requests: int
     failed_requests: int
     unique_users: int
+
+
+# --- Compatibility & Workflow Request Schemas ---
+class CVAnalyzeRequest(BaseModel):
+    cv_id: str = Field(..., min_length=1, description="ID của CV đã upload")
+    jd_text: str = Field(..., min_length=1, description="Nội dung Job Description")
+
+
+
+class SuggestionDecisionRequest(BaseModel):
+    final_text: str | None = None
+
+
+class InterviewAnswerRequest(BaseModel):
+    answer: str | None = None
+    user_answer: str | None = None
+
+    def get_text(self) -> str:
+        if self.answer is not None:
+            return self.answer
+        if self.user_answer is not None:
+            return self.user_answer
+        return ""
+
