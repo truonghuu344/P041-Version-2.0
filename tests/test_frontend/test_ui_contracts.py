@@ -198,7 +198,7 @@ def test_cv_target_jd_supports_data_catalog_or_file_upload():
     assert "gap-select-search" in APP_JS
     assert ".cv-jd-select-shell .gap-select-menu" in STYLE_CSS
     assert 'id="cv-jd-upload-form"' in PAGE_JS
-    assert 'accept=".pdf,.docx,.txt"' in PAGE_JS
+    assert 'accept=".pdf,.docx,.txt,.jpg,.jpeg,.png"' in PAGE_JS
 
 
 def test_auth_role_dropdown_and_google_button_are_responsive_custom_controls():
@@ -216,7 +216,7 @@ def test_auth_role_dropdown_and_google_button_are_responsive_custom_controls():
 def test_enterprise_jd_supports_template_file_or_manual_text():
     assert 'id="page-download-jd-template"' in PAGE_JS
     assert 'id="page-upload-jd-form"' in PAGE_JS
-    assert 'accept=".pdf,.docx,.txt"' in PAGE_JS
+    assert 'accept=".pdf,.docx,.txt,.jpg,.jpeg,.png"' in PAGE_JS
     assert 'id="page-custom-jd-form"' in PAGE_JS
     assert "ApiClient.uploadJD" in APP_JS
     assert "JD_TEMPLATE_CONTENT" in APP_JS

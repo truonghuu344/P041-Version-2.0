@@ -1,3 +1,4 @@
+import os
 import tempfile
 from collections.abc import AsyncGenerator
 from pathlib import Path
@@ -8,6 +9,12 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from sqlalchemy.pool import StaticPool
 
 # Import app và các thành phần liên quan từ dự án của bạn
+# Evals/tests must remain offline and reproducible even when a developer has a Gemini key in .env.
+os.environ["CV_JD_EMBEDDING_PROVIDER"] = "hashing"
+os.environ["MALWARE_SCAN_MODE"] = "disabled"
+os.environ["GEMINI_API_KEY"] = ""
+os.environ["GOOGLE_API_KEY"] = ""
+
 from src.db.database import Base, get_db
 from src.main import app
 
@@ -35,7 +42,8 @@ def pytest_configure(config):
         for argument in config.invocation_params.args
     )
     if not has_explicit_basetemp:
-        config.option.basetemp = str(Path(tempfile.gettempdir()) / "p041-pytest")
+        import uuid
+        config.option.basetemp = str(Path(tempfile.gettempdir()) / f"p041-pytest-{uuid.uuid4().hex[:8]}")
 
 
 @pytest_asyncio.fixture(scope="session", autouse=True)

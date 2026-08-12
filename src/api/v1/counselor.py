@@ -160,15 +160,18 @@ async def get_student_overview(
 
     cv_count = await db.scalar(select(func.count(CV.id)).where(CV.user_id == student_id)) or 0
     analysis_count = await db.scalar(select(func.count(CVAnalysis.id)).where(CVAnalysis.user_id == student_id)) or 0
-    interview_count = await db.scalar(
-        select(func.count(InterviewSession.id)).where(InterviewSession.user_id == student_id)
-    ) or 0
-    completed_count = await db.scalar(
-        select(func.count(InterviewSession.id)).where(
-            InterviewSession.user_id == student_id,
-            InterviewSession.status == "completed",
+    interview_count = (
+        await db.scalar(select(func.count(InterviewSession.id)).where(InterviewSession.user_id == student_id)) or 0
+    )
+    completed_count = (
+        await db.scalar(
+            select(func.count(InterviewSession.id)).where(
+                InterviewSession.user_id == student_id,
+                InterviewSession.status == "completed",
+            )
         )
-    ) or 0
+        or 0
+    )
     average_score = await db.scalar(
         select(func.avg(InterviewReport.total_score))
         .join(InterviewSession, InterviewSession.id == InterviewReport.session_id)
@@ -200,9 +203,7 @@ async def get_student_overview(
     # Detailed student lists for counselor reporting
     from sqlalchemy.orm import selectinload
 
-    cvs_result = await db.execute(
-        select(CV).where(CV.user_id == student_id).order_by(CV.created_at.desc())
-    )
+    cvs_result = await db.execute(select(CV).where(CV.user_id == student_id).order_by(CV.created_at.desc()))
     student_cvs = [CVOut.model_validate(item) for item in cvs_result.scalars().all()]
 
     analyses_result = await db.execute(
@@ -216,10 +217,40 @@ async def get_student_overview(
                 id=item.id,
                 cv_id=item.cv_id,
                 jd_id=item.jd_id,
+                pipeline_version=gap_data.get("pipeline_version", "1.0"),
+                trace_id=gap_data.get("trace_id", ""),
+                match_id=gap_data.get("match_id", ""),
+                candidate_id=gap_data.get("candidate_id", ""),
+                document_id=gap_data.get("document_id", ""),
+                status=gap_data.get("status", "COMPLETED"),
                 match_score=item.match_score,
+                final_score=gap_data.get("final_score", item.match_score),
+                rating=gap_data.get("rating", "POOR"),
+                mandatory_requirement_failed=gap_data.get("mandatory_requirement_failed", False),
+                criteria=gap_data.get("criteria", []),
+                requirements=gap_data.get("requirements", {}),
+                evidence=gap_data.get("evidence", []),
+                retrieval_results=gap_data.get("retrieval_results", []),
+                cv_chunks=gap_data.get("cv_chunks", []),
+                warnings=gap_data.get("warnings", []),
+                versions=gap_data.get("versions", {}),
+                processing_trace=gap_data.get("processing_trace", []),
+                structured_cv=gap_data.get("structured_cv", {}),
+                structured_jd=gap_data.get("structured_jd", {}),
+                raw_match_score=gap_data.get("raw_match_score", item.match_score),
+                match_level=gap_data.get("match_level", "partial_match"),
+                confidence_score=gap_data.get("confidence_score", 0.0),
+                confidence_level=gap_data.get("confidence_level", "low"),
+                must_have_coverage=gap_data.get("must_have_coverage", 0.0),
+                must_have_gate=gap_data.get("must_have_gate", {}),
                 hard_skills_matching=gap_data.get("hard_skills_matching", []),
+                hard_skills_partial=gap_data.get("hard_skills_partial", []),
                 hard_skills_missing=gap_data.get("hard_skills_missing", []),
                 soft_skills_gap=gap_data.get("soft_skills_gap", []),
+                unknown_requirements=gap_data.get("unknown_requirements", []),
+                requirement_evidence=gap_data.get("requirement_evidence", []),
+                strengths=gap_data.get("strengths", []),
+                risks=gap_data.get("risks", []),
                 suggestions=item.optimized_suggestions_json or [],
                 executive_summary=gap_data.get("executive_summary", ""),
                 priority_actions=gap_data.get("priority_actions", []),

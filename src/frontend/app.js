@@ -1,5 +1,7 @@
 /* ============================================================
    CAREER COPILOT X – app.js
+/* ============================================================
+   CAREER COPILOT X – app.js
    Deep Space Starfield + Shooting Stars Animation Engine
    FastAPI Backend Integration (PostgreSQL)
    ============================================================ */
@@ -10,12 +12,15 @@ const API_BASE_URL = window.__CAREER_API_BASE_URL__ || '/api/v1';
 
 class ApiClient {
   static getToken() {
-    return null;
+    return localStorage.getItem('access_token');
   }
 
-  static setToken(_token) {
-    // JWT phiên đăng nhập do backend giữ trong cookie HttpOnly.
-    localStorage.removeItem('access_token');
+  static setToken(token) {
+    if (token) {
+      localStorage.setItem('access_token', token);
+    } else {
+      localStorage.removeItem('access_token');
+    }
   }
 
   static getUser() {
@@ -2073,7 +2078,9 @@ function startAppLogic() {
     latestCVAnalysisContext = { analysis, cvId, jdId };
     const score = Number(analysis.match_score || 0);
     const matched = Array.isArray(analysis.hard_skills_matching) ? analysis.hard_skills_matching : [];
-    const missing = Array.isArray(analysis.hard_skills_missing) ? analysis.hard_skills_missing : [];
+    const partial = Array.isArray(analysis.hard_skills_partial) ? analysis.hard_skills_partial : [];
+    const missingRaw = Array.isArray(analysis.hard_skills_missing) ? analysis.hard_skills_missing : [];
+    const missing = missingRaw.filter(skill => !partial.includes(skill));
     const softGaps = Array.isArray(analysis.soft_skills_gap) ? analysis.soft_skills_gap : [];
     const priorityActions = Array.isArray(analysis.priority_actions) ? analysis.priority_actions : [];
     const learningActions = Array.isArray(analysis.learning_recommendations) ? analysis.learning_recommendations : [];
@@ -2086,68 +2093,142 @@ function startAppLogic() {
     const scoreEl = document.getElementById('cv-result-match-score');
     const scoreRing = scoreEl?.closest('.cv-result-score-ring');
 
+    const setText = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+    const setHTML = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
+
     if (scoreEl) scoreEl.textContent = `${score.toFixed(1)}%`;
     scoreRing?.style.setProperty('--match-score', `${Math.max(0, Math.min(100, score)) * 3.6}deg`);
-    document.getElementById('cv-result-context').textContent = `${cvLabel}  ↔  ${jdLabel}`;
-    document.getElementById('cv-result-summary').textContent = analysis.executive_summary
-      || `CV khớp ${matched.length} kỹ năng và cần bổ sung ${missing.length} kỹ năng theo JD.`;
+    setText('cv-result-context', `${cvLabel}  ↔  ${jdLabel}`);
+    setText('cv-result-summary', analysis.executive_summary || `CV khớp ${matched.length} kỹ năng và cần bổ sung ${missing.length} kỹ năng theo JD.`);
+    
+    const confidenceSummary = document.getElementById('cv-result-confidence-summary');
+    if (confidenceSummary) {
+      const matchLabels = {
+        high_match: 'Match cao',
+        application_ready: 'Có thể ứng tuyển',
+        partial_match: 'Match một phần',
+        low_match: 'Match thấp',
+        insufficient_data: 'Chưa đủ dữ liệu',
+      };
+      setHTML('cv-result-confidence-summary', `
+        <span>${escapeHtml(matchLabels[analysis.match_level] || analysis.match_level || 'Đang đánh giá')}</span>
+        <span>Xếp loại ${escapeHtml(analysis.rating || '—')}</span>
+        <span>Độ tin cậy ${Math.round(Number(analysis.confidence_score || 0) * 100)}%</span>
+        <span>Must-have ${Math.round(Number(analysis.must_have_coverage || 0) * 100)}%</span>
+        ${analysis.mandatory_requirement_failed ? '<span>⚠ Thiếu yêu cầu bắt buộc</span>' : ''}
+      `);
+    }
 
     const renderSkills = (items, variant) => items.length
       ? items.map(item => `<span class="cv-result-tag ${variant}">${escapeHtml(item)}</span>`).join('')
       : '<span class="cv-result-empty">Không có dữ liệu.</span>';
-    document.getElementById('cv-result-matching-skills').innerHTML = renderSkills(matched, 'matched');
-    document.getElementById('cv-result-missing-skills').innerHTML = renderSkills(missing, 'missing');
+    
+    setHTML('cv-result-matching-skills', renderSkills(matched, 'matched'));
+    setHTML('cv-result-missing-skills', renderSkills(missing, 'missing'));
+    setHTML('cv-result-partial-skills', renderSkills(partial, 'partial'));
 
-    document.getElementById('cv-result-priority-actions').innerHTML = priorityActions.length
+    setHTML('cv-result-priority-actions', priorityActions.length
       ? priorityActions.slice(0, 4).map((item, index) => {
         const title = typeof item === 'string' ? item : (item.gap || item.action || `Ưu tiên ${index + 1}`);
         const detail = typeof item === 'string' ? '' : (item.action || item.why_it_matters || '');
         return `<article class="cv-result-action"><span>${escapeHtml(item.priority || index + 1)}</span><div><strong>${escapeHtml(title)}</strong>${detail && detail !== title ? `<p>${escapeHtml(detail)}</p>` : ''}</div></article>`;
       }).join('')
-      : '<p class="cv-result-empty">Chưa phát hiện khoảng trống ưu tiên.</p>';
+      : '<p class="cv-result-empty">Chưa phát hiện khoảng trống ưu tiên.</p>');
 
-    document.getElementById('cv-result-learning-actions').innerHTML = learningActions.length
+    setHTML('cv-result-learning-actions', learningActions.length
       ? learningActions.slice(0, 4).map((item, index) => {
         const title = typeof item === 'string' ? item : (item.skill || item.learning_goal || `Gợi ý ${index + 1}`);
         const detail = typeof item === 'string' ? '' : (item.learning_goal || item.practice || '');
         return `<article class="cv-result-action learning"><span>${index + 1}</span><div><strong>${escapeHtml(title)}</strong>${detail && detail !== title ? `<p>${escapeHtml(detail)}</p>` : ''}</div></article>`;
       }).join('')
-      : '<p class="cv-result-empty">Chưa cần lộ trình học bổ sung.</p>';
+      : '<p class="cv-result-empty">Chưa cần lộ trình học bổ sung.</p>');
 
     const scoreLabels = {
       hard_skills: 'Kỹ năng cứng',
       nice_to_have: 'Kỹ năng mềm',
       domain_fit: 'Phù hợp lĩnh vực',
       experience_fit: 'Bằng chứng kinh nghiệm',
+      must_have_skills: 'Kỹ năng bắt buộc',
+      experience_seniority: 'Kinh nghiệm & cấp bậc',
+      responsibilities: 'Trách nhiệm công việc',
+      nice_to_have_skills: 'Kỹ năng ưu tiên',
+      role_domain_fit: 'Vai trò & lĩnh vực',
+      education_certification: 'Học vấn & chứng chỉ',
+      soft_skills: 'Kỹ năng mềm',
+      required_skill: 'Kỹ năng bắt buộc',
+      experience: 'Kinh nghiệm liên quan',
+      education: 'Học vấn',
+      preferred_skill: 'Kỹ năng ưu tiên',
+      domain: 'Kinh nghiệm lĩnh vực',
     };
     const scoreBreakdown = Object.entries(analysis.score_breakdown || {});
-    document.getElementById('cv-result-score-breakdown').innerHTML = scoreBreakdown.length
+    setHTML('cv-result-score-breakdown', scoreBreakdown.length
       ? scoreBreakdown.map(([key, value]) => `
         <article><span>${escapeHtml(scoreLabels[key] || key)}</span><strong>${Number(value).toFixed(1)}%</strong><i style="--score-width:${Math.max(0, Math.min(100, Number(value)))}%"></i></article>
       `).join('')
-      : '<p class="cv-result-empty">Chưa có dữ liệu phân rã điểm.</p>';
+      : '<p class="cv-result-empty">Chưa có dữ liệu phân rã điểm.</p>');
 
-    document.getElementById('cv-result-soft-skills').innerHTML = renderSkills(softGaps, 'missing');
-    document.getElementById('cv-result-section-recommendations').innerHTML = sectionRecommendations.length
+    const criteria = Array.isArray(analysis.criteria) ? analysis.criteria : [];
+    const criteriaList = document.getElementById('cv-result-criteria');
+    if (criteriaList) {
+      const criterionLabels = {
+        CRIT_REQUIRED_SKILL: 'Kỹ năng bắt buộc',
+        CRIT_EXPERIENCE: 'Kinh nghiệm liên quan',
+        CRIT_EDUCATION: 'Học vấn',
+        CRIT_PREFERRED_SKILL: 'Kỹ năng ưu tiên',
+        CRIT_DOMAIN: 'Kinh nghiệm lĩnh vực',
+      };
+      criteriaList.innerHTML = criteria.length
+        ? criteria.map(item => `<article>
+          <div><strong>${escapeHtml(criterionLabels[item.criterion_id] || item.criterion_id)}</strong><small>${escapeHtml(item.status || '')}</small></div>
+          <span>${Number(item.raw_score || 0).toFixed(1)} × ${Number(item.weight || 0).toFixed(1)}%</span>
+          <b>${Number(item.weighted_score || 0).toFixed(1)} điểm</b>
+          <p>${escapeHtml(item.reason || '')}</p>
+        </article>`).join('')
+        : '<p class="cv-result-empty">JD chưa tạo được criterion có thể chấm điểm.</p>';
+    }
+    const warnings = Array.isArray(analysis.warnings) ? analysis.warnings : [];
+    setHTML('cv-result-warnings', warnings.map(item => `<p>⚠ ${escapeHtml(item)}</p>`).join(''));
+
+    const evidenceMatrix = Array.isArray(analysis.requirement_evidence) ? analysis.requirement_evidence : [];
+    const evidenceList = document.getElementById('cv-result-requirement-evidence');
+    if (evidenceList) {
+      const statusLabels = { matched: 'Đã đáp ứng', partial: 'Một phần', missing: 'Chưa có', unknown: 'Chưa rõ' };
+      evidenceList.innerHTML = evidenceMatrix.length
+        ? evidenceMatrix.map(item => {
+          const sources = Array.isArray(item.evidence) ? item.evidence : [];
+          const quotes = sources.length
+            ? sources.slice(0, 2).map(source => `<p>“${escapeHtml(source.quote)}” <small>· ${escapeHtml(source.section)} · BM25 ${source.bm25_score == null ? '—' : Number(source.bm25_score).toFixed(3)} · Semantic ${source.semantic_score == null ? '—' : Number(source.semantic_score).toFixed(3)} · RRF ${source.fusion_score == null ? '—' : Number(source.fusion_score).toFixed(5)}</small></p>`).join('')
+            : `<p>${escapeHtml(item.reason || 'Chưa tìm thấy bằng chứng trong CV.')}</p>`;
+          return `<article class="cv-result-evidence-item">
+            <div><strong>${escapeHtml(item.requirement)}</strong><small>${escapeHtml(item.requirement_type)} · trọng số ${Number(item.importance || 0).toFixed(0)}</small><br><span class="cv-result-evidence-status ${escapeHtml(item.status)}">${escapeHtml(statusLabels[item.status] || item.status)}</span></div>
+            <div>${quotes}<small>Confidence ${Math.round(Number(item.confidence || 0) * 100)}% · ${escapeHtml(item.reason || '')}</small></div>
+          </article>`;
+        }).join('')
+        : '<p class="cv-result-empty">JD chưa có yêu cầu đủ rõ để lập ma trận bằng chứng.</p>';
+    }
+
+    setHTML('cv-result-soft-skills', renderSkills(softGaps, 'missing'));
+    setHTML('cv-result-section-recommendations', sectionRecommendations.length
       ? sectionRecommendations.slice(0, 4).map(item => `
         <article class="cv-result-action learning"><span>§</span><div><strong>${escapeHtml(item.section)}</strong><p>${escapeHtml(item.recommendation)}</p></div></article>
       `).join('')
-      : '<p class="cv-result-empty">Chưa có mục CV cần chỉnh thêm.</p>';
-    document.getElementById('cv-result-certifications').innerHTML = certifications.length
+      : '<p class="cv-result-empty">Chưa có mục CV cần chỉnh thêm.</p>');
+    setHTML('cv-result-certifications', certifications.length
       ? certifications.slice(0, 3).map((item, index) => `
         <article class="cv-result-action learning"><span>${index + 1}</span><div><strong>${escapeHtml(item.name)}</strong><p>${escapeHtml(item.provider)} · ${escapeHtml(item.reason)}</p></div></article>
       `).join('')
-      : '<p class="cv-result-empty">JD không yêu cầu chứng chỉ rõ ràng.</p>';
-    document.getElementById('cv-result-projects').innerHTML = projects.length
+      : '<p class="cv-result-empty">JD không yêu cầu chứng chỉ rõ ràng.</p>');
+    setHTML('cv-result-projects', projects.length
       ? projects.slice(0, 3).map((item, index) => `
         <article class="cv-result-action"><span>${index + 1}</span><div><strong>${escapeHtml(item.title)}</strong><p>${escapeHtml(item.objective)} · Chưa hoàn thành</p></div></article>
       `).join('')
-      : '<p class="cv-result-empty">Chưa cần đề xuất dự án mới.</p>';
-    document.getElementById('cv-result-suggestions-preview').innerHTML = suggestions.length
+      : '<p class="cv-result-empty">Chưa cần đề xuất dự án mới.</p>');
+    setHTML('cv-result-suggestions-preview', suggestions.length
       ? suggestions.slice(0, 3).map((item, index) => `
         <article class="cv-result-rewrite"><span>${index + 1}</span><div><small>Gốc: ${escapeHtml(item.original_text)}</small><strong>${escapeHtml(item.suggested_improvement)}</strong><p>${escapeHtml(item.reason)}</p></div></article>
       `).join('')
-      : '<p class="cv-result-empty">Không có câu viết lại đủ bằng chứng.</p>';
+      : '<p class="cv-result-empty">Không có câu viết lại đủ bằng chứng.</p>');
     const guardrail = document.getElementById('cv-result-guardrail-status');
     if (guardrail) {
       const passed = (analysis.integrity_guardrail || 'passed') === 'passed';
@@ -2173,7 +2254,7 @@ function startAppLogic() {
     }
     const file = cvJdFileInput?.files?.[0];
     if (!file) {
-      showToast('Vui lòng chọn file JD dạng PDF, DOCX hoặc TXT.', 'warning');
+      showToast('Vui lòng chọn file JD dạng PDF, DOCX, TXT hoặc ảnh.', 'warning');
       return;
     }
     const button = cvJdUploadForm.querySelector('button[type="submit"]');
@@ -2182,7 +2263,7 @@ function startAppLogic() {
       button.textContent = 'Đang tải và trích xuất JD...';
       const jd = await ApiClient.uploadJD(file, document.getElementById('cv-jd-title-input')?.value.trim() || '');
       cvJdUploadForm.reset();
-      if (cvJdFileName) cvJdFileName.textContent = 'PDF, DOCX hoặc TXT · tối đa 5 MB';
+      if (cvJdFileName) cvJdFileName.textContent = 'PDF, DOCX, TXT hoặc ảnh · tối đa 20 MB';
       await loadCVJDOptions(jd.id);
       showToast('✅ JD đã được tải lên và chọn làm mục tiêu.', 'success');
     } catch (err) {
@@ -2610,7 +2691,7 @@ TÊN CÔNG TY:
 
   function bindJDFileName(input, label) {
     input?.addEventListener('change', () => {
-      label.textContent = input.files?.[0]?.name || 'PDF, DOCX hoặc TXT';
+      label.textContent = input.files?.[0]?.name || 'PDF, DOCX, TXT hoặc ảnh';
     });
   }
 
@@ -2944,7 +3025,7 @@ TÊN CÔNG TY:
       e.preventDefault();
       const file = pageUploadJdFile?.files?.[0];
       if (!file) {
-        showToast('Vui lòng chọn file JD dạng PDF, DOCX hoặc TXT.', 'warning');
+        showToast('Vui lòng chọn file JD dạng PDF, DOCX, TXT hoặc ảnh.', 'warning');
         return;
       }
       const submitButton = pageUploadJdForm.querySelector('button[type="submit"]');
@@ -2959,7 +3040,7 @@ TÊN CÔNG TY:
         );
         showToast('🎉 Đã tải lên và lưu Job Description!', 'success');
         pageUploadJdForm.reset();
-        document.getElementById('page-upload-jd-file-name').textContent = 'PDF, DOCX hoặc TXT';
+        document.getElementById('page-upload-jd-file-name').textContent = 'PDF, DOCX, TXT hoặc ảnh';
         pageBtnTabSys?.click();
         await loadPageJDList();
       } catch (err) {
@@ -4896,7 +4977,7 @@ TÊN CÔNG TY:
       const fileInput = document.getElementById('cv-file-input');
       const titleInput = document.getElementById('cv-title-input');
       if (!fileInput.files[0]) {
-        showToast('Vui lòng chọn file CV dạng .pdf hoặc .docx', 'warning');
+        showToast('Vui lòng chọn CV dạng PDF, DOCX, JPG, JPEG hoặc PNG', 'warning');
         return;
       }
 
@@ -5006,7 +5087,7 @@ TÊN CÔNG TY:
       e.preventDefault();
       const file = uploadJdFile?.files?.[0];
       if (!file) {
-        showToast('Vui lòng chọn file JD dạng PDF, DOCX hoặc TXT.', 'warning');
+        showToast('Vui lòng chọn file JD dạng PDF, DOCX, TXT hoặc ảnh.', 'warning');
         return;
       }
       const submitButton = uploadJdForm.querySelector('button[type="submit"]');
@@ -5021,7 +5102,7 @@ TÊN CÔNG TY:
         );
         showToast('🎉 Đã tải lên và lưu Job Description!', 'success');
         uploadJdForm.reset();
-        document.getElementById('upload-jd-file-name').textContent = 'PDF, DOCX hoặc TXT';
+        document.getElementById('upload-jd-file-name').textContent = 'PDF, DOCX, TXT hoặc ảnh';
         btnTabSysJd?.click();
         await loadJDList();
       } catch (err) {

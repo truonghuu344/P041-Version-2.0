@@ -124,47 +124,19 @@ def build_gap_evidence(
     parsed: dict[str, Any],
     jd_title: str,
     jd_requirements: str,
+    jd_parsed: dict[str, Any] | None = None,
+    rubric: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    cv_skills = collect_cv_skills(cv_text, parsed)
-    jd_skills = extract_known_terms(jd_requirements, TECH_SKILLS)
-    cv_lookup = {skill.casefold(): skill for skill in cv_skills}
-    matched = [cv_lookup[skill.casefold()] for skill in jd_skills if skill.casefold() in cv_lookup]
-    missing = [skill for skill in jd_skills if skill.casefold() not in cv_lookup]
+    from src.services.cv_jd_matching import build_cv_jd_evidence
 
-    jd_soft = extract_known_terms(jd_requirements, SOFT_SKILLS)
-    cv_soft = extract_known_terms(cv_text, SOFT_SKILLS)
-    cv_soft_lookup = {skill.casefold() for skill in cv_soft}
-    soft_gap = [skill for skill in jd_soft if skill.casefold() not in cv_soft_lookup]
-
-    cv_lower = f"{cv_text} {parsed.get('summary', '')}".casefold()
-    title_lower = jd_title.casefold()
-    role_terms = [term for term in _ROLE_TERMS if term in title_lower]
-    domain_score = 100.0 if role_terms and any(term in cv_lower for term in role_terms) else 50.0
-
-    hard_score = (len(matched) / len(jd_skills) * 100.0) if jd_skills else 70.0
-    nice_score = (len(jd_soft) - len(soft_gap)) / len(jd_soft) * 100.0 if jd_soft else 70.0
-    parsed_experience = parsed.get("experience", [])
-    parsed_projects = parsed.get("projects", [])
-    experience_score = 85.0 if parsed_experience else 65.0 if parsed_projects else 35.0
-    match_score = round(
-        hard_score * 0.50 + nice_score * 0.20 + domain_score * 0.20 + experience_score * 0.10,
-        2,
+    return build_cv_jd_evidence(
+        cv_text=cv_text,
+        parsed_cv=parsed,
+        jd_title=jd_title,
+        jd_requirements=jd_requirements,
+        jd_parsed=jd_parsed,
+        rubric=rubric,
     )
-
-    return {
-        "cv_skills": cv_skills,
-        "jd_skills": jd_skills,
-        "hard_skills_matching": matched,
-        "hard_skills_missing": missing,
-        "soft_skills_gap": soft_gap,
-        "score_breakdown": {
-            "hard_skills": round(hard_score, 2),
-            "nice_to_have": nice_score,
-            "domain_fit": domain_score,
-            "experience_fit": experience_score,
-        },
-        "match_score": max(0.0, min(100.0, match_score)),
-    }
 
 
 def cv_evidence_sentences(cv_text: str) -> list[str]:

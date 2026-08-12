@@ -33,6 +33,8 @@ class GapAnalysisState(TypedDict, total=False):
     cv_parsed_json: dict[str, Any]
     jd_title: str
     jd_requirements: str
+    jd_parsed_json: dict[str, Any]
+    rubric: dict[str, Any]
     evidence: dict[str, Any]
     draft_result: dict[str, Any]
     gap_analysis_result: dict[str, Any]

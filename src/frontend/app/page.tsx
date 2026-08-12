@@ -546,8 +546,8 @@ export default function Page() {
                         </svg>
                       </div>
                       <p className="dropzone-text">Kéo thả file CV vào đây hoặc <span className="highlight-text">bấm để chọn file</span></p>
-                      <p className="dropzone-sub">Hỗ trợ định dạng PDF, DOCX (Tối đa 10MB)</p>
-                      <input type="file" id="cv-page-file-input" accept=".pdf,.docx" style={{ display: 'none' }} />
+                      <p className="dropzone-sub">Hỗ trợ PDF, DOCX, JPG, JPEG, PNG (tối đa 20 MB)</p>
+                      <input type="file" id="cv-page-file-input" accept=".pdf,.docx,.jpg,.jpeg,.png" style={{ display: 'none' }} />
                       <span id="selected-file-name" className="selected-file-badge" style={{ display: 'none' }}></span>
                     </div>
                   </div>
@@ -623,9 +623,9 @@ export default function Page() {
                   </div>
                   <label className="cv-jd-file-drop" htmlFor="cv-jd-file-input">
                     <span className="cv-jd-file-icon" aria-hidden="true">📄</span>
-                    <span><strong>Chọn file JD</strong><small id="cv-jd-file-name">PDF, DOCX hoặc TXT · tối đa 5 MB</small></span>
+                    <span><strong>Chọn file JD</strong><small id="cv-jd-file-name">PDF, DOCX, TXT hoặc ảnh · tối đa 20 MB</small></span>
                   </label>
-                  <input type="file" id="cv-jd-file-input" className="visually-hidden-file" accept=".pdf,.docx,.txt" />
+                  <input type="file" id="cv-jd-file-input" className="visually-hidden-file" accept=".pdf,.docx,.txt,.jpg,.jpeg,.png" />
                   <button type="submit" className="ship-btn-secondary cv-jd-upload-button">Tải lên &amp; chọn JD này</button>
                 </form>
 
@@ -661,6 +661,7 @@ export default function Page() {
                     <span className="analysis-result-kicker">GEMINI AI AGENT · PHÂN TÍCH HOÀN TẤT</span>
                     <h4 id="cv-result-context">CV · JD</h4>
                     <p id="cv-result-summary"></p>
+                    <div id="cv-result-confidence-summary" className="cv-result-confidence-summary"></div>
                   </div>
                 </div>
 
@@ -684,6 +685,10 @@ export default function Page() {
                     <h5>Lộ trình học đề xuất</h5>
                     <div id="cv-result-learning-actions" className="cv-result-action-list"></div>
                   </section>
+                  <section className="cv-result-panel is-partial">
+                    <h5><span aria-hidden="true">△</span> Đáp ứng một phần</h5>
+                    <div id="cv-result-partial-skills" className="cv-result-tags"></div>
+                  </section>
                 </div>
 
                 <section className="cv-result-deep-dive" aria-labelledby="cv-result-deep-dive-title">
@@ -696,6 +701,17 @@ export default function Page() {
                   </div>
 
                   <div id="cv-result-score-breakdown" className="cv-result-score-breakdown"></div>
+
+                  <section className="cv-result-panel cv-result-evidence-panel">
+                    <h5>Rubric và điểm có trọng số</h5>
+                    <div id="cv-result-criteria" className="cv-result-criteria-list"></div>
+                    <div id="cv-result-warnings" className="cv-result-warnings"></div>
+                  </section>
+
+                  <section className="cv-result-panel cv-result-evidence-panel">
+                    <h5>Ma trận yêu cầu – bằng chứng</h5>
+                    <div id="cv-result-requirement-evidence" className="cv-result-evidence-list"></div>
+                  </section>
 
                   <div className="cv-result-deep-grid">
                     <section className="cv-result-panel">
@@ -897,7 +913,7 @@ export default function Page() {
                     <span className="jd-create-icon">📤</span>
                     <div>
                       <h3>Tải file JD theo mẫu</h3>
-                      <p>Hỗ trợ PDF, DOCX hoặc TXT, tối đa 5 MB.</p>
+                      <p>Hỗ trợ PDF, DOCX, TXT, JPG, JPEG hoặc PNG, tối đa 20 MB.</p>
                     </div>
                   </div>
                   <button type="button" id="page-download-jd-template" className="jd-template-button">⬇ Tải mẫu JD (.txt)</button>
@@ -919,9 +935,9 @@ export default function Page() {
                     <label className="jd-file-drop" htmlFor="page-upload-jd-file">
                       <span className="jd-file-drop-icon">📄</span>
                       <strong>Chọn file JD đã điền</strong>
-                      <span id="page-upload-jd-file-name">PDF, DOCX hoặc TXT</span>
+                      <span id="page-upload-jd-file-name">PDF, DOCX, TXT hoặc ảnh</span>
                     </label>
-                    <input type="file" id="page-upload-jd-file" className="visually-hidden-file" accept=".pdf,.docx,.txt" required />
+                    <input type="file" id="page-upload-jd-file" className="visually-hidden-file" accept=".pdf,.docx,.txt,.jpg,.jpeg,.png" required />
                     <button type="submit" className="btn-primary full-width">Tải lên &amp; lưu JD</button>
                   </form>
                 </section>
@@ -1478,8 +1494,8 @@ export default function Page() {
               <input type="text" id="cv-title-input" className="form-input" placeholder="Ví dụ: CV Backend Developer 2026" />
             </div>
             <div className="form-group">
-              <label className="form-label" data-i18n="label-cv-file">Chọn File CV (.pdf hoặc .docx, max 10MB)</label>
-              <input type="file" id="cv-file-input" className="form-input" accept=".pdf,.docx" required />
+              <label className="form-label" data-i18n="label-cv-file">Chọn CV (PDF, DOCX hoặc ảnh, tối đa 20 MB)</label>
+              <input type="file" id="cv-file-input" className="form-input" accept=".pdf,.docx,.jpg,.jpeg,.png" required />
             </div>
             <button type="submit" className="btn-primary" style={{ width: '100%' }} data-i18n="btn-cv-upload">Tải Lên & Parse CV</button>
           </form>
@@ -1508,7 +1524,7 @@ export default function Page() {
                 <span className="jd-create-icon">📤</span>
                 <div>
                   <h3>Tải file JD theo mẫu</h3>
-                  <p>PDF, DOCX hoặc TXT — tối đa 5 MB.</p>
+                  <p>PDF, DOCX, TXT, JPG, JPEG hoặc PNG — tối đa 20 MB.</p>
                 </div>
               </div>
               <button type="button" id="download-jd-template" className="jd-template-button">⬇ Tải mẫu JD (.txt)</button>
@@ -1530,9 +1546,9 @@ export default function Page() {
                 <label className="jd-file-drop compact" htmlFor="upload-jd-file">
                   <span className="jd-file-drop-icon">📄</span>
                   <strong>Chọn file JD</strong>
-                  <span id="upload-jd-file-name">PDF, DOCX hoặc TXT</span>
+                  <span id="upload-jd-file-name">PDF, DOCX, TXT hoặc ảnh</span>
                 </label>
-                <input type="file" id="upload-jd-file" className="visually-hidden-file" accept=".pdf,.docx,.txt" required />
+                <input type="file" id="upload-jd-file" className="visually-hidden-file" accept=".pdf,.docx,.txt,.jpg,.jpeg,.png" required />
                 <button type="submit" className="btn-primary" style={{ width: '100%' }}>Tải lên &amp; lưu JD</button>
               </form>
             </div>

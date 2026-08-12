@@ -113,6 +113,7 @@ class JobCatalogItem(BaseModel):
     match_score: float | None = None
     matched_skills: list[str] = Field(default_factory=list)
     missing_skills: list[str] = Field(default_factory=list)
+    retrieval_score: float | None = None
 
 
 class JobCatalogResponse(BaseModel):
@@ -120,6 +121,25 @@ class JobCatalogResponse(BaseModel):
     total: int
     returned: int
     matched_by_cv: bool = False
+    retrieval_mode: str = "catalog"
+
+
+class JobRAGStatus(BaseModel):
+    enabled: bool
+    available: bool
+    collection: str
+    points_count: int
+    embedding_model: str
+    detail: str
+
+
+class JobRAGSyncResponse(BaseModel):
+    indexed: int
+    unchanged: int
+    deleted: int
+    total: int
+    collection: str
+    embedding_provider: str
 
 
 # --- Gap Analysis Schemas ---
@@ -173,16 +193,94 @@ class CVSectionRecommendation(BaseModel):
     recommendation: str
 
 
+class RequirementEvidenceSource(BaseModel):
+    section: str
+    quote: str
+    source_id: str
+    evidence_id: str | None = None
+    requirement_id: str | None = None
+    chunk_id: str | None = None
+    text: str | None = None
+    source_page: int | None = None
+    source_section: str | None = None
+    semantic_score: float | None = None
+    semantic_rank: int | None = None
+    bm25_score: float | None = None
+    bm25_rank: int | None = None
+    fusion_score: float | None = None
+    fusion_rank: int | None = None
+
+
+class RequirementEvidenceItem(BaseModel):
+    requirement_id: str
+    requirement: str
+    requirement_type: str
+    importance: float
+    status: Literal["matched", "partial", "missing", "unknown"]
+    evidence_strength: str
+    evidence: list[RequirementEvidenceSource] = []
+    reason: str
+    confidence: float
+    score: float
+    evaluation_status: Literal["SUPPORTED", "PARTIALLY_SUPPORTED", "NOT_FOUND", "CONFLICTING", "UNCERTAIN"] | None = (
+        None
+    )
+    match_classification: (
+        Literal["EXACT_MATCH", "NORMALIZED_MATCH", "SEMANTIC_MATCH", "PARTIAL_MATCH", "NOT_FOUND"] | None
+    ) = None
+
+
+class CriterionEvaluationOut(BaseModel):
+    criterion_id: str
+    raw_score: float
+    weight: float
+    weighted_score: float
+    status: str
+    reason: str
+    requirement_ids: list[str] = []
+    evidence_ids: list[str] = []
+
+
 class GapAnalysisResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: str
     cv_id: str
     jd_id: str
+    pipeline_version: str = "1.0"
     match_score: float
+    final_score: float = 0.0
+    rating: str = "POOR"
+    trace_id: str = ""
+    match_id: str = ""
+    candidate_id: str = ""
+    document_id: str = ""
+    status: str = "COMPLETED"
+    mandatory_requirement_failed: bool = False
+    criteria: list[CriterionEvaluationOut] = []
+    requirements: dict[str, list[dict[str, Any]]] = {}
+    evidence: list[dict[str, Any]] = []
+    retrieval_results: list[dict[str, Any]] = []
+    cv_chunks: list[dict[str, Any]] = []
+    warnings: list[str] = []
+    versions: dict[str, str] = {}
+    processing_trace: list[dict[str, Any]] = []
+    structured_cv: dict[str, Any] = {}
+    structured_jd: dict[str, Any] = {}
+    raw_match_score: float = 0.0
+    match_level: str = "partial_match"
+    confidence_score: float = 0.0
+    confidence_level: str = "low"
+    must_have_coverage: float = 0.0
+    must_have_gate: dict[str, Any] = {}
     hard_skills_matching: list[str] = []
+    hard_skills_partial: list[str] = []
     hard_skills_missing: list[str] = []
     soft_skills_gap: list[str] = []
+    unknown_requirements: list[str] = []
+    requirement_evidence: list[RequirementEvidenceItem] = []
+    strengths: list[str] = []
+    risks: list[str] = []
     suggestions: list[CVOptimizationSuggestion] = []
     executive_summary: str = ""
     priority_actions: list[GapPriorityAction] = []
@@ -404,7 +502,6 @@ class CounselorStudentOverview(BaseModel):
     interviews: list[InterviewSessionSummaryOut] = Field(default_factory=list)
 
 
-
 # --- Enterprise Schemas ---
 class JobApplicationCreate(BaseModel):
     jd_id: str
@@ -499,7 +596,6 @@ class AdminAILogStatsOut(BaseModel):
 class CVAnalyzeRequest(BaseModel):
     cv_id: str = Field(..., min_length=1, description="ID của CV đã upload")
     jd_text: str = Field(..., min_length=1, description="Nội dung Job Description")
-
 
 
 class SuggestionDecisionRequest(BaseModel):
