@@ -1088,6 +1088,27 @@ body {
   z-index: 1;
 }
 
+.auth-forgot-password {
+  display: block;
+  width: fit-content;
+  margin: 12px auto 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--accent-purple);
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.auth-forgot-password:hover { text-decoration: underline; }
+
+.auth-reset-help {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 .form-group {
   display: flex;
   flex-direction: column;

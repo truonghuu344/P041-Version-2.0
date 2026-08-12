@@ -97,6 +97,20 @@ class ApiClient {
     });
   }
 
+  static async requestPasswordReset(email) {
+    return await this.request('/auth/password-reset/request', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+  }
+
+  static async confirmPasswordReset(email, otp, newPassword) {
+    return await this.request('/auth/password-reset/confirm', {
+      method: 'POST',
+      body: JSON.stringify({ email, otp, new_password: newPassword }),
+    });
+  }
+
   static async getMe() {
     try {
       const user = await this.request('/auth/me', { silent: true });
@@ -4220,10 +4234,26 @@ TÊN CÔNG TY:
   const authSub = document.getElementById('auth-sub');
   const btnSubmitLabel = document.getElementById('btn-submit-label');
   const loginForm = document.getElementById('login-form');
+  const forgotPasswordButton = document.getElementById('btn-forgot-password');
+  const passwordResetOverlay = document.getElementById('password-reset-overlay');
+  const passwordResetCloseButton = document.getElementById('password-reset-close');
+  const passwordResetForm = document.getElementById('password-reset-form');
+  const resetStep1 = document.getElementById('reset-step-1');
+  const resetStep2 = document.getElementById('reset-step-2');
+  const resetStep3 = document.getElementById('reset-step-3');
+  const btnResetStep1 = document.getElementById('btn-reset-step-1');
+  const btnResetStep2 = document.getElementById('btn-reset-step-2');
+  const btnResetStep3 = document.getElementById('btn-reset-step-3');
+  const passwordResetBack1 = document.getElementById('btn-password-reset-back');
+  const passwordResetBack2 = document.getElementById('btn-password-reset-back-2');
+  const resetStep2Sub = document.getElementById('reset-step-2-sub');
+  const passwordResetTimer = document.getElementById('password-reset-timer');
   const googleButtonHost = document.getElementById('google-signin-button');
   const googleAuthHelp = document.getElementById('google-auth-help');
 
   let isRegisterMode = false;
+  let currentResetStep = 1;
+  let resetCountdownInterval = null;
   let googleIdentityInitialized = false;
 
   function openAuthModal() {
@@ -4237,6 +4267,7 @@ TÊN CÔNG TY:
   if (authClose) authClose.addEventListener('click', closeAuthModal);
 
   function setAuthMode(register) {
+    if (forgotPasswordButton) forgotPasswordButton.hidden = register;
     isRegisterMode = register;
     const currentLang = localStorage.getItem('career_copilot_lang') || 'vi';
     const dict = TRANSLATIONS[currentLang] || TRANSLATIONS.vi;
@@ -4263,6 +4294,130 @@ TÊN CÔNG TY:
 
   if (tabLogin) tabLogin.addEventListener('click', () => setAuthMode(false));
   if (tabRegister) tabRegister.addEventListener('click', () => setAuthMode(true));
+
+  function updateResetSteps() {
+    if (resetStep1) resetStep1.hidden = (currentResetStep !== 1);
+    if (resetStep2) resetStep2.hidden = (currentResetStep !== 2);
+    if (resetStep3) resetStep3.hidden = (currentResetStep !== 3);
+  }
+
+  function setPasswordResetMode(enabled) {
+    if (!passwordResetForm || !passwordResetOverlay) return;
+    passwordResetOverlay.classList.toggle('open', enabled);
+    if (enabled) {
+      closeAuthModal();
+      currentResetStep = 1;
+      updateResetSteps();
+      document.getElementById('reset-email')?.focus();
+      return;
+    }
+    passwordResetForm.reset();
+    clearInterval(resetCountdownInterval);
+  }
+
+  forgotPasswordButton?.addEventListener('click', () => setPasswordResetMode(true));
+  passwordResetBack1?.addEventListener('click', () => {
+    setPasswordResetMode(false);
+    setAuthMode(false);
+    openAuthModal();
+  });
+  passwordResetBack2?.addEventListener('click', () => {
+    currentResetStep = 1;
+    updateResetSteps();
+  });
+  passwordResetCloseButton?.addEventListener('click', () => setPasswordResetMode(false));
+
+  passwordResetForm?.addEventListener('submit', async event => {
+    event.preventDefault();
+    const email = document.getElementById('reset-email')?.value.trim();
+    if (!email) return;
+
+    if (currentResetStep === 1) {
+      try {
+        if (btnResetStep1) btnResetStep1.disabled = true;
+        await ApiClient.requestPasswordReset(email);
+        if (btnResetStep1) btnResetStep1.disabled = false;
+        
+        currentResetStep = 2;
+        updateResetSteps();
+        
+        if (resetStep2Sub) resetStep2Sub.textContent = `Mã 6 số đã được gửi đến ${email}.`;
+        
+        if (passwordResetTimer) {
+          passwordResetTimer.hidden = false;
+          let secondsLeft = 600; // 10 minutes
+          passwordResetTimer.textContent = `Mã hết hạn trong: 10:00`;
+          clearInterval(resetCountdownInterval);
+          resetCountdownInterval = setInterval(() => {
+            secondsLeft--;
+            if (secondsLeft <= 0) {
+              clearInterval(resetCountdownInterval);
+              passwordResetTimer.textContent = 'Mã OTP đã hết hạn.';
+              if (btnResetStep2) btnResetStep2.disabled = true;
+            } else {
+              const m = Math.floor(secondsLeft / 60);
+              const s = secondsLeft % 60;
+              passwordResetTimer.textContent = `Mã hết hạn trong: ${m}:${s.toString().padStart(2, '0')}`;
+            }
+          }, 1000);
+        }
+        
+        showToast('Kiểm tra hộp thư Gmail để lấy mã OTP.', 'success');
+        document.getElementById('reset-otp')?.focus();
+      } catch (err) {
+        if (btnResetStep1) btnResetStep1.disabled = false;
+        showToast(`❌ ${err.message}`, 'error');
+      }
+      return;
+    }
+
+    if (currentResetStep === 2) {
+      const otp = document.getElementById('reset-otp')?.value.trim();
+      if (!/^\d{6}$/.test(otp || '')) {
+        showToast('Vui lòng nhập mã OTP gồm 6 số.', 'error');
+        return;
+      }
+      currentResetStep = 3;
+      updateResetSteps();
+      document.getElementById('reset-new-password')?.focus();
+      return;
+    }
+
+    if (currentResetStep === 3) {
+      const otp = document.getElementById('reset-otp')?.value.trim();
+      const newPassword = document.getElementById('reset-new-password')?.value;
+      const confirmPassword = document.getElementById('reset-confirm-password')?.value;
+      
+      if (!newPassword || newPassword.length < 8) {
+        showToast('Mật khẩu mới phải có ít nhất 8 ký tự.', 'error');
+        return;
+      }
+      if (newPassword !== confirmPassword) {
+        showToast('Mật khẩu xác nhận không khớp.', 'error');
+        return;
+      }
+      
+      try {
+        if (btnResetStep3) btnResetStep3.disabled = true;
+        const result = await ApiClient.confirmPasswordReset(email, otp, newPassword);
+        showToast(result.message || 'Đặt lại mật khẩu thành công.', 'success');
+        setPasswordResetMode(false);
+        setAuthMode(false);
+        openAuthModal();
+        document.getElementById('input-email').value = email;
+        document.getElementById('input-password')?.focus();
+        if (btnResetStep3) btnResetStep3.disabled = false;
+      } catch (err) {
+        if (btnResetStep3) btnResetStep3.disabled = false;
+        showToast(`❌ ${err.message}`, 'error');
+        if (err.message.toLowerCase().includes('otp') || err.message.toLowerCase().includes('mã')) {
+          currentResetStep = 2;
+          updateResetSteps();
+          document.getElementById('reset-otp')?.focus();
+        }
+      }
+    }
+  });
 
   function enhanceAuthRoleSelect() {
     const select = document.getElementById('input-role');
