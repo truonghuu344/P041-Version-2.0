@@ -88,6 +88,30 @@ class JDOut(BaseModel):
     created_at: datetime
 
 
+class JobCatalogItem(BaseModel):
+    source_id: str
+    title: str
+    company: str
+    location: str
+    job_level: str
+    employment_type: str
+    remote_type: str
+    domain: str
+    skills: list[str] = Field(default_factory=list)
+    description: str
+    source_url: str | None = None
+    match_score: float | None = None
+    matched_skills: list[str] = Field(default_factory=list)
+    missing_skills: list[str] = Field(default_factory=list)
+
+
+class JobCatalogResponse(BaseModel):
+    jobs: list[JobCatalogItem]
+    total: int
+    returned: int
+    matched_by_cv: bool = False
+
+
 # --- Gap Analysis Schemas ---
 class GapAnalysisRequest(BaseModel):
     cv_id: str
