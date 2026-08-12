@@ -113,6 +113,254 @@ class CVAnalysis(Base):
     jd: Mapped["JobDescription"] = relationship("JobDescription", back_populates="analyses")
 
 
+class MatchRun(Base):
+    __tablename__ = "matches"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    user_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    cv_id: Mapped[str] = mapped_column(String(36), ForeignKey("cvs.id", ondelete="CASCADE"), nullable=False, index=True)
+    jd_id: Mapped[str] = mapped_column(String(36), ForeignKey("job_descriptions.id", ondelete="CASCADE"), nullable=False, index=True)
+    analysis_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("cv_analyses.id", ondelete="SET NULL"), nullable=True, index=True)
+    trace_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    status: Mapped[str] = mapped_column(String(30), default="PENDING", nullable=False, index=True)
+    current_step: Mapped[str] = mapped_column(String(30), default="PENDING", nullable=False)
+    final_score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    rating: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    mandatory_requirement_failed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    rubric_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    versions_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+    result_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+    error_code: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class CVChunkArtifact(Base):
+    __tablename__ = "cv_chunks"
+    __table_args__ = (Index("uq_match_chunk", "match_id", "chunk_id", unique=True),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    match_id: Mapped[str] = mapped_column(String(64), ForeignKey("matches.id", ondelete="CASCADE"), nullable=False, index=True)
+    chunk_id: Mapped[str] = mapped_column(String(80), nullable=False)
+    candidate_id: Mapped[str] = mapped_column(String(64), nullable=False)
+    document_id: Mapped[str] = mapped_column(String(64), nullable=False)
+    chunk_type: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    text: Mapped[str] = mapped_column(Text, nullable=False)
+    normalized_text: Mapped[str] = mapped_column(Text, nullable=False)
+    source_section: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    source_page: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    metadata_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+    embedding_model: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    embedding_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+
+
+class JDRequirementArtifact(Base):
+    __tablename__ = "jd_requirements"
+    __table_args__ = (Index("uq_match_requirement", "match_id", "requirement_id", unique=True),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    match_id: Mapped[str] = mapped_column(String(64), ForeignKey("matches.id", ondelete="CASCADE"), nullable=False, index=True)
+    requirement_id: Mapped[str] = mapped_column(String(80), nullable=False)
+    requirement_type: Mapped[str] = mapped_column(String(80), nullable=False, index=True)
+    text: Mapped[str] = mapped_column(Text, nullable=False)
+    mandatory: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    priority: Mapped[str] = mapped_column(String(20), nullable=False)
+    status: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    criterion_score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    payload_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+
+
+class RetrievalArtifact(Base):
+    __tablename__ = "retrieval_results"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    match_id: Mapped[str] = mapped_column(String(64), ForeignKey("matches.id", ondelete="CASCADE"), nullable=False, index=True)
+    requirement_id: Mapped[str] = mapped_column(String(80), nullable=False, index=True)
+    bm25_results_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+    semantic_results_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+    hybrid_results_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+
+
+class MatchEvidenceArtifact(Base):
+    __tablename__ = "evidences"
+    __table_args__ = (Index("uq_match_evidence", "match_id", "evidence_id", unique=True),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    match_id: Mapped[str] = mapped_column(String(64), ForeignKey("matches.id", ondelete="CASCADE"), nullable=False, index=True)
+    evidence_id: Mapped[str] = mapped_column(String(80), nullable=False)
+    requirement_id: Mapped[str] = mapped_column(String(80), nullable=False, index=True)
+    chunk_id: Mapped[str] = mapped_column(String(80), nullable=False, index=True)
+    text: Mapped[str] = mapped_column(Text, nullable=False)
+    source_page: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    source_section: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    semantic_score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    bm25_score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    fusion_score: Mapped[float] = mapped_column(Float, nullable=False)
+    ranks_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+
+
+class CriterionEvaluationArtifact(Base):
+    __tablename__ = "criterion_evaluations"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    match_id: Mapped[str] = mapped_column(String(64), ForeignKey("matches.id", ondelete="CASCADE"), nullable=False, index=True)
+    criterion_id: Mapped[str] = mapped_column(String(80), nullable=False, index=True)
+    raw_score: Mapped[float] = mapped_column(Float, nullable=False)
+    weight: Mapped[float] = mapped_column(Float, nullable=False)
+    weighted_score: Mapped[float] = mapped_column(Float, nullable=False)
+    status: Mapped[str] = mapped_column(String(30), nullable=False)
+    reason: Mapped[str] = mapped_column(Text, nullable=False)
+    requirement_ids_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+    evidence_ids_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+
+
+class RubricDefinition(Base):
+    __tablename__ = "rubrics"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    version: Mapped[str] = mapped_column(String(30), nullable=False)
+    config_json: Mapped[Any] = mapped_column(JSON, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class RubricCriterionDefinition(Base):
+    __tablename__ = "rubric_criteria"
+    __table_args__ = (Index("uq_rubric_criterion", "rubric_id", "criterion_id", unique=True),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    rubric_id: Mapped[str] = mapped_column(
+        String(64), ForeignKey("rubrics.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    criterion_id: Mapped[str] = mapped_column(String(80), nullable=False)
+    weight: Mapped[float] = mapped_column(Float, nullable=False)
+    enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    config_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+
+
+class CandidateArtifact(Base):
+    __tablename__ = "candidates"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    current_title: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    location: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    profile_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class JobArtifact(Base):
+    __tablename__ = "jobs"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    source_jd_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("job_descriptions.id", ondelete="CASCADE"), nullable=False, unique=True
+    )
+    title_original: Mapped[str] = mapped_column(String(255), nullable=False)
+    title_normalized: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    structured_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class DocumentArtifact(Base):
+    __tablename__ = "documents"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    document_type: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
+    source_entity_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    raw_text: Mapped[str] = mapped_column(Text, nullable=False)
+    structured_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+    normalized_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+    pages_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class CVProfileArtifact(Base):
+    __tablename__ = "cv_profiles"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    match_id: Mapped[str] = mapped_column(
+        String(64), ForeignKey("matches.id", ondelete="CASCADE"), nullable=False, unique=True
+    )
+    candidate_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    payload_json: Mapped[Any] = mapped_column(JSON, nullable=False)
+
+
+class CVExperienceArtifact(Base):
+    __tablename__ = "cv_experiences"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    match_id: Mapped[str] = mapped_column(String(64), ForeignKey("matches.id", ondelete="CASCADE"), nullable=False)
+    source_page: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    payload_json: Mapped[Any] = mapped_column(JSON, nullable=False)
+
+
+class CVProjectArtifact(Base):
+    __tablename__ = "cv_projects"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    match_id: Mapped[str] = mapped_column(String(64), ForeignKey("matches.id", ondelete="CASCADE"), nullable=False)
+    source_page: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    payload_json: Mapped[Any] = mapped_column(JSON, nullable=False)
+
+
+class CVSkillArtifact(Base):
+    __tablename__ = "cv_skills"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    match_id: Mapped[str] = mapped_column(String(64), ForeignKey("matches.id", ondelete="CASCADE"), nullable=False)
+    original_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    normalized_name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    source_page: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    payload_json: Mapped[Any] = mapped_column(JSON, nullable=False)
+
+
+class CVEducationArtifact(Base):
+    __tablename__ = "cv_education"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    match_id: Mapped[str] = mapped_column(String(64), ForeignKey("matches.id", ondelete="CASCADE"), nullable=False)
+    source_page: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    payload_json: Mapped[Any] = mapped_column(JSON, nullable=False)
+
+
+class CVCertificationArtifact(Base):
+    __tablename__ = "cv_certifications"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    match_id: Mapped[str] = mapped_column(String(64), ForeignKey("matches.id", ondelete="CASCADE"), nullable=False)
+    source_page: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    payload_json: Mapped[Any] = mapped_column(JSON, nullable=False)
+
+
+class CVLanguageArtifact(Base):
+    __tablename__ = "cv_languages"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    match_id: Mapped[str] = mapped_column(String(64), ForeignKey("matches.id", ondelete="CASCADE"), nullable=False)
+    source_page: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    payload_json: Mapped[Any] = mapped_column(JSON, nullable=False)
+
+
+class MatchResultArtifact(Base):
+    __tablename__ = "match_results"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    match_id: Mapped[str] = mapped_column(
+        String(64), ForeignKey("matches.id", ondelete="CASCADE"), nullable=False, unique=True
+    )
+    final_score: Mapped[float] = mapped_column(Float, nullable=False)
+    rating: Mapped[str] = mapped_column(String(30), nullable=False)
+    result_json: Mapped[Any] = mapped_column(JSON, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
 class InterviewSession(Base):
     __tablename__ = "interview_sessions"
 

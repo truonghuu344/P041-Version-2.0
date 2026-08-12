@@ -108,7 +108,7 @@ flowchart LR
    - Xếp hạng `strong` (>=80), `needs_review` (>=60), hoặc `incomplete`.
    - Trả metadata: provider, model, LLM status, fallback, latency và trace.
 
-**Input file:** endpoint production `/api/v1/cvs/upload` nhận PDF/DOCX tối đa 10 MB, trích text bằng `pypdf`/`python-docx`, parse trước rồi mới lưu file để tránh file rác khi parse lỗi.
+**Input file:** endpoint production `/api/v1/cvs/upload` nhận PDF/DOCX/JPG/JPEG/PNG tối đa 20 MB. PDF/DOCX được parse cục bộ; ảnh và PDF scan đi qua OCR Gemini khi đã cấu hình API key. File được parse trước rồi mới lưu để tránh file rác khi lỗi.
 
 **HITL:** kết quả parse là dữ liệu để người dùng xem/xác nhận. Agent không tự tuyên bố thông tin thiếu và không tự bổ sung thành tích.
 
@@ -128,23 +128,24 @@ flowchart LR
 ```
 
 1. Kiểm tra CV, chức danh JD và yêu cầu JD không rỗng.
-2. Trích evidence bằng danh mục hard skill/soft skill định nghĩa trong `career_tools.py`.
-3. Tính match score deterministic:
+2. Chuẩn hóa JD thành atomic requirements và CV thành structural chunks; dữ liệu profile nhạy cảm không tham gia scoring.
+3. Với từng requirement, chạy BM25 và vector cosine độc lập, lọc theo Matching Matrix, hợp nhất rank bằng RRF rồi chọn tối đa ba evidence.
+4. Chấm rubric deterministic:
 
 ```text
-match_score = hard_skills * 50%
-            + nice_to_have/soft_skills * 20%
-            + domain_fit * 20%
-            + experience_fit * 10%
+Final Score = Required Skills * 35%
+            + Relevant Experience * 30%
+            + Education * 10%
+            + Preferred Skills * 10%
+            + Domain Experience * 15%
 ```
 
-- `hard_skills`: tỷ lệ kỹ năng JD đã có trong CV; nếu JD không có skill nhận diện được thì mặc định 70.
-- `nice_to_have`: tỷ lệ soft skill đã có; nếu JD không có soft skill nhận diện được thì mặc định 70.
-- `domain_fit`: 100 nếu role term trong title JD xuất hiện trong CV/summary, ngược lại 50.
-- `experience_fit`: 85 nếu có experience, 65 nếu chỉ có project, ngược lại 35.
-- Điểm cuối được clamp trong `[0, 100]`.
+- Criterion không có requirement tương ứng bị disable; trọng số còn lại được chuẩn hóa về 100%.
+- `bm25_score`, `semantic_score`, `fusion_score`, `criterion_score` và `final_score` được lưu riêng.
+- Thiếu mandatory requirement tạo warning, không tự động cap điểm hoặc đưa Final Score về 0.
+- `match_score` là alias tương thích của `final_score`; điểm luôn nằm trong `[0, 100]`.
 
-4. Gemini hoặc fallback tạo:
+5. Gemini hoặc fallback tạo:
    - executive summary;
    - priority actions;
    - lộ trình học và bài thực hành;
@@ -152,7 +153,7 @@ match_score = hard_skills * 50%
    - tối đa 3 dự án portfolio tương lai;
    - đề xuất cải thiện từng section CV;
    - tối đa 3 câu viết lại từ evidence có sẵn.
-5. Integrity guardrail kiểm tra lại bằng code:
+6. Integrity guardrail kiểm tra lại bằng code:
    - `original_text` phải xuất hiện nguyên văn trong CV.
    - Câu viết lại không được đưa skill còn thiếu vào CV.
    - Không được thêm skill ngoài danh sách skill đã xác minh.
@@ -647,7 +648,7 @@ Test có mock/fallback nên không tốn Gemini API. Các test gắn marker `slo
 - Một số compatibility endpoint `/api/v1/cv/...` và `/api/v1/interview/...` dùng service stub/legacy; luồng production là `/cvs`, `/analysis`, `/interviews`, `/assistant`.
 - Hàm `src/services/cv_parser.py::parse_cv()` trả dữ liệu demo hard-coded cho compatibility upload; production upload dùng `extract_text_from_pdf/docx` + `parse_cv_to_structured_json()`.
 - Tài liệu `ARCHITECTURE.md`, một số `docs/guide/*` và README vẫn chứa boilerplate (GPT-4o, RAG, vector store, ReAct) không phản ánh đường code production hiện tại.
-- Match score là keyword/rule-based trên vocabulary hữu hạn; không phải semantic embedding score và có thể bỏ sót synonym/công nghệ ngoài danh mục.
+- Match score được tính bằng rubric deterministic từ evidence. Evidence được tìm bằng BM25 + semantic embedding + RRF; semantic score không bao giờ được dùng trực tiếp làm Match Score. Production dùng Gemini Embedding 2 khi có API key và fallback hashing được version hóa.
 - ATS quality score đo độ đầy đủ section, không mô phỏng đầy đủ một ATS thương mại.
 - Interview fallback là heuristic theo từ khóa/độ dài, không thay thế đánh giá của recruiter.
 - Nova routing dựa trên keyword, chưa phải intent classifier học máy.

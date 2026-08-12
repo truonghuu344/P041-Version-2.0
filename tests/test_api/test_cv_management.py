@@ -26,47 +26,52 @@ async def test_upload_rejects_unsupported_extension(client):
         files={"file": ("malware.exe", b"not-a-cv", "application/octet-stream")},
     )
     assert response.status_code == 400
-    assert "PDF" in response.json()["detail"]
+    assert response.json()["error"]["code"] == "UPLOAD_002"
 
 
 @pytest.mark.asyncio
-async def test_upload_rejects_file_larger_than_ten_megabytes(client):
+async def test_upload_rejects_file_larger_than_twenty_megabytes(client):
     _user, headers = await register_and_login(client, email="large-cv@example.com")
 
     response = await client.post(
         "/api/v1/cvs/upload",
         headers=headers,
-        files={"file": ("large.pdf", b"x" * (10 * 1024 * 1024 + 1), "application/pdf")},
+        files={"file": ("large.pdf", b"x" * (20 * 1024 * 1024 + 1), "application/pdf")},
     )
     assert response.status_code == 400
-    assert "10 MB" in response.json()["detail"]
+    assert "20 MB" in response.json()["error"]["message"]
 
 
 @pytest.mark.asyncio
 async def test_upload_returns_422_when_document_cannot_be_parsed(client, monkeypatch):
     _user, headers = await register_and_login(client, email="broken-pdf@example.com")
 
-    def fail_extraction(_content):
+    async def fail_extraction(_content, _filename, _content_type):
         raise ValueError("PDF bị hỏng")
 
-    monkeypatch.setattr("src.api.v1.cvs.extract_text_from_pdf", fail_extraction)
+    monkeypatch.setattr("src.api.v1.cvs.extract_text_from_document", fail_extraction)
     response = await client.post(
         "/api/v1/cvs/upload",
         headers=headers,
-        files={"file": ("broken.pdf", b"broken", "application/pdf")},
+        files={"file": ("broken.pdf", b"%PDF-broken", "application/pdf")},
     )
     assert response.status_code == 422
-    assert response.json()["detail"] == "PDF bị hỏng"
+    assert response.json()["error"] == {
+        "code": "PARSER_001",
+        "message": "PDF bị hỏng",
+        "retryable": False,
+    }
 
 
 @pytest.mark.asyncio
 async def test_upload_list_and_detail_cv_success(client, tmp_path, monkeypatch):
     user, headers = await register_and_login(client, email="upload-success@example.com")
     monkeypatch.setattr("src.api.v1.cvs.UPLOAD_DIR", str(tmp_path))
-    monkeypatch.setattr(
-        "src.api.v1.cvs.extract_text_from_pdf",
-        lambda _content: "NGUYEN VAN A\nPython FastAPI",
-    )
+
+    async def fake_extract(_content, _filename, _content_type):
+        return "NGUYEN VAN A\nPython FastAPI"
+
+    monkeypatch.setattr("src.api.v1.cvs.extract_text_from_document", fake_extract)
 
     async def fake_parse(raw_text, *, use_llm):
         assert "Python" in raw_text
@@ -79,7 +84,7 @@ async def test_upload_list_and_detail_cv_success(client, tmp_path, monkeypatch):
         "/api/v1/cvs/upload",
         headers=headers,
         data={"title": "CV Backend 2026", "use_llm": "false"},
-        files={"file": ("resume.pdf", b"valid-pdf", "application/pdf")},
+        files={"file": ("resume.pdf", b"%PDF-valid", "application/pdf")},
     )
     assert upload.status_code == 201, upload.text
     body = upload.json()
@@ -109,9 +114,7 @@ async def test_users_cannot_read_delete_or_reanalyze_each_others_cv(client, monk
 
     assert (await client.get(f"/api/v1/cvs/{cv.id}", headers=other_headers)).status_code == 404
     assert (await client.delete(f"/api/v1/cvs/{cv.id}", headers=other_headers)).status_code == 404
-    assert (
-        await client.post(f"/api/v1/cvs/{cv.id}/analyze", headers=other_headers)
-    ).status_code == 404
+    assert (await client.post(f"/api/v1/cvs/{cv.id}/analyze", headers=other_headers)).status_code == 404
 
 
 @pytest.mark.asyncio
@@ -192,8 +195,7 @@ async def test_unknown_cv_template_returns_not_found(client):
 @pytest.mark.asyncio
 async def test_cv_template_downloads_are_three_distinct_pdf_layouts(client):
     responses = [
-        await client.get(f"/api/v1/cvs/templates/{template}/download")
-        for template in ("modern", "classic", "compact")
+        await client.get(f"/api/v1/cvs/templates/{template}/download") for template in ("modern", "classic", "compact")
     ]
 
     assert all(response.status_code == 200 for response in responses)

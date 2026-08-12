@@ -179,9 +179,7 @@ async def test_delete_cv_removes_database_record_and_uploaded_file(client, tmp_p
     monkeypatch.setattr("src.api.v1.cvs.UPLOAD_DIR", str(tmp_path))
 
     async with TestingSessionLocal() as session:
-        user = (
-            await session.execute(select(User).where(User.email == "delete-cv@example.com"))
-        ).scalar_one()
+        user = (await session.execute(select(User).where(User.email == "delete-cv@example.com"))).scalar_one()
         cv = CV(
             user_id=user.id,
             title="CV cần xóa",
@@ -225,9 +223,7 @@ async def test_bulk_delete_cvs_removes_selected_records_and_files(client, tmp_pa
         uploaded_file.write_bytes(b"temporary cv")
 
     async with TestingSessionLocal() as session:
-        user = (
-            await session.execute(select(User).where(User.email == "bulk-delete-cv@example.com"))
-        ).scalar_one()
+        user = (await session.execute(select(User).where(User.email == "bulk-delete-cv@example.com"))).scalar_one()
         cvs = [
             CV(
                 user_id=user.id,
@@ -321,12 +317,34 @@ async def test_two_ai_agent_workflows_match_frontend_contract(client, monkeypatc
     gap = gap_response.json()
     assert set(gap["hard_skills_matching"]) == {"Python", "FastAPI", "REST API"}
     assert set(gap["hard_skills_missing"]) == {"PostgreSQL", "Docker"}
+    assert gap["pipeline_version"] == "1.0"
+    assert gap["requirement_evidence"]
+    assert gap["final_score"] == gap["match_score"]
+    assert gap["criteria"]
+    assert gap["retrieval_results"]
+    assert gap["evidence"]
+    assert gap["versions"]["retrieval"] == "1.0-bm25-vector-rrf"
+    assert sum(item["weighted_score"] for item in gap["criteria"]) == pytest.approx(gap["final_score"])
+    assert 0 <= gap["confidence_score"] <= 1
     assert gap["suggestions"]
     assert gap["priority_actions"]
     assert gap["learning_recommendations"]
     assert gap["certification_recommendations"]
     assert gap["project_recommendations"]
     assert gap["cv_section_recommendations"]
+
+    evidence_response = await client.get(
+        f"/api/v1/analysis/{gap['id']}/evidence",
+        headers=headers,
+    )
+    report_response = await client.get(
+        f"/api/v1/analysis/{gap['id']}/report",
+        headers=headers,
+    )
+    assert evidence_response.status_code == 200
+    assert evidence_response.json()
+    assert report_response.status_code == 200
+    assert report_response.json()["final_score"] == gap["final_score"]
 
     start_response = await client.post(
         "/api/v1/interviews/start",
