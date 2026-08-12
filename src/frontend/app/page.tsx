@@ -519,11 +519,12 @@ export default function Page() {
                 <form id="cv-page-upload-form" className="spaceship-form">
                   <div className="cv-choice-block">
                     <label className="ship-label" htmlFor="cv-analysis-cv-select">Chọn CV đã lưu <span className="required-mark">*</span></label>
-                    <div className="jd-select-wrap">
-                      <select id="cv-analysis-cv-select" className="ship-input" aria-label="Chọn CV cần phân tích">
+                    <div className="jd-select-wrap gap-select-shell cv-jd-select-shell cv-analysis-select-shell">
+                      <span className="gap-select-icon" aria-hidden="true">CV</span>
+                      <select id="cv-analysis-cv-select" className="ship-input gap-select" aria-label="Chọn CV cần phân tích">
                         <option value="">Chọn một CV đã lưu</option>
                       </select>
-                      <span className="jd-select-chevron" aria-hidden="true">⌄</span>
+                      <span className="jd-select-chevron gap-select-chevron" aria-hidden="true">⌄</span>
                     </div>
                     <p id="cv-selected-cv-hint" className="jd-selection-hint">Chọn CV trong kho hoặc tải file mới ngay bên dưới.</p>
                   </div>
@@ -604,7 +605,7 @@ export default function Page() {
 
                 <div className="jd-choice-block">
                   <label className="ship-label" htmlFor="cv-analysis-jd-select">Chọn JD trong data hoặc JD đã lưu <span className="required-mark">*</span></label>
-                  <div className="jd-select-wrap gap-select-shell cv-jd-select-shell">
+                  <div className="jd-select-wrap gap-select-shell cv-jd-select-shell cv-analysis-select-shell">
                     <span className="gap-select-icon" aria-hidden="true">JD</span>
                     <select id="cv-analysis-jd-select" className="ship-input gap-select" required aria-label="Chọn JD mục tiêu">
                       <option value="">Chọn một JD để phân tích CV</option>

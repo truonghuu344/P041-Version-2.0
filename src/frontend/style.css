@@ -1660,7 +1660,7 @@ body {
 /* Grid layout for Vessel */
 .vessel-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 24px;
 }
 @media (max-width: 860px) {
@@ -1669,6 +1669,7 @@ body {
 }
 
 .vessel-card {
+  min-width: 0;
   background: #ffffff;
   border-radius: 20px;
   padding: 24px;
@@ -1828,10 +1829,10 @@ body {
   background: linear-gradient(155deg, #ffffff 0%, #f0fdfa 100%);
   border-color: #ccfbf1;
 }
-.cv-choice-block { margin-top: 4px; }
-.jd-choice-block { margin-top: 4px; }
+.cv-choice-block { min-width: 0; margin-top: 4px; }
+.jd-choice-block { min-width: 0; margin-top: 4px; }
 .required-mark { color: #dc2626; }
-.jd-select-wrap { position: relative; }
+.jd-select-wrap { position: relative; min-width: 0; max-width: 100%; }
 .jd-select-wrap select {
   appearance: none;
   padding-right: 38px;
@@ -1864,6 +1865,7 @@ body {
   color: #0f766e;
 }
 .cv-jd-select-shell .gap-select-trigger {
+  max-width: 100%;
   min-height: 56px;
   padding: 9px 48px 9px 54px;
   border: 1.5px solid #cbd5e1;
@@ -1881,11 +1883,17 @@ body {
   border-color: #14b8a6;
   box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.13), 0 12px 26px rgba(13, 148, 136, 0.1);
 }
+.cv-jd-select-shell .gap-select-value,
+.cv-jd-select-shell .gap-select-value-title,
+.cv-jd-select-shell .gap-select-value-meta {
+  min-width: 0;
+  max-width: 100%;
+}
 .cv-jd-select-shell .gap-select-value-title { color: #0f172a; font-size: 13px; }
 .cv-jd-select-shell .gap-select-value-meta { color: #64748b; font-size: 10px; }
 .cv-jd-select-shell .gap-select-menu {
   z-index: 120;
-  max-height: min(430px, 58vh);
+  max-height: var(--gap-select-menu-max-height, min(430px, 58vh));
   padding: 9px;
   border-color: #99f6e4;
   background: rgba(255, 255, 255, 0.985);
@@ -1893,9 +1901,8 @@ body {
   backdrop-filter: blur(20px);
 }
 .gap-select-search-wrap {
-  position: sticky;
+  position: relative;
   z-index: 3;
-  top: -1px;
   display: grid;
   grid-template-columns: 24px minmax(0, 1fr);
   align-items: center;
@@ -1919,10 +1926,19 @@ body {
   font-weight: 600;
 }
 .gap-select-search::placeholder { color: #94a3b8; }
-.gap-select-options { display: grid; gap: 5px; }
+.gap-select-options {
+  display: grid;
+  flex: 1 1 auto;
+  min-height: 0;
+  gap: 5px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
 .gap-select-group-label {
   position: sticky;
-  top: 51px;
+  top: 0;
   z-index: 2;
   padding: 8px 9px 5px;
   background: rgba(255, 255, 255, 0.97);
@@ -1963,12 +1979,23 @@ body {
   text-align: center;
 }
 .jd-selection-hint {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
   margin: 7px 0 0;
+  overflow: hidden;
   color: #64748b;
   font-size: 11px;
   line-height: 1.45;
+  overflow-wrap: anywhere;
 }
-.jd-selection-hint.is-selected { color: #047857; font-weight: 700; }
+.jd-selection-hint.is-selected {
+  display: -webkit-box;
+  color: #047857;
+  font-weight: 700;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
 .jd-choice-divider {
   display: flex;
   align-items: center;
@@ -2685,6 +2712,8 @@ body {
    native dropdown menu on Windows while preserving keyboard accessibility. */
 .gap-select-shell {
   position: relative;
+  min-width: 0;
+  max-width: 100%;
   isolation: isolate;
 }
 
@@ -2793,6 +2822,7 @@ body {
   display: flex;
   align-items: center;
   width: 100%;
+  max-width: 100%;
   min-height: 64px;
   padding: 10px 50px 10px 54px;
   overflow: hidden;
@@ -2894,12 +2924,13 @@ body {
   top: calc(100% + 10px);
   left: 0;
   right: 0;
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 5px;
-  max-height: 300px;
+  max-height: var(--gap-select-menu-max-height, 300px);
   padding: 8px;
   overflow-x: hidden;
-  overflow-y: auto;
+  overflow-y: hidden;
   border: 1px solid rgba(99, 102, 241, 0.44);
   border-radius: 16px;
   background:
@@ -2917,6 +2948,17 @@ body {
   transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s ease;
 }
 
+.gap-select-shell.opens-upward .gap-select-menu {
+  top: auto;
+  bottom: calc(100% + 10px);
+  transform: translateY(8px) scale(0.985);
+  transform-origin: bottom center;
+}
+
+.gap-select-shell.opens-upward.is-open .gap-select-menu {
+  transform: translateY(0) scale(1);
+}
+
 .gap-select-shell.is-open .gap-select-menu {
   opacity: 1;
   visibility: visible;
@@ -2924,11 +2966,11 @@ body {
   pointer-events: auto;
 }
 
-.gap-select-menu::-webkit-scrollbar {
+.gap-select-options::-webkit-scrollbar {
   width: 7px;
 }
 
-.gap-select-menu::-webkit-scrollbar-thumb {
+.gap-select-options::-webkit-scrollbar-thumb {
   border: 2px solid transparent;
   border-radius: 999px;
   background: rgba(103, 232, 249, 0.42);

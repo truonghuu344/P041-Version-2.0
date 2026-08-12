@@ -1,4 +1,6 @@
+import tempfile
 from collections.abc import AsyncGenerator
+from pathlib import Path
 
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
@@ -26,10 +28,21 @@ TestingSessionLocal = async_sessionmaker(
 )
 
 
+def pytest_configure(config):
+    """Đặt thư mục tmp_path ngoài repository để ACL sandbox không chặn Git."""
+    has_explicit_basetemp = any(
+        str(argument).startswith("--basetemp")
+        for argument in config.invocation_params.args
+    )
+    if not has_explicit_basetemp:
+        config.option.basetemp = str(Path(tempfile.gettempdir()) / "p041-pytest")
+
+
 @pytest_asyncio.fixture(scope="session", autouse=True)
 async def dispose_test_database_engine():
     yield
     await test_engine.dispose()
+
 
 @pytest_asyncio.fixture(scope="function", autouse=True)
 async def setup_database():

@@ -1978,10 +1978,13 @@ function startAppLogic() {
     if (!cvSelectedJdHint || !cvAnalysisJdSelect) return;
     const selected = cvAnalysisJdSelect.options[cvAnalysisJdSelect.selectedIndex];
     if (cvAnalysisJdSelect.value && selected) {
-      cvSelectedJdHint.textContent = `✓ AI Agent sẽ phân tích theo: ${selected.textContent}`;
+      const selectedLabel = selected.textContent.trim();
+      cvSelectedJdHint.textContent = `✓ AI Agent sẽ phân tích theo: ${selectedLabel}`;
+      cvSelectedJdHint.title = selectedLabel;
       cvSelectedJdHint.classList.add('is-selected');
     } else {
       cvSelectedJdHint.textContent = 'JD là bắt buộc để AI Agent phân tích đúng vị trí ứng tuyển.';
+      cvSelectedJdHint.removeAttribute('title');
       cvSelectedJdHint.classList.remove('is-selected');
     }
   }
@@ -1999,7 +2002,7 @@ function startAppLogic() {
   }
 
   async function loadCVJDOptions(preferredJdId = '') {
-      if (!cvAnalysisJdSelect) return;
+    if (!cvAnalysisJdSelect) return;
     if (!ApiClient.isAuthenticated()) {
       cvAnalysisJdSelect.innerHTML = '<option value="">Vui lòng đăng nhập để chọn JD</option>';
       cvAnalysisJdSelect.disabled = true;
@@ -2265,6 +2268,7 @@ function startAppLogic() {
       loadedCVs = [];
       cvAnalysisCvSelect.innerHTML = '<option value="">Vui lòng đăng nhập để chọn CV</option>';
       cvAnalysisCvSelect.disabled = true;
+      enhanceGapSelect(cvAnalysisCvSelect);
       updateCVSelectionHint();
       return;
     }
@@ -2280,10 +2284,12 @@ function startAppLogic() {
       if ([...cvAnalysisCvSelect.options].some(option => option.value === previousValue)) {
         cvAnalysisCvSelect.value = previousValue;
       }
+      enhanceGapSelect(cvAnalysisCvSelect);
       updateCVSelectionHint();
     } catch (err) {
       cvAnalysisCvSelect.innerHTML = '<option value="">Không thể tải danh sách CV</option>';
       cvAnalysisCvSelect.disabled = true;
+      enhanceGapSelect(cvAnalysisCvSelect);
       updateCVSelectionHint();
       showToast(`Không thể tải CV: ${err.message}`, 'error');
     }
@@ -2823,6 +2829,70 @@ TÊN CÔNG TY:
     });
   }
 
+  function normalizeGapSearchText(value = '') {
+    return String(value)
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/đ/g, 'd')
+      .replace(/Đ/g, 'd')
+      .toLocaleLowerCase('vi')
+      .trim();
+  }
+
+  function gapEditDistanceWithin(left, right, maxDistance) {
+    if (Math.abs(left.length - right.length) > maxDistance) return false;
+    let previousRow = Array.from({ length: right.length + 1 }, (_, index) => index);
+
+    for (let leftIndex = 1; leftIndex <= left.length; leftIndex += 1) {
+      const currentRow = [leftIndex];
+      let smallestInRow = currentRow[0];
+      for (let rightIndex = 1; rightIndex <= right.length; rightIndex += 1) {
+        const substitutionCost = left[leftIndex - 1] === right[rightIndex - 1] ? 0 : 1;
+        const distance = Math.min(
+          currentRow[rightIndex - 1] + 1,
+          previousRow[rightIndex] + 1,
+          previousRow[rightIndex - 1] + substitutionCost,
+        );
+        currentRow.push(distance);
+        smallestInRow = Math.min(smallestInRow, distance);
+      }
+      if (smallestInRow > maxDistance) return false;
+      previousRow = currentRow;
+    }
+
+    return previousRow[right.length] <= maxDistance;
+  }
+
+  function looselyMatchesGapSearchToken(searchText, token) {
+    const words = searchText.split(/[^a-z0-9]+/).filter(Boolean);
+    if (words.some(word => word === token)) return true;
+    if (token.length <= 2) return words.some(word => word.startsWith(token));
+    if (searchText.includes(token) || words.some(word => word.startsWith(token))) return true;
+
+    const maxDistance = token.length <= 8 ? 1 : 2;
+    return words.some(word => (
+      Math.abs(token.length - word.length) <= maxDistance
+      && gapEditDistanceWithin(token, word, maxDistance)
+    ));
+  }
+
+  function positionGapSelectMenu(shell, menu) {
+    const trigger = shell?.querySelector('.gap-select-trigger');
+    if (!trigger || !menu) return;
+    const triggerRect = trigger.getBoundingClientRect();
+    const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+    const menuGap = 10;
+    const viewportPadding = 12;
+    const preferredHeight = Math.min(430, Math.round(viewportHeight * 0.58));
+    const roomBelow = Math.max(0, viewportHeight - triggerRect.bottom - menuGap - viewportPadding);
+    const roomAbove = Math.max(0, triggerRect.top - menuGap - viewportPadding);
+    const openUpward = roomBelow < Math.min(260, preferredHeight) && roomAbove > roomBelow;
+    const availableHeight = openUpward ? roomAbove : roomBelow;
+
+    shell.classList.toggle('opens-upward', openUpward);
+    menu.style.setProperty('--gap-select-menu-max-height', `${Math.max(120, Math.min(preferredHeight, availableHeight))}px`);
+  }
+
   if (pageUploadJdForm) {
     pageUploadJdForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -2888,7 +2958,10 @@ TÊN CÔNG TY:
         closeGapSelectMenus(shell);
         shell.classList.toggle('is-open', shouldOpen);
         trigger.setAttribute('aria-expanded', String(shouldOpen));
-        if (shouldOpen) window.setTimeout(() => menu.querySelector('.gap-select-search')?.focus(), 0);
+        if (shouldOpen) {
+          positionGapSelectMenu(shell, menu);
+          window.setTimeout(() => menu.querySelector('.gap-select-search')?.focus(), 0);
+        }
       });
 
       trigger.addEventListener('keydown', event => {
@@ -2897,6 +2970,7 @@ TÊN CÔNG TY:
         closeGapSelectMenus(shell);
         shell.classList.add('is-open');
         trigger.setAttribute('aria-expanded', 'true');
+        positionGapSelectMenu(shell, menu);
         const items = [...menu.querySelectorAll('.gap-select-menu-item:not(:disabled):not([hidden])')];
         const selectedIndex = Math.max(0, items.findIndex(item => item.getAttribute('aria-selected') === 'true'));
         const targetIndex = event.key === 'ArrowUp' ? Math.max(0, selectedIndex - 1) : selectedIndex;
@@ -2923,18 +2997,23 @@ TÊN CÔNG TY:
     }
 
     const selectedOption = select.options[select.selectedIndex] || select.options[0];
-    const selectedParts = (selectedOption?.textContent || 'Chọn một mục').split(' • ');
-    trigger.querySelector('.gap-select-value-title').textContent = selectedParts.shift();
+    const selectedParts = (selectedOption?.textContent || 'Chọn một mục').split(/\s+[\u2022·]\s+/);
+    const selectedTitle = selectedParts.shift();
+    const selectedTitleElement = trigger.querySelector('.gap-select-value-title');
+    selectedTitleElement.textContent = selectedTitle;
+    selectedTitleElement.title = selectedTitle;
     const selectedMeta = trigger.querySelector('.gap-select-value-meta');
     selectedMeta.textContent = selectedParts.join(' • ');
+    selectedMeta.title = selectedMeta.textContent;
     selectedMeta.hidden = selectedParts.length === 0;
     trigger.disabled = select.disabled || !selectedOption || selectedOption.disabled;
 
-    const badge = select.id.includes('jd') ? 'JD' : 'CV';
-    const searchable = select.options.length > 10;
+    const isJDSelect = select.id.includes('jd');
+    const badge = isJDSelect ? 'JD' : 'CV';
+    const searchable = isJDSelect || select.options.length > 6;
     let previousGroup = '';
     const optionMarkup = [...select.options].map(option => {
-      const parts = option.textContent.split(' • ');
+      const parts = option.textContent.split(/\s+[\u2022·]\s+/);
       const title = parts.shift();
       const meta = parts.join(' • ');
       const selected = option.value === select.value;
@@ -2947,7 +3026,7 @@ TÊN CÔNG TY:
         ${groupHeading}
         <button type="button" class="gap-select-menu-item${selected ? ' is-selected' : ''}"
           role="option" data-value="${escapeHtml(option.value)}" aria-selected="${selected}"
-          data-search-text="${escapeHtml(`${title} ${meta} ${group}`.toLocaleLowerCase('vi'))}"
+          data-search-text="${escapeHtml(normalizeGapSearchText(`${title} ${meta}`))}"
           data-option-group="${escapeHtml(group)}"
           ${option.disabled ? 'disabled' : ''}>
           <span class="gap-option-badge">${badge}</span>
@@ -2962,18 +3041,19 @@ TÊN CÔNG TY:
       ${searchable ? `
         <div class="gap-select-search-wrap">
           <span aria-hidden="true">⌕</span>
-          <input class="gap-select-search" type="search" placeholder="Tìm vị trí hoặc doanh nghiệp..." aria-label="Tìm trong danh sách JD" autocomplete="off" />
+          <input class="gap-select-search" type="search" placeholder="${isJDSelect ? 'Tìm gần đúng theo vị trí, kỹ năng...' : 'Tìm gần đúng CV đã lưu...'}" aria-label="${isJDSelect ? 'Tìm gần đúng trong danh sách JD' : 'Tìm gần đúng trong danh sách CV'}" autocomplete="off" />
         </div>` : ''}
       <div class="gap-select-options">${optionMarkup}</div>
-      <p class="gap-select-no-results" hidden>Không tìm thấy JD phù hợp.</p>`;
+      <p class="gap-select-no-results" hidden>Không tìm thấy ${isJDSelect ? 'JD' : 'CV'} phù hợp.</p>`;
 
     const searchInput = menu.querySelector('.gap-select-search');
     searchInput?.addEventListener('click', event => event.stopPropagation());
     searchInput?.addEventListener('input', () => {
-      const query = searchInput.value.trim().toLocaleLowerCase('vi');
+      const queryTokens = normalizeGapSearchText(searchInput.value).split(/\s+/).filter(Boolean);
       const items = [...menu.querySelectorAll('.gap-select-menu-item')];
       items.forEach(item => {
-        item.hidden = Boolean(query) && !item.dataset.searchText.includes(query);
+        item.hidden = queryTokens.length > 0
+          && !queryTokens.every(token => looselyMatchesGapSearchToken(item.dataset.searchText, token));
       });
       menu.querySelectorAll('.gap-select-group-label').forEach(label => {
         const group = label.dataset.selectGroup;
@@ -2982,6 +3062,7 @@ TÊN CÔNG TY:
       const hasVisibleItems = items.some(item => !item.hidden && !item.disabled);
       const noResults = menu.querySelector('.gap-select-no-results');
       if (noResults) noResults.hidden = hasVisibleItems;
+      menu.querySelector('.gap-select-menu-item:not([hidden]):not(:disabled)')?.scrollIntoView({ block: 'nearest' });
     });
 
     menu.querySelectorAll('.gap-select-menu-item:not(:disabled)').forEach(item => {
@@ -3001,6 +3082,13 @@ TÊN CÔNG TY:
     document.addEventListener('click', event => {
       if (!event.target.closest('.gap-select-shell')) closeGapSelectMenus();
     });
+    const repositionOpenGapSelect = () => {
+      document.querySelectorAll('.gap-select-shell.is-open').forEach(shell => {
+        positionGapSelectMenu(shell, shell.querySelector('.gap-select-menu'));
+      });
+    };
+    window.addEventListener('resize', repositionOpenGapSelect);
+    window.addEventListener('scroll', repositionOpenGapSelect, true);
   }
 
   async function populatePageGapOptions() {
