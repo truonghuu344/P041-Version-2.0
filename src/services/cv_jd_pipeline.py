@@ -713,10 +713,12 @@ class EvaluationService:
                 degree = str(record.get("degree_level") or "") if isinstance(record, dict) else ""
                 if not degree:
                     for name in reversed(list(DEGREE_RANK)):
-                        if (
-                            name in text
-                            or {"bachelor": "cu nhan", "master": "thac si", "doctorate": "tien si"}.get(name) in text
-                        ):
+                        vietnamese_alias = {
+                            "bachelor": "cu nhan",
+                            "master": "thac si",
+                            "doctorate": "tien si",
+                        }.get(name)
+                        if name in text or (vietnamese_alias and vietnamese_alias in text):
                             degree = name
                             break
                 best_degree = max(best_degree, DEGREE_RANK.get(degree, 0))
