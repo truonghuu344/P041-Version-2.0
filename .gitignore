@@ -43,10 +43,13 @@ chroma_db/
 logs/
 *.log
 
-# Test coverage
+# Test coverage & Temp
 htmlcov/
 .coverage
 coverage.xml
+.pytest_cache/
+.pytest_tmp/
+
 
 # Docker
 docker-compose.override.yml
@@ -66,3 +69,11 @@ out/
 .ai-log/*.jsonl
 .ai-log/archive/
 .vercel
+
+.claude
+.codex
+.cursor
+.gemini
+
+# Note
+note.txt

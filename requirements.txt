@@ -7,7 +7,12 @@ pydantic>=2.10.0
 pydantic-settings>=2.7.0
 python-dotenv>=1.0.0
 python-multipart>=0.0.12        # Bắt buộc để nhận File upload (CV PDF/Word)
+email-validator>=2.2.0         # Validate EmailStr trong Pydantic
+google-auth>=2.35.0            # Google OAuth token verification
 reportlab>=4.0.0               # Tạo file PDF CV export
+python-docx>=1.1.0             # Đọc file Word CV (.docx)
+pypdf>=5.0.0                   # Đọc file PDF CV (.pdf)
+
 
 # ==========================================
 # 2. AUTHENTICATION & SECURITY

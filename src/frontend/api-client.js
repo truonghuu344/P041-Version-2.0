@@ -151,6 +151,13 @@ export class ApiClient {
     return await this.request('/jds');
   }
 
+  static async searchJobs(query = '', cvId = '', limit = 60) {
+    const params = new URLSearchParams({ limit: String(limit) });
+    if (query) params.set('q', query);
+    if (cvId) params.set('cv_id', cvId);
+    return await this.request(`/jobs?${params.toString()}`);
+  }
+
   static async createCustomJD(title, company, location, requirementsText) {
     return await this.request('/jds/custom', {
       method: 'POST',
