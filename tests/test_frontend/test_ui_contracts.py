@@ -96,17 +96,27 @@ def test_menubar_matches_gate1_role_flows_without_icons():
     nav_markup = PAGE_JS.split('<nav className="nav-links"', 1)[1].split('</nav>', 1)[0]
     assert 'className="nav-icon"' not in nav_markup
     assert "const ROLE_NAV_ITEMS" in APP_JS
-    assert "student: ['nav-dashboard', 'nav-cv', 'nav-interview', 'nav-history']" in APP_JS
+    assert "student: ['nav-dashboard', 'nav-cv', 'nav-find-jobs', 'nav-interview', 'nav-history']" in APP_JS
     assert "counselor: ['nav-counselor', 'nav-counselor-reports']" in APP_JS
     assert "enterprise: ['nav-enterprise', 'nav-jobs', 'nav-enterprise-applications']" in APP_JS
     assert 'Lịch sử &amp; Báo cáo' in nav_markup
     assert 'Sinh viên của tôi' in nav_markup
     assert 'Hồ sơ ứng tuyển' in nav_markup
     assert "font-weight: 700 !important;" in STYLE_CSS
-    assert "from 'next/font/google'" in (FRONTEND_ROOT / "app" / "layout.tsx").read_text(encoding="utf-8")
-    assert "Quicksand" in (FRONTEND_ROOT / "app" / "layout.tsx").read_text(encoding="utf-8")
-    assert "--font-quicksand" in STYLE_CSS
+    assert "--font: 'Quicksand'" in STYLE_CSS
+    assert "@font-face" in STYLE_CSS
     assert "SOFT CYAN PALETTE" in STYLE_CSS
+
+
+def test_job_search_menu_and_cv_matching_flow_are_connected():
+    assert 'id="nav-find-jobs"' in PAGE_JS
+    assert 'id="view-find-jobs"' in PAGE_JS
+    assert 'id="job-search-form"' in PAGE_JS
+    assert 'id="job-search-cv-select"' in PAGE_JS
+    assert 'id="job-match-cv-btn"' in PAGE_JS
+    assert "switchView('find-jobs')" in APP_JS
+    assert "ApiClient.searchJobs" in APP_JS
+    assert "initializeJobSearchView" in APP_JS
 
 
 def test_google_signin_uses_official_button_without_programmatic_one_tap_popup():
@@ -119,11 +129,46 @@ def test_google_signin_uses_official_button_without_programmatic_one_tap_popup()
     assert "Cross-Origin-Opener-Policy same-origin-allow-popups" in nginx_config
 
 
-def test_quicksand_variable_is_defined_on_root_before_shared_font_token_resolves():
+def test_google_quicksand_is_self_hosted_and_used_as_the_shared_font():
     layout = (FRONTEND_ROOT / "app" / "layout.tsx").read_text(encoding="utf-8")
-    assert '<html lang="vi" className={quicksand.variable}' in layout
-    assert '<body className={quicksand.variable}>' not in layout
-    assert "font-family: var(--font-quicksand), 'Quicksand'" in STYLE_CSS
+    assert "next/font/google" not in layout
+    assert '<html lang="vi" suppressHydrationWarning>' in layout
+    assert "font-family: 'Quicksand'" in STYLE_CSS
+    assert "--font: 'Quicksand'" in STYLE_CSS
+    for font_file in (
+        "quicksand-vietnamese.woff2",
+        "quicksand-latin-ext.woff2",
+        "quicksand-latin.woff2",
+    ):
+        assert f"/fonts/{font_file}" in STYLE_CSS
+        assert (FRONTEND_ROOT / "public" / "fonts" / font_file).is_file()
+
+
+def test_create_cv_gallery_offers_three_distinct_downloadable_templates():
+    assert 'id="btn-open-template-gallery"' in PAGE_JS
+    assert 'id="cv-template-modal-overlay"' in PAGE_JS
+    assert "onClick={() => setIsTemplateGalleryOpen(true)}" in PAGE_JS
+    assert "className={`modal-overlay${isTemplateGalleryOpen ? ' open' : ''}`}" in PAGE_JS
+    assert "const selectCVTemplate" in PAGE_JS
+    assert "setSelectedCVTemplate(templateName)" in PAGE_JS
+    assert 'hidden={!selectedCVTemplate}' in PAGE_JS
+    assert PAGE_JS.count('className="template-download-btn"') == 3
+    assert PAGE_JS.count('href="/api/v1/cvs/templates/') == 3
+    assert 'className="template-preview template-preview-modern"' in PAGE_JS
+    assert 'className="template-preview template-preview-classic"' in PAGE_JS
+    assert 'className="template-preview template-preview-creative"' in PAGE_JS
+    assert ".template-gallery-grid" in STYLE_CSS
+
+
+def test_cv_target_jd_supports_data_catalog_or_file_upload():
+    assert "ApiClient.searchJobs('', '', 100)" in APP_JS
+    assert "ApiClient.selectCatalogJD(sourceId)" in APP_JS
+    assert "JD DOANH NGHIỆP TRONG DATA/JDS" in APP_JS
+    assert 'className="jd-select-wrap gap-select-shell cv-jd-select-shell"' in PAGE_JS
+    assert "gap-select-search" in APP_JS
+    assert ".cv-jd-select-shell .gap-select-menu" in STYLE_CSS
+    assert 'id="cv-jd-upload-form"' in PAGE_JS
+    assert 'accept=".pdf,.docx,.txt"' in PAGE_JS
 
 
 def test_auth_role_dropdown_and_google_button_are_responsive_custom_controls():

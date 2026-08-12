@@ -1,12 +1,24 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+
+type CVTemplateName = 'modern' | 'classic' | 'compact';
 
 export default function Page() {
+  const [isTemplateGalleryOpen, setIsTemplateGalleryOpen] = useState(false);
+  const [selectedCVTemplate, setSelectedCVTemplate] = useState<CVTemplateName | null>(null);
+
   useEffect(() => {
     // Import app.js dynamically on client side
     import('../app.js');
   }, []);
+
+  const selectCVTemplate = (templateName: CVTemplateName) => {
+    setSelectedCVTemplate(templateName);
+    setIsTemplateGalleryOpen(false);
+    const manualForm = document.getElementById('manual-cv-form');
+    window.requestAnimationFrame(() => manualForm?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+  };
 
   return (
     <>
@@ -33,6 +45,7 @@ export default function Page() {
           <nav className="nav-links" id="nav-links">
             <a href="#" className="nav-link active" id="nav-dashboard"><span className="nav-text" data-i18n="nav-dashboard">Trang chủ</span></a>
             <a href="#" className="nav-link" id="nav-cv"><span className="nav-text" data-i18n="nav-cv">Phân tích CV</span></a>
+            <a href="#" className="nav-link" id="nav-find-jobs"><span className="nav-text" data-i18n="nav-find-jobs">Tìm việc</span></a>
             <a href="#" className="nav-link" id="nav-jobs"><span className="nav-text" data-i18n="nav-jobs">Danh sách JD</span></a>
             <a href="#" className="nav-link" id="nav-interview"><span className="nav-text" data-i18n="nav-interview">Phòng phỏng vấn</span></a>
             <a href="#" className="nav-link" id="nav-history" hidden><span className="nav-text" data-i18n="nav-history">Lịch sử &amp; Báo cáo</span></a>
@@ -244,10 +257,10 @@ export default function Page() {
 
             <div className="agent-info" id="agent-info">
               <h2 className="agent-title" id="agent-title" data-i18n="agent-title" data-i18n-html="true">
-                Agent AI – Trí Tuệ<br />Nhân Tạo hỗ trợ
+                CV Assistant
               </h2>
               <div className="features-grid" id="features-grid">
-                <div className="feature-item" id="feature-optimize">
+                <div className="feature-item" id="feature-cv">
                   <div className="feature-icon">
                     <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
                       <path d="M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
@@ -255,19 +268,8 @@ export default function Page() {
                     </svg>
                   </div>
                   <div>
-                    <p className="feature-name" data-i18n="feat-opt-name">Tự động</p>
-                    <p className="feature-desc" data-i18n="feat-opt-desc">tối ưu CV</p>
-                  </div>
-                </div>
-                <div className="feature-item" id="feature-deep-interview">
-                  <div className="feature-icon feature-icon-purple">
-                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
-                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="feature-name" data-i18n="feat-int-name">Phỏng vấn</p>
-                    <p className="feature-desc" data-i18n="feat-int-desc">STAR Rubric</p>
+                    <p className="feature-name" data-i18n="feat-opt-name">Phân tích CV</p>
+                    <p className="feature-desc" data-i18n="feat-opt-desc">Tối ưu theo JD</p>
                   </div>
                 </div>
                 <div className="feature-item" id="feature-keywords">
@@ -277,20 +279,19 @@ export default function Page() {
                     </svg>
                   </div>
                   <div>
-                    <p className="feature-name" data-i18n="feat-match-name">Match Score</p>
-                    <p className="feature-desc" data-i18n="feat-match-desc">Gap Analysis</p>
+                    <p className="feature-name" data-i18n="feat-match-name">Danh sách JD</p>
+                    <p className="feature-desc" data-i18n="feat-match-desc">Việc làm phù hợp</p>
                   </div>
                 </div>
-                <div className="feature-item" id="feature-career">
-                  <div className="feature-icon feature-icon-blue">
+                <div className="feature-item" id="feature-deep-interview">
+                  <div className="feature-icon feature-icon-purple">
                     <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
-                      <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="1.5"/>
-                      <path d="M7 8h10M7 12h7M7 16h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
                     </svg>
                   </div>
                   <div>
-                    <p className="feature-name" data-i18n="feat-custom-name">Tạo Custom</p>
-                    <p className="feature-desc" data-i18n="feat-custom-desc">Job Description</p>
+                    <p className="feature-name" data-i18n="feat-int-name">Phòng phỏng vấn</p>
+                    <p className="feature-desc" data-i18n="feat-int-desc">STAR Rubric</p>
                   </div>
                 </div>
               </div>
@@ -406,7 +407,7 @@ export default function Page() {
           <div className="testimonials-wrap">
             <div className="section-header center-header">
               <span className="section-tag" data-i18n="testi-tag">💬 CÂU CHUYỆN THÀNH CÔNG</span>
-              <h2 className="section-title-large" data-i18n="testi-title">Ứng Viên Nói Gì Về Career Assistant X?</h2>
+              <h2 className="section-title-large" data-i18n="testi-title">Ứng Viên Nói Gì Về CV Assistant?</h2>
               <p className="section-subtitle" data-i18n="testi-sub">Hàng ngàn ứng viên đã chinh phục được công việc mơ ước nhờ sự đồng hành của AI Agent</p>
             </div>
 
@@ -493,7 +494,7 @@ export default function Page() {
                     <span className="status-pill"><i className="pill-dot purple"></i> 3 TEMPLATES AVAILABLE</span>
                   </div>
                 </div>
-                <button type="button" id="btn-open-template-gallery" className="create-cv-template-cta">
+                <button type="button" id="btn-open-template-gallery" className="create-cv-template-cta" onClick={() => setIsTemplateGalleryOpen(true)} aria-haspopup="dialog" aria-controls="cv-template-modal-overlay">
                   <span className="create-cv-template-cta-icon" aria-hidden="true">✨</span>
                   <span><strong>TẠO CV MỚI</strong><small>Chọn 1 trong 3 template</small></span>
                 </button>
@@ -597,17 +598,18 @@ export default function Page() {
                   </div>
                   <div>
                     <h3 className="console-title">JD MỤC TIÊU ĐỂ PHÂN TÍCH</h3>
-                    <p className="console-subtitle">Chọn JD đã có hoặc tải JD mới. AI Agent sẽ luôn so khớp CV với JD này.</p>
+                    <p className="console-subtitle">Chọn JD doanh nghiệp trong data/jds, JD đã lưu hoặc tải JD mới. AI Agent sẽ luôn so khớp CV với JD này.</p>
                   </div>
                 </div>
 
                 <div className="jd-choice-block">
-                  <label className="ship-label" htmlFor="cv-analysis-jd-select">Chọn JD đã lưu <span className="required-mark">*</span></label>
-                  <div className="jd-select-wrap">
-                    <select id="cv-analysis-jd-select" className="ship-input" required aria-label="Chọn JD mục tiêu">
+                  <label className="ship-label" htmlFor="cv-analysis-jd-select">Chọn JD trong data hoặc JD đã lưu <span className="required-mark">*</span></label>
+                  <div className="jd-select-wrap gap-select-shell cv-jd-select-shell">
+                    <span className="gap-select-icon" aria-hidden="true">JD</span>
+                    <select id="cv-analysis-jd-select" className="ship-input gap-select" required aria-label="Chọn JD mục tiêu">
                       <option value="">Chọn một JD để phân tích CV</option>
                     </select>
-                    <span className="jd-select-chevron" aria-hidden="true">⌄</span>
+                    <span className="jd-select-chevron gap-select-chevron" aria-hidden="true">⌄</span>
                   </div>
                   <p id="cv-selected-jd-hint" className="jd-selection-hint">JD là bắt buộc để AI Agent phân tích đúng vị trí ứng tuyển.</p>
                 </div>
@@ -688,7 +690,7 @@ export default function Page() {
               </div>
             </div>
 
-              <div className="vessel-card manual-cv-card" id="manual-cv-card" hidden>
+              <div className="vessel-card manual-cv-card" id="manual-cv-card" hidden={!selectedCVTemplate}>
                 <div className="console-header">
                   <div className="console-icon console-icon-purple"><span aria-hidden="true">✎</span></div>
                   <div>
@@ -697,7 +699,7 @@ export default function Page() {
                   </div>
                 </div>
                 <form id="manual-cv-form" className="manual-cv-form">
-                  <input type="hidden" id="manual-cv-template" value="classic" />
+                  <input type="hidden" id="manual-cv-template" value={selectedCVTemplate || 'classic'} readOnly />
                   <div className="manual-cv-grid">
                     <div className="form-group"><label className="ship-label" htmlFor="manual-cv-title">Tên CV</label><input id="manual-cv-title" className="ship-input" placeholder="CV Frontend Developer 2026" required /></div>
                     <div className="form-group"><label className="ship-label" htmlFor="manual-cv-name">Họ và tên</label><input id="manual-cv-name" className="ship-input" required /></div>
@@ -718,7 +720,59 @@ export default function Page() {
           </div>
       </section>
 
-      {/* ===== 3. VIEW: THƯ VIỆN JOBS ===== */}
+      {/* ===== 3. VIEW: TÌM VIỆC ===== */}
+      <section className="app-view" id="view-find-jobs">
+        <div className="page-container job-search-page">
+          <div className="page-header job-search-heading">
+            <div className="page-badge">AI JOB DISCOVERY // ENTERPRISE CATALOG</div>
+            <h1 className="page-title">🔎 Tìm Việc Phù Hợp</h1>
+            <p className="page-sub">Khám phá JD thật từ doanh nghiệp và để AI xếp hạng công việc theo CV của bạn.</p>
+          </div>
+
+          <section className="job-search-console" aria-labelledby="job-search-console-title">
+            <div className="job-search-console-copy">
+              <span className="job-search-kicker">98+ JD DOANH NGHIỆP</span>
+              <h2 id="job-search-console-title">Tìm bằng từ khóa hoặc CV có sẵn</h2>
+              <p>AI chỉ dùng nội dung và kỹ năng có trong CV để xếp hạng, không tự thêm kinh nghiệm.</p>
+            </div>
+            <form id="job-search-form" className="job-search-form">
+              <label className="job-search-field" htmlFor="job-search-input">
+                <span>Tìm kiếm JD</span>
+                <span className="job-search-input-wrap">
+                  <span aria-hidden="true">⌕</span>
+                  <input id="job-search-input" type="search" placeholder="Ví dụ: Python, Frontend, ShopBack, Hà Nội..." autoComplete="off" />
+                </span>
+              </label>
+              <button type="submit" className="job-search-primary">Tìm kiếm</button>
+            </form>
+            <div className="job-cv-match-row">
+              <label htmlFor="job-search-cv-select">
+                <span>Tìm việc bằng CV</span>
+                <select id="job-search-cv-select" className="form-input">
+                  <option value="">Chọn CV có sẵn của bạn</option>
+                </select>
+              </label>
+              <button type="button" id="job-match-cv-btn" className="job-match-cv-btn" disabled>
+                <span aria-hidden="true">✦</span> AI lọc JD phù hợp
+              </button>
+              <button type="button" id="job-search-reset-btn" className="job-search-reset">Xóa bộ lọc</button>
+            </div>
+          </section>
+
+          <div className="job-results-toolbar">
+            <div>
+              <span className="pulse-dot green"></span>
+              <strong id="job-results-summary">Đang tải danh sách việc làm...</strong>
+            </div>
+            <span id="job-results-mode" className="job-results-mode">Tất cả JD</span>
+          </div>
+          <div id="job-search-results" className="job-search-results" aria-live="polite">
+            <div className="job-search-loading"><span></span><p>AI đang nạp dữ liệu JD doanh nghiệp...</p></div>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== 4. VIEW: THƯ VIỆN JOBS ===== */}
       <section className="app-view" id="view-jobs">
         <div className="page-container">
           <div className="page-header">
@@ -1406,6 +1460,61 @@ export default function Page() {
               <span id="btn-submit-label" data-i18n="btn-submit-login">Đăng nhập</span>
             </button>
           </form>
+          <button type="button" id="btn-forgot-password" className="auth-forgot-password">Quên mật khẩu?</button>
+        </div>
+      </div>
+
+      <div className="modal-overlay" id="password-reset-overlay" role="dialog" aria-modal="true" aria-labelledby="password-reset-title">
+        <div className="modal-card password-reset-card">
+          <button type="button" className="modal-close" id="password-reset-close" aria-label="Đóng">&times;</button>
+          <form className="login-form" id="password-reset-form">
+            
+            {/* STEP 1: EMAIL */}
+            <div id="reset-step-1">
+              <div className="modal-header">
+                <h2 className="modal-title" id="password-reset-title">Quên mật khẩu</h2>
+                <p className="modal-sub">Nhập email của bạn để nhận mã OTP.</p>
+              </div>
+              <div className="form-group">
+                <label className="form-label" htmlFor="reset-email">Email</label>
+                <input type="email" id="reset-email" className="form-input" placeholder="you@example.com" required />
+              </div>
+              <button type="submit" className="btn-submit" id="btn-reset-step-1">Tiếp tục</button>
+              <button type="button" id="btn-password-reset-back" className="auth-forgot-password" style={{marginTop: '10px'}}>Quay lại đăng nhập</button>
+            </div>
+
+            {/* STEP 2: OTP */}
+            <div id="reset-step-2" hidden>
+              <div className="modal-header">
+                <h2 className="modal-title">Xác thực OTP</h2>
+                <p className="modal-sub" id="reset-step-2-sub">Mã 6 số đã được gửi đến email của bạn.</p>
+              </div>
+              <div className="form-group">
+                <input type="text" id="reset-otp" className="form-input" inputMode="numeric" pattern="[0-9]{6}" maxLength={6} placeholder="------" style={{textAlign: 'center', fontSize: '1.5rem', letterSpacing: '0.5em', fontWeight: 'bold'}} />
+              </div>
+              <p className="auth-reset-timer" id="password-reset-timer" style={{color: 'var(--primary-color)', fontSize: '0.9rem', marginBottom: '15px', textAlign: 'center'}}></p>
+              <button type="submit" className="btn-submit" id="btn-reset-step-2">Xác thực</button>
+              <button type="button" id="btn-password-reset-back-2" className="auth-forgot-password" style={{marginTop: '10px'}}>Nhập lại email</button>
+            </div>
+
+            {/* STEP 3: NEW PASSWORD */}
+            <div id="reset-step-3" hidden>
+              <div className="modal-header">
+                <h2 className="modal-title">Tạo mật khẩu mới</h2>
+                <p className="modal-sub">Mật khẩu của bạn phải có tối thiểu 8 ký tự.</p>
+              </div>
+              <div className="form-group">
+                <label className="form-label" htmlFor="reset-new-password">Mật khẩu mới</label>
+                <input type="password" id="reset-new-password" className="form-input" minLength={8} placeholder="Ít nhất 8 ký tự" />
+              </div>
+              <div className="form-group">
+                <label className="form-label" htmlFor="reset-confirm-password">Xác nhận mật khẩu mới</label>
+                <input type="password" id="reset-confirm-password" className="form-input" minLength={8} placeholder="Nhập lại mật khẩu" />
+              </div>
+              <button type="submit" className="btn-submit" id="btn-reset-step-3">Cập nhật mật khẩu</button>
+            </div>
+
+          </form>
         </div>
       </div>
 
@@ -1791,55 +1900,87 @@ export default function Page() {
         </div>
       </div>
       {/* ═══ 3-CV TEMPLATES SELECTION GALLERY MODAL ═══ */}
-      <div className="modal-overlay" id="cv-template-modal-overlay" style={{ display: 'none', zIndex: 9999 }}>
+      <div
+        className={`modal-overlay${isTemplateGalleryOpen ? ' open' : ''}`}
+        id="cv-template-modal-overlay"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="cv-template-modal-title"
+        aria-hidden={!isTemplateGalleryOpen}
+        style={{ display: isTemplateGalleryOpen ? 'flex' : 'none', zIndex: 9999 }}
+        onMouseDown={(event) => {
+          if (event.target === event.currentTarget) setIsTemplateGalleryOpen(false);
+        }}
+      >
         <div className="archive-modal-content" style={{ maxWidth: '920px', width: '94%' }}>
           <div className="archive-modal-header">
             <div>
-              <h2 style={{ margin: 0, fontSize: '20px', color: '#00e5ff' }}>🎨 CHỌN TEMPLATE CV PHÙ HỢP CỦA BẠN</h2>
+              <h2 id="cv-template-modal-title" style={{ margin: 0, fontSize: '20px', color: '#00e5ff' }}>🎨 CHỌN TEMPLATE CV PHÙ HỢP CỦA BẠN</h2>
               <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#94a3b8' }}>Mỗi template có bố cục cấu trúc thiết kế hoàn toàn khác nhau cho từng ngành nghề</p>
             </div>
-            <button className="archive-modal-close" id="btn-close-template-modal" type="button">&times;</button>
+            <button className="archive-modal-close" id="btn-close-template-modal" type="button" onClick={() => setIsTemplateGalleryOpen(false)} aria-label="Đóng thư viện template">&times;</button>
           </div>
 
-          <div className="template-gallery-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px', marginTop: '16px' }}>
+          <div className="template-gallery-grid">
             {/* Template 1: Modern 2-Column */}
-            <div className="template-card" style={{ background: 'rgba(15, 23, 42, 0.7)', border: '1px solid rgba(0, 229, 255, 0.3)', borderRadius: '14px', padding: '16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '12px' }}>
-              <div>
-                <div className="template-card-header" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+            <article className="template-card template-card-modern">
+              <div className="template-preview template-preview-modern" aria-label="Xem trước CV bố cục hai cột">
+                <div className="preview-sidebar"><i></i><i></i><i></i><i></i><i></i></div>
+                <div className="preview-main"><b></b><i></i><i></i><span></span><i></i><i></i><span></span><i></i><i></i></div>
+              </div>
+              <div className="template-card-content">
+                <div className="template-card-header">
                   <span className="archive-tag tag-cv">HỒ SƠ 2 CỘT</span>
                   <span className="badge badge-ok">PHỔ BIẾN NHẤT</span>
                 </div>
-                <h3 className="template-title" style={{ fontSize: '16px', color: '#fff', margin: '6px 0' }}>1. Modern Two-Column (Hồ Sơ 2 Cột Hiện Đại)</h3>
-                <p className="template-desc" style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: '1.4' }}>Bố cục 2 cột phân chia cột trái (Thông tin, Kỹ năng, Học vấn) &amp; cột phải (Mục tiêu, Kinh nghiệm, Dự án). Accent Blue.</p>
+                <h3 className="template-title">Modern Two-Column</h3>
+                <p className="template-desc">Hai cột rõ ràng: thông tin, kỹ năng và học vấn bên trái; mục tiêu, kinh nghiệm và dự án bên phải.</p>
               </div>
-              <button type="button" className="archive-btn-view btn-use-template" data-template="modern" style={{ width: '100%', padding: '10px', fontSize: '13px', background: '#2563eb', color: '#fff', borderColor: '#3b82f6' }}>Dùng Mẫu 2 Cột ➔</button>
-            </div>
+              <div className="template-card-actions">
+                <a className="template-download-btn" href="/api/v1/cvs/templates/modern/download?v=2" download="cv-template-modern.pdf">↓ Tải mẫu PDF</a>
+                <button type="button" className="template-use-btn" onClick={() => selectCVTemplate('modern')}>Dùng mẫu này →</button>
+              </div>
+            </article>
 
             {/* Template 2: Classic ATS Single Column */}
-            <div className="template-card" style={{ background: 'rgba(15, 23, 42, 0.7)', border: '1px solid rgba(255, 255, 255, 0.15)', borderRadius: '14px', padding: '16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '12px' }}>
-              <div>
-                <div className="template-card-header" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                  <span className="archive-tag tag-optimized">ATS STANDARD</span>
-                  <span className="badge badge-ok" style={{ background: 'rgba(0, 229, 255, 0.2)', color: '#00e5ff' }}>CHUẨN DOANH NGHIỆP</span>
-                </div>
-                <h3 className="template-title" style={{ fontSize: '16px', color: '#fff', margin: '6px 0' }}>2. Classic ATS Standard (Hồ Sơ Cổ Điển 1 Cột)</h3>
-                <p className="template-desc" style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: '1.4' }}>Bố cục 1 cột truyền thống căn giữa từ trên xuống dưới với đường kẻ kẻ thanh lịch. Tối ưu 100% cho máy quét ATS.</p>
+            <article className="template-card template-card-classic">
+              <div className="template-preview template-preview-classic" aria-label="Xem trước CV ATS bố cục một cột">
+                <b></b><em></em><span></span><i></i><i></i><span></span><i></i><i></i><span></span><i></i><i></i>
               </div>
-              <button type="button" className="archive-btn-view btn-use-template" data-template="classic" style={{ width: '100%', padding: '10px', fontSize: '13px', background: '#334155', color: '#fff', borderColor: '#64748b' }}>Dùng Mẫu ATS ➔</button>
-            </div>
+              <div className="template-card-content">
+                <div className="template-card-header">
+                  <span className="archive-tag tag-optimized">ATS STANDARD</span>
+                  <span className="badge badge-ok template-badge-blue">CHUẨN DOANH NGHIỆP</span>
+                </div>
+                <h3 className="template-title">Classic ATS Standard</h3>
+                <p className="template-desc">Một cột theo thứ tự thời gian, tiêu đề rõ ràng và ít yếu tố trang trí để hệ thống ATS dễ đọc.</p>
+              </div>
+              <div className="template-card-actions">
+                <a className="template-download-btn" href="/api/v1/cvs/templates/classic/download?v=2" download="cv-template-classic-ats.pdf">↓ Tải mẫu PDF</a>
+                <button type="button" className="template-use-btn" onClick={() => selectCVTemplate('classic')}>Dùng mẫu này →</button>
+              </div>
+            </article>
 
             {/* Template 3: Creative Tech Minimalist */}
-            <div className="template-card" style={{ background: 'rgba(15, 23, 42, 0.7)', border: '1px solid rgba(13, 148, 136, 0.4)', borderRadius: '14px', padding: '16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '12px' }}>
-              <div>
-                <div className="template-card-header" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                  <span className="archive-tag tag-interview">CREATIVE TECH</span>
-                  <span className="badge badge-ok" style={{ background: 'rgba(13, 148, 136, 0.2)', color: '#2dd4bf' }}>SÁNG TẠO</span>
-                </div>
-                <h3 className="template-title" style={{ fontSize: '16px', color: '#fff', margin: '6px 0' }}>3. Creative Tech Timeline (Hồ Sơ Sáng Tạo &amp; Tech)</h3>
-                <p className="template-desc" style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: '1.4' }}>Header dạng Banner cá nhân hóa, khối Kỹ năng hiển thị dạng Badges / Tag Cloud, Kinh nghiệm theo timeline thời gian dọc.</p>
+            <article className="template-card template-card-creative">
+              <div className="template-preview template-preview-creative" aria-label="Xem trước CV Creative Tech dạng timeline">
+                <div className="preview-banner"><b></b><i></i></div>
+                <div className="preview-tags"><i></i><i></i><i></i></div>
+                <div className="preview-timeline"><span></span><i></i><span></span><i></i><span></span><i></i></div>
               </div>
-              <button type="button" className="archive-btn-view btn-use-template" data-template="compact" style={{ width: '100%', padding: '10px', fontSize: '13px', background: '#0d9488', color: '#fff', borderColor: '#14b8a6' }}>Dùng Mẫu Sáng Tạo ➔</button>
-            </div>
+              <div className="template-card-content">
+                <div className="template-card-header">
+                  <span className="archive-tag tag-interview">CREATIVE TECH</span>
+                  <span className="badge badge-ok template-badge-teal">SÁNG TẠO</span>
+                </div>
+                <h3 className="template-title">Creative Tech Timeline</h3>
+                <p className="template-desc">Banner cá nhân, kỹ năng dạng thẻ và kinh nghiệm theo timeline; phù hợp hồ sơ công nghệ và sáng tạo.</p>
+              </div>
+              <div className="template-card-actions">
+                <a className="template-download-btn" href="/api/v1/cvs/templates/compact/download?v=2" download="cv-template-creative-tech.pdf">↓ Tải mẫu PDF</a>
+                <button type="button" className="template-use-btn" onClick={() => selectCVTemplate('compact')}>Dùng mẫu này →</button>
+              </div>
+            </article>
           </div>
         </div>
       </div>

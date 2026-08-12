@@ -24,6 +24,16 @@ class UserLogin(BaseModel):
     password: str
 
 
+class PasswordResetRequest(BaseModel):
+    email: EmailStr
+
+
+class PasswordResetConfirm(BaseModel):
+    email: EmailStr
+    otp: str = Field(..., pattern=r"^\d{6}$", description="Mã OTP gồm 6 chữ số")
+    new_password: str = Field(..., min_length=8, max_length=72)
+
+
 class GoogleAuthRequest(BaseModel):
     credential: str = Field(..., min_length=20, description="Google Identity Services ID token")
     role: Literal["student", "counselor", "enterprise"] = "student"
@@ -86,6 +96,30 @@ class JDOut(BaseModel):
     is_system: bool
     is_published: bool = False
     created_at: datetime
+
+
+class JobCatalogItem(BaseModel):
+    source_id: str
+    title: str
+    company: str
+    location: str
+    job_level: str
+    employment_type: str
+    remote_type: str
+    domain: str
+    skills: list[str] = Field(default_factory=list)
+    description: str
+    source_url: str | None = None
+    match_score: float | None = None
+    matched_skills: list[str] = Field(default_factory=list)
+    missing_skills: list[str] = Field(default_factory=list)
+
+
+class JobCatalogResponse(BaseModel):
+    jobs: list[JobCatalogItem]
+    total: int
+    returned: int
+    matched_by_cv: bool = False
 
 
 # --- Gap Analysis Schemas ---
@@ -449,3 +483,27 @@ class AdminAILogStatsOut(BaseModel):
     successful_requests: int
     failed_requests: int
     unique_users: int
+
+
+# --- Compatibility & Workflow Request Schemas ---
+class CVAnalyzeRequest(BaseModel):
+    cv_id: str = Field(..., min_length=1, description="ID của CV đã upload")
+    jd_text: str = Field(..., min_length=1, description="Nội dung Job Description")
+
+
+
+class SuggestionDecisionRequest(BaseModel):
+    final_text: str | None = None
+
+
+class InterviewAnswerRequest(BaseModel):
+    answer: str | None = None
+    user_answer: str | None = None
+
+    def get_text(self) -> str:
+        if self.answer is not None:
+            return self.answer
+        if self.user_answer is not None:
+            return self.user_answer
+        return ""
+

@@ -10,7 +10,7 @@ from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus import HRFlowable, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+from reportlab.platypus import Flowable, HRFlowable, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 
 def _font_name() -> str:
@@ -29,6 +29,103 @@ def _text(value: Any) -> str:
     return escape(str(value or "").strip()).replace("\n", "<br/>")
 
 
+def _item_text(item: Any) -> str:
+    if isinstance(item, dict):
+        return " - ".join(_text(value) for value in item.values() if value)
+    return _text(item)
+
+
+class _AvatarPlaceholder(Flowable):
+    def __init__(self, size: float, accent: colors.Color) -> None:
+        super().__init__()
+        self.width = size
+        self.height = size
+        self.accent = accent
+
+    def draw(self) -> None:
+        canvas = self.canv
+        canvas.saveState()
+        canvas.setFillColor(colors.white)
+        canvas.circle(self.width / 2, self.height / 2, self.width / 2, fill=1, stroke=0)
+        canvas.setFillColor(self.accent)
+        canvas.circle(self.width / 2, self.height * 0.62, self.width * 0.15, fill=1, stroke=0)
+        canvas.roundRect(
+            self.width * 0.22,
+            self.height * 0.18,
+            self.width * 0.56,
+            self.height * 0.25,
+            self.width * 0.12,
+            fill=1,
+            stroke=0,
+        )
+        canvas.restoreState()
+
+
+class _SkillChips(Flowable):
+    def __init__(self, skills: list[str], font: str, accent: colors.Color) -> None:
+        super().__init__()
+        self.skills = [str(skill).strip() for skill in skills if str(skill).strip()]
+        self.font = font
+        self.accent = accent
+        self._positions: list[tuple[float, float, float, str]] = []
+
+    def wrap(self, avail_width: float, _avail_height: float) -> tuple[float, float]:
+        font_size = 8
+        chip_height = 18
+        gap = 6
+        x = 0.0
+        y = 0.0
+        self._positions = []
+        for label in self.skills:
+            width = min(avail_width, pdfmetrics.stringWidth(label, self.font, font_size) + 18)
+            if x and x + width > avail_width:
+                x = 0
+                y += chip_height + gap
+            self._positions.append((x, y, width, label))
+            x += width + gap
+        self.width = avail_width
+        self.height = y + chip_height if self._positions else 0
+        return self.width, self.height
+
+    def draw(self) -> None:
+        canvas = self.canv
+        canvas.saveState()
+        canvas.setFont(self.font, 8)
+        for x, y_from_top, width, label in self._positions:
+            y = self.height - y_from_top - 18
+            canvas.setFillColor(colors.HexColor("#ccfbf1"))
+            canvas.setStrokeColor(colors.HexColor("#5eead4"))
+            canvas.roundRect(x, y, width, 18, 9, fill=1, stroke=1)
+            canvas.setFillColor(self.accent)
+            canvas.drawCentredString(x + width / 2, y + 5.2, label)
+        canvas.restoreState()
+
+
+def _timeline_table(items: list[Any], body_style: ParagraphStyle, accent: colors.Color) -> Table:
+    rows = [
+        [Paragraph("●", body_style), Paragraph(_item_text(item), body_style)]
+        for item in items
+        if _item_text(item)
+    ]
+    table = Table(rows, colWidths=[8 * mm, 164 * mm], hAlign="LEFT")
+    table.setStyle(
+        TableStyle(
+            [
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ("TEXTCOLOR", (0, 0), (0, -1), accent),
+                ("LINEBEFORE", (0, 0), (0, -1), 1.4, accent),
+                ("LEFTPADDING", (0, 0), (0, -1), 0),
+                ("RIGHTPADDING", (0, 0), (0, -1), 4),
+                ("LEFTPADDING", (1, 0), (1, -1), 5),
+                ("RIGHTPADDING", (1, 0), (1, -1), 0),
+                ("TOPPADDING", (0, 0), (-1, -1), 3),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+            ]
+        )
+    )
+    return table
+
+
 def build_cv_pdf(
     *,
     title: str,
@@ -45,7 +142,7 @@ def build_cv_pdf(
     if template_name == "modern":
         # ===== TEMPLATE 1: MODERN TWO-COLUMN LAYOUT =====
         accent = colors.HexColor("#2563eb")
-        sidebar_bg = colors.HexColor("#f8fafc")
+        sidebar_bg = colors.HexColor("#e0f2fe")
 
         document = SimpleDocTemplate(
             buffer,
@@ -62,7 +159,7 @@ def build_cv_pdf(
             fontName=font,
             fontSize=11,
             leading=14,
-            textColor=accent,
+            textColor=colors.HexColor("#0369a1"),
             spaceBefore=8,
             spaceAfter=4,
         )
@@ -91,21 +188,27 @@ def build_cv_pdf(
             spaceAfter=6,
         )
 
-        # Left Sidebar Flowables
+        # Left sidebar mirrors the visual preview: avatar, contact, skills and education.
         left_flowables = []
         personal = parsed.get("personal_info") or {}
         full_name = personal.get("full_name") or title
-        left_flowables.append(Paragraph(f"<b>{_text(full_name)}</b>", left_heading))
+        left_flowables.extend(
+            [
+                Table([[_AvatarPlaceholder(28 * mm, colors.HexColor("#0284c7"))]], hAlign="CENTER"),
+                Spacer(1, 8),
+                Paragraph("THÔNG TIN", left_heading),
+            ]
+        )
         for key in ("email", "phone", "location", "linkedin", "website"):
             if personal.get(key):
-                left_flowables.append(Paragraph(f"• {_text(personal[key])}", body_style))
+                left_flowables.append(Paragraph(f"- {_text(personal[key])}", body_style))
 
         skills = parsed.get("skills") or []
         if skills:
             left_flowables.append(Spacer(1, 8))
             left_flowables.append(Paragraph("KỸ NĂNG", left_heading))
             for skill in skills:
-                left_flowables.append(Paragraph(f"▪ {_text(skill)}", body_style))
+                left_flowables.append(Paragraph(f"- {_text(skill)}", body_style))
 
         education = parsed.get("education") or []
         if education:
@@ -113,35 +216,39 @@ def build_cv_pdf(
             left_flowables.append(Paragraph("HỌC VẤN", left_heading))
             for edu in education:
                 if isinstance(edu, dict):
-                    line = " — ".join(_text(v) for v in edu.values() if v)
+                    line = " - ".join(_text(v) for v in edu.values() if v)
                 else:
                     line = _text(edu)
-                left_flowables.append(Paragraph(f"• {line}", body_style))
+                left_flowables.append(Paragraph(f"- {line}", body_style))
 
-        # Right Main Content Flowables
-        right_flowables = [Paragraph(_text(title), title_style)]
+        # Right column uses the candidate name as the document hero, like the preview.
+        right_flowables = [
+            Paragraph(_text(full_name), title_style),
+            Paragraph(_text(parsed.get("headline") or title), body_style),
+            HRFlowable(width="100%", thickness=2, color=accent, spaceBefore=7, spaceAfter=8),
+        ]
         if parsed.get("summary"):
-            right_flowables.append(Paragraph("TÓM TẮT THỰC THI", right_heading))
+            right_flowables.append(Paragraph("MỤC TIÊU NGHỀ NGHIỆP", right_heading))
             right_flowables.append(Paragraph(_text(parsed["summary"]), body_style))
 
         experience = parsed.get("experience") or []
         if experience:
             right_flowables.append(Paragraph("KINH NGHIỆM LÀM VIỆC", right_heading))
             for item in experience:
-                line = " — ".join(_text(v) for v in item.values() if v) if isinstance(item, dict) else _text(item)
-                right_flowables.append(Paragraph(f"• {line}", body_style))
+                line = _item_text(item)
+                right_flowables.append(Paragraph(f"- {line}", body_style))
 
         projects = parsed.get("projects") or []
         if projects:
             right_flowables.append(Paragraph("DỰ ÁN NỔI BẬT", right_heading))
             for item in projects:
-                line = " — ".join(_text(v) for v in item.values() if v) if isinstance(item, dict) else _text(item)
-                right_flowables.append(Paragraph(f"• {line}", body_style))
+                line = _item_text(item)
+                right_flowables.append(Paragraph(f"- {line}", body_style))
 
         if accepted_suggestions:
             right_flowables.append(Paragraph("NỘI DUNG TỐI ƯU ĐÃ XÁC NHẬN", right_heading))
             for sug in accepted_suggestions:
-                right_flowables.append(Paragraph(f"✓ {_text(sug)}", body_style))
+                right_flowables.append(Paragraph(f"- {_text(sug)}", body_style))
 
         # Build 2-Column Table
         col_widths = [65 * mm, 118 * mm]
@@ -153,7 +260,14 @@ def build_cv_pdf(
             TableStyle([
                 ("VALIGN", (0, 0), (-1, -1), "TOP"),
                 ("BACKGROUND", (0, 0), (0, 0), sidebar_bg),
-                ("PADDING", (0, 0), (0, 0), 8),
+                ("LEFTPADDING", (0, 0), (0, 0), 12),
+                ("RIGHTPADDING", (0, 0), (0, 0), 12),
+                ("TOPPADDING", (0, 0), (0, 0), 14),
+                ("BOTTOMPADDING", (0, 0), (0, 0), 14),
+                ("LEFTPADDING", (1, 0), (1, 0), 12),
+                ("RIGHTPADDING", (1, 0), (1, 0), 8),
+                ("TOPPADDING", (1, 0), (1, 0), 14),
+                ("BOTTOMPADDING", (1, 0), (1, 0), 14),
                 ("LINERIGHT", (0, 0), (0, 0), 1, colors.HexColor("#e2e8f0")),
             ])
         )
@@ -209,11 +323,15 @@ def build_cv_pdf(
 
         story = []
         personal = parsed.get("personal_info") or {}
+        full_name = personal.get("full_name") or title
         contact_parts = [_text(val) for val in personal.values() if val]
         header_table = Table(
             [[
-                Paragraph(f"<b>{_text(title)}</b>", title_style),
-                Paragraph(" | ".join(contact_parts[:3]), contact_style),
+                [
+                    Paragraph(f"<b>{_text(full_name)}</b>", title_style),
+                    Paragraph(_text(parsed.get("headline") or title), contact_style),
+                ],
+                Paragraph(" | ".join(contact_parts[1:4]), contact_style),
             ]],
             colWidths=[110 * mm, 72 * mm],
         )
@@ -224,31 +342,50 @@ def build_cv_pdf(
                 ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
             ])
         )
-        story.extend([header_table, Spacer(1, 10)])
+        story.extend([header_table, Spacer(1, 8)])
 
-        sections = (
-            ("🚀 MỤC TIÊU NGHỀ NGHIỆP", parsed.get("summary") or ""),
-            ("⚡ KỸ NĂNG CÔNG NGHIỆP", ", ".join(parsed.get("skills") or [])),
-            ("🛠️ DỰ ÁN & SẢN PHẨM", parsed.get("projects") or []),
-            ("💼 KINH NGHIỆM LÀM VIỆC", parsed.get("experience") or []),
-            ("🎓 HỌC VẤN & BẰNG CẤP", parsed.get("education") or []),
+        summary = parsed.get("summary") or ""
+        if summary:
+            story.extend(
+                [
+                    Paragraph("MỤC TIÊU NGHỀ NGHIỆP", heading_style),
+                    HRFlowable(width="100%", thickness=1.2, color=accent, spaceBefore=2, spaceAfter=6),
+                    Paragraph(_text(summary), body_style),
+                ]
+            )
+
+        skills = parsed.get("skills") or []
+        if skills:
+            story.extend(
+                [
+                    Paragraph("KỸ NĂNG CÔNG NGHỆ", heading_style),
+                    HRFlowable(width="100%", thickness=1.2, color=accent, spaceBefore=2, spaceAfter=7),
+                    _SkillChips(skills, font, accent),
+                    Spacer(1, 3),
+                ]
+            )
+
+        timeline_sections = (
+            ("KINH NGHIỆM LÀM VIỆC", parsed.get("experience") or []),
+            ("DỰ ÁN & SẢN PHẨM", parsed.get("projects") or []),
+            ("HỌC VẤN & BẰNG CẤP", parsed.get("education") or []),
         )
-        for heading, value in sections:
-            if not value:
+        for heading, items in timeline_sections:
+            if not items:
                 continue
-            story.append(Paragraph(heading, heading_style))
-            story.append(HRFlowable(width="100%", thickness=1, color=accent, spaceBefore=2, spaceAfter=6))
-            items = value if isinstance(value, list) else [value]
-            for item in items:
-                line = " — ".join(_text(part) for part in item.values() if part) if isinstance(item, dict) else _text(item)
-                if line:
-                    story.append(Paragraph(f"▪ {line}", body_style))
+            story.extend(
+                [
+                    Paragraph(heading, heading_style),
+                    HRFlowable(width="100%", thickness=1.2, color=accent, spaceBefore=2, spaceAfter=5),
+                    _timeline_table(items, body_style, accent),
+                ]
+            )
 
         if accepted_suggestions:
-            story.append(Paragraph("✦ NỘI DUNG ATS ĐÃ TỐI ƯU", heading_style))
+            story.append(Paragraph("NỘI DUNG ATS ĐÃ TỐI ƯU", heading_style))
             story.append(HRFlowable(width="100%", thickness=1, color=accent, spaceBefore=2, spaceAfter=6))
             for suggestion in accepted_suggestions:
-                story.append(Paragraph(f"✓ {_text(suggestion)}", body_style))
+                story.append(Paragraph(f"- {_text(suggestion)}", body_style))
 
         document.build(story)
 
@@ -291,12 +428,26 @@ def build_cv_pdf(
             leading=13,
             textColor=colors.HexColor("#111827"),
         )
+        header_meta_style = ParagraphStyle(
+            name="ClassicHeaderMeta",
+            parent=body_style,
+            alignment=TA_CENTER,
+            textColor=colors.HexColor("#475569"),
+        )
 
-        story = [Paragraph(_text(title), title_style)]
         personal = parsed.get("personal_info") or {}
-        contact = " · ".join(_text(value) for value in personal.values() if value)
+        full_name = personal.get("full_name") or title
+        story = [Paragraph(_text(full_name), title_style)]
+        headline = parsed.get("headline") or title
+        if headline and headline != full_name:
+            story.append(Paragraph(_text(headline), header_meta_style))
+        contact = " | ".join(
+            _text(value)
+            for key, value in personal.items()
+            if key != "full_name" and value
+        )
         if contact:
-            story.extend([Paragraph(contact, body_style), Spacer(1, 4)])
+            story.extend([Paragraph(contact, header_meta_style), Spacer(1, 4)])
 
         sections = (
             ("TÓM TẮT THỰC THI", parsed.get("summary") or ""),
@@ -312,15 +463,15 @@ def build_cv_pdf(
             story.append(HRFlowable(width="100%", thickness=0.8, color=colors.HexColor("#9ca3af"), spaceBefore=2, spaceAfter=4))
             items = value if isinstance(value, list) else [value]
             for item in items:
-                line = " — ".join(_text(part) for part in item.values() if part) if isinstance(item, dict) else _text(item)
+                line = _item_text(item)
                 if line:
-                    story.append(Paragraph(f"• {line}", body_style))
+                    story.append(Paragraph(f"- {line}", body_style))
 
         if accepted_suggestions:
             story.append(Paragraph("NỘI DUNG TỐI ƯU ĐÃ XÁC NHẬN", heading_style))
             story.append(HRFlowable(width="100%", thickness=0.8, color=colors.HexColor("#9ca3af"), spaceBefore=2, spaceAfter=4))
             for suggestion in accepted_suggestions:
-                story.append(Paragraph(f"• {_text(suggestion)}", body_style))
+                story.append(Paragraph(f"- {_text(suggestion)}", body_style))
 
         document.build(story)
 
