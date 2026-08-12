@@ -206,6 +206,12 @@ class ApiClient {
     return await this.request('/jds');
   }
 
+  static async selectCatalogJD(sourceId) {
+    return await this.request(`/jds/catalog/${encodeURIComponent(sourceId)}/select`, {
+      method: 'POST',
+    });
+  }
+
   static async searchJobs(query = '', cvId = '', limit = 60) {
     const params = new URLSearchParams({ limit: String(limit) });
     if (query) params.set('q', query);
@@ -1979,29 +1985,76 @@ function startAppLogic() {
   }
 
   async function loadCVJDOptions(preferredJdId = '') {
-    if (!cvAnalysisJdSelect) return;
+      if (!cvAnalysisJdSelect) return;
     if (!ApiClient.isAuthenticated()) {
       cvAnalysisJdSelect.innerHTML = '<option value="">Vui lòng đăng nhập để chọn JD</option>';
       cvAnalysisJdSelect.disabled = true;
+      enhanceGapSelect(cvAnalysisJdSelect);
       updateCVJDSelectionHint();
       return;
     }
     const previousValue = preferredJdId || cvAnalysisJdSelect.value;
     try {
-      const jds = await ApiClient.listJDs();
+      const [jds, catalogResult] = await Promise.all([
+        ApiClient.listJDs(),
+        ApiClient.searchJobs('', '', 100).catch(() => ({ jobs: [] })),
+      ]);
+      const catalogJobs = catalogResult.jobs || [];
+      const storedCatalogBySource = new Map(
+        (jds || [])
+          .filter(jd => jd.normalized_json?.source === 'data/jds' && jd.normalized_json?.source_id)
+          .map(jd => [String(jd.normalized_json.source_id), jd]),
+      );
+      const savedJDs = (jds || []).filter(jd => jd.normalized_json?.source !== 'data/jds');
+      const catalogOptions = catalogJobs.map(job => {
+        const storedJD = storedCatalogBySource.get(String(job.source_id));
+        const value = storedJD?.id || `catalog:${job.source_id}`;
+        return `<option value="${escapeHtml(value)}">${escapeHtml(job.title)} · ${escapeHtml(job.company || 'Doanh nghiệp')}</option>`;
+      });
+      const savedOptions = savedJDs.map(jd => `<option value="${escapeHtml(jd.id)}">${escapeHtml(jd.title)} · ${escapeHtml(jd.company || 'Chưa ghi công ty')}</option>`);
       cvAnalysisJdSelect.disabled = false;
       cvAnalysisJdSelect.innerHTML = [
         '<option value="">Chọn một JD để phân tích CV</option>',
-        ...(jds || []).map(jd => `<option value="${escapeHtml(jd.id)}">${escapeHtml(jd.title)} · ${escapeHtml(jd.company || 'Chưa ghi công ty')}</option>`),
+        ...(catalogOptions.length ? [`<optgroup label="JD DOANH NGHIỆP TRONG DATA/JDS (${catalogOptions.length})">${catalogOptions.join('')}</optgroup>`] : []),
+        ...(savedOptions.length ? [`<optgroup label="JD ĐÃ LƯU HOẶC HỆ THỐNG">${savedOptions.join('')}</optgroup>`] : []),
       ].join('');
       if ([...cvAnalysisJdSelect.options].some(option => option.value === previousValue)) {
         cvAnalysisJdSelect.value = previousValue;
       }
+      enhanceGapSelect(cvAnalysisJdSelect);
       updateCVJDSelectionHint();
     } catch (err) {
       cvAnalysisJdSelect.innerHTML = '<option value="">Không thể tải danh sách JD</option>';
       cvAnalysisJdSelect.disabled = true;
+      enhanceGapSelect(cvAnalysisJdSelect);
       showToast(`Không thể tải JD: ${err.message}`, 'error');
+    }
+  }
+
+  async function handleCVJDSelectionChange() {
+    if (!cvAnalysisJdSelect) return;
+    const value = cvAnalysisJdSelect.value;
+    if (!value.startsWith('catalog:')) {
+      updateCVJDSelectionHint();
+      return;
+    }
+
+    const sourceId = value.slice('catalog:'.length);
+    cvAnalysisJdSelect.disabled = true;
+    if (cvSelectedJdHint) {
+      cvSelectedJdHint.textContent = 'Đang nạp JD doanh nghiệp từ data/jds...';
+      cvSelectedJdHint.classList.add('is-selected');
+    }
+    try {
+      const selectedJD = await ApiClient.selectCatalogJD(sourceId);
+      await loadCVJDOptions(selectedJD.id);
+      showToast('✅ Đã chọn JD doanh nghiệp từ data/jds.', 'success');
+    } catch (err) {
+      cvAnalysisJdSelect.value = '';
+      updateCVJDSelectionHint();
+      showToast(`❌ Không thể chọn JD trong data: ${err.message}`, 'error');
+    } finally {
+      cvAnalysisJdSelect.disabled = false;
     }
   }
 
@@ -2052,7 +2105,7 @@ function startAppLogic() {
   }
 
   cvAnalysisCvSelect?.addEventListener('change', updateCVSelectionHint);
-  cvAnalysisJdSelect?.addEventListener('change', updateCVJDSelectionHint);
+  cvAnalysisJdSelect?.addEventListener('change', handleCVJDSelectionChange);
   bindJDFileName(cvJdFileInput, cvJdFileName);
 
   cvJdUploadForm?.addEventListener('submit', async event => {
@@ -2221,43 +2274,6 @@ function startAppLogic() {
       showToast(`Không thể tải CV: ${err.message}`, 'error');
     }
   }
-
-  // --- CV Template Gallery Modal Controls ---
-  const btnOpenTemplateGallery = document.getElementById('btn-open-template-gallery');
-  const templateModalOverlay = document.getElementById('cv-template-modal-overlay');
-  const btnCloseTemplateModal = document.getElementById('btn-close-template-modal');
-
-  btnOpenTemplateGallery?.addEventListener('click', () => {
-    if (templateModalOverlay) templateModalOverlay.style.display = 'flex';
-  });
-
-  btnCloseTemplateModal?.addEventListener('click', () => {
-    if (templateModalOverlay) templateModalOverlay.style.display = 'none';
-  });
-
-  templateModalOverlay?.addEventListener('click', (e) => {
-    if (e.target === templateModalOverlay) templateModalOverlay.style.display = 'none';
-  });
-
-  document.querySelectorAll('.btn-use-template').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const templateName = btn.dataset.template || 'classic';
-      const templateSelect = document.getElementById('manual-cv-template');
-      if (templateSelect) templateSelect.value = templateName;
-      if (templateModalOverlay) templateModalOverlay.style.display = 'none';
-
-      const templateLabels = {
-        modern: 'Modern Two-Column (Hồ Sơ 2 Cột)',
-        classic: 'Classic ATS Standard (Hồ Sơ Cổ Điển ATS)',
-        compact: 'Creative Tech Timeline (Hồ Sơ Sáng Tạo & Tech)',
-      };
-      showToast(`✨ Đã chọn mẫu: ${templateLabels[templateName] || templateName}! Hãy điền thông tin bên dưới để tạo CV.`, 'success');
-      const manualForm = document.getElementById('manual-cv-form');
-      const manualCard = document.getElementById('manual-cv-card');
-      if (manualCard) manualCard.hidden = false;
-      if (manualForm) manualForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    });
-  });
 
   document.getElementById('btn-open-full-gap-result')?.addEventListener('click', async () => {
     if (!latestCVAnalysisContext) return;
@@ -2858,6 +2874,7 @@ TÊN CÔNG TY:
         closeGapSelectMenus(shell);
         shell.classList.toggle('is-open', shouldOpen);
         trigger.setAttribute('aria-expanded', String(shouldOpen));
+        if (shouldOpen) window.setTimeout(() => menu.querySelector('.gap-select-search')?.focus(), 0);
       });
 
       trigger.addEventListener('keydown', event => {
@@ -2866,14 +2883,14 @@ TÊN CÔNG TY:
         closeGapSelectMenus(shell);
         shell.classList.add('is-open');
         trigger.setAttribute('aria-expanded', 'true');
-        const items = [...menu.querySelectorAll('.gap-select-menu-item:not(:disabled)')];
+        const items = [...menu.querySelectorAll('.gap-select-menu-item:not(:disabled):not([hidden])')];
         const selectedIndex = Math.max(0, items.findIndex(item => item.getAttribute('aria-selected') === 'true'));
         const targetIndex = event.key === 'ArrowUp' ? Math.max(0, selectedIndex - 1) : selectedIndex;
         items[targetIndex]?.focus();
       });
 
       menu.addEventListener('keydown', event => {
-        const items = [...menu.querySelectorAll('.gap-select-menu-item:not(:disabled)')];
+        const items = [...menu.querySelectorAll('.gap-select-menu-item:not(:disabled):not([hidden])')];
         const currentIndex = items.indexOf(document.activeElement);
         if (event.key === 'Escape') {
           event.preventDefault();
@@ -2897,17 +2914,27 @@ TÊN CÔNG TY:
     const selectedMeta = trigger.querySelector('.gap-select-value-meta');
     selectedMeta.textContent = selectedParts.join(' • ');
     selectedMeta.hidden = selectedParts.length === 0;
-    trigger.disabled = !selectedOption || selectedOption.disabled;
+    trigger.disabled = select.disabled || !selectedOption || selectedOption.disabled;
 
-    const badge = select.id.includes('cv') ? 'CV' : 'JD';
-    menu.innerHTML = [...select.options].map(option => {
+    const badge = select.id.includes('jd') ? 'JD' : 'CV';
+    const searchable = select.options.length > 10;
+    let previousGroup = '';
+    const optionMarkup = [...select.options].map(option => {
       const parts = option.textContent.split(' • ');
       const title = parts.shift();
       const meta = parts.join(' • ');
       const selected = option.value === select.value;
+      const group = option.parentElement?.tagName === 'OPTGROUP' ? option.parentElement.label : '';
+      const groupHeading = group && group !== previousGroup
+        ? `<div class="gap-select-group-label" data-select-group="${escapeHtml(group)}">${escapeHtml(group)}</div>`
+        : '';
+      previousGroup = group;
       return `
+        ${groupHeading}
         <button type="button" class="gap-select-menu-item${selected ? ' is-selected' : ''}"
           role="option" data-value="${escapeHtml(option.value)}" aria-selected="${selected}"
+          data-search-text="${escapeHtml(`${title} ${meta} ${group}`.toLocaleLowerCase('vi'))}"
+          data-option-group="${escapeHtml(group)}"
           ${option.disabled ? 'disabled' : ''}>
           <span class="gap-option-badge">${badge}</span>
           <span class="gap-option-copy">
@@ -2917,6 +2944,31 @@ TÊN CÔNG TY:
           <span class="gap-option-check" aria-hidden="true">✓</span>
         </button>`;
     }).join('');
+    menu.innerHTML = `
+      ${searchable ? `
+        <div class="gap-select-search-wrap">
+          <span aria-hidden="true">⌕</span>
+          <input class="gap-select-search" type="search" placeholder="Tìm vị trí hoặc doanh nghiệp..." aria-label="Tìm trong danh sách JD" autocomplete="off" />
+        </div>` : ''}
+      <div class="gap-select-options">${optionMarkup}</div>
+      <p class="gap-select-no-results" hidden>Không tìm thấy JD phù hợp.</p>`;
+
+    const searchInput = menu.querySelector('.gap-select-search');
+    searchInput?.addEventListener('click', event => event.stopPropagation());
+    searchInput?.addEventListener('input', () => {
+      const query = searchInput.value.trim().toLocaleLowerCase('vi');
+      const items = [...menu.querySelectorAll('.gap-select-menu-item')];
+      items.forEach(item => {
+        item.hidden = Boolean(query) && !item.dataset.searchText.includes(query);
+      });
+      menu.querySelectorAll('.gap-select-group-label').forEach(label => {
+        const group = label.dataset.selectGroup;
+        label.hidden = !items.some(item => !item.hidden && item.dataset.optionGroup === group);
+      });
+      const hasVisibleItems = items.some(item => !item.hidden && !item.disabled);
+      const noResults = menu.querySelector('.gap-select-no-results');
+      if (noResults) noResults.hidden = hasVisibleItems;
+    });
 
     menu.querySelectorAll('.gap-select-menu-item:not(:disabled)').forEach(item => {
       item.addEventListener('click', () => {

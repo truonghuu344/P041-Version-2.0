@@ -4,6 +4,32 @@ from tests.helpers import insert_jd, register_and_login
 
 
 @pytest.mark.asyncio
+async def test_student_can_select_enterprise_jd_from_data_catalog(client):
+    _user, headers = await register_and_login(client, email="catalog-jd@example.com")
+    catalog = await client.get("/api/v1/jobs?limit=1", headers=headers)
+    assert catalog.status_code == 200
+    source_job = catalog.json()["jobs"][0]
+
+    selected = await client.post(
+        f"/api/v1/jds/catalog/{source_job['source_id']}/select",
+        headers=headers,
+    )
+    assert selected.status_code == 200, selected.text
+    body = selected.json()
+    assert body["title"] == source_job["title"]
+    assert body["company"] == source_job["company"]
+    assert body["normalized_json"]["source"] == "data/jds"
+    assert body["normalized_json"]["source_id"] == source_job["source_id"]
+
+    selected_again = await client.post(
+        f"/api/v1/jds/catalog/{source_job['source_id']}/select",
+        headers=headers,
+    )
+    assert selected_again.status_code == 200
+    assert selected_again.json()["id"] == body["id"]
+
+
+@pytest.mark.asyncio
 async def test_jd_list_seeds_system_records_and_includes_users_custom_jd(client):
     _user, headers = await register_and_login(client, email="jd-owner@example.com")
     custom = await client.post(
