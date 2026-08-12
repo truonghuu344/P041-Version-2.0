@@ -1,4 +1,4 @@
-# 📋 Product Requirements Document (PRD) — Trợ Lý Nghề Nghiệp X
+# 📋 Product Requirements Document (PRD) — CV ASSISTANT
 > **Agent tối ưu CV và phỏng vấn thử cho sinh viên**  
 > **Mã dự án:** P-041 | **Nhóm:** WinTop
 > **Mentor:** Trần Vũ Anh (Andy)  
@@ -9,7 +9,7 @@
 ## 1. Tổng quan dự án (Project Overview)
 
 ### 1.1 Tên & Định hướng sản phẩm
-* **Tên dự án:** Trợ Lý Nghề Nghiệp X (Career Assistant X)
+* **Tên dự án:** Trợ Lý Nghề Nghiệp X (CV Assistant)
 * **Định vị:** AI Agent hướng nghiệp thông minh giúp sinh viên tối ưu hóa CV theo từng Job Description (dựa trên kinh nghiệm thật, không bịa/thổi phồng) và luyện phỏng vấn thử theo rubric STAR, nâng cao tỷ lệ qua vòng hồ sơ và sự tự tin khi ứng tuyển.
 
 ### 1.2 Mục tiêu dự án & Chỉ số vận hành

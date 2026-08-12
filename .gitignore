@@ -16,6 +16,8 @@ env/
 .env
 .env.local
 .env.production
+.env.development
+.env*.local
 
 # IDE
 .vscode/
@@ -51,6 +53,7 @@ docker-compose.override.yml
 
 # Node (frontend)
 node_modules/
+*.tsbuildinfo
 .next/
 out/
 .nuxt/
@@ -62,3 +65,4 @@ out/
 # AI logs — tracked structure, ignored content
 .ai-log/*.jsonl
 .ai-log/archive/
+.vercel

@@ -1,14 +1,38 @@
-# Core
+# ==========================================
+# 1. CORE & SERVER
+# ==========================================
 fastapi>=0.115.0
 uvicorn[standard]>=0.34.0
 pydantic>=2.10.0
 pydantic-settings>=2.7.0
 python-dotenv>=1.0.0
+python-multipart>=0.0.12        # Bắt buộc để nhận File upload (CV PDF/Word)
+reportlab>=4.0.0               # Tạo file PDF CV export
 
-# AI / LangChain
+# ==========================================
+# 2. AUTHENTICATION & SECURITY
+# ==========================================
+pyjwt>=2.8.0                    # Tạo và verify JWT token
+passlib[bcrypt]>=1.7.4          # Mã hóa mật khẩu
+bcrypt>=4.1.0                   # Engine mã hóa bcrypt
+
+# ==========================================
+# 3. DATABASE & CACHING
+# ==========================================
+sqlalchemy>=2.0.0               # ORM quản lý Database
+alembic>=1.14.0                 # DB Migration tool
+psycopg2-binary>=2.9.0          # Driver kết nối PostgreSQL
+asyncpg>=0.29.0                 # Async driver cho PostgreSQL (tùy chọn tối ưu tốc độ)
+aiosqlite>=0.20.0               # Async driver cho SQLite (dev fallback)
+redis>=5.0.0                    # Cache session & state cho LangGraph
+
+# ==========================================
+# 4. AI & LANGCHAIN FRAMEWORK
+# ==========================================
 langchain>=0.3.0
-langchain-openai>=0.3.0
-langgraph>=0.2.0
+langchain-community>=0.3.0
+langchain-google-genai>=4.0.0
+langgraph>=0.2.0                # Xử lý luồng hội thoại phỏng vấn AI phức tạp
 
 # Database (uncomment as needed)
 # sqlalchemy>=2.0.0
