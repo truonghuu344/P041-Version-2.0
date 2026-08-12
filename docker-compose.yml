@@ -3,6 +3,8 @@ name: career-assistant
 services:
   db:
     image: pgvector/pgvector:pg16
+    ports:
+      - "5432:5432"
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-career_assistant}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
