@@ -51,6 +51,13 @@ async def test_student_controls_counselor_consent_and_feedback(client):
     assert students.status_code == 200
     assert students.json()[0]["student_id"] == student["id"]
 
+    overview = await client.get(f"/api/v1/counselor/students/{student['id']}", headers=counselor_headers)
+    assert overview.status_code == 200, overview.text
+    assert overview.json()["first_interview_score"] is None
+    assert overview.json()["latest_interview_score"] is None
+    assert overview.json()["interview_score_delta"] is None
+    assert overview.json()["average_csat"] is None
+
     feedback = await client.post(
         f"/api/v1/counselor/students/{student['id']}/feedback",
         headers=counselor_headers,
@@ -204,4 +211,8 @@ async def test_interview_resume_csat_and_product_metrics(client):
     metrics = await client.get("/api/v1/metrics/product", headers=admin_headers)
     assert metrics.status_code == 200, metrics.text
     assert metrics.json()["average_csat"] == 5
+    assert metrics.json()["adoption_target"] == 60
+    assert isinstance(metrics.json()["adoption_target_met"], bool)
+    assert metrics.json()["csat_target"] == 4
+    assert metrics.json()["csat_target_met"] is True
     assert admin["role"] == "admin"

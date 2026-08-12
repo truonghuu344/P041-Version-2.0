@@ -17,6 +17,32 @@ def test_cv_and_jd_selection_render_analysis_results_in_place():
     assert ".cv-analysis-results-card" in STYLE_CSS
 
 
+def test_gap_analysis_replaces_static_roadmap_with_evidence_backed_detail():
+    assert 'trajectory-roadmap-card' not in PAGE_JS
+    for element_id in (
+        'cv-result-score-breakdown',
+        'cv-result-soft-skills',
+        'cv-result-section-recommendations',
+        'cv-result-certifications',
+        'cv-result-projects',
+        'cv-result-suggestions-preview',
+    ):
+        assert f'id="{element_id}"' in PAGE_JS
+    assert "analysis.integrity_guardrail" in APP_JS
+    assert 'id="view-gap"' not in PAGE_JS
+    assert 'id="btn-open-full-gap-result"' not in PAGE_JS
+
+
+def test_counselor_dashboard_shows_actual_kpis_and_before_after_progress():
+    assert 'id="counselor-kpi-overview"' in PAGE_JS
+    assert "ApiClient.getProductMetrics()" in APP_JS
+    assert "data.first_interview_score" in APP_JS
+    assert "data.latest_interview_score" in APP_JS
+    assert "data.interview_score_delta" in APP_JS
+    assert "data.average_csat" in APP_JS
+    assert ".counselor-progress-summary" in STYLE_CSS
+
+
 def test_nova_widget_has_accessible_open_close_controls():
     assert 'id="ai-companion-avatar"' in PAGE_JS
     assert 'aria-label="Mở chat với trợ lý AI Nova"' in PAGE_JS
@@ -34,12 +60,16 @@ def test_nova_uses_authenticated_backend_and_handles_expired_session():
     assert "ApiClient.logout()" in APP_JS
 
 
-def test_gap_analysis_dropdown_and_submit_contract_are_present():
-    assert 'id="page-gap-select-cv"' in PAGE_JS
-    assert 'id="page-gap-select-jd"' in PAGE_JS
-    assert 'id="page-btn-run-gap"' in PAGE_JS
+def test_inline_analysis_and_interview_dropdown_contract_are_present():
+    assert 'id="page-gap-select-cv"' not in PAGE_JS
+    assert 'id="page-gap-select-jd"' not in PAGE_JS
+    assert 'id="page-btn-run-gap"' not in PAGE_JS
+    assert 'id="page-interview-select-cv"' in PAGE_JS
+    assert 'id="page-interview-select-jd"' in PAGE_JS
     assert "ApiClient.runGapAnalysis" in APP_JS
     assert ".gap-select-trigger" in STYLE_CSS
+    assert ".interview-select-shell .gap-select-value" in STYLE_CSS
+    assert "grid-template-columns: minmax(170px, 0.42fr) minmax(0, 1.58fr);" in STYLE_CSS
 
 
 def test_assistant_gif_asset_exists_and_is_not_empty():

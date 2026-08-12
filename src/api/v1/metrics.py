@@ -31,7 +31,11 @@ async def get_product_metrics(
         active_users=int(active_users),
         total_users=int(total_users),
         adoption_rate=adoption,
+        adoption_target=60.0,
+        adoption_target_met=adoption >= 60.0,
         average_csat=round(float(average_csat), 2) if average_csat is not None else None,
+        csat_target=4.0,
+        csat_target_met=(float(average_csat) >= 4.0) if average_csat is not None else None,
         completed_interviews=int(completed_interviews),
         average_interview_score=(
             round(float(average_interview_score), 2) if average_interview_score is not None else None

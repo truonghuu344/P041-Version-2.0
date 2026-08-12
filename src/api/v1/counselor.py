@@ -12,6 +12,7 @@ from src.db.models import (
     CounselorAssignment,
     CounselorFeedback,
     CVAnalysis,
+    InterviewFeedback,
     InterviewReport,
     InterviewSession,
     User,
@@ -173,6 +174,23 @@ async def get_student_overview(
         .join(InterviewSession, InterviewSession.id == InterviewReport.session_id)
         .where(InterviewSession.user_id == student_id)
     )
+    score_rows = await db.execute(
+        select(InterviewReport.total_score)
+        .join(InterviewSession, InterviewSession.id == InterviewReport.session_id)
+        .where(InterviewSession.user_id == student_id)
+        .order_by(InterviewSession.created_at.asc())
+    )
+    interview_scores = [float(score) for score in score_rows.scalars().all() if score is not None]
+    first_interview_score = interview_scores[0] if interview_scores else None
+    latest_interview_score = interview_scores[-1] if interview_scores else None
+    score_delta = (
+        latest_interview_score - first_interview_score
+        if first_interview_score is not None and latest_interview_score is not None
+        else None
+    )
+    average_csat = await db.scalar(
+        select(func.avg(InterviewFeedback.rating)).where(InterviewFeedback.user_id == student_id)
+    )
     feedback_result = await db.execute(
         select(CounselorFeedback)
         .where(CounselorFeedback.student_id == student_id)
@@ -210,6 +228,7 @@ async def get_student_overview(
                 project_recommendations=gap_data.get("project_recommendations", []),
                 cv_section_recommendations=gap_data.get("cv_section_recommendations", []),
                 score_breakdown=gap_data.get("score_breakdown", {}),
+                integrity_guardrail=gap_data.get("integrity_guardrail", "passed"),
                 created_at=item.created_at,
             )
         )
@@ -242,6 +261,10 @@ async def get_student_overview(
         interview_count=int(interview_count),
         completed_interview_count=int(completed_count),
         average_star_score=round(float(average_score or 0.0), 2),
+        first_interview_score=round(first_interview_score, 2) if first_interview_score is not None else None,
+        latest_interview_score=round(latest_interview_score, 2) if latest_interview_score is not None else None,
+        interview_score_delta=round(score_delta, 2) if score_delta is not None else None,
+        average_csat=round(float(average_csat), 2) if average_csat is not None else None,
         recent_feedback=[CounselorFeedbackOut.model_validate(item) for item in feedback_result.scalars().all()],
         cvs=student_cvs,
         analyses=student_analyses,

@@ -191,6 +191,7 @@ class GapAnalysisResponse(BaseModel):
     project_recommendations: list[ProjectRecommendation] = []
     cv_section_recommendations: list[CVSectionRecommendation] = []
     score_breakdown: dict[str, float] = {}
+    integrity_guardrail: str = "passed"
     created_at: datetime
 
 
@@ -282,6 +283,7 @@ class AssistantChatRequest(BaseModel):
     message: str = Field(..., min_length=1, max_length=4000)
     history: list[AssistantChatMessage] = Field(default_factory=list, max_length=12)
     current_page: str = Field(default="dashboard", max_length=50)
+    timezone: str | None = Field(default=None, max_length=64)
     conversation_id: str | None = Field(default=None, max_length=36)
 
 
@@ -392,6 +394,10 @@ class CounselorStudentOverview(BaseModel):
     interview_count: int
     completed_interview_count: int
     average_star_score: float
+    first_interview_score: float | None = None
+    latest_interview_score: float | None = None
+    interview_score_delta: float | None = None
+    average_csat: float | None = None
     recent_feedback: list[CounselorFeedbackOut] = Field(default_factory=list)
     cvs: list[CVOut] = Field(default_factory=list)
     analyses: list[GapAnalysisResponse] = Field(default_factory=list)
@@ -430,7 +436,11 @@ class ProductMetricsOut(BaseModel):
     active_users: int
     total_users: int
     adoption_rate: float
+    adoption_target: float = 60.0
+    adoption_target_met: bool = False
     average_csat: float | None = None
+    csat_target: float = 4.0
+    csat_target_met: bool | None = None
     completed_interviews: int
     average_interview_score: float | None = None
     latency_by_event_ms: dict[str, float] = Field(default_factory=dict)
@@ -506,4 +516,3 @@ class InterviewAnswerRequest(BaseModel):
         if self.user_answer is not None:
             return self.user_answer
         return ""
-
