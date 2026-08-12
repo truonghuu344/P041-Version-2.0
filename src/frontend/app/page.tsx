@@ -256,7 +256,6 @@ export default function Page() {
                     </svg>
                   </div>
                   <div>
-<<<<<<< HEAD
                     <p className="feature-name" data-i18n="feat-opt-name">Phân tích CV</p>
                     <p className="feature-desc" data-i18n="feat-opt-desc">Tối ưu theo JD</p>
                   </div>
@@ -283,35 +282,6 @@ export default function Page() {
                     <p className="feature-desc" data-i18n="feat-int-desc">STAR Rubric</p>
                   </div>
                 </div>
-=======
-                    <p className="feature-name" data-i18n="nav-cv">Phân tích CV</p>
-                    <p className="feature-desc" data-i18n="feat-opt-desc">tối ưu CV</p>
-                  </div>
-                </div>
-                <div className="feature-item" id="feature-chatbot">
-                  <div className="feature-icon feature-icon-blue">
-                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
-                      <path d="M20 15a3 3 0 0 1-3 3H9l-5 3v-6a3 3 0 0 1-1-2.24V7a3 3 0 0 1 3-3h11a3 3 0 0 1 3 3v8z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
-                      <path d="M8 10h.01M12 10h.01M16 10h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="feature-name" data-i18n="feat-chatbot-name">Chatbot</p>
-                    <p className="feature-desc" data-i18n="feat-chatbot-desc">Trợ lý nghề nghiệp AI</p>
-                  </div>
-                </div>
-                <div className="feature-item" id="feature-interview">
-                  <div className="feature-icon feature-icon-purple">
-                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
-                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="feature-name" data-i18n="nav-interview">Phòng phỏng vấn</p>
-                    <p className="feature-desc" data-i18n="feat-int-desc">STAR Rubric</p>
-                  </div>
-                </div>
->>>>>>> dce2081f0be2eca0c0425bbbfda841ad1bdebaed
               </div>
             </div>
           </div>

@@ -707,13 +707,13 @@ body {
 
 .agent-card {
   width: 100%;
-  max-width: 880px;
+  max-width: 780px;
   background: rgba(12, 14, 44, 0.88);
   border: 1.5px solid rgba(124, 77, 255, 0.4);
   border-radius: var(--radius-xl);
-  padding: 36px 32px;
+  padding: 32px;
   display: flex;
-  gap: 32px;
+  gap: 28px;
   align-items: center;
   backdrop-filter: blur(24px);
   box-shadow: 0 24px 64px rgba(0,0,0,0.5), 0 0 45px rgba(124,77,255,0.2);
@@ -785,7 +785,7 @@ body {
 
 .features-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
 
@@ -795,6 +795,7 @@ body {
 }
 
 .feature-item {
+  min-height: 76px;
   background: rgba(255,255,255,0.06);
   border: 1.5px solid rgba(255,255,255,0.12);
   border-radius: var(--radius-md);
@@ -854,7 +855,7 @@ body {
 /* ===== RESPONSIVE ===== */
 @media (max-width: 900px) {
   .agent-card {
-    max-width: 680px;
+    max-width: 620px;
     flex-direction: column;
   }
 
