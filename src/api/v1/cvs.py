@@ -59,6 +59,38 @@ def _manual_cv_raw_text(payload: ManualCVCreate) -> str:
     return "\n".join(lines)
 
 
+CV_TEMPLATE_DOWNLOADS = {
+    "modern": ("cv-template-modern.pdf", "Mẫu CV Hiện Đại - Hai Cột"),
+    "classic": ("cv-template-classic-ats.pdf", "Mẫu CV ATS - Một Cột"),
+    "compact": ("cv-template-creative-tech.pdf", "Mẫu CV Creative Tech - Timeline"),
+}
+
+
+def _cv_template_sample() -> dict:
+    """Nội dung gợi ý giúp người dùng thấy rõ cấu trúc của PDF mẫu tải về."""
+    return {
+        "headline": "VỊ TRÍ ỨNG TUYỂN / CHUYÊN MÔN CỦA BẠN",
+        "personal_info": {
+            "full_name": "HỌ VÀ TÊN CỦA BẠN",
+            "email": "email@example.com",
+            "phone": "(+84) 000 000 000",
+            "location": "Thành phố, Việt Nam",
+        },
+        "summary": "Viết 2-3 câu về mục tiêu nghề nghiệp, kinh nghiệm và giá trị nổi bật của bạn.",
+        "skills": ["Kỹ năng chuyên môn", "Công cụ", "Ngoại ngữ", "Kỹ năng mềm"],
+        "education": [
+            {"description": "Tên trường - Chuyên ngành - Thời gian - Thành tích nổi bật"},
+        ],
+        "experience": [
+            {"description": "Vị trí - Doanh nghiệp - Thời gian - Kết quả có số liệu"},
+            {"description": "Mô tả trách nhiệm và tác động nổi bật của bạn"},
+        ],
+        "projects": [
+            {"description": "Tên dự án - Vai trò - Công nghệ - Kết quả"},
+        ],
+    }
+
+
 @router.post("/upload", response_model=CVOut, status_code=status.HTTP_201_CREATED)
 async def upload_cv(
     file: UploadFile = File(...),
@@ -177,6 +209,31 @@ async def create_manual_cv(
     await db.commit()
     await db.refresh(cv)
     return cv
+
+
+@router.get("/templates/{template_name}/download")
+async def download_cv_template(template_name: str) -> StreamingResponse:
+    """Tải PDF mẫu công khai để người dùng xem và điền theo một trong ba cấu trúc CV."""
+    template = CV_TEMPLATE_DOWNLOADS.get(template_name)
+    if not template:
+        raise HTTPException(status_code=404, detail="Template CV không tồn tại.")
+
+    filename, title = template
+    pdf_bytes = build_cv_pdf(
+        title=title,
+        parsed=_cv_template_sample(),
+        accepted_suggestions=[],
+        template_name=template_name,
+    )
+    return StreamingResponse(
+        BytesIO(pdf_bytes),
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Cache-Control": "no-store, max-age=0",
+            "Pragma": "no-cache",
+        },
+    )
 
 
 @router.put("/{cv_id}/manual", response_model=CVOut)
