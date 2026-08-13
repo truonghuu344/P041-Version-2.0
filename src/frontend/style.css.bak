@@ -35,8 +35,8 @@
 
 :root {
   /* Brand Core Colors */
-  --primary:          #5B52E0;
-  --primary-hover:    #4A3AD8;
+  --primary:          #6C63FF;
+  --primary-hover:    #5b52e0;
   --secondary:        #72B5C7;
   --accent:           #B983FF;
   --success:          #37D67A;
@@ -102,9 +102,8 @@
 
   --accent-purple:    #7c4dff;
   --accent-pink:      #ff4e9a;
-  --accent-cyan:      #00E5FF;
+  --accent-cyan:      #68B9C6;
   --accent-red:       #ff4e6a;
-  --text-white:       #FFFFFF;
   --radius-sm:        8px;
   --radius-md:        14px;
   --radius-lg:        22px;
@@ -124,12 +123,7 @@ html.light,
   --text-primary:     #18233F;
   --text-secondary:   #60708F;
   --text-dim:         #60708F;
-  --text-muted:       #636D7B;
-  --accent-cyan:      #0E7490;
-  --success:          #0B7A47;
-  --danger:           #C1121F;
-  --accent:           #7A3FD6;
-  --secondary:        #3E7C8C;
+  --text-muted:       #8A94A8;
 
   --bg-deep:          #F7F9FF;
   --bg-dark:          #EEF4FF;
@@ -170,7 +164,7 @@ html.light,
 
   /* Status colors */
   --success-bg:       #E9FBF3;
-  --warning:          #B45309;
+  --warning:          #F5A524;
   --warning-bg:       #FFF6DF;
   --danger-bg:        #FFF0F3;
 
@@ -264,7 +258,7 @@ body {
   font-family: var(--font);
   font-weight: 500;
   background-color: var(--bg-deep);
-  color: var(--text-primary);
+  color: var(--text-white);
   min-height: 100vh;
   overflow-x: hidden;
   position: relative;
@@ -798,7 +792,7 @@ body {
 
 #icon-search-btn {
   border-color: rgba(0,229,255,0.45);
-  color: var(--accent-cyan);
+  color: #00e5ff;
   box-shadow: 0 0 20px rgba(0,229,255,0.25);
 }
 #icon-search-btn:hover {
@@ -934,7 +928,7 @@ body {
   border-radius: 12px;
   background: rgba(0,229,255,0.15);
   border: 1.5px solid rgba(0,229,255,0.4);
-  color: var(--accent-cyan);
+  color: #00e5ff;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
   box-shadow: 0 0 16px rgba(0,229,255,0.3);
@@ -1519,8 +1513,8 @@ html.light .page-title,
   border-radius: 55px;
   position: relative;
   background: radial-gradient(circle at 50% 50%, rgba(6,7,26,0.3) 0%, rgba(4,5,20,0.9) 100%);
-  border: 3px solid #b9ecfb;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.6), inset 0 0 20px rgba(0,210,255,0.30), 0 0 16px rgba(0,229,255,0.55), 0 0 5px rgba(0,229,255,0.9);
+  border: 6px solid #e2e8f0;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.6), inset 0 0 20px rgba(0,210,255,0.25), 0 0 15px rgba(255,255,255,0.4);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -1532,7 +1526,7 @@ html.light .page-title,
   width: 260px;
   height: 130px;
   border-radius: 65px;
-  border-width: 4px;
+  border-width: 8px;
   border-color: #ffffff;
   box-shadow: 0 10px 32px rgba(0,0,0,0.7), inset 0 0 25px rgba(0,229,255,0.3), 0 0 20px rgba(255,255,255,0.6);
 }
@@ -1545,20 +1539,20 @@ html.light .page-title,
 .porthole-ring {
   position: absolute;
   inset: 4px;
-  border-radius: 999px;
-  border: 1px dashed rgba(0,229,255,0.45);
+  border-radius: 50%;
+  border: 1px dashed rgba(255,255,255,0.3);
   pointer-events: none;
 }
 .porthole-label {
-  font-size: 12px;
-  font-weight: 800;
-  color: var(--accent-cyan);
-  letter-spacing: 0.3px;
+  font-size: 9px;
+  font-weight: 700;
+  color: #00e5ff;
+  letter-spacing: 1px;
   text-shadow: 0 0 6px rgba(0,229,255,0.8);
-  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  position: relative;
   z-index: 2;
   background: rgba(0,0,0,0.45);
-  padding: 2px 9px; width: fit-content; max-width: 150px; text-align: center; white-space: normal; line-height: 1.18;
+  padding: 2px 8px;
   border-radius: 10px;
 }
 
@@ -1584,7 +1578,7 @@ html.light .page-title,
   align-items: center;
   gap: 8px;
   background: #0f172a;
-  color: var(--accent-cyan);
+  color: #00e5ff;
   padding: 6px 16px;
   border-radius: 20px;
   font-size: 11px;
@@ -4782,7 +4776,7 @@ html.light .form-input:focus,
   font-family: 'Space Mono', 'Courier New', monospace;
   font-size: 11px;
   font-weight: 700;
-  color: var(--accent-cyan);
+  color: #00e5ff;
   letter-spacing: 1px;
   text-transform: uppercase;
 }
@@ -4929,7 +4923,7 @@ html.light .form-input:focus,
 .career-nav-map-card .map-title {
   font-family: 'Space Mono', monospace;
   font-size: 14px;
-  color: var(--accent-cyan);
+  color: #00e5ff;
   letter-spacing: 1px;
 }
 
@@ -4997,7 +4991,7 @@ html.light .form-input:focus,
 }
 
 .map-node.active .node-icon {
-  border-color: var(--accent-cyan);
+  border-color: #00e5ff;
   background: rgba(0, 229, 255, 0.2);
   box-shadow: 0 0 30px #00e5ff;
 }
@@ -5220,7 +5214,7 @@ html.light .form-input:focus,
   font-weight: 700;
 }
 
-.tag-cv { background: rgba(0, 229, 255, 0.15); color: var(--accent-cyan); }
+.tag-cv { background: rgba(0, 229, 255, 0.15); color: #00e5ff; }
 .tag-interview { background: rgba(185, 131, 255, 0.15); color: #b983ff; }
 .tag-gap { background: rgba(255, 78, 154, 0.15); color: #ff4e9a; }
 
@@ -5240,7 +5234,7 @@ html.light .form-input:focus,
 .archive-btn-view {
   background: none;
   border: none;
-  color: var(--accent-cyan);
+  color: #00e5ff;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
@@ -5268,7 +5262,7 @@ html.light .form-input:focus,
 
 .archive-detail-score-row strong {
   font-size: 22px;
-  color: var(--accent-cyan);
+  color: #00e5ff;
 }
 
 .star-grid,
@@ -5402,7 +5396,7 @@ html.light .form-input:focus,
 }
 
 .crew-name { font-size: 20px; font-weight: 800; color: #ffffff; margin-bottom: 4px; }
-.crew-role-badge { font-family: monospace; font-size: 11px; color: var(--accent-cyan); margin-bottom: 20px; }
+.crew-role-badge { font-family: monospace; font-size: 11px; color: #00e5ff; margin-bottom: 20px; }
 
 .crew-stats-grid {
   display: grid;
@@ -5421,7 +5415,7 @@ html.light .form-input:focus,
   align-items: center;
 }
 
-.crew-stat-box .stat-num { font-size: 16px; font-weight: 800; color: var(--accent-cyan); }
+.crew-stat-box .stat-num { font-size: 16px; font-weight: 800; color: #00e5ff; }
 .crew-stat-box .stat-lbl { font-size: 10px; color: var(--text-dim); }
 
 .profile-settings-card {
@@ -5454,7 +5448,7 @@ html.light .form-input:focus,
 
 .persona-btn:hover,
 .persona-btn.active {
-  border-color: var(--accent-cyan);
+  border-color: #00e5ff;
   background: rgba(0, 229, 255, 0.1);
   box-shadow: 0 0 20px rgba(0, 229, 255, 0.15);
 }
@@ -5583,7 +5577,7 @@ html.light .form-input:focus,
 }
 
 .nav-link:hover {
-  color: var(--accent-cyan) !important;
+  color: #00e5ff !important;
   background: rgba(0, 229, 255, 0.08) !important;
   box-shadow: 0 0 14px rgba(0, 229, 255, 0.2) !important;
   transform: translateY(-1px) !important;
@@ -5618,7 +5612,7 @@ html.light .form-input:focus,
 
 .btn-login:hover {
   background: linear-gradient(135deg, rgba(124, 77, 255, 0.45), rgba(0, 229, 255, 0.45)) !important;
-  border-color: var(--accent-cyan) !important;
+  border-color: #00e5ff !important;
   box-shadow: 0 0 22px rgba(0, 229, 255, 0.5) !important;
   transform: translateY(-1px) !important;
 }
@@ -5975,7 +5969,7 @@ html.light .form-input:focus,
 
 .btn-login:hover {
   background: linear-gradient(135deg, rgba(124, 77, 255, 0.45), rgba(0, 229, 255, 0.45)) !important;
-  border-color: var(--accent-cyan) !important;
+  border-color: #00e5ff !important;
   box-shadow: 0 0 22px rgba(0, 229, 255, 0.5) !important;
   transform: translateY(-1px) !important;
 }
@@ -6001,7 +5995,7 @@ html.light .form-input:focus,
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 1.5px;
-  color: var(--accent-cyan);
+  color: #00e5ff;
   background: rgba(0, 229, 255, 0.1);
   border: 1px solid rgba(0, 229, 255, 0.3);
   padding: 6px 16px;
@@ -6128,7 +6122,7 @@ html.light .section-subtitle,
 }
 
 .plan-title.pro-title {
-  color: var(--accent-cyan);
+  color: #00e5ff;
   text-shadow: 0 0 15px rgba(0, 229, 255, 0.4);
 }
 
@@ -6153,7 +6147,7 @@ html.light .section-subtitle,
 }
 
 .price-amount.pro-price {
-  color: var(--accent-cyan);
+  color: #00e5ff;
   text-shadow: 0 0 20px rgba(0, 229, 255, 0.4);
 }
 
@@ -6191,7 +6185,7 @@ html.light .section-subtitle,
 }
 
 .check-icon.cyan {
-  color: var(--accent-cyan);
+  color: #00e5ff;
   text-shadow: 0 0 8px rgba(0, 229, 255, 0.6);
 }
 
@@ -6288,7 +6282,7 @@ html.light .section-subtitle,
 }
 
 .glow-cyan {
-  color: var(--accent-cyan);
+  color: #00e5ff;
   text-shadow: 0 0 20px rgba(0, 229, 255, 0.5);
 }
 
@@ -6509,7 +6503,7 @@ html.light .section-subtitle,
 
 .role-student {
   background: rgba(0, 229, 255, 0.15);
-  color: var(--accent-cyan);
+  color: #00e5ff;
   border: 1px solid rgba(0, 229, 255, 0.4);
 }
 
@@ -6537,7 +6531,7 @@ html.light .section-subtitle,
 
 .btn-edit-user {
   background: rgba(0, 229, 255, 0.2);
-  color: var(--accent-cyan);
+  color: #00e5ff;
   border: 1px solid rgba(0, 229, 255, 0.4);
 }
 
@@ -7471,7 +7465,7 @@ select {
 .archive-filter-btn.active {
   background: linear-gradient(135deg, rgba(0, 229, 255, 0.2), rgba(124, 77, 255, 0.2));
   color: #fff;
-  border-color: var(--accent-cyan);
+  border-color: #00e5ff;
   box-shadow: 0 0 12px rgba(0, 229, 255, 0.25);
 }
 
@@ -7519,7 +7513,7 @@ select {
 
 .archive-tag.tag-cv {
   background: rgba(0, 229, 255, 0.15);
-  color: var(--accent-cyan);
+  color: #00e5ff;
   border: 1px solid rgba(0, 229, 255, 0.3);
 }
 
@@ -7569,7 +7563,7 @@ select {
 .archive-btn-view {
   background: rgba(0, 229, 255, 0.1);
   border: 1px solid rgba(0, 229, 255, 0.3);
-  color: var(--accent-cyan);
+  color: #00e5ff;
   padding: 6px 12px;
   border-radius: 6px;
   font-size: 12px;
@@ -7716,93 +7710,6 @@ html.light .gap-card-kicker,
 [data-theme="light"] .gap-card-kicker {
   color: var(--primary) !important;         /* #6B5CFF readable on white */
 }
-
-/* ============================================================
-   DESIGN REVIEW FIXES — Light-theme surfaces + typography (2026-08-13)
-   Appended last so it wins by source order. Dark theme untouched
-   except where noted (nav-link colour, brand primary already re-toned
-   via tokens). ============================================================ */
-
-/* L1 — surfaces hardcoded dark navy -> frosted glass in light mode */
-html.light .pricing-card, body.light-mode .pricing-card, [data-theme="light"] .pricing-card,
-html.light .job-search-console, body.light-mode .job-search-console, [data-theme="light"] .job-search-console,
-html.light .job-catalog-card, body.light-mode .job-catalog-card, [data-theme="light"] .job-catalog-card {
-  background: var(--card) !important;
-  border: 1px solid var(--card-border) !important;
-  color: var(--text-primary) !important;
-  -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
-  box-shadow: var(--shadow) !important;
-}
-html.light .pricing-card.pro-card, body.light-mode .pricing-card.pro-card, [data-theme="light"] .pricing-card.pro-card {
-  border-color: var(--primary) !important;
-}
-/* porthole (Phan tich CV) */
-html.light .porthole-window, body.light-mode .porthole-window, [data-theme="light"] .porthole-window {
-  background: radial-gradient(circle at 50% 45%, #FFFFFF 0%, #EEF4FF 100%) !important;
-  border: 1px solid var(--card-border) !important;
-}
-html.light .porthole-label, body.light-mode .porthole-label, [data-theme="light"] .porthole-label {
-  color: var(--primary) !important;
-  background: rgba(107,92,255,0.12) !important;
-}
-
-/* Text on the normalised surfaces (was hardcoded white) */
-html.light .plan-title, [data-theme="light"] .plan-title,
-html.light .price-amount, [data-theme="light"] .price-amount { color: var(--text-primary) !important; }
-html.light .plan-desc, [data-theme="light"] .plan-desc,
-html.light .price-period, [data-theme="light"] .price-period,
-html.light .plan-features li, [data-theme="light"] .plan-features li { color: var(--text-secondary) !important; }
-
-/* Archive filter bar */
-html.light .archive-filters, [data-theme="light"] .archive-filters,
-html.light .archive-filter-btn, [data-theme="light"] .archive-filter-btn {
-  background: rgba(255,255,255,0.6) !important;
-  border: 1px solid var(--card-border) !important;
-  color: var(--text-secondary) !important;
-}
-html.light .archive-filter-btn.active, [data-theme="light"] .archive-filter-btn.active {
-  background: var(--primary) !important; color: #fff !important; border-color: var(--primary) !important;
-}
-
-/* L3 — nav link inactive gets a real token colour (dark theme was falling back to UA #0000EE).
-   Non-important so the existing light-mode nav override still wins in light. */
-.nav-link { color: var(--text-secondary); }
-/* N2 — soften over-heavy nav weight */
-.nav-link { font-weight: 600 !important; }
-
-/* M2 — heading hierarchy: section titles smaller than the page H1 (26px) */
-.card-section-title { font-size: 18px; font-weight: 700; line-height: 1.35; }
-
-/* N1 — comfortable reading rhythm */
-body { line-height: 1.6; }
-p { line-height: 1.55; }
-
-/* N2 — minimum legible size for status pills / tags */
-.archive-tag, .section-tag, .badge, .status-pill, .hero-pill, .vessel-badge { font-size: 12px !important; }
-
-/* Live-review follow-ups (2026-08-13) — Tìm việc console inner elements */
-html.light .job-search-console-copy h2, [data-theme="light"] .job-search-console-copy h2 { color: var(--text-primary) !important; }
-html.light .job-search-console-copy p, [data-theme="light"] .job-search-console-copy p { color: var(--text-secondary) !important; }
-html.light .job-search-field, [data-theme="light"] .job-search-field,
-html.light .job-cv-match-row label, [data-theme="light"] .job-cv-match-row label { color: var(--text-secondary) !important; }
-html.light .job-search-input-wrap, [data-theme="light"] .job-search-input-wrap { background: rgba(255,255,255,0.85) !important; border-color: var(--card-border) !important; }
-html.light .job-search-input-wrap input, [data-theme="light"] .job-search-input-wrap input { color: var(--text-primary) !important; }
-
-
-
-/* ===== FULL LIGHT-MODE SWEEP FIXES (2026-08-13 v2) — light-only, dark untouched ===== */
-:is(html.light,[data-theme="light"],body.light-mode) .brand-name, :is(html.light,[data-theme="light"],body.light-mode) .nav-text, :is(html.light,[data-theme="light"],body.light-mode) .lang-flag, :is(html.light,[data-theme="light"],body.light-mode) .lang-code, :is(html.light,[data-theme="light"],body.light-mode) .lang-btn, :is(html.light,[data-theme="light"],body.light-mode) .persona-title { color: var(--text-primary) !important; }
-:is(html.light,[data-theme="light"],body.light-mode) .badge-ok { color:#0B7A47 !important; }
-:is(html.light,[data-theme="light"],body.light-mode) .badge-need { color:#B45309 !important; }
-:is(html.light,[data-theme="light"],body.light-mode) .badge-focus { color:#7A3FD6 !important; }
-:is(html.light,[data-theme="light"],body.light-mode) .archive-tag.tag-interview, :is(html.light,[data-theme="light"],body.light-mode) .tag-interview { color:#8A6D00 !important; }
-:is(html.light,[data-theme="light"],body.light-mode) .archive-tag.tag-gap, :is(html.light,[data-theme="light"],body.light-mode) .tag-gap { color:#C21E68 !important; }
-:is(html.light,[data-theme="light"],body.light-mode) .section-tag, :is(html.light,[data-theme="light"],body.light-mode) .job-search-kicker, :is(html.light,[data-theme="light"],body.light-mode) .map-title, :is(html.light,[data-theme="light"],body.light-mode) .glow-cyan { color:#0B5E6E !important; }
-:is(html.light,[data-theme="light"],body.light-mode) .btn-outline, :is(html.light,[data-theme="light"],body.light-mode) .tab.active { color:#5A4FD0 !important; }
-:is(html.light,[data-theme="light"],body.light-mode) .summary-title, :is(html.light,[data-theme="light"],body.light-mode) .chart-label, :is(html.light,[data-theme="light"],body.light-mode) .job-search-reset, :is(html.light,[data-theme="light"],body.light-mode) .map-subtitle, :is(html.light,[data-theme="light"],body.light-mode) .stat-lbl, :is(html.light,[data-theme="light"],body.light-mode) .admin-stat-lbl, :is(html.light,[data-theme="light"],body.light-mode) .admin-section-tab, :is(html.light,[data-theme="light"],body.light-mode) .ai-log-privacy-note, :is(html.light,[data-theme="light"],body.light-mode) .ai-log-empty { color: var(--text-secondary) !important; }
-:is(html.light,[data-theme="light"],body.light-mode) .basic-btn { color: var(--primary) !important; border-color: var(--primary) !important; }
-:is(html.light,[data-theme="light"],body.light-mode) .admin-table-wrap, :is(html.light,[data-theme="light"],body.light-mode) .counselor-kpi-section, :is(html.light,[data-theme="light"],body.light-mode) .career-nav-map-card { background: var(--card) !important; border:1px solid var(--card-border) !important; color: var(--text-primary) !important; }
-:is(html.light,[data-theme="light"],body.light-mode) .admin-table-wrap th, :is(html.light,[data-theme="light"],body.light-mode) .admin-table-wrap td, :is(html.light,[data-theme="light"],body.light-mode) .admin-table-wrap span { color: var(--text-primary) !important; }
 
 @tailwind components;
 @tailwind utilities;
