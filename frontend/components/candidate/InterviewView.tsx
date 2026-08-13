@@ -13,11 +13,10 @@ export default function InterviewView(props: any) {
           
           <div className="buddy-section-heading" style={{ marginBottom: 32 }}>
             <div>
-              <span className="buddy-kicker" style={{ marginBottom: 8 }}><Mic size={15} /> Bước 3 · Phỏng vấn mô phỏng</span>
-              <h2 id="buddy-journey-title">Luyện trả lời dựa trên CV và JD bạn đã chọn.</h2>
+              <h2 id="buddy-journey-title">Luyện phỏng vấn bằng giọng nói.</h2>
             </div>
             <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-              <span style={{ fontSize: '13px', color: '#607184', fontWeight: 600 }}>Chấm theo tiêu chí STAR và nội dung câu trả lời</span>
+              <span style={{ fontSize: '13px', color: '#607184', fontWeight: 600 }}>Trả lời bằng mic · hệ thống chấm theo transcript</span>
             </div>
           </div>
 
@@ -28,9 +27,10 @@ export default function InterviewView(props: any) {
               <div>
                 <h3 style={{ fontSize: '18px', color: 'var(--buddy-navy)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <PlayCircle color="var(--buddy-emerald)" size={20} />
-                  Thiết Lập Phỏng Vấn
+                  Thiết lập phỏng vấn voice
                 </h3>
-                <p style={{ fontSize: '14px', color: '#607184', margin: 0 }}>Chọn CV và JD để AI Agent nhập vai nhà tuyển dụng.</p>
+                <p style={{ fontSize: '14px', color: '#607184', margin: 0 }}>Chọn CV và công việc để chuẩn bị câu hỏi phù hợp, rồi trả lời bằng giọng nói.</p>
+                <p style={{ fontSize: '13px', color: '#607184', margin: '8px 0 0' }}>Bạn có thể luyện phỏng vấn ngay; kết quả Match chỉ bổ sung ngữ cảnh khi có.</p>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -86,7 +86,7 @@ export default function InterviewView(props: any) {
                 </div>
 
                 <button id="page-btn-start-interview" className="buddy-primary-button" style={{ width: '100%', justifyContent: 'center', marginTop: '8px' }}>
-                  BẮT ĐẦU PHỎNG VẤN
+                  BẮT ĐẦU PHỎNG VẤN VOICE
                 </button>
               </div>
             </div>

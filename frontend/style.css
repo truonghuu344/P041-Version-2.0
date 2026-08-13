@@ -92,7 +92,7 @@
   --radius-md:        14px;
   --radius-lg:        22px;
   --radius-xl:        32px;
-  --font: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font: 'Quicksand', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 /* Light Theme Variables */

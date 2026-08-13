@@ -2,19 +2,18 @@ import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 
 import '../style.css';
-import { ThemeProvider } from './providers';
+import './design-refresh.css';
+import './dashboard-focus.css';
 
 export const metadata: Metadata = {
-  title: 'CV Assistant – Career Copilot AI',
-  description: 'Nâng cấp CV và phỏng vấn với AI Agent.',
+  title: 'Career Assistant',
+  description: 'Tối ưu CV và phỏng vấn với AI.',
 };
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="vi" suppressHydrationWarning>
-      <body>
-        <ThemeProvider>{children}</ThemeProvider>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

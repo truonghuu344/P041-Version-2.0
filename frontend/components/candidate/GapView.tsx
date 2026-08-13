@@ -3,7 +3,7 @@ import { ArrowRight, Check, Sparkles, Target } from 'lucide-react';
 
 export default function GapView() {
   return <section className="app-view buddy-landing" id="view-gap"><div className="gap-detail-workspace">
-    <header className="gap-detail-hero"><p><Sparkles size={14} /> MATCH ANALYSIS</p><h2>Phân tích chi tiết mức độ phù hợp.</h2><span id="gap-detail-context">Chọn một kết quả Match để xem bằng chứng, điểm mạnh và các điểm cần làm rõ.</span></header>
+    <header className="gap-detail-hero"><h2>Kết quả Match chi tiết</h2><span id="gap-detail-context">Chọn một kết quả Match để xem bằng chứng, điểm mạnh và các điểm cần làm rõ.</span></header>
     <section id="gap-detail-empty" className="gap-detail-empty"><Target size={28}/><h3>Bạn chưa có kết quả Match để xem.</h3><p>Đối chiếu một CV với công việc để nhận Gap Analysis chi tiết.</p><button type="button" id="gap-start-match">Bắt đầu Match <ArrowRight size={16}/></button></section>
     <section id="page-gap-results-container" className="gap-detail-result" hidden>
       <div className="gap-detail-score"><div><p>KẾT QUẢ MATCH</p><h3 id="page-gap-match-score-badge">—</h3></div><p id="page-gap-executive-summary"></p></div>

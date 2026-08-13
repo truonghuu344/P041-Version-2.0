@@ -272,10 +272,10 @@ export class ApiClient {
   }
 
   // --- Mock Interview APIs ---
-  static async startInterview(cvId, jdId, totalQuestions = 5) {
+  static async startInterview(cvId, jdId, totalQuestions = 5, context = {}) {
     return await this.request('/interviews/start', {
       method: 'POST',
-      body: JSON.stringify({ cv_id: cvId, jd_id: jdId, total_questions: totalQuestions }),
+      body: JSON.stringify({ cv_id: cvId, jd_id: jdId, total_questions: totalQuestions, ...context }),
     });
   }
 
@@ -422,4 +422,4 @@ export class ApiClient {
     return await this.requestAssistant('/admin/ai-logs/stats');
   }
 }
-
+

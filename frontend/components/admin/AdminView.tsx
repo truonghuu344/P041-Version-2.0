@@ -11,9 +11,9 @@ export default function AdminView(props: any) {
         <section className="app-view" id="view-admin">
           <div className="spaceship-stage">
             <div className="section-header center-header" style={{ marginBottom: '32px' }}>
-              <span className="section-tag glow-cyan" data-i18n="admin-tag">👑 QUẢN TRỊ VIÊN HỆ THỐNG</span>
-              <h2 className="section-title-large" data-i18n="admin-title">Quản Lý Người Dùng & Phân Quyền</h2>
-              <p className="section-subtitle" data-i18n="admin-sub">Quản lý người dùng với một Admin hệ thống duy nhất; không hỗ trợ chuyển quyền Admin</p>
+              <span className="section-tag glow-cyan">👑 QUẢN TRỊ VIÊN HỆ THỐNG</span>
+              <h2 className="section-title-large">Quản Lý Người Dùng & Phân Quyền</h2>
+              <p className="section-subtitle">Quản lý người dùng với một Admin hệ thống duy nhất; không hỗ trợ chuyển quyền Admin</p>
             </div>
 
             <div className="admin-container">
@@ -21,19 +21,19 @@ export default function AdminView(props: any) {
               <div className="admin-stats-grid">
                 <div className="admin-stat-card">
                   <span className="admin-stat-num glow-cyan" id="admin-stat-total">0</span>
-                  <span className="admin-stat-lbl" data-i18n="admin-stat-total">Tổng Người Dùng</span>
+                  <span className="admin-stat-lbl">Tổng Người Dùng</span>
                 </div>
                 <div className="admin-stat-card">
                   <span className="admin-stat-num glow-purple" id="admin-stat-admin">0</span>
-                  <span className="admin-stat-lbl" data-i18n="admin-stat-admin">Admin Hệ Thống Duy Nhất</span>
+                  <span className="admin-stat-lbl">Admin Hệ Thống Duy Nhất</span>
                 </div>
                 <div className="admin-stat-card">
                   <span className="admin-stat-num glow-pink" id="admin-stat-student">0</span>
-                  <span className="admin-stat-lbl" data-i18n="admin-stat-student">Sinh Viên / Candidate</span>
+                  <span className="admin-stat-lbl">Sinh Viên / Candidate</span>
                 </div>
                 <div className="admin-stat-card">
                   <span className="admin-stat-num glow-green" id="admin-stat-enterprise">0</span>
-                  <span className="admin-stat-lbl" data-i18n="admin-stat-enterprise">Doanh Nghiệp & Mentor</span>
+                  <span className="admin-stat-lbl">Doanh Nghiệp & Mentor</span>
                 </div>
               </div>
 
@@ -48,7 +48,7 @@ export default function AdminView(props: any) {
                   <div className="admin-search-wrap">
                     <input type="text" id="admin-user-search" className="form-input" placeholder="🔍 Tìm kiếm theo Tên hoặc Email..." />
                   </div>
-                  <button className="btn-primary" id="btn-admin-add-user" data-i18n="btn-admin-add-user">➕ Thêm User Mới</button>
+                  <button className="btn-primary" id="btn-admin-add-user">➕ Thêm User Mới</button>
                 </div>
 
                 {/* Users Table */}
@@ -56,11 +56,11 @@ export default function AdminView(props: any) {
                   <table className="admin-users-table">
                     <thead>
                       <tr>
-                        <th data-i18n="th-fullname">Họ và Tên</th>
-                        <th data-i18n="th-email">Email</th>
-                        <th data-i18n="th-role">Vai Trò</th>
-                        <th data-i18n="th-created">Ngày Tạo</th>
-                        <th style={{ textAlign: 'center' }} data-i18n="th-actions">Thao Tác</th>
+                        <th>Họ và Tên</th>
+                        <th>Email</th>
+                        <th>Vai Trò</th>
+                        <th>Ngày Tạo</th>
+                        <th style={{ textAlign: 'center' }}>Thao Tác</th>
                       </tr>
                     </thead>
                     <tbody id="admin-users-tbody">

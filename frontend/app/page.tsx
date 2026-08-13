@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { FileText, Moon, Sun, Upload } from 'lucide-react';
+import { FileText, Home, Mic, Target, Upload, UserRound } from 'lucide-react';
 
 type CVTemplateName = 'modern' | 'classic' | 'compact';
 
@@ -38,20 +38,6 @@ export default function Page() {
 
   return (
     <>
-      <canvas id="space-canvas" aria-hidden="true"></canvas>
-      <div className="nebula-left" aria-hidden="true"></div>
-      <div className="nebula-right" aria-hidden="true"></div>
-
-      {/* Universe Morning Theme Layered Atmosphere Container (Light Mode) */}
-      <div className="galaxy-blur-container" id="galaxy-blur-container" aria-hidden="true">
-        <div className="bg-layer-gradient"></div>
-        <div className="nebula-purple"></div>
-        <div className="nebula-cyan"></div>
-        <div className="aurora-left"></div>
-        <div className="aurora-right"></div>
-        <div className="center-white-glow"></div>
-      </div>
-
       <header className="navbar" id="navbar">
         <div className="navbar-inner">
           <a href="#" className="brand" id="brand-logo">
@@ -59,12 +45,12 @@ export default function Page() {
             <span className="brand-name">CV Assistant</span>
           </a>
           <nav className="nav-links" id="nav-links">
-            <a href="#" className="nav-link active" id="nav-dashboard"><span className="nav-text" data-i18n="nav-dashboard">Trang chủ</span></a>
-            <a href="#" className="nav-link" id="nav-cv"><span className="nav-text" data-i18n="nav-cv">CV của tôi</span></a>
-            <a href="#" className="nav-link" id="nav-find-jobs"><span className="nav-text" data-i18n="nav-find-jobs">Tìm việc</span></a>
-            <a href="#" className="nav-link" id="nav-match"><span className="nav-text">AI Match</span></a>
-            <a href="#" className="nav-link" id="nav-interview"><span className="nav-text" data-i18n="nav-interview">Phòng phỏng vấn</span></a>
-            <a href="#" className="nav-link" id="nav-history" hidden><span className="nav-text" data-i18n="nav-history">Lịch sử &amp; Báo cáo</span></a>
+            <a href="#" className="nav-link active" id="nav-dashboard"><span className="nav-text">Trang chủ</span></a>
+            <a href="#" className="nav-link" id="nav-match"><span className="nav-text">Match CV</span></a>
+            <a href="#" className="nav-link" id="nav-interview"><span className="nav-text">Phỏng vấn voice</span></a>
+            <a href="#" className="nav-link" id="nav-find-jobs"><span className="nav-text">Việc phù hợp</span></a>
+            <a href="#" className="nav-link" id="nav-cv"><span className="nav-text">Kho CV</span></a>
+            <a href="#" className="nav-link" id="nav-history" hidden><span className="nav-text">Lịch sử &amp; Báo cáo</span></a>
             <a href="#" className="nav-link role-only-link" id="nav-counselor" hidden><span className="nav-text">Sinh viên của tôi</span></a>
             <a href="#" className="nav-link role-only-link" id="nav-counselor-reports" hidden><span className="nav-text">Báo cáo</span></a>
             <a href="#" className="nav-link role-only-link" id="nav-enterprise" hidden><span className="nav-text">Dashboard</span></a>
@@ -72,29 +58,7 @@ export default function Page() {
             <a href="#" className="nav-link admin-only-link" id="nav-admin" hidden><span className="nav-text">Quản trị hệ thống</span></a>
           </nav>
 
-          <div className="header-utilities">
-            <button className="theme-toggle-btn" id="theme-toggle-btn" title="Đổi chế độ Sáng/Tối (Light/Dark Mode)" aria-label="Toggle theme">
-              <Moon size={18} className="theme-icon moon-icon" />
-              <Sun size={18} className="theme-icon sun-icon" />
-            </button>
-
-            <div className="lang-switcher" id="lang-switcher">
-              <button className="lang-btn" id="lang-btn" aria-haspopup="true" aria-expanded="false" title="Đổi ngôn ngữ / Change Language">
-                <span className="lang-code" id="lang-current-code">VI</span>
-                <svg className="lang-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M6 9l6 6 6-6" />
-                </svg>
-              </button>
-              <div className="lang-dropdown" id="lang-dropdown">
-                <button className="lang-option active" data-lang="vi"><span className="lang-short">VI</span><span className="lang-name">Tiếng Việt</span><span className="lang-check">✓</span></button>
-                <button className="lang-option" data-lang="en"><span className="lang-short">EN</span><span className="lang-name">English</span><span className="lang-check">✓</span></button>
-              </div>
-            </div>
-
-            <div id="auth-container">
-              <button className="btn-login" id="btn-login" data-i18n="btn-login">Đăng nhập</button>
-            </div>
-          </div>
+          <div className="header-utilities"><div id="auth-container"><button className="btn-login" id="btn-login">Đăng nhập</button></div></div>
 
           <button className="hamburger" id="hamburger" aria-label="Toggle menu">
             <span></span><span></span><span></span>
@@ -103,11 +67,11 @@ export default function Page() {
       </header>
 
       <nav className="candidate-bottom-nav" aria-label="Điều hướng Candidate">
-        <button type="button" data-mobile-view="dashboard" className="active" onClick={() => window.switchView?.('dashboard')}><span>⌂</span>Tổng quan</button>
-        <button type="button" data-mobile-view="cv" onClick={() => window.switchView?.('cv')}><span>▣</span>CV</button>
-        <button type="button" data-mobile-view="find-jobs" onClick={() => window.switchView?.('find-jobs')}><span>♡</span>Việc</button>
-        <button type="button" data-mobile-view="interview" onClick={() => window.switchView?.('interview')}><span>◉</span>Phỏng vấn</button>
-        <button type="button" data-mobile-view="profile" onClick={() => window.switchView?.('profile')}><span>●</span>Tôi</button>
+        <button type="button" data-mobile-view="dashboard" className="active" onClick={() => window.switchView?.('dashboard')}><Home size={18} />Tổng quan</button>
+        <button type="button" data-mobile-view="match" onClick={() => window.switchView?.('match')}><Target size={18} />Match</button>
+        <button type="button" data-mobile-view="interview" onClick={() => window.switchView?.('interview')}><Mic size={18} />Voice</button>
+        <button type="button" data-mobile-view="cv" onClick={() => window.switchView?.('cv')}><FileText size={18} />Kho CV</button>
+        <button type="button" data-mobile-view="profile" onClick={() => window.switchView?.('profile')}><UserRound size={18} />Tôi</button>
       </nav>
 
       {/* ===== SPACESHIP CORRIDOR TRANSITION SWEEP ===== */}
@@ -139,8 +103,8 @@ export default function Page() {
           <div className="modal-header">
             <div className="auth-welcome-mark" aria-hidden="true"><span>✦</span></div>
             <p className="auth-eyebrow">CV ASSISTANT</p>
-            <h2 className="modal-title" id="auth-title" data-i18n="auth-title-login">Chào mừng trở lại</h2>
-            <p className="modal-sub" id="auth-sub" data-i18n="auth-sub-login">Đăng nhập để tiếp tục hành trình chinh phục công việc phù hợp.</p>
+            <h2 className="modal-title" id="auth-title">Chào mừng trở lại</h2>
+            <p className="modal-sub" id="auth-sub">Đăng nhập để tiếp tục hành trình chinh phục công việc phù hợp.</p>
           </div>
           {/* Google Sign-in / Register Option */}
           <div className="google-auth-wrap">
@@ -158,16 +122,16 @@ export default function Page() {
             </div>
           </div>
           <div className="auth-tabs" role="tablist" aria-label="Đăng nhập hoặc đăng ký">
-            <button type="button" id="tab-auth-login" className="tab active" role="tab" aria-selected="true" data-i18n="tab-auth-login">Đăng Nhập</button>
-            <button type="button" id="tab-auth-register" className="tab" role="tab" aria-selected="false" data-i18n="tab-auth-register">Đăng Ký</button>
+            <button type="button" id="tab-auth-login" className="tab active" role="tab" aria-selected="true">Đăng Nhập</button>
+            <button type="button" id="tab-auth-register" className="tab" role="tab" aria-selected="false">Đăng Ký</button>
           </div>
           <form className="login-form" id="login-form">
             <div className="form-group" id="form-fullname-group" style={{ display: 'none' }}>
-              <label className="form-label" data-i18n="label-fullname">Họ và tên</label>
+              <label className="form-label">Họ và tên</label>
               <input type="text" id="input-fullname" className="form-input" placeholder="Nguyễn Văn A" />
             </div>
             <div className="form-group" id="form-role-group" style={{ display: 'none' }}>
-              <label className="form-label" data-i18n="label-role">Vai trò</label>
+              <label className="form-label">Vai trò</label>
               <div className="auth-role-select" id="auth-role-select">
                 <select id="input-role" className="auth-role-native" aria-label="Chọn vai trò tài khoản">
                   <option value="student">Sinh viên (Student)</option>
@@ -177,15 +141,15 @@ export default function Page() {
               </div>
             </div>
             <div className="form-group">
-              <label className="form-label" data-i18n="label-email">Email</label>
+              <label className="form-label">Email</label>
               <input type="email" id="input-email" className="form-input" placeholder="you@example.com" required />
             </div>
             <div className="form-group">
-              <label className="form-label" data-i18n="label-password">Mật khẩu</label>
+              <label className="form-label">Mật khẩu</label>
               <input type="password" id="input-password" className="form-input" placeholder="••••••••" required />
             </div>
             <button type="submit" className="btn-submit" id="btn-submit">
-              <span id="btn-submit-label" data-i18n="btn-submit-login">Đăng nhập</span>
+              <span id="btn-submit-label">Đăng nhập</span>
             </button>
           </form>
           <button type="button" id="btn-forgot-password" className="auth-forgot-password">Quên mật khẩu?</button>
@@ -250,21 +214,21 @@ export default function Page() {
         <div className="modal-card" style={{ maxWidth: '640px' }}>
           <button className="modal-close" id="modal-cv-close">&times;</button>
           <div className="modal-header">
-            <h2 className="modal-title" data-i18n="modal-cv-title" style={{ display: "flex", alignItems: "center", gap: "8px" }}><FileText size={24} color="var(--primary)" /> Upload & Quản Lý CV</h2>
-            <p className="modal-sub" data-i18n="modal-cv-sub">Trích xuất kỹ năng, kinh nghiệm & dự án tự động bằng AI</p>
+            <h2 className="modal-title" style={{ display: "flex", alignItems: "center", gap: "8px" }}><FileText size={24} color="var(--primary)" /> Upload & Quản Lý CV</h2>
+            <p className="modal-sub">Trích xuất kỹ năng, kinh nghiệm & dự án tự động bằng AI</p>
           </div>
           <form id="cv-upload-form" style={{ marginBottom: '20px' }}>
             <div className="form-group">
-              <label className="form-label" data-i18n="label-cv-name">Tên CV (Tùy chọn)</label>
+              <label className="form-label">Tên CV (Tùy chọn)</label>
               <input type="text" id="cv-title-input" className="form-input" placeholder="Ví dụ: CV Backend Developer 2026" />
             </div>
             <div className="form-group">
-              <label className="form-label" data-i18n="label-cv-file">Chọn CV (PDF, DOCX hoặc ảnh, tối đa 20 MB)</label>
+              <label className="form-label">Chọn CV (PDF, DOCX hoặc ảnh, tối đa 20 MB)</label>
               <input type="file" id="cv-file-input" className="form-input" accept=".pdf,.docx,.jpg,.jpeg,.png" required />
             </div>
-            <button type="submit" className="btn-primary" style={{ width: '100%' }} data-i18n="btn-cv-upload">Tải Lên & Parse CV</button>
+            <button type="submit" className="btn-primary" style={{ width: '100%' }}>Tải Lên & Parse CV</button>
           </form>
-          <h3 style={{ fontSize: '14px', color: 'var(--text-dim)', marginBottom: '10px' }} data-i18n="cv-saved-list-title">Danh sách CV đã lưu của bạn:</h3>
+          <h3 style={{ fontSize: '14px', color: 'var(--text-dim)', marginBottom: '10px' }}>Danh sách CV đã lưu của bạn:</h3>
           <div id="cv-list-container" style={{ maxHeight: '220px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}></div>
         </div>
       </div>
@@ -273,12 +237,12 @@ export default function Page() {
         <div className="modal-card" style={{ maxWidth: '680px' }}>
           <button className="modal-close" id="modal-jd-close">&times;</button>
           <div className="modal-header">
-            <h2 className="modal-title" data-i18n="modal-jd-title">💼 Thư Viện Job Descriptions (JD)</h2>
-            <p className="modal-sub" data-i18n="modal-jd-sub">Chọn JD mẫu từ hệ thống hoặc dán JD công ty bên ngoài</p>
+            <h2 className="modal-title">💼 Thư Viện Job Descriptions (JD)</h2>
+            <p className="modal-sub">Chọn JD mẫu từ hệ thống hoặc dán JD công ty bên ngoài</p>
           </div>
           <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
-            <button id="btn-tab-system-jds" className="tab active" style={{ flex: 1 }} data-i18n="tab-system-jds">JD Mẫu Hệ Thống</button>
-            <button id="btn-tab-custom-jd" className="tab" style={{ flex: 1 }} data-i18n="tab-custom-jd">Dán JD Tùy Chỉnh</button>
+            <button id="btn-tab-system-jds" className="tab active" style={{ flex: 1 }}>JD Mẫu Hệ Thống</button>
+            <button id="btn-tab-custom-jd" className="tab" style={{ flex: 1 }}>Dán JD Tùy Chỉnh</button>
           </div>
           <div id="section-system-jds">
             <div id="jd-list-container" style={{ maxHeight: '280px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px' }}></div>
@@ -320,24 +284,24 @@ export default function Page() {
             <div className="jd-section-divider"><span>HOẶC TỰ ĐIỀN NỘI DUNG</span></div>
             <form id="custom-jd-form">
               <div className="form-group">
-                <label className="form-label" data-i18n="label-jd-position">Tên vị trí công việc</label>
+                <label className="form-label">Tên vị trí công việc</label>
                 <input type="text" id="custom-jd-title" className="form-input" placeholder="Ví dụ: AI Engineer" required />
               </div>
               <div style={{ display: 'flex', gap: '10px' }}>
                 <div className="form-group" style={{ flex: 1 }}>
-                  <label className="form-label" data-i18n="label-jd-company">Tên công ty</label>
+                  <label className="form-label">Tên công ty</label>
                   <input type="text" id="custom-jd-company" className="form-input" placeholder="Tech Company" />
                 </div>
                 <div className="form-group" style={{ flex: 1 }}>
-                  <label className="form-label" data-i18n="label-jd-location">Địa điểm</label>
+                  <label className="form-label">Địa điểm</label>
                   <input type="text" id="custom-jd-location" className="form-input" placeholder="Hà Nội" />
                 </div>
               </div>
               <div className="form-group">
-                <label className="form-label" data-i18n="label-jd-requirements">Nội dung Yêu cầu Công việc (Requirements Text)</label>
+                <label className="form-label">Nội dung Yêu cầu Công việc (Requirements Text)</label>
                 <textarea id="custom-jd-requirements" className="form-input" style={{ height: '110px' }} required></textarea>
               </div>
-              <button type="submit" className="btn-primary" style={{ width: '100%' }} data-i18n="btn-save-custom-jd">Lưu Job Description Tùy Chỉnh</button>
+              <button type="submit" className="btn-primary" style={{ width: '100%' }}>Lưu Job Description Tùy Chỉnh</button>
             </form>
           </div>
         </div>
@@ -347,12 +311,12 @@ export default function Page() {
         <div className="modal-card" style={{ maxWidth: '720px' }}>
           <button className="modal-close" id="modal-gap-close">&times;</button>
           <div className="modal-header">
-            <h2 className="modal-title" data-i18n="modal-gap-title">🎯 Phân Tích Match Score & Gap Analysis</h2>
-            <p className="modal-sub" data-i18n="modal-gap-sub">So khớp CV với JD & đề xuất tối ưu câu từ Chân Thật (Anti-Hallucination)</p>
+            <h2 className="modal-title">🎯 Phân Tích Match Score & Gap Analysis</h2>
+            <p className="modal-sub">So khớp CV với JD & đề xuất tối ưu câu từ Chân Thật (Anti-Hallucination)</p>
           </div>
           <div className="form-row gap-selection-grid" style={{ marginBottom: '16px' }}>
             <div style={{ flex: 1 }}>
-              <label className="form-label" data-i18n="label-select-cv">Chọn CV:</label>
+              <label className="form-label">Chọn CV:</label>
               <div className="gap-select-shell">
                 <span className="gap-select-icon" aria-hidden="true">📄</span>
                 <select id="gap-select-cv" className="form-input gap-select" aria-label="Chọn CV để phân tích"></select>
@@ -360,7 +324,7 @@ export default function Page() {
               </div>
             </div>
             <div style={{ flex: 1 }}>
-              <label className="form-label" data-i18n="label-select-jd">Chọn JD Mục Tiêu:</label>
+              <label className="form-label">Chọn JD Mục Tiêu:</label>
               <div className="gap-select-shell">
                 <span className="gap-select-icon" aria-hidden="true">🎯</span>
                 <select id="gap-select-jd" className="form-input gap-select" aria-label="Chọn JD mục tiêu"></select>
@@ -368,7 +332,7 @@ export default function Page() {
               </div>
             </div>
           </div>
-          <button id="btn-run-gap-analysis" className="btn-primary gap-analysis-submit" style={{ width: '100%', marginBottom: '16px' }} data-i18n="btn-run-gap">
+          <button id="btn-run-gap-analysis" className="btn-primary gap-analysis-submit" style={{ width: '100%', marginBottom: '16px' }}>
             <span className="gap-submit-icon" aria-hidden="true">✦</span>
             <span>Phân Tích Khớp CV - JD</span>
           </button>
@@ -398,13 +362,13 @@ export default function Page() {
         <div className="modal-card" style={{ maxWidth: '760px', height: '85vh', display: 'flex', flexDirection: 'column' }}>
           <button className="modal-close" id="modal-interview-close">&times;</button>
           <div className="modal-header">
-            <h2 className="modal-title" data-i18n="modal-int-title">🎙️ Phòng Phỏng Vấn Thử (STAR Rubric)</h2>
-            <p className="modal-sub" data-i18n="modal-int-sub">Đóng vai nhà tuyển dụng hỏi đáp chuyên sâu & tự động gợi mở follow-up</p>
+            <h2 className="modal-title">🎙️ Phòng Phỏng Vấn Thử (STAR Rubric)</h2>
+            <p className="modal-sub">Đóng vai nhà tuyển dụng hỏi đáp chuyên sâu & tự động gợi mở follow-up</p>
           </div>
           <div id="interview-setup-section" style={{ background: 'rgba(255,255,255,0.03)', padding: '16px', borderRadius: '12px' }}>
             <div className="interview-selection-grid" style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
               <div style={{ flex: 1 }}>
-                <label className="form-label" data-i18n="label-int-cv">Chọn CV Phỏng Vấn:</label>
+                <label className="form-label">Chọn CV Phỏng Vấn:</label>
                 <div className="gap-select-shell interview-select-shell interview-select-cv">
                   <span className="gap-select-icon" aria-hidden="true">📄</span>
                   <select id="interview-select-cv" className="form-input gap-select interview-select" aria-label="Chọn CV phỏng vấn"></select>
@@ -412,7 +376,7 @@ export default function Page() {
                 </div>
               </div>
               <div style={{ flex: 1 }}>
-                <label className="form-label" data-i18n="label-int-jd">Chọn JD Ứng Tuyển:</label>
+                <label className="form-label">Chọn JD Ứng Tuyển:</label>
                 <div className="gap-select-shell interview-select-shell interview-select-jd">
                   <span className="gap-select-icon" aria-hidden="true">💼</span>
                   <select id="interview-select-jd" className="form-input gap-select interview-select" aria-label="Chọn vị trí ứng tuyển"></select>
@@ -420,7 +384,7 @@ export default function Page() {
                 </div>
               </div>
             </div>
-            <button id="btn-start-interview-session" className="btn-primary" style={{ width: '100%' }} data-i18n="btn-start-int">Bắt Đầu Phiên Phỏng Vấn</button>
+            <button id="btn-start-interview-session" className="btn-primary" style={{ width: '100%' }}>Bắt Đầu Phiên Phỏng Vấn</button>
           </div>
 
           <div id="interview-chat-section" style={{ display: 'none', flex: 1, flexDirection: 'column', minHeight: 0 }}>
@@ -430,8 +394,8 @@ export default function Page() {
             </div>
             <div id="interview-chat-history" style={{ flex: 1, overflowY: 'auto', padding: '12px', display: 'flex', flexDirection: 'column', gap: '12px' }}></div>
             <form id="interview-answer-form" style={{ display: 'flex', gap: '8px' }}>
-              <input type="text" id="interview-answer-input" className="form-input" placeholder="Nhập câu trả lời của bạn..." style={{ flex: 1 }} required data-i18n-placeholder="placeholder-answer" />
-              <button type="submit" className="btn-primary" id="btn-send-answer" data-i18n="btn-send-answer">Gửi</button>
+              <input type="text" id="interview-answer-input" className="form-input" placeholder="Nhập câu trả lời của bạn..." style={{ flex: 1 }} required />
+              <button type="submit" className="btn-primary" id="btn-send-answer">Gửi</button>
             </form>
           </div>
 
@@ -473,8 +437,8 @@ export default function Page() {
                 <line x1="22" y1="11" x2="16" y2="11" />
               </svg>
             </div>
-            <h2 className="modal-title" id="admin-user-modal-title" data-i18n="admin-modal-add-title">Thêm Người Dùng Mới</h2>
-            <p className="modal-sub" id="admin-user-modal-sub" data-i18n="admin-modal-add-sub">Tạo tài khoản Student, Counselor hoặc Enterprise</p>
+            <h2 className="modal-title" id="admin-user-modal-title">Thêm Người Dùng Mới</h2>
+            <p className="modal-sub" id="admin-user-modal-sub">Tạo tài khoản Student, Counselor hoặc Enterprise</p>
           </div>
 
           <form id="admin-user-form" className="admin-user-form">
@@ -482,7 +446,7 @@ export default function Page() {
 
             {/* Họ và tên */}
             <div className="form-group admin-form-group">
-              <label className="form-label" data-i18n="label-fullname">Họ và tên</label>
+              <label className="form-label">Họ và tên</label>
               <div className="admin-input-wrap">
                 <span className="admin-input-icon">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
@@ -493,7 +457,7 @@ export default function Page() {
 
             {/* Email */}
             <div className="form-group admin-form-group">
-              <label className="form-label" data-i18n="label-email">Email</label>
+              <label className="form-label">Email</label>
               <div className="admin-input-wrap">
                 <span className="admin-input-icon">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></svg>
@@ -504,7 +468,7 @@ export default function Page() {
 
             {/* Vai trò */}
             <div className="form-group admin-form-group">
-              <label className="form-label" data-i18n="label-role">Vai trò</label>
+              <label className="form-label">Vai trò</label>
               <div className="admin-input-wrap">
                 <span className="admin-input-icon">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
@@ -520,7 +484,7 @@ export default function Page() {
 
             {/* Mật khẩu */}
             <div className="form-group admin-form-group">
-              <label className="form-label" id="admin-label-password" data-i18n="label-password">Mật khẩu (Tối thiểu 6 ký tự)</label>
+              <label className="form-label" id="admin-label-password">Mật khẩu (Tối thiểu 6 ký tự)</label>
               <div className="admin-input-wrap">
                 <span className="admin-input-icon">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
@@ -529,7 +493,7 @@ export default function Page() {
               </div>
             </div>
 
-            <button type="submit" className="btn-primary admin-btn-save" id="btn-admin-save-user" data-i18n="btn-save-user">
+            <button type="submit" className="btn-primary admin-btn-save" id="btn-admin-save-user">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" /><polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" /></svg>
               <span id="admin-btn-save-text">Lưu Thông Tin Người Dùng</span>
             </button>
