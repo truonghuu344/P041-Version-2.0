@@ -110,7 +110,7 @@ async def search_jobs(
 async def market_job_rag_status(
     admin_user: User = Depends(require_role(["admin"])),
 ) -> JobRAGStatus:
-    """[ADMIN ONLY] Check Qdrant collection availability and indexed JD count."""
+    """[ADMIN ONLY] Check pgvector index availability and indexed JD count."""
     return JobRAGStatus.model_validate(await get_market_job_rag().status())
 
 
@@ -118,12 +118,12 @@ async def market_job_rag_status(
 async def sync_market_job_rag(
     admin_user: User = Depends(require_role(["admin"])),
 ) -> JobRAGSyncResponse:
-    """[ADMIN ONLY] Incrementally sync data/jds into the Qdrant collection."""
+    """[ADMIN ONLY] Incrementally sync data/jds into PostgreSQL/pgvector."""
     try:
         result = await get_market_job_rag().sync_catalog()
     except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"Không thể đồng bộ Qdrant: {exc}",
+            detail=f"Không thể đồng bộ pgvector: {exc}",
         ) from exc
     return JobRAGSyncResponse.model_validate(result)

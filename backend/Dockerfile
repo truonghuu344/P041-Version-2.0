@@ -8,7 +8,7 @@ WORKDIR /app
 ENV PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 
-COPY requirements-prod.txt ./
+COPY backend/requirements-prod.txt ./
 RUN pip install --prefix=/install -r requirements-prod.txt
 
 # ---- Runtime ----
@@ -26,7 +26,7 @@ RUN apt-get update \
     && useradd --create-home --uid 10001 appuser
 
 COPY --from=builder /install /usr/local
-COPY --chown=appuser:appuser src ./src
+COPY --chown=appuser:appuser backend/src ./src
 COPY --chown=appuser:appuser data/clean/jds_clean.json ./data/clean/jds_clean.json
 COPY --chown=appuser:appuser data/jds/raw ./data/jds/raw
 

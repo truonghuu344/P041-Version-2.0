@@ -11,7 +11,6 @@
 .gemini
 .github
 .vscode
-src/frontend
 data/*
 !data/clean/
 data/clean/*
@@ -28,8 +27,8 @@ docs/
 presentation/
 eval/
 *.md
-!requirements.txt
-!requirements-prod.txt
+!backend/requirements.txt
+!backend/requirements-prod.txt
 .dockerignore
 Dockerfile
 docker-compose.yml

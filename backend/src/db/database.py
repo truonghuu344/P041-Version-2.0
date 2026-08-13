@@ -68,6 +68,8 @@ async def init_db() -> None:
         from src.db.models import User
 
         async with engine.begin() as conn:
+            if conn.dialect.name == "postgresql":
+                await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
             await conn.run_sync(Base.metadata.create_all)
             if conn.dialect.name == "postgresql":
                 await conn.execute(

@@ -40,14 +40,13 @@ langchain-community>=0.3.0
 langchain-google-genai>=4.0.0
 langgraph>=0.2.0                # Xử lý luồng hội thoại phỏng vấn AI phức tạp
 google-genai>=1.0.0
-qdrant-client>=1.15.0,<2.0.0
 
 # Database (uncomment as needed)
 # sqlalchemy>=2.0.0
 # alembic>=1.14.0
 # psycopg2-binary>=2.9.0
 
-# Vector stores: pgvector embeddings and Qdrant market-JD retrieval
+# Vector search in PostgreSQL
 pgvector>=0.2.0
 sentence-transformers>=2.2.0
 

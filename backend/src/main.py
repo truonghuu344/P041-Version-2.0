@@ -21,7 +21,7 @@ async def lifespan(app: FastAPI):
     # Tự động tạo bảng DB khi startup
     await init_db()
     rag_sync_task = None
-    if settings.qdrant_enabled and settings.qdrant_sync_on_startup:
+    if settings.vector_search_enabled and settings.vector_sync_on_startup:
         rag_sync_task = asyncio.create_task(sync_market_jobs_safely())
     yield
     if rag_sync_task and not rag_sync_task.done():

@@ -63,17 +63,13 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+asyncpg://postgres:postgrespassword@localhost:5432/career_assistant_db"
     database_echo: bool = False
 
-    # Vector Store / Market JD RAG
-    qdrant_enabled: bool = False
-    qdrant_url: str = "http://localhost:6333"
-    qdrant_api_key: str = ""
-    qdrant_collection: str = "market_job_descriptions"
-    qdrant_embedding_provider: Literal["auto", "gemini", "hashing"] = "auto"
-    qdrant_embedding_model: str = "gemini-embedding-2"
-    qdrant_vector_size: int = Field(default=768, ge=128, le=3072)
-    qdrant_timeout_seconds: float = Field(default=10, ge=1, le=120)
-    qdrant_sync_on_startup: bool = True
-    qdrant_auto_sync: bool = True
+    # pgvector / Market JD RAG
+    vector_search_enabled: bool = False
+    vector_embedding_provider: Literal["auto", "gemini", "hashing"] = "auto"
+    vector_embedding_model: str = "gemini-embedding-2"
+    vector_dimensions: int = Field(default=768, ge=128, le=3072)
+    vector_sync_on_startup: bool = True
+    vector_auto_sync: bool = True
 
     # CV-JD Matching v1 (Requirement -> BM25/Vector -> RRF -> Evidence -> Rubric)
     cv_jd_embedding_provider: Literal["auto", "gemini", "hashing"] = "auto"

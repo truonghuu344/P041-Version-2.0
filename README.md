@@ -4,10 +4,10 @@ Trợ lý nghề nghiệp AI cho sinh viên năm 3–4/mới ra trường — ph
 
 ## 🌐 Demo
 
-Dự án hiện chạy **local qua Docker**, chưa deploy public:
+Dự án hiện chạy local: backend qua Docker, frontend qua Next.js, chưa deploy public:
 
 ```
-http://localhost:8080
+http://localhost:3000
 ```
 
 Xem [Cách chạy demo](#-cách-chạy-demo-first-mvp) bên dưới để dựng lên trên máy bạn.
@@ -43,40 +43,71 @@ cp .env.example .env
 | `INITIAL_ADMIN_PASSWORD` | ✅ Bắt buộc (production mode) | Mật khẩu cho tài khoản admin seed sẵn (`admin@cva.com`) |
 | `GEMINI_API_KEY` | ✅ Bắt buộc để có AI thật | Không set thì Nova/Gap Analysis/Interview chạy ở chế độ fallback |
 | `MODEL_NAME` | Khuyến nghị | Đặt `gemini-3.1-flash-lite` — đã xác nhận hoạt động ổn định (một số model khác như `gemini-2.0-flash` đã bị Google ngừng hỗ trợ) |
-| `GOOGLE_OAUTH_CLIENT_ID` | Tùy chọn | Chỉ cần nếu muốn nút "Đăng nhập Google" hoạt động — lấy từ Google Cloud Console (Web application, Authorized JavaScript origins: `http://localhost:8080`) |
+| `GOOGLE_OAUTH_CLIENT_ID` | Tùy chọn | Chỉ cần nếu muốn nút "Đăng nhập Google" hoạt động — lấy từ Google Cloud Console (Web application, Authorized JavaScript origins: `http://localhost:3000`) |
 
 Lưu ý: `docker-compose.yml` tự đặt `APP_ENV=production` cho backend — khi đó `SECRET_KEY` và `INITIAL_ADMIN_PASSWORD` là **bắt buộc**, không có giá trị mặc định an toàn.
 
-### Bước 2 — Chạy full-stack
+### Bước 2 — Khởi tạo backend bằng Docker
 
 ```bash
+# Build lại image backend khi lần đầu chạy hoặc sau khi đổi Dockerfile/dependency/code backend
 docker compose up --build -d
-docker compose ps   # xác nhận cả 6 service: db, qdrant, clamav, backend, frontend, gateway đều Up
+docker compose ps
+docker compose logs -f backend
 ```
 
-### Bước 3 — Mở app
+`docker compose up --build -d` khởi động PostgreSQL + pgvector, ClamAV và FastAPI. API có tại `http://localhost:8000`; kiểm tra nhanh bằng `http://localhost:8000/health`.
 
-Truy cập [http://localhost:8080](http://localhost:8080) qua Nginx Gateway (chỉ Gateway publish ra host, frontend/backend nằm trong mạng Docker nội bộ).
+### Bước 3 — Khởi tạo frontend local
+
+```bash
+cd frontend && npm install
+Copy-Item .env.local.example .env.local # PowerShell (chạy một lần)
+npm run dev
+```
+
+Trên macOS/Linux, thay lệnh copy bằng `cp .env.local.example .env.local`. Frontend có tại `http://localhost:3000`.
+
+### Bước 4 — Mở app
+
+Truy cập [http://localhost:3000](http://localhost:3000). Next.js local tự proxy các request `/api/v1/*` đến backend Docker tại `http://localhost:8000`.
 
 - Đăng nhập admin: `admin@cva.com` + mật khẩu bạn đặt ở `INITIAL_ADMIN_PASSWORD`.
 - Hoặc đăng ký tài khoản sinh viên mới ngay trên giao diện để test luồng chính (upload CV → chọn JD → Gap Analysis → phỏng vấn thử).
 
-Dừng stack: `docker compose down` (thêm `-v` chỉ khi muốn xóa sạch dữ liệu Postgres/Qdrant).
-
-### RAG JD thị trường với Qdrant
-
-Backend tự đồng bộ ~98 JD mẫu trong `data/jds` vào Qdrant lúc khởi động. Nếu Qdrant lỗi hoặc quota Gemini API hết (đồng bộ embedding thất bại), API tự chuyển về tìm kiếm theo catalog để giao diện vẫn hoạt động bình thường (chỉ tính năng "AI lọc JD theo CV" bị ảnh hưởng, tìm việc theo từ khóa vẫn chạy).
+### Lệnh vận hành thường dùng
 
 ```bash
-# Đồng bộ thủ công (chạy backend ngoài Docker, hoặc sau khi quota reset)
-python -m scripts.index_market_jds
+# Docker backend
+docker compose up -d                  # Bật lại các container đã build
+docker compose up --build -d           # Build image backend rồi khởi động
+docker compose ps                      # Xem trạng thái service
+docker compose logs -f backend         # Xem log FastAPI theo thời gian thực
+docker compose restart backend          # Khởi động lại FastAPI
+docker compose down                    # Dừng và xóa container/network, giữ data PostgreSQL
+docker compose down -v                 # Xóa cả PostgreSQL/ClamAV/upload volumes — không thể khôi phục
+
+# Frontend local (chạy trong frontend/)
+npm run dev                            # Development server, http://localhost:3000
+npm run typecheck                      # Kiểm tra TypeScript
+npm run build && npm run start         # Build và chạy Next.js production local
+```
+
+Khi sửa mã backend hoặc dependency, dùng `docker compose up --build -d`. Khi chỉ sửa frontend, Next.js dev server tự reload; không cần Docker build.
+
+### RAG JD thị trường với pgvector
+
+Backend tự đồng bộ ~98 JD mẫu trong `data/jds` vào PostgreSQL/pgvector lúc khởi động. Nếu embedding lỗi hoặc quota Gemini API hết, API tự chuyển về tìm kiếm theo catalog để giao diện vẫn hoạt động bình thường (chỉ tính năng "AI lọc JD theo CV" bị ảnh hưởng, tìm việc theo từ khóa vẫn chạy).
+
+```bash
+# Đồng bộ thủ công từ thư mục root (hoặc sau khi quota reset)
+python scripts/index_market_jds.py
 
 # Hoặc gọi endpoint quản trị (cần token admin)
-curl -X POST http://localhost:8080/api/v1/jobs/rag/sync \
+curl -X POST http://localhost:8000/api/v1/jobs/rag/sync \
   -H "Authorization: Bearer <admin-token>"
 ```
 
-Qdrant Dashboard (local): [http://localhost:6333/dashboard](http://localhost:6333/dashboard).
 
 ## 🛠 Tech Stack
 
@@ -86,30 +117,30 @@ Qdrant Dashboard (local): [http://localhost:6333/dashboard](http://localhost:633
 | Frontend | Next.js (App Router) |
 | LLM | Google Gemini (`gemini-3.1-flash-lite`, cấu hình qua `MODEL_NAME`) |
 | Database | PostgreSQL + pgvector |
-| Vector Search / RAG | Qdrant + Gemini Embedding (fallback offline hashing khi không có API key) |
+| Vector Search / RAG | PostgreSQL pgvector + Gemini Embedding (fallback offline hashing khi không có API key) |
 | Malware Scan | ClamAV (`MALWARE_SCAN_MODE`) |
-| DevOps | Docker Compose (6 service: db, qdrant, clamav, backend, frontend, gateway) + GitHub Actions |
+| DevOps | Docker Compose (3 service: db, clamav, backend) + GitHub Actions; Next.js chạy local |
 | Testing | pytest + pytest-asyncio |
 
 ## 📁 Cấu trúc dự án (rút gọn)
 
 ```
-├── src/
-│   ├── agents/            # LangGraph agents (CV parser, Gap Analysis, Interview, Career Assistant)
-│   ├── api/v1/             # FastAPI routes (auth, cvs, jds, analysis, matches, interviews, assistant, admin, counselor, enterprise)
-│   ├── db/                 # SQLAlchemy models + database init
-│   ├── services/           # cv_jd_pipeline.py (BM25+Vector+RRF+Rubric), job_rag.py (Qdrant), file_security.py (ClamAV), llm.py
-│   ├── frontend/            # Next.js app (app/ router) + app.js (tương tác UI chính)
-│   └── config.py, main.py
-├── tests/                  # pytest suite (unit, api, e2e, guardrails, frontend)
+├── backend/                # FastAPI service (Python)
+│   ├── src/                # API, agents, services, database, core, config
+│   ├── tests/              # pytest suite (unit, API, e2e, guardrails, UI contracts)
+│   ├── Dockerfile
+│   └── pyproject.toml, requirements*.txt
+├── frontend/               # Next.js application (TypeScript/JavaScript/CSS)
+│   ├── app/, components/, public/
+│   └── package.json, Dockerfile
 ├── eval/                   # Bộ eval CV parser + CV-JD matching (golden cases)
 ├── docs/
 │   ├── gate 1/             # Brief, PRD, wireframe (Gate 1)
 │   ├── pipeline/            # Đặc tả kỹ thuật pipeline (Phrase_2: CV-JD Matching, Phrase_3: Voice Interview)
 │   └── OVERNIGHT_RUN_LOG_*.md  # Nhật ký các phiên fix/test tự động
-├── scripts/                 # AI Logging Hooks (BTC) + tiện ích đồng bộ Qdrant
-├── docker-compose.yml       # Full stack: db, qdrant, clamav, backend, frontend, gateway
-└── Dockerfile
+├── scripts/                 # AI Logging Hooks (BTC) + tiện ích đồng bộ pgvector
+├── docker-compose.yml       # Backend stack: db, clamav, backend
+└── Makefile                 # Local backend entry points
 ```
 
 ## 📊 AI Usage Logging (yêu cầu BTC — không thay đổi)

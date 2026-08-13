@@ -10,7 +10,11 @@ from typing import Any
 
 from src.agents.tools.career_tools import TECH_SKILLS, collect_cv_skills, extract_known_terms
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
+APP_ROOT = Path(__file__).resolve().parents[2]
+# In Docker the application and data directories both live in /app.  In local
+# development the Python application lives in backend/ while shared fixtures
+# remain at the repository root.
+PROJECT_ROOT = APP_ROOT if (APP_ROOT / "data").is_dir() else APP_ROOT.parent
 RAW_JD_DIR = PROJECT_ROOT / "data" / "jds" / "raw"
 CLEAN_JD_PATH = PROJECT_ROOT / "data" / "clean" / "jds_clean.json"
 
