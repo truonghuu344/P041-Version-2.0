@@ -32,6 +32,7 @@
 
 /* ---------- RESET & BASE ---------- */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+[hidden] { display: none !important; }
 
 :root {
   /* Brand Core Colors */
@@ -1978,6 +1979,11 @@ body {
   font-size: 11px;
   text-align: center;
 }
+.gap-select-menu-item[hidden],
+.gap-select-group-label[hidden],
+.gap-select-no-results[hidden] {
+  display: none !important;
+}
 .jd-selection-hint {
   width: 100%;
   min-width: 0;
@@ -2673,7 +2679,7 @@ body {
 .interview-selection-grid {
   display: grid;
   grid-template-columns: minmax(170px, 0.42fr) minmax(0, 1.58fr);
-  align-items: flex-end;
+  align-items: flex-start;
   gap: 16px;
 }
 
@@ -2682,8 +2688,40 @@ body {
   min-width: 0;
 }
 
+.interview-select-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.interview-quick-upload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border: 1px solid rgba(103, 232, 249, 0.35);
+  border-radius: 8px;
+  background: rgba(34, 211, 238, 0.1);
+  color: #67e8f9;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.interview-quick-upload-btn:hover {
+  border-color: #22d3ee;
+  background: rgba(34, 211, 238, 0.2);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
 .interview-select-label {
-  margin-bottom: 3px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
   color: #e2e8f0;
   font-size: 12px;
   font-weight: 700;

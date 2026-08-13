@@ -1022,12 +1022,19 @@ export default function Page() {
           <div className="interview-workspace">
             <div id="page-interview-setup" className="interview-card">
               <h3 className="card-section-title">Thiết Lập Phiên Phỏng Vấn Thử</h3>
-              <div className="form-row margin-bottom interview-selection-grid">
+              <div className="interview-selection-grid margin-bottom">
                 <div className="form-group flex-1">
-                  <label className="form-label interview-select-label">
-                    <span>Chọn CV phỏng vấn</span>
-                    <small>Hồ sơ ứng viên</small>
-                  </label>
+                  <div className="interview-select-header-row">
+                    <label className="form-label interview-select-label" htmlFor="page-interview-select-cv">
+                      <span>Chọn CV phỏng vấn</span>
+                      <small>Hồ sơ ứng viên</small>
+                    </label>
+                    <label className="interview-quick-upload-btn" htmlFor="page-interview-quick-cv-file">
+                      <span aria-hidden="true">📤</span>
+                      <span>Tải CV mới</span>
+                      <input type="file" id="page-interview-quick-cv-file" accept=".pdf,.docx,.jpg,.jpeg,.png" style={{ display: 'none' }} />
+                    </label>
+                  </div>
                   <div className="gap-select-shell interview-select-shell interview-select-cv">
                     <span className="gap-select-icon" aria-hidden="true">📄</span>
                     <select id="page-interview-select-cv" className="form-input gap-select interview-select" aria-label="Chọn CV phỏng vấn"></select>
@@ -1035,10 +1042,12 @@ export default function Page() {
                   </div>
                 </div>
                 <div className="form-group flex-1">
-                  <label className="form-label interview-select-label">
-                    <span>Chọn vị trí ứng tuyển</span>
-                    <small>Mô tả công việc</small>
-                  </label>
+                  <div className="interview-select-header-row">
+                    <label className="form-label interview-select-label" htmlFor="page-interview-select-jd">
+                      <span>Chọn vị trí ứng tuyển</span>
+                      <small>Mô tả công việc</small>
+                    </label>
+                  </div>
                   <div className="gap-select-shell interview-select-shell interview-select-jd">
                     <span className="gap-select-icon" aria-hidden="true">💼</span>
                     <select id="page-interview-select-jd" className="form-input gap-select interview-select" aria-label="Chọn vị trí ứng tuyển"></select>

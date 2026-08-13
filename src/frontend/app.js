@@ -2705,6 +2705,28 @@ TÊN CÔNG TY:
   const jobResultsMode = document.getElementById('job-results-mode');
   let activeJobSearchCV = '';
 
+  function getCompanyInitials(company = '') {
+    if (!company || typeof company !== 'string') return 'JD';
+    let cleaned = company
+      .replace(/^(\[.*?\]|\(.*?\))\s*/g, '')
+      .replace(/^(công ty\s+(tnhh|cổ phần|cp|mtv|liên doanh|đầu tư|công nghệ)?\s*)/i, '')
+      .replace(/^(cty\s+(tnhh|cp)?\s*)/i, '')
+      .replace(/^(tổng công ty|tập đoàn)\s*/i, '')
+      .trim();
+
+    if (!cleaned) cleaned = company.trim();
+
+    const words = cleaned.split(/[\s\-._]+/).filter(w => w.length > 0 && !/^(tnhh|cp|jsc|ltd|inc|corp|vietnam|vn)$/i.test(w));
+    if (words.length >= 2) {
+      return (words[0][0] + words[1][0]).toUpperCase();
+    } else if (words.length === 1 && words[0].length >= 2) {
+      return words[0].slice(0, 2).toUpperCase();
+    } else if (words.length === 1 && words[0].length === 1) {
+      return words[0].toUpperCase();
+    }
+    return cleaned.slice(0, 2).toUpperCase() || 'JD';
+  }
+
   function renderJobCatalogCard(job) {
     const skills = (job.skills || []).slice(0, 7);
     const matched = new Set((job.matched_skills || []).map(skill => skill.toLocaleLowerCase()));
@@ -2715,7 +2737,7 @@ TÊN CÔNG TY:
     return `
       <article class="job-catalog-card ${hasMatchScore ? 'is-ai-ranked' : ''}">
         <div class="job-catalog-topline">
-          <span class="job-company-mark">${escapeHtml((job.company || 'DN').slice(0, 2).toUpperCase())}</span>
+          <span class="job-company-mark">${escapeHtml(getCompanyInitials(job.company))}</span>
           <div class="job-catalog-heading">
             <span class="job-catalog-source">${escapeHtml(job.source_id)} • ${escapeHtml(job.domain || 'Công nghệ')}</span>
             <h3>${escapeHtml(job.title)}</h3>
@@ -3105,6 +3127,21 @@ TÊN CÔNG TY:
       });
 
       menu.addEventListener('keydown', event => {
+        const searchInput = menu.querySelector('.gap-select-search');
+        if (event.target === searchInput) {
+          if (event.key === 'Escape') {
+            event.preventDefault();
+            shell.classList.remove('is-open');
+            trigger.setAttribute('aria-expanded', 'false');
+            trigger.focus();
+          } else if (event.key === 'ArrowDown') {
+            event.preventDefault();
+            const firstItem = menu.querySelector('.gap-select-menu-item:not(:disabled):not([hidden])');
+            firstItem?.focus();
+          }
+          return;
+        }
+
         const items = [...menu.querySelectorAll('.gap-select-menu-item:not(:disabled):not([hidden])')];
         const currentIndex = items.indexOf(document.activeElement);
         if (event.key === 'Escape') {
@@ -3382,17 +3419,37 @@ TÊN CÔNG TY:
 
   let pageSessionId = null;
 
-  async function populatePageInterviewOptions() {
+  const pageInterviewQuickCvFile = document.getElementById('page-interview-quick-cv-file');
+  pageInterviewQuickCvFile?.addEventListener('change', async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try {
+      showToast('⏳ Đang tải lên và phân tích CV...', 'info');
+      const uploaded = await ApiClient.uploadCV(file);
+      showToast('✅ Tải CV thành công! Đã tự động chọn CV cho phỏng vấn.', 'success');
+      await populatePageInterviewOptions(uploaded.id);
+    } catch (err) {
+      showToast(`❌ Lỗi tải CV: ${err.message}`, 'error');
+    } finally {
+      event.target.value = '';
+    }
+  });
+
+  async function populatePageInterviewOptions(preferredCvId = '') {
     if (!pageSelectIntCv || !pageSelectIntJd) return;
     try {
       const [cvs, jds] = await Promise.all([ApiClient.listCVs(), ApiClient.listJDs()]);
       pageSelectIntCv.innerHTML = cvs.length > 0
         ? cvs.map(c => `<option value="${escapeHtml(c.id)}">${escapeHtml(c.title || 'CV chưa đặt tên')}</option>`).join('')
-        : `<option value="">(Bắt buộc upload 1 CV trước)</option>`;
+        : `<option value="" disabled selected>Chưa có CV — bấm "Tải CV mới" để bắt đầu</option>`;
 
       pageSelectIntJd.innerHTML = jds.length > 0
         ? jds.map(j => `<option value="${escapeHtml(j.id)}">${escapeHtml(j.title || 'JD chưa đặt tên')} • ${escapeHtml(j.company || 'Chưa ghi công ty')}</option>`).join('')
-        : `<option value="">(Bắt buộc chọn 1 JD trước)</option>`;
+        : `<option value="" disabled selected>Chưa có JD — hãy chọn hoặc tạo JD</option>`;
+
+      if (preferredCvId && cvs.some(c => c.id === preferredCvId)) {
+        pageSelectIntCv.value = preferredCvId;
+      }
       enhanceGapSelect(pageSelectIntCv);
       enhanceGapSelect(pageSelectIntJd);
       const sessions = await ApiClient.listInterviews();
