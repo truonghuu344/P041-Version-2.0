@@ -14,6 +14,7 @@ os.environ["CV_JD_EMBEDDING_PROVIDER"] = "hashing"
 os.environ["MALWARE_SCAN_MODE"] = "disabled"
 os.environ["GEMINI_API_KEY"] = ""
 os.environ["GOOGLE_API_KEY"] = ""
+os.environ["MAX_REQUEST_BODY_MB"] = "22"
 
 from src.db.database import Base, get_db
 from src.main import app
