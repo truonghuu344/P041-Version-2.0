@@ -2151,10 +2151,6 @@ function startAppLogic() {
 
     if (scoreEl) scoreEl.textContent = `${score.toFixed(1)}%`;
     scoreRing?.style.setProperty('--match-score', `${Math.max(0, Math.min(100, score)) * 3.6}deg`);
-<<<<<<< HEAD
-=======
-
->>>>>>> 4b9c0ff33948c4dccd35154fbe8fd6dd3540d2df
     const missingIds = [];
     applyDomField('cv-result-context', 'textContent', `${cvLabel}  ↔  ${jdLabel}`, missingIds);
     applyDomField('cv-result-summary', 'textContent', analysis.executive_summary
@@ -2183,11 +2179,7 @@ function startAppLogic() {
       : '<span class="cv-result-empty">Không có dữ liệu.</span>';
     applyDomField('cv-result-matching-skills', 'innerHTML', renderSkills(matched, 'matched'), missingIds);
     applyDomField('cv-result-missing-skills', 'innerHTML', renderSkills(missing, 'missing'), missingIds);
-<<<<<<< HEAD
     applyDomField('cv-result-partial-skills', 'innerHTML', renderSkills(partial, 'partial'), missingIds);
-=======
-    setHTML('cv-result-partial-skills', renderSkills(partial, 'partial'));
->>>>>>> 4b9c0ff33948c4dccd35154fbe8fd6dd3540d2df
 
     applyDomField('cv-result-priority-actions', 'innerHTML', priorityActions.length
       ? priorityActions.slice(0, 4).map((item, index) => {
@@ -3306,11 +3298,6 @@ TÊN CÔNG TY:
           s => `<span class="badge badge-need">${escapeHtml(s)}</span>`
         ).join('') || `<span style="font-size:11px;color:var(--text-muted);">Không có dữ liệu</span>`, missingIds);
 
-<<<<<<< HEAD
-=======
-        applyDomField('page-gap-executive-summary', 'textContent', res.executive_summary || '', missingIds);
-
->>>>>>> 4b9c0ff33948c4dccd35154fbe8fd6dd3540d2df
         applyDomField('page-gap-soft-skills', 'innerHTML', (res.soft_skills_gap || []).map(
           s => `<span class="badge badge-warn">${escapeHtml(s)}</span>`
         ).join('') || `<span style="font-size:11px;color:var(--text-muted);">CV đã có bằng chứng cho các kỹ năng mềm nhận diện được.</span>`, missingIds);
@@ -3330,11 +3317,7 @@ TÊN CÔNG TY:
             </article>
           `).join('')
           : '<p class="gap-empty">Chưa có dữ liệu phân rã điểm.</p>', missingIds);
-<<<<<<< HEAD
-
         applyDomField('page-gap-executive-summary', 'textContent', res.executive_summary || '', missingIds);
-=======
->>>>>>> 4b9c0ff33948c4dccd35154fbe8fd6dd3540d2df
 
         applyDomField('page-gap-priority-actions', 'innerHTML', (res.priority_actions || []).map(item => `
           <article class="gap-plan-item priority-item">
