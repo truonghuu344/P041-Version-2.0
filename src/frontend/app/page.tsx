@@ -708,11 +708,6 @@ export default function Page() {
                     <div id="cv-result-warnings" className="cv-result-warnings"></div>
                   </section>
 
-                  <section className="cv-result-panel cv-result-evidence-panel">
-                    <h5>Ma trận yêu cầu – bằng chứng</h5>
-                    <div id="cv-result-requirement-evidence" className="cv-result-evidence-list"></div>
-                  </section>
-
                   <div className="cv-result-deep-grid">
                     <section className="cv-result-panel">
                       <h5>Kỹ năng mềm còn thiếu bằng chứng</h5>
@@ -980,131 +975,6 @@ export default function Page() {
         </div>
       </section>
 
-<<<<<<< HEAD
-      {/* ===== 5. VIEW: GAP ANALYSIS ===== */}
-      <section className="app-view" id="view-gap">
-        <div className="page-container">
-          <div className="page-header">
-            <div className="page-badge badge-pink">DECK DELTA // NAVIGATION DECK</div>
-            <h1 className="page-title">🎯 Phân Tích Match Score &amp; Lộ Trình Nâng Cấp Kỹ Năng</h1>
-            <p className="page-sub">So khớp CV với JD mục tiêu &amp; đề xuất tối ưu câu từ Chân Thật (Anti-Hallucination)</p>
-          </div>
-
-          <div className="trajectory-roadmap-card">
-            <div className="roadmap-header">
-              <span className="pulse-dot cyan"></span>
-              <h3 className="roadmap-title">QUỸ ĐẠO BỔ SUNG KỸ NĂNG MỤC TIÊU (CAREER MILESTONE ROADMAP)</h3>
-            </div>
-            <div className="trajectory-steps">
-              <div className="t-step step-done">
-                <div className="step-num">01</div>
-                <div className="step-content">
-                  <span className="step-label">Nền Tảng Đã Có</span>
-                  <span className="step-title">Python &amp; Web Dev Fundamentals</span>
-                </div>
-              </div>
-              <div className="t-step step-current">
-                <div className="step-num">02</div>
-                <div className="step-content">
-                  <span className="step-label">Kỹ Năng Đang Bổ Sung</span>
-                  <span className="step-title">FastAPI Backend &amp; Docker Deployment</span>
-                </div>
-              </div>
-              <div className="t-step step-next">
-                <div className="step-num">03</div>
-                <div className="step-content">
-                  <span className="step-label">Milestone Tiếp Theo</span>
-                  <span className="step-title">LangGraph Agent &amp; System Architecture</span>
-                </div>
-              </div>
-              <div className="t-step step-target">
-                <div className="step-num">04</div>
-                <div className="step-content">
-                  <span className="step-label">Đích Đến Mục Tiêu</span>
-                  <span className="step-title">Senior AI &amp; Fullstack Specialist</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="gap-workspace">
-            <div className="gap-card">
-              <div className="form-row gap-selection-grid margin-bottom">
-                <div className="form-group flex-1">
-                  <label className="form-label">Chọn CV:</label>
-                  <div className="gap-select-shell">
-                    <span className="gap-select-icon" aria-hidden="true">📄</span>
-                    <select id="page-gap-select-cv" className="form-input gap-select" aria-label="Chọn CV để phân tích"></select>
-                    <span className="gap-select-chevron" aria-hidden="true">⌄</span>
-                  </div>
-                </div>
-                <div className="form-group flex-1">
-                  <label className="form-label">Chọn JD Mục Tiêu:</label>
-                  <div className="gap-select-shell">
-                    <span className="gap-select-icon" aria-hidden="true">🎯</span>
-                    <select id="page-gap-select-jd" className="form-input gap-select" aria-label="Chọn JD mục tiêu"></select>
-                    <span className="gap-select-chevron" aria-hidden="true">⌄</span>
-                  </div>
-                </div>
-              </div>
-              <button id="page-btn-run-gap" className="btn-primary full-width gap-analysis-submit">
-                <span className="gap-submit-icon" aria-hidden="true">✦</span>
-                <span>Chạy Phân Tích Khớp Hồ Sơ CV - JD</span>
-              </button>
-            </div>
-
-            <div id="page-gap-results-container" className="gap-results-card" style={{ display: 'none' }}>
-              <div className="score-header">
-                <span className="score-title">Tỷ Lệ Phù Hợp (Match Score):</span>
-                <span id="page-gap-match-score-badge" className="badge badge-ok match-score-badge">0%</span>
-              </div>
-
-              <div className="gap-result-block">
-                <p className="block-title title-green">✅ Kỹ năng đáp ứng tốt (Matching Skills):</p>
-                <div id="page-gap-matching-skills" className="tags-row"></div>
-              </div>
-
-              <div className="gap-result-block">
-                <p className="block-title title-red">⚠️ Kỹ năng còn thiếu (Missing Skills):</p>
-                <div id="page-gap-missing-skills" className="tags-row"></div>
-              </div>
-
-              <div className="gap-result-block">
-                <p className="block-title">Tóm tắt định hướng:</p>
-                <p id="page-gap-executive-summary" className="gap-empty"></p>
-              </div>
-              <div className="gap-result-block">
-                <p className="block-title">Ưu tiên cải thiện:</p>
-                <div id="page-gap-priority-actions" className="gap-plan-list"></div>
-              </div>
-              <div className="gap-result-block">
-                <p className="block-title">Lộ trình học tập:</p>
-                <div id="page-gap-learning-list" className="gap-plan-list"></div>
-              </div>
-              <div className="gap-result-block">
-                <p className="block-title">Chứng chỉ tham khảo:</p>
-                <div id="page-gap-certifications-list" className="gap-plan-list"></div>
-              </div>
-              <div className="gap-result-block">
-                <p className="block-title">Dự án portfolio đề xuất:</p>
-                <div id="page-gap-projects-list" className="gap-plan-list"></div>
-              </div>
-              <div className="gap-result-block">
-                <p className="block-title">Mục CV cần hoàn thiện:</p>
-                <div id="page-gap-cv-sections-list" className="gap-plan-list"></div>
-              </div>
-
-              <div className="gap-result-block">
-                <p className="block-title title-purple">💡 Đề xuất chỉnh sửa câu từ chuẩn ATS (Anti-Hallucination):</p>
-                <div id="page-gap-suggestions-list" className="suggestions-stack"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-=======
->>>>>>> 9f4ac042a3ecb6bfd71ff85a6cab3f07893b59ee
       {/* ===== 4. VIEW: PHỎNG VẤN STAR ===== */}
       <section className="app-view" id="view-interview">
         <div className="page-container">
@@ -1281,6 +1151,66 @@ export default function Page() {
                   <button className="archive-btn-view" id="btn-archive-view-gap">Xem Lộ Trình ➔</button>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== 6b. VIEW: MISSION ARCHIVE DETAIL ===== */}
+      <section className="app-view" id="view-archive-detail">
+        <div className="page-container">
+          <div className="page-header">
+            <button className="btn-outline archive-detail-back-btn" id="btn-archive-detail-back" type="button">← Quay lại Lịch Sử</button>
+            <div className="page-badge badge-purple" id="archive-detail-badge">DECK EPSILON // CHI TIẾT NHIỆM VỤ</div>
+            <h1 className="page-title" id="archive-detail-title">Chi tiết nhiệm vụ</h1>
+            <p className="page-sub" id="archive-detail-sub"></p>
+          </div>
+
+          {/* --- STAR interview report detail --- */}
+          <div id="archive-detail-star-section" className="profile-settings-card archive-detail-card" style={{ display: 'none' }}>
+            <h3 className="card-section-title">📊 Báo Cáo Chấm Điểm Phỏng Vấn (STAR Rubric)</h3>
+            <div className="archive-detail-score-row">
+              <span>Điểm Tổng Kết Rubric STAR:</span>
+              <strong id="archive-detail-star-score">— / 100 PTS</strong>
+            </div>
+            <div id="archive-detail-star-breakdown" className="archive-detail-star-grid"></div>
+            <div className="archive-detail-block">
+              <p className="archive-detail-label is-positive">Điểm Mạnh:</p>
+              <ul id="archive-detail-star-strengths" className="archive-detail-list"></ul>
+            </div>
+            <div className="archive-detail-block">
+              <p className="archive-detail-label is-warning">Cần Cải Thiện:</p>
+              <ul id="archive-detail-star-improvements" className="archive-detail-list"></ul>
+            </div>
+            <div className="archive-detail-block">
+              <p className="archive-detail-label is-info">Khuyên Luyện Tập:</p>
+              <ul id="archive-detail-star-recommendations" className="archive-detail-list"></ul>
+            </div>
+          </div>
+
+          {/* --- CV Gap Analysis / optimized CV detail --- */}
+          <div id="archive-detail-gap-section" className="profile-settings-card archive-detail-card" style={{ display: 'none' }}>
+            <h3 className="card-section-title">🎯 Chi Tiết Gap Analysis &amp; CV Đã Tối Ưu</h3>
+            <p className="archive-detail-context" id="archive-detail-gap-context"></p>
+            <div className="archive-detail-score-row">
+              <span>Tỷ lệ phù hợp với JD:</span>
+              <strong id="archive-detail-gap-score">—%</strong>
+            </div>
+            <div className="archive-detail-block">
+              <p className="archive-detail-label is-positive">Kỹ năng đã khớp:</p>
+              <div id="archive-detail-gap-matched" className="cv-result-tags"></div>
+            </div>
+            <div className="archive-detail-block">
+              <p className="archive-detail-label is-warning">Kỹ năng còn thiếu:</p>
+              <div id="archive-detail-gap-missing" className="cv-result-tags"></div>
+            </div>
+            <div className="archive-detail-block">
+              <p className="archive-detail-label is-info">Hành động ưu tiên:</p>
+              <div id="archive-detail-gap-actions" className="cv-result-action-list"></div>
+            </div>
+            <div className="archive-detail-block">
+              <p className="archive-detail-label is-info">Đề xuất chỉnh sửa CV (cần Accept/Reject):</p>
+              <div id="archive-detail-gap-suggestions" className="cv-result-action-list"></div>
             </div>
           </div>
         </div>
