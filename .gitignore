@@ -34,6 +34,7 @@ Thumbs.db
 *.db
 *.sqlite3
 postgres_data/
+data/raw/
 
 # Chroma DB (using PostgreSQL instead)
 chroma_db/
@@ -70,3 +71,11 @@ out/
 .ai-log/codex-state.json
 .ai-log/archive/
 .vercel
+
+.claude
+.codex
+.cursor
+.gemini
+
+# Note
+note.txt

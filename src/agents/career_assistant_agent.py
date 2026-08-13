@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import re
+import unicodedata
 from typing import Any
 
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
@@ -32,10 +33,43 @@ def _is_datetime_request(message: str) -> bool:
     return any(re.search(pattern, message, flags=re.IGNORECASE) for pattern in _DATETIME_PATTERNS)
 
 
+def _normalize_intent_text(message: str) -> str:
+    decomposed = unicodedata.normalize("NFD", message.casefold())
+    without_marks = "".join(character for character in decomposed if unicodedata.category(character) != "Mn")
+    return " ".join(without_marks.replace("đ", "d").split())
+
+
+def _contains_any(message: str, phrases: tuple[str, ...]) -> bool:
+    return any(phrase in message for phrase in phrases)
+
+
 def _plan_assistant_action(state: CareerAssistantState) -> dict[str, Any]:
     message = state.get("message", "").casefold()
+    normalized = _normalize_intent_text(message)
     actions: list[dict[str, str]] = []
     intent = "career_chat"
+
+    if _contains_any(normalized, ("system prompt", "api key", "gemini api", "khoa bi mat", "tiet lo prompt")):
+        return {"intent": "security_refusal", "suggested_actions": []}
+
+    if _contains_any(normalized, ("liet ke cv", "danh sach cv", "cac cv cua toi", "toi co nhung cv")):
+        return {"intent": "list_cvs", "suggested_actions": []}
+    if _contains_any(normalized, ("liet ke jd", "danh sach jd", "cac jd", "vi tri nao", "cong viec nao")):
+        return {"intent": "list_jds", "suggested_actions": []}
+    if _contains_any(normalized, ("so sanh cac vi tri", "so sanh vi tri", "so sanh jd")):
+        return {"intent": "compare_positions", "suggested_actions": []}
+    if _contains_any(normalized, ("ke hoach hanh dong", "lo trinh tu ket qua", "nen lam gi tiep")):
+        return {"intent": "action_plan", "suggested_actions": []}
+    if _contains_any(normalized, ("ket qua gan nhat", "phan tich gan nhat", "mo ket qua")):
+        return {"intent": "latest_analysis", "suggested_actions": []}
+    if _contains_any(normalized, ("giai thich ket qua", "giai thich phan tich", "tai sao diem")):
+        return {"intent": "explain_analysis", "suggested_actions": []}
+    if _contains_any(normalized, ("chay gap", "bat dau gap", "khoi tao gap", "phan tich cv jd", "so khop cv")):
+        return {"intent": "prepare_gap_analysis", "suggested_actions": []}
+    if _contains_any(normalized, ("bat dau phong van", "khoi tao phong van", "mo phong van", "luyen phong van voi")):
+        return {"intent": "prepare_interview", "suggested_actions": []}
+    if _contains_any(normalized, ("cv cua toi", "trong cv cua toi", "viet lai cv cua toi")):
+        return {"intent": "grounded_cv_request", "suggested_actions": []}
 
     if any(term in message for term in ("thời tiết", "weather", "nhiệt độ", "dự báo", "trời mưa", "trời nắng")):
         return {"intent": "weather", "suggested_actions": []}
@@ -59,6 +93,135 @@ def _plan_assistant_action(state: CareerAssistantState) -> dict[str, Any]:
 
     deduplicated = list({action["page"]: action for action in actions}.values())[:2]
     return {"intent": intent, "suggested_actions": deduplicated}
+
+
+def _source_action(sources: list[dict[str, Any]]) -> dict[str, Any]:
+    return {
+        "label": "Nguồn và bằng chứng",
+        "action_type": "evidence",
+        "sources": sources,
+    }
+
+
+def _selection_action(action_type: str, label: str, resources: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "label": label,
+        "action_type": action_type,
+        "requires_confirmation": True,
+        "options": {
+            "cvs": [
+                {"id": item["id"], "label": item["title"], "meta": item.get("updated_at", "")}
+                for item in resources.get("cvs", [])
+            ],
+            "jds": [
+                {
+                    "id": item["id"],
+                    "label": item["title"],
+                    "meta": " · ".join(part for part in (item.get("company"), item.get("location")) if part),
+                }
+                for item in resources.get("jds", [])
+            ],
+        },
+    }
+
+
+async def _respond_with_orchestration(state: CareerAssistantState) -> dict[str, Any]:
+    resources = state.get("resource_context", {})
+    cvs = resources.get("cvs", [])
+    jds = resources.get("jds", [])
+    analyses = resources.get("analyses", [])
+    intent = state.get("intent")
+    result: dict[str, Any] = {
+        "provider": "nova_orchestrator",
+        "model": "deterministic_orchestration",
+        "llm_succeeded": True,
+        "tools_used": ["verified_user_database"],
+        "suggested_actions": [],
+    }
+
+    if intent == "security_refusal":
+        return {
+            **result,
+            "tools_used": ["security_guardrail"],
+            "response": "Mình không thể cung cấp system prompt, API key hoặc thông tin bí mật. Mình vẫn có thể giải thích cách Nova hoạt động ở mức an toàn.",
+        }
+
+    if intent == "list_cvs":
+        if not cvs:
+            return {**result, "response": "Bạn chưa có CV nào đã lưu.", "suggested_actions": [{"label": "Mở CV Upload", "page": "cv"}]}
+        lines = [f"{index}. {item['title']} — cập nhật {item['updated_at']}" for index, item in enumerate(cvs, 1)]
+        sources = [
+            {"source_type": "cv", "source_id": item["id"], "title": item["title"], "updated_at": item.get("updated_at"), "provenance": "user_data"}
+            for item in cvs
+        ]
+        return {**result, "response": "Các CV thuộc tài khoản của bạn:\n" + "\n".join(lines), "suggested_actions": [_source_action(sources), {"label": "Mở CV Upload", "page": "cv"}]}
+
+    if intent == "list_jds":
+        if not jds:
+            return {**result, "response": "Hiện không có JD nào bạn được phép sử dụng.", "suggested_actions": [{"label": "Mở thư viện Jobs", "page": "jobs"}]}
+        lines = [f"{index}. {item['title']}{' · ' + item['company'] if item.get('company') else ''}" for index, item in enumerate(jds, 1)]
+        sources = [
+            {"source_type": "jd", "source_id": item["id"], "title": item["title"], "updated_at": item.get("created_at"), "provenance": "user_data" if item.get("owned") else "system_data"}
+            for item in jds
+        ]
+        return {**result, "response": "Các JD bạn có thể sử dụng:\n" + "\n".join(lines), "suggested_actions": [_source_action(sources), {"label": "Mở thư viện Jobs", "page": "jobs"}]}
+
+    if intent in {"prepare_gap_analysis", "prepare_interview", "grounded_cv_request"}:
+        if not cvs or not jds:
+            missing = "CV" if not cvs else "JD"
+            return {**result, "response": f"Bạn cần có ít nhất một {missing} hợp lệ trước khi thực hiện tác vụ này.", "suggested_actions": [{"label": "Mở CV Upload" if not cvs else "Mở thư viện Jobs", "page": "cv" if not cvs else "jobs"}]}
+        action_type = "start_interview" if intent == "prepare_interview" else "run_gap_analysis"
+        label = "Bắt đầu phỏng vấn" if action_type == "start_interview" else "Chạy Gap Analysis"
+        explanation = (
+            "Hãy chọn CV và JD. Nova sẽ hiển thị xác nhận trước khi tạo phiên phỏng vấn."
+            if action_type == "start_interview"
+            else "Hãy chọn CV và JD. Nova chỉ phân tích sau khi bạn xác nhận; mọi nhận định CV sẽ dựa trên evidence của Gap Analysis."
+        )
+        return {**result, "response": explanation, "suggested_actions": [_selection_action(action_type, label, resources)]}
+
+    if not analyses:
+        return {**result, "response": "Bạn chưa có kết quả Gap Analysis nào để mở hoặc giải thích.", "suggested_actions": [_selection_action("run_gap_analysis", "Tạo Gap Analysis đầu tiên", resources)] if cvs and jds else []}
+
+    latest = analyses[0]
+    source = {
+        "source_type": "analysis",
+        "source_id": latest["id"],
+        "title": f"{latest['cv_title']} ↔ {latest['jd_title']}",
+        "updated_at": latest.get("created_at"),
+        "provenance": "verified_analysis",
+    }
+    if intent in {"latest_analysis", "explain_analysis"}:
+        matching = ", ".join(latest.get("matching", [])[:6]) or "chưa có bằng chứng khớp"
+        missing = ", ".join(latest.get("missing", [])[:6]) or "chưa ghi nhận"
+        evidence_lines = [f"• {item['requirement']}: “{item['quote']}”" for item in latest.get("evidence", [])[:3]]
+        response = (
+            f"Kết quả gần nhất: {latest['cv_title']} ↔ {latest['jd_title']}, điểm {latest['match_score']:.1f}%.\n"
+            f"Kỹ năng có bằng chứng: {matching}.\nKỹ năng còn thiếu: {missing}."
+        )
+        if evidence_lines:
+            response += "\nBằng chứng tiêu biểu:\n" + "\n".join(evidence_lines)
+            source["quote"] = evidence_lines[0].removeprefix("• ")
+        return {**result, "response": response, "tools_used": ["gap_analysis_evidence"], "suggested_actions": [_source_action([source]), {"label": "Mở Gap Analysis", "page": "gap"}]}
+
+    if intent == "action_plan":
+        actions = latest.get("priority_actions", [])[:5]
+        learning = latest.get("learning", [])[:3]
+        lines = [f"{index}. {item.get('gap')}: {item.get('action')}" for index, item in enumerate(actions, 1)]
+        lines.extend(f"Học đề xuất: {item.get('skill')} — {item.get('learning_goal')}" for item in learning)
+        response = "Kế hoạch đề xuất từ kết quả đã kiểm chứng:\n" + ("\n".join(lines) or "Chưa có hành động ưu tiên.")
+        response += "\nCác mục trên là khuyến nghị tương lai, không phải thành tích đã hoàn thành."
+        return {**result, "response": response, "tools_used": ["gap_analysis_guardrail"], "suggested_actions": [_source_action([source]), {"label": "Mở Gap Analysis", "page": "gap"}]}
+
+    if intent == "compare_positions":
+        comparisons = analyses[:8]
+        lines = [f"{index}. {item['jd_title']}: {item['match_score']:.1f}% · CV {item['cv_title']} · {item['created_at']}" for index, item in enumerate(comparisons, 1)]
+        sources = [
+            {"source_type": "analysis", "source_id": item["id"], "title": f"{item['cv_title']} ↔ {item['jd_title']}", "updated_at": item.get("created_at"), "provenance": "verified_analysis"}
+            for item in comparisons
+        ]
+        return {**result, "response": "So sánh các kết quả đã chạy (mỗi dòng là một phân tích riêng):\n" + "\n".join(lines), "tools_used": ["analysis_comparison"], "suggested_actions": [_source_action(sources), {"label": "Mở Gap Analysis", "page": "gap"}]}
+
+    return {**result, "response": "Nova chưa xác định được tác vụ cần thực hiện."}
 
 
 def _extract_weather_request(message: str) -> tuple[str, int]:
@@ -245,15 +408,26 @@ def _build_career_assistant_graph():
     graph.add_node("weather", _load_weather_context)
     graph.add_node("datetime", _respond_with_current_datetime)
     graph.add_node("respond", _respond_with_gemini)
+    graph.add_node("orchestrate", _respond_with_orchestration)
     graph.set_entry_point("plan")
     graph.add_conditional_edges(
         "plan",
-        lambda state: state.get("intent") if state.get("intent") in {"weather", "datetime"} else "respond",
-        {"weather": "weather", "datetime": "datetime", "respond": "respond"},
+        lambda state: (
+            state.get("intent")
+            if state.get("intent") in {"weather", "datetime"}
+            else "orchestrate"
+            if state.get("intent") in {
+                "security_refusal", "list_cvs", "list_jds", "prepare_gap_analysis", "prepare_interview",
+                "grounded_cv_request", "latest_analysis", "explain_analysis", "action_plan", "compare_positions",
+            }
+            else "respond"
+        ),
+        {"weather": "weather", "datetime": "datetime", "respond": "respond", "orchestrate": "orchestrate"},
     )
     graph.add_edge("weather", "respond")
     graph.add_edge("datetime", END)
     graph.add_edge("respond", END)
+    graph.add_edge("orchestrate", END)
     return graph.compile()
 
 
@@ -270,7 +444,12 @@ class CareerAssistantAgent:
         user_context: dict[str, Any],
     ) -> dict[str, Any]:
         return await self.graph.ainvoke(
-            {"message": message, "history": history, "user_context": user_context}
+            {
+                "message": message,
+                "history": history,
+                "user_context": user_context,
+                "resource_context": user_context.get("_resources", {}),
+            }
         )
 
 

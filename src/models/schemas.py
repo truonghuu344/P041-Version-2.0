@@ -377,17 +377,46 @@ class AssistantChatMessage(BaseModel):
     content: str = Field(..., min_length=1, max_length=4000)
 
 
+class AssistantOperationRequest(BaseModel):
+    action_type: Literal["run_gap_analysis", "start_interview"]
+    cv_id: str = Field(..., min_length=1, max_length=36)
+    jd_id: str = Field(..., min_length=1, max_length=36)
+    confirmed: bool = False
+    total_questions: int = Field(default=5, ge=3, le=10)
+
+
 class AssistantChatRequest(BaseModel):
     message: str = Field(..., min_length=1, max_length=4000)
     history: list[AssistantChatMessage] = Field(default_factory=list, max_length=12)
     current_page: str = Field(default="dashboard", max_length=50)
     timezone: str | None = Field(default=None, max_length=64)
     conversation_id: str | None = Field(default=None, max_length=36)
+    operation: AssistantOperationRequest | None = None
+
+
+class AssistantResourceOption(BaseModel):
+    id: str
+    label: str
+    meta: str = ""
+
+
+class AssistantSource(BaseModel):
+    source_type: Literal["cv", "jd", "analysis", "system"]
+    source_id: str
+    title: str
+    quote: str = ""
+    updated_at: datetime | None = None
+    provenance: Literal["user_data", "verified_analysis", "system_data", "recommendation"]
 
 
 class AssistantAction(BaseModel):
     label: str
-    page: str
+    page: str | None = None
+    action_type: Literal["navigate", "run_gap_analysis", "start_interview", "evidence"] = "navigate"
+    requires_confirmation: bool = False
+    payload: dict[str, Any] = Field(default_factory=dict)
+    options: dict[str, list[AssistantResourceOption]] = Field(default_factory=dict)
+    sources: list[AssistantSource] = Field(default_factory=list)
 
 
 class AssistantChatResponse(BaseModel):
