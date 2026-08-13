@@ -93,6 +93,11 @@ def test_nova_conversation_history_is_connected_to_persistent_api():
     assert ".ai-chat-history-item" in STYLE_CSS
 
 
+def test_nova_legacy_gap_actions_open_the_current_cv_analysis_view():
+    assert "action.page === 'gap' ? 'cv' : action.page" in APP_JS
+    assert "button.dataset.assistantTarget = targetPage" in APP_JS
+
+
 def test_admin_ai_log_view_is_admin_portal_contract():
     assert 'id="admin-tab-ai-logs"' in PAGE_JS
     assert 'id="admin-ai-log-list"' in PAGE_JS
