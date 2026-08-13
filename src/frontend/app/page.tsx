@@ -58,13 +58,12 @@ export default function Page() {
             <span className="brand-name">CV Assistant</span>
           </a>
           <nav className="nav-links" id="nav-links">
-            <a href="#" className="nav-link active" id="nav-dashboard"><span className="nav-text" data-i18n="nav-dashboard">Tổng quan</span></a>
-            <a href="#" className="nav-link" id="nav-cv"><span className="nav-text" data-i18n="nav-cv">CV của tôi</span></a>
-            <a href="#" className="nav-link" id="nav-find-jobs"><span className="nav-text" data-i18n="nav-find-jobs">Việc phù hợp</span></a>
-            <a href="#" className="nav-link" id="nav-jobs" hidden><span className="nav-text" data-i18n="nav-jobs">Danh sách JD</span></a>
-            <a href="#" className="nav-link" id="nav-interview"><span className="nav-text" data-i18n="nav-interview">Luyện phỏng vấn</span></a>
-            <a href="#" className="nav-link" id="nav-history" hidden><span className="nav-text" data-i18n="nav-history">Tiến độ</span></a>
-            <a href="#" className="nav-link" id="nav-gap" hidden><span className="nav-text" data-i18n="nav-gap">Gap Analysis</span></a>
+            <a href="#" className="nav-link active" id="nav-dashboard"><span className="nav-text" data-i18n="nav-dashboard">Trang chủ</span></a>
+            <a href="#" className="nav-link" id="nav-cv"><span className="nav-text" data-i18n="nav-cv">Phân tích CV</span></a>
+            <a href="#" className="nav-link" id="nav-find-jobs"><span className="nav-text" data-i18n="nav-find-jobs">Tìm việc</span></a>
+            <a href="#" className="nav-link" id="nav-jobs"><span className="nav-text" data-i18n="nav-jobs">Danh sách JD</span></a>
+            <a href="#" className="nav-link" id="nav-interview"><span className="nav-text" data-i18n="nav-interview">Phòng phỏng vấn</span></a>
+            <a href="#" className="nav-link" id="nav-history" hidden><span className="nav-text" data-i18n="nav-history">Lịch sử &amp; Báo cáo</span></a>
             <a href="#" className="nav-link role-only-link" id="nav-counselor" hidden><span className="nav-text">Sinh viên của tôi</span></a>
             <a href="#" className="nav-link role-only-link" id="nav-counselor-reports" hidden><span className="nav-text">Báo cáo</span></a>
             <a href="#" className="nav-link role-only-link" id="nav-enterprise" hidden><span className="nav-text">Dashboard</span></a>
@@ -259,8 +258,8 @@ export default function Page() {
               <input type="text" id="cv-title-input" className="form-input" placeholder="Ví dụ: CV Backend Developer 2026" />
             </div>
             <div className="form-group">
-              <label className="form-label" data-i18n="label-cv-file">Chọn File CV (.pdf hoặc .docx, max 10MB)</label>
-              <input type="file" id="cv-file-input" className="form-input" accept=".pdf,.docx" required />
+              <label className="form-label" data-i18n="label-cv-file">Chọn CV (PDF, DOCX hoặc ảnh, tối đa 20 MB)</label>
+              <input type="file" id="cv-file-input" className="form-input" accept=".pdf,.docx,.jpg,.jpeg,.png" required />
             </div>
             <button type="submit" className="btn-primary" style={{ width: '100%' }} data-i18n="btn-cv-upload">Tải Lên & Parse CV</button>
           </form>
@@ -289,7 +288,7 @@ export default function Page() {
                 <div className="jd-create-icon"><FileText size={32} /></div>
                 <div>
                   <h3>Tải file JD theo mẫu</h3>
-                  <p>PDF, DOCX hoặc TXT — tối đa 5 MB.</p>
+                  <p>PDF, DOCX, TXT, JPG, JPEG hoặc PNG — tối đa 20 MB.</p>
                 </div>
               </div>
               <button type="button" id="download-jd-template" className="jd-template-button">⬇ Tải mẫu JD (.txt)</button>
@@ -311,9 +310,9 @@ export default function Page() {
                 <label className="jd-file-drop compact" htmlFor="upload-jd-file">
                   <div className="jd-file-drop-icon" style={{ color: "var(--accent)", marginBottom: "15px" }}><Upload size={48} /></div>
                   <strong>Chọn file JD</strong>
-                  <span id="upload-jd-file-name">PDF, DOCX hoặc TXT</span>
+                  <span id="upload-jd-file-name">PDF, DOCX, TXT hoặc ảnh</span>
                 </label>
-                <input type="file" id="upload-jd-file" className="visually-hidden-file" accept=".pdf,.docx,.txt" required />
+                <input type="file" id="upload-jd-file" className="visually-hidden-file" accept=".pdf,.docx,.txt,.jpg,.jpeg,.png" required />
                 <button type="submit" className="btn-primary" style={{ width: '100%' }}>Tải lên &amp; lưu JD</button>
               </form>
             </div>

@@ -41,6 +41,11 @@ class CVStructuredExtraction(BaseModel):
     experience: list[EvidenceRecord]
     projects: list[EvidenceRecord]
     certifications: list[EvidenceRecord]
+    languages: list[EvidenceRecord] = Field(default_factory=list)
+    awards: list[EvidenceRecord] = Field(default_factory=list)
+    publications: list[EvidenceRecord] = Field(default_factory=list)
+    volunteer: list[EvidenceRecord] = Field(default_factory=list)
+    other: list[EvidenceRecord] = Field(default_factory=list)
     missing_information: list[str]
 
 
@@ -240,7 +245,17 @@ async def evidence_guardrail_node(state: CVParserAgentState) -> dict[str, Any]:
         "soft_skills": soft_skills,
         "skills": list(dict.fromkeys([*hard_skills, *soft_skills])),
     }
-    for key in ("education", "experience", "projects", "certifications"):
+    for key in (
+        "education",
+        "experience",
+        "projects",
+        "certifications",
+        "languages",
+        "awards",
+        "publications",
+        "volunteer",
+        "other",
+    ):
         records, dropped = _verified_records(llm.get(key, []), raw_text)
         rejected += dropped
         verified[key] = records or local.get(key, [])

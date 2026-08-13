@@ -16,7 +16,7 @@ async def test_request_body_size_guard(client):
     response = await client.post(
         "/api/v1/auth/register",
         content=b"{}",
-        headers={"content-length": str(13 * 1024 * 1024), "content-type": "application/json"},
+        headers={"content-length": str(23 * 1024 * 1024), "content-type": "application/json"},
     )
 
     assert response.status_code == 413

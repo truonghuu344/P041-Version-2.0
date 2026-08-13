@@ -37,7 +37,7 @@ PASSWORD_RESET_REQUEST_MESSAGE = "Nếu email tồn tại, mã OTP đặt lại 
 
 
 def _otp_hash(email: str, otp: str) -> str:
-    payload = f"{email}:{otp}".encode("utf-8")
+    payload = f"{email}:{otp}".encode()
     return hmac.new(settings.secret_key.encode("utf-8"), payload, hashlib.sha256).hexdigest()
 
 

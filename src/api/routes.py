@@ -5,12 +5,14 @@ from src.api.v1.admin import router as admin_router
 from src.api.v1.analysis import router as analysis_router
 from src.api.v1.assistant import router as assistant_router
 from src.api.v1.auth import router as auth_router
+from src.api.v1.candidates import router as candidates_router
 from src.api.v1.counselor import router as counselor_router
 from src.api.v1.cvs import router as cvs_router
 from src.api.v1.enterprise import router as enterprise_router
 from src.api.v1.interviews import router as interviews_router
 from src.api.v1.jds import router as jds_router
 from src.api.v1.jobs import router as jobs_router
+from src.api.v1.matches import router as matches_router
 from src.api.v1.metrics import router as metrics_router
 from src.models.schemas import (
     ChatRequest,
@@ -26,6 +28,7 @@ router = APIRouter()
 
 # Include Sub-routers
 router.include_router(auth_router)
+router.include_router(candidates_router)
 router.include_router(cvs_router)
 router.include_router(jds_router)
 router.include_router(jobs_router)
@@ -36,6 +39,7 @@ router.include_router(assistant_router)
 router.include_router(counselor_router)
 router.include_router(enterprise_router)
 router.include_router(metrics_router)
+router.include_router(matches_router)
 
 
 @router.post("/chat", response_model=ChatResponse, tags=["Legacy Agent"])

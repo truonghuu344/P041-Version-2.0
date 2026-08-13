@@ -84,6 +84,21 @@ Khi đưa lên Internet, trỏ Cloudflare Tunnel hoặc reverse proxy của máy
 
 Để dừng stack, dùng `docker compose down`. Thêm `-v` chỉ khi muốn xóa toàn bộ dữ liệu PostgreSQL và dữ liệu ứng dụng.
 
+### RAG JD thị trường với Qdrant
+
+Docker Compose khởi chạy Qdrant và backend tự đồng bộ tăng dần 98 JD trong `data/jds`. API `GET /api/v1/jobs` dùng vector retrieval khi có từ khóa hoặc `cv_id`, sau đó rerank theo kỹ năng; nếu Qdrant tạm lỗi, API tự chuyển về tìm kiếm catalog để giao diện vẫn hoạt động.
+
+```bash
+# Đồng bộ thủ công khi chạy backend ngoài Docker
+python -m scripts.index_market_jds
+
+# Hoặc gọi endpoint quản trị
+curl -X POST http://localhost:8000/api/v1/jobs/rag/sync \
+  -H "Authorization: Bearer <admin-token>"
+```
+
+`QDRANT_EMBEDDING_PROVIDER=auto` dùng `gemini-embedding-2` khi có `GEMINI_API_KEY`; nếu không có key, hệ thống dùng embedding hashing offline. Qdrant Dashboard ở `http://localhost:6333/dashboard` trong môi trường local.
+
 ### Bước 5: Đọc hướng dẫn
 
 📖 Mở **[Technical Guidebook](https://phoenix.note.transformerlabs.ai/technical-book)** và làm theo từng chương.
@@ -168,6 +183,7 @@ Khi đưa lên Internet, trỏ Cloudflare Tunnel hoặc reverse proxy của máy
 | LLM | Google Gemini 3.5 Flash | Gemini Developer API |
 | Frontend | Next.js / Streamlit | 14+ / 1.30+ |
 | Database | SQLite (dev) / PostgreSQL (prod) | — |
+| Vector DB / RAG | Qdrant + Gemini Embedding 2 | 1.x |
 | DevOps | Docker + GitHub Actions | — |
 | Testing | pytest + pytest-asyncio | 8+ |
 
@@ -213,3 +229,17 @@ bất kỳ markdown viewer/editor nào (VS Code, Obsidian, GitHub UI, …).
 ## 📄 License
 
 MIT — Sử dụng tự do cho mục đích giáo dục.
+
+## CV–JD Matching Pipeline v1
+
+Luồng phân tích hiện dùng atomic JD requirements → BM25 + semantic embedding → RRF → evidence → configurable rubric. Kết quả lưu đầy đủ chuỗi truy vết từ Final Score về CV chunk và trang nguồn.
+
+Các API chính:
+
+- `POST /api/v1/matches` bắt đầu match bất đồng bộ;
+- `GET /api/v1/matches/{match_id}` đọc trạng thái/kết quả;
+- `GET /api/v1/matches/{match_id}/evidence` lọc evidence theo requirement/criterion;
+- `GET /api/v1/matches/{match_id}/report` lấy báo cáo JSON;
+- `GET /api/v1/metrics/cv-jd` xem metrics vận hành (admin/counselor).
+
+Đặc tả triển khai và cấu hình nằm tại `docs/pipeline/CV_JD.md`. Docker Compose kèm Qdrant và ClamAV; production đặt `MALWARE_SCAN_MODE=required` và `CV_JD_EMBEDDING_PROVIDER=gemini`.

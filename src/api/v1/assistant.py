@@ -192,6 +192,7 @@ async def assistant_chat(
                 "full_name": current_user.full_name,
                 "role": current_user.role,
                 "current_page": payload.current_page,
+                "timezone": payload.timezone or get_settings().app_timezone,
                 "cv_count": cv_count or 0,
                 "latest_cv_title": latest_cv.title if latest_cv else None,
                 "analysis_count": analysis_count or 0,

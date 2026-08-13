@@ -8,11 +8,15 @@ const API_BASE_URL =
 
 export class ApiClient {
   static getToken() {
-    return null;
+    return localStorage.getItem('access_token');
   }
 
-  static setToken(_token) {
-    localStorage.removeItem('access_token');
+  static setToken(token) {
+    if (token) {
+      localStorage.setItem('access_token', token);
+    } else {
+      localStorage.removeItem('access_token');
+    }
   }
 
   static getUser() {

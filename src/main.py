@@ -1,13 +1,17 @@
-from contextlib import asynccontextmanager
+import asyncio
+from contextlib import asynccontextmanager, suppress
 
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
 from src.api.routes import router
 from src.config import get_settings
+from src.core.errors import PipelineError
 from src.db.database import engine, init_db
 from src.middleware.security import ApiProtectionMiddleware
+from src.services.job_rag import sync_market_jobs_safely
 
 
 @asynccontextmanager
@@ -16,7 +20,14 @@ async def lifespan(app: FastAPI):
     print(f"Starting {settings.app_name} in {settings.app_env} mode...")
     # Tự động tạo bảng DB khi startup
     await init_db()
+    rag_sync_task = None
+    if settings.qdrant_enabled and settings.qdrant_sync_on_startup:
+        rag_sync_task = asyncio.create_task(sync_market_jobs_safely())
     yield
+    if rag_sync_task and not rag_sync_task.done():
+        rag_sync_task.cancel()
+        with suppress(asyncio.CancelledError):
+            await rag_sync_task
     print("Stopping service...")
 
 
@@ -46,6 +57,11 @@ app.add_middleware(
 )
 
 app.include_router(router, prefix="/api/v1")
+
+
+@app.exception_handler(PipelineError)
+async def pipeline_error_handler(_request: Request, exc: PipelineError) -> JSONResponse:
+    return JSONResponse(status_code=exc.status_code, content=exc.payload())
 
 
 @app.get("/health", tags=["System"])

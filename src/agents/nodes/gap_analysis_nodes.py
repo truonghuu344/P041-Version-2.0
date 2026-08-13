@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 import re
 from typing import Any
@@ -88,11 +89,14 @@ async def validate_gap_input(state: GapAnalysisState) -> dict[str, Any]:
 
 
 async def extract_gap_evidence(state: GapAnalysisState) -> dict[str, Any]:
-    evidence = build_gap_evidence(
+    evidence = await asyncio.to_thread(
+        build_gap_evidence,
         cv_text=state["cv_raw_text"],
         parsed=state.get("cv_parsed_json", {}),
         jd_title=state["jd_title"],
         jd_requirements=state["jd_requirements"],
+        jd_parsed=state.get("jd_parsed_json", {}),
+        rubric=state.get("rubric", {}),
     )
     return {"evidence": evidence}
 
@@ -125,13 +129,17 @@ RÀNG BUỘC LIÊM CHÍNH:
 - Chỉ đề xuất nội dung liên quan trực tiếp tới kỹ năng/yêu cầu trong JD.
 - Với chứng chỉ, luôn nhắc người dùng kiểm tra thông tin hiện hành trên trang nhà cung cấp."""
     user_prompt = f"""CV:
-{state['cv_raw_text']}
+{state["cv_raw_text"]}
 
-JD title: {state['jd_title']}
-JD requirements: {state['jd_requirements']}
-Verified matching skills: {evidence['hard_skills_matching']}
-Missing skills: {evidence['hard_skills_missing']}
-Soft-skill gaps: {evidence['soft_skills_gap']}
+JD title: {state["jd_title"]}
+JD requirements: {state["jd_requirements"]}
+Verified matching skills: {evidence["hard_skills_matching"]}
+Partial skills: {evidence.get("hard_skills_partial", [])}
+Missing skills: {evidence["hard_skills_missing"]}
+Soft-skill gaps: {evidence["soft_skills_gap"]}
+Verified requirement-evidence matrix: {evidence.get("requirement_evidence", [])}
+Match score (immutable): {evidence["match_score"]}
+Confidence score: {evidence.get("confidence_score", 0)}
 """
     try:
         llm = ChatGoogleGenerativeAI(
@@ -269,9 +277,7 @@ async def enforce_gap_integrity(state: GapAnalysisState) -> dict[str, Any]:
         if not isinstance(item, dict):
             continue
         skills = [
-            jd_lookup[str(skill).casefold()]
-            for skill in item.get("skills", [])
-            if str(skill).casefold() in jd_lookup
+            jd_lookup[str(skill).casefold()] for skill in item.get("skills", []) if str(skill).casefold() in jd_lookup
         ]
         if not skills or (missing_lookup and not any(skill.casefold() in missing_lookup for skill in skills)):
             continue
@@ -283,9 +289,9 @@ async def enforce_gap_integrity(state: GapAnalysisState) -> dict[str, Any]:
                 "title": str(item.get("title", "")).strip(),
                 "objective": str(item.get("objective", "")).strip(),
                 "skills": skills,
-                "deliverables": [
-                    str(value).strip() for value in item.get("deliverables", []) if str(value).strip()
-                ][:6],
+                "deliverables": [str(value).strip() for value in item.get("deliverables", []) if str(value).strip()][
+                    :6
+                ],
                 "cv_bullet_template": bullet,
                 "status": "recommended_not_completed",
             }
@@ -311,10 +317,41 @@ async def enforce_gap_integrity(state: GapAnalysisState) -> dict[str, Any]:
         )
 
     result = {
+        "pipeline_version": evidence.get("pipeline_version", "1.0"),
+        "trace_id": evidence.get("trace_id", ""),
+        "match_id": evidence.get("match_id", ""),
+        "candidate_id": evidence.get("candidate_id", ""),
+        "document_id": evidence.get("document_id", ""),
+        "status": evidence.get("status", "COMPLETED"),
         "match_score": evidence["match_score"],
+        "final_score": evidence.get("final_score", evidence["match_score"]),
+        "rating": evidence.get("rating", "POOR"),
+        "mandatory_requirement_failed": evidence.get("mandatory_requirement_failed", False),
+        "criteria": evidence.get("criteria", []),
+        "requirements": evidence.get("requirements", {}),
+        "evidence": evidence.get("evidence", []),
+        "retrieval_results": evidence.get("retrieval_results", []),
+        "cv_chunks": evidence.get("cv_chunks", []),
+        "warnings": evidence.get("warnings", []),
+        "versions": evidence.get("versions", {}),
+        "processing_trace": evidence.get("processing_trace", []),
+        "structured_cv": evidence.get("structured_cv", {}),
+        "structured_jd": evidence.get("structured_jd", evidence.get("jd_parsed", {})),
+        "raw_match_score": evidence.get("raw_match_score", evidence["match_score"]),
+        "match_level": evidence.get("match_level", "partial_match"),
+        "confidence_score": evidence.get("confidence_score", 0.0),
+        "confidence_level": evidence.get("confidence_level", "low"),
+        "must_have_coverage": evidence.get("must_have_coverage", 0.0),
+        "must_have_gate": evidence.get("must_have_gate", {}),
         "hard_skills_matching": evidence["hard_skills_matching"],
+        "hard_skills_partial": evidence.get("hard_skills_partial", []),
         "hard_skills_missing": evidence["hard_skills_missing"],
         "soft_skills_gap": evidence["soft_skills_gap"],
+        "unknown_requirements": evidence.get("unknown_requirements", []),
+        "requirement_evidence": evidence.get("requirement_evidence", []),
+        "jd_parsed": evidence.get("jd_parsed", {}),
+        "strengths": evidence.get("strengths", []),
+        "risks": evidence.get("risks", []),
         "suggestions": accepted,
         "executive_summary": fallback_plan["executive_summary"],
         "priority_actions": priority_actions or fallback_plan["priority_actions"],
