@@ -47,9 +47,17 @@ qdrant-client>=1.15.0,<2.0.0
 # alembic>=1.14.0
 # psycopg2-binary>=2.9.0
 
+<<<<<<< HEAD
 # Vector stores: pgvector embeddings and Qdrant market-JD retrieval
 pgvector>=0.2.0
 sentence-transformers>=2.2.0
+=======
+# Vector Store
+pgvector>=0.2.0
+sentence-transformers>=2.2.0
+
+# Vector Store: Qdrant lưu và truy xuất JD thị trường
+>>>>>>> 4b9c0ff33948c4dccd35154fbe8fd6dd3540d2df
 
 # Dev tools
 ruff>=0.8.0

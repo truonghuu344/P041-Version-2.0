@@ -36,10 +36,26 @@
 :root {
   /* Brand Core Colors */
   --primary:          #6C63FF;
+  --primary-hover:    #5b52e0;
   --secondary:        #72B5C7;
   --accent:           #B983FF;
   --success:          #37D67A;
+  --success-bg:       rgba(55, 214, 122, 0.12);
+  --warning:          #f5a524;
+  --warning-bg:       rgba(245, 165, 36, 0.12);
   --danger:           #FF6B6B;
+  --danger-bg:        rgba(255, 107, 107, 0.12);
+
+  /* STAR score badge colors (dark default — kept identical to the
+     pre-existing hardcoded values so dark mode is visually unchanged) */
+  --situation:        #00e676;
+  --situation-bg:     rgba(0, 230, 118, 0.12);
+  --task:             #00bcd4;
+  --task-bg:          rgba(0, 188, 212, 0.12);
+  --action:           #b084fc;
+  --action-bg:        rgba(176, 132, 252, 0.12);
+  --result:           #ff8c42;
+  --result-bg:        rgba(255, 140, 66, 0.12);
 
   /* Dark Theme Tokens (Default) */
   --background:       #050816;
@@ -95,51 +111,140 @@
   --font: 'Quicksand', ui-rounded, 'SF Pro Rounded', 'Arial Rounded MT Bold', 'Segoe UI', system-ui, sans-serif;
 }
 
-/* Light Theme Variables (Universe Morning Theme) */
+/* Light Theme Variables (Universe Morning Theme — pastel glass palette, 2026-08-13) */
 body.light-mode,
 html.light,
 [data-theme="light"] {
-  --background:       #F5F9FF;
-  --foreground:       #16213E;
-  --card:             rgba(255, 255, 255, 0.72);
-  --card-border:      rgba(255, 255, 255, 0.55);
-  --muted:            #8A94A8;
-  --text-primary:     #16213E;
-  --text-secondary:   #5A6785;
-  --text-dim:         #5A6785;
+  --background:       #F7F9FF;
+  --foreground:       #18233F;
+  --card:             rgba(255, 255, 255, 0.88);
+  --card-border:      rgba(107, 92, 255, 0.22);
+  --muted:            #60708F;
+  --text-primary:     #18233F;
+  --text-secondary:   #60708F;
+  --text-dim:         #60708F;
   --text-muted:       #8A94A8;
 
-  --bg-deep:          #F5F9FF;
-  --bg-dark:          #EAF3FF;
-  --bg-card:          rgba(255, 255, 255, 0.72);
-  --bg-card2:         rgba(255, 255, 255, 0.80);
-  --border:           rgba(200, 218, 245, 0.5);
-  --border-md:        rgba(180, 205, 240, 0.6);
-  --glass-border:     rgba(255, 255, 255, 0.55);
+  --bg-deep:          #F7F9FF;
+  --bg-dark:          #EEF4FF;
+  --bg-gradient:      linear-gradient(135deg, #F9FBFF 0%, #EEF4FF 50%, #F7F0FF 100%);
+  --bg-card:          rgba(255, 255, 255, 0.88);
+  --bg-card2:         rgba(255, 255, 255, 0.92);
+  --border:           #D9D8FF;
+  --border-md:        rgba(107, 92, 255, 0.35);
+  --glass-border:     rgba(107, 92, 255, 0.22);
 
-  --shadow:           0 12px 40px rgba(88, 130, 193, 0.15);
-  --shadow-glow:      0 0 35px rgba(108, 99, 255, 0.18);
-  --card-shadow:      0 12px 40px rgba(88, 130, 193, 0.15);
+  --shadow:           0 12px 32px rgba(82, 99, 160, 0.14);
+  --shadow-glow:      0 0 35px rgba(107, 92, 255, 0.18);
+  --card-shadow:      0 12px 32px rgba(82, 99, 160, 0.14);
 
-  --navbar-bg:        rgba(255, 255, 255, 0.72);
-  --navbar-border:    rgba(255, 255, 255, 0.6);
-  --navbar-shadow:    0 10px 30px rgba(0, 0, 0, 0.05);
+  --navbar-bg:        rgba(255, 255, 255, 0.85);
+  --navbar-border:    rgba(217, 216, 255, 0.6);
+  --navbar-shadow:    0 10px 30px rgba(82, 99, 160, 0.08);
 
-  --hero-title-color: #14213D;
+  --hero-title-color: #18233F;
   --hero-sub-color:   #60708F;
 
   --icon-color:       #3A4A6B;
-  --icon-hover:       #6C63FF;
+  --icon-hover:       #6B5CFF;
   --icon-btn-bg:      rgba(255, 255, 255, 0.75);
-  --icon-btn-border:  rgba(255, 255, 255, 0.6);
+  --icon-btn-border:  rgba(217, 216, 255, 0.6);
 
-  --ring:             rgba(108, 99, 255, 0.25);
-  --glass:            rgba(255, 255, 255, 0.70);
+  --ring:             rgba(107, 92, 255, 0.25);
+  --glass:            rgba(255, 255, 255, 0.88);
 
-  --gauge-bg-stroke:  #d8e5f8;
-  --input-bg:         rgba(255, 255, 255, 0.90);
-  --input-border:     rgba(180, 205, 240, 0.8);
-  --input-text:       #16213E;
+  --gauge-bg-stroke:  #E4E9FA;
+  --input-bg:         rgba(255, 255, 255, 0.92);
+  --input-border:     rgba(217, 216, 255, 0.8);
+  --input-text:       #18233F;
+
+  /* Brand primary — light mode uses a slightly cooler tone than the dark default */
+  --primary:          #6B5CFF;
+  --primary-hover:    #5848F0;
+
+  /* Status colors */
+  --success-bg:       #E9FBF3;
+  --warning:          #F5A524;
+  --warning-bg:       #FFF6DF;
+  --danger-bg:        #FFF0F3;
+
+  /* STAR score badge colors — Situation=cyan, Task=purple, Action=blue, Result=orange */
+  --situation:        #18C7E8;
+  --situation-bg:     #E8FBFF;
+  --task:             #7A5CFA;
+  --task-bg:          #F1EDFF;
+  --action:           #4D91FF;
+  --action-bg:        #EDF4FF;
+  --result:           #FF8A3D;
+  --result-bg:        #FFF3EA;
+}
+
+/* Pastel gradient page background (light mode only). The starfield canvas and
+   nebula glow layers sit above this at z-index -2/-1 and are left untouched. */
+body.light-mode {
+  background: var(--bg-gradient);
+  background-attachment: fixed;
+}
+
+/* Light-mode glass card overrides. These containers (STAR report card, Gap
+   Analysis card, Lịch sử archive cards, Hồ sơ/settings card, and the "Xem
+   chi tiết" report card) are hardcoded to a dark-navy translucent background
+   in the base rules further down this file — that reads as a dark blotch on
+   the new pastel background. Light mode gets the frosted white glass card
+   instead; dark mode is untouched. Layout/animation are not affected. */
+body.light-mode .interview-card,
+body.light-mode .gap-card,
+body.light-mode .gap-results-card,
+body.light-mode .profile-settings-card,
+body.light-mode .archive-card,
+html.light .interview-card,
+html.light .gap-card,
+html.light .gap-results-card,
+html.light .profile-settings-card,
+html.light .archive-card,
+[data-theme="light"] .interview-card,
+[data-theme="light"] .gap-card,
+[data-theme="light"] .gap-results-card,
+[data-theme="light"] .profile-settings-card,
+[data-theme="light"] .archive-card {
+  background: var(--card);
+  border-color: var(--card-border);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+body.light-mode .archive-time,
+html.light .archive-time,
+[data-theme="light"] .archive-time {
+  color: var(--text-muted);
+}
+body.light-mode .archive-card-title,
+html.light .archive-card-title,
+[data-theme="light"] .archive-card-title {
+  color: var(--text-primary);
+}
+body.light-mode .archive-card-sub,
+html.light .archive-card-sub,
+[data-theme="light"] .archive-card-sub {
+  color: var(--text-secondary);
+}
+body.light-mode .archive-card-footer,
+html.light .archive-card-footer,
+[data-theme="light"] .archive-card-footer {
+  border-top-color: var(--border);
+}
+
+body.light-mode .archive-detail-score-row,
+html.light .archive-detail-score-row,
+[data-theme="light"] .archive-detail-score-row {
+  background: var(--situation-bg);
+  color: var(--text-secondary);
+}
+body.light-mode .archive-detail-score-row strong,
+html.light .archive-detail-score-row strong,
+[data-theme="light"] .archive-detail-score-row strong {
+  color: var(--primary);
 }
 
 html { scroll-behavior: smooth; }
@@ -1368,6 +1473,17 @@ body {
   margin: 0 auto;
 }
 
+/* Light mode: .page-title is the main <h1> on nearly every page (Tìm việc,
+   Danh sách JD, Phòng phỏng vấn, Lịch sử & Báo cáo, Chi tiết nhiệm vụ,
+   Profile, Counselor, Enterprise) and was hardcoded solid white — nearly
+   invisible on the light page background. .page-sub already uses the
+   theme-aware var(--text-dim) so it doesn't need an override. */
+body.light-mode .page-title,
+html.light .page-title,
+[data-theme="light"] .page-title {
+  color: var(--text-primary);
+}
+
 /* ============================================================
    🌌 WHITE FUTURISTIC SPACESHIP INTERIOR THEME (#view-cv)
 ============================================================ */
@@ -2449,6 +2565,23 @@ body {
 .job-search-reset { min-height: 48px; padding: 0 16px; border: 1px solid rgba(162, 183, 224, .22); border-radius: 14px; background: rgba(255,255,255,.035); color: #aab6ce; cursor: pointer; }
 .job-results-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 24px 2px 14px; color: #dce8f9; }
 .job-results-toolbar > div { display: flex; align-items: center; gap: 9px; }
+
+/* Light mode: the "N JD doanh nghiệp" summary and "Tất cả JD" / "AI xếp
+   hạng theo CV" pill were tuned for the dark background (#dce8f9 near-white
+   text, #78e6f1 light cyan pill) and are nearly unreadable on the light
+   page background. */
+body.light-mode .job-results-toolbar,
+html.light .job-results-toolbar,
+[data-theme="light"] .job-results-toolbar {
+  color: var(--text-primary);
+}
+body.light-mode .job-results-mode,
+html.light .job-results-mode,
+[data-theme="light"] .job-results-mode {
+  color: #0f7a8c;
+  background: rgba(31, 182, 212, 0.12);
+  border-color: rgba(31, 182, 212, 0.35);
+}
 .job-results-toolbar strong { font-size: 14px; }
 .job-results-mode { padding: 7px 12px; border: 1px solid rgba(87, 224, 240, .26); border-radius: 999px; background: rgba(31, 182, 212, .08); color: #78e6f1; font-size: 11px; font-weight: 800; }
 .job-search-results { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
@@ -4451,9 +4584,9 @@ html.light .hero-sub,
 body.light-mode .btn-primary,
 html.light .btn-primary,
 [data-theme="light"] .btn-primary {
-  background: linear-gradient(135deg, #6C63FF 0%, #3BB9FF 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
   color: #ffffff;
-  box-shadow: 0 6px 20px rgba(108, 99, 255, 0.25);
+  box-shadow: 0 6px 20px rgba(107, 92, 255, 0.25);
 }
 
 body.light-mode .btn-primary:hover,
@@ -5157,6 +5290,129 @@ html.light .form-input:focus,
   cursor: pointer;
 }
 
+/* --- 7b. MISSION ARCHIVE DETAIL VIEW (Việc 4) --- */
+.archive-detail-back-btn {
+  margin-bottom: 14px;
+}
+
+.archive-detail-card {
+  margin-top: 16px;
+}
+
+.archive-detail-score-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 12px 16px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+  color: var(--text-secondary);
+}
+
+.archive-detail-score-row strong {
+  font-size: 22px;
+  color: #00e5ff;
+}
+
+.star-grid,
+.archive-detail-star-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+/* STAR score badge cards — Situation/Task/Action/Result, each with its own
+   icon + pastel color (see --situation/--task/--action/--result tokens).
+   Used by loadPageSTARReport(), renderArchiveDetailStarSection() and the
+   legacy loadSTARReport() modal in app.js. */
+.star-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 8px;
+  border-radius: 14px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+}
+
+.star-badge-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.55);
+  flex-shrink: 0;
+}
+
+.star-badge-icon svg { width: 18px; height: 18px; }
+
+.star-badge-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  color: var(--text-dim);
+}
+
+.star-badge-value {
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.star-badge.situation { background: var(--situation-bg); }
+.star-badge.situation .star-badge-icon,
+.star-badge.situation .star-badge-value,
+.star-badge.situation .star-badge-label { color: var(--situation); }
+
+.star-badge.task { background: var(--task-bg); }
+.star-badge.task .star-badge-icon,
+.star-badge.task .star-badge-value,
+.star-badge.task .star-badge-label { color: var(--task); }
+
+.star-badge.action { background: var(--action-bg); }
+.star-badge.action .star-badge-icon,
+.star-badge.action .star-badge-value,
+.star-badge.action .star-badge-label { color: var(--action); }
+
+.star-badge.result { background: var(--result-bg); }
+.star-badge.result .star-badge-icon,
+.star-badge.result .star-badge-value,
+.star-badge.result .star-badge-label { color: var(--result); }
+
+.archive-detail-block {
+  margin-bottom: 18px;
+}
+
+.archive-detail-label {
+  font-weight: 600;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+
+.archive-detail-label.is-positive { color: #4ade80; }
+.archive-detail-label.is-warning { color: #fb923c; }
+.archive-detail-label.is-info { color: #c084fc; }
+
+.archive-detail-list {
+  padding-left: 20px;
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.archive-detail-context {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin: -6px 0 16px 0;
+}
+
 /* --- 8. CREW QUARTERS & TERMINAL --- */
 .profile-workspace {
   display: grid;
@@ -5276,10 +5532,10 @@ html.light .form-input:focus,
   height: 60px !important;
   display: flex !important;
   align-items: center !important;
-  background: rgba(8, 10, 30, 0.72) !important;
+  background: var(--navbar-bg, rgba(8, 10, 30, 0.72)) !important;
   backdrop-filter: blur(24px) saturate(180%) !important;
   -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
-  border-bottom: 1px solid rgba(0, 229, 255, 0.18) !important;
+  border-bottom: 1px solid var(--navbar-border, rgba(0, 229, 255, 0.18)) !important;
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
@@ -5815,6 +6071,26 @@ html.light .form-input:focus,
   max-width: 650px;
   margin: 0 auto;
   line-height: 1.6;
+}
+
+/* Light mode: the white-to-purple gradient text and 70%-white subtitle above
+   were tuned for the dark starfield background and become nearly invisible
+   on the light page background (used by the Pricing, Testimonials and Admin
+   section headers) — fall back to solid, high-contrast text colors. */
+body.light-mode .section-title-large,
+html.light .section-title-large,
+[data-theme="light"] .section-title-large {
+  color: var(--text-primary);
+  background: none;
+  -webkit-background-clip: unset;
+  -webkit-text-fill-color: unset;
+  text-shadow: none;
+}
+
+body.light-mode .section-subtitle,
+html.light .section-subtitle,
+[data-theme="light"] .section-subtitle {
+  color: var(--text-secondary);
 }
 
 /* Pricing Grid */
