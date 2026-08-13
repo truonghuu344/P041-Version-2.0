@@ -267,6 +267,10 @@ class ApiClient {
     });
   }
 
+  static async getAnalysisHistory() {
+    return await this.request('/analysis/history');
+  }
+
   // --- Mock Interview APIs ---
   static async startInterview(cvId, jdId, totalQuestions = 5) {
     return await this.request('/interviews/start', {
@@ -2073,6 +2077,20 @@ function startAppLogic() {
     }
   }
 
+  // Gán textContent/innerHTML an toàn cho 1 phần tử DOM theo id.
+  // Nếu không tìm thấy phần tử: KHÔNG âm thầm bỏ qua — ghi vào mảng `missingIds`
+  // (để caller log console.error + showToast báo người dùng biết UI thiếu vùng hiển thị)
+  // thay vì để lỗi trôi qua trong im lặng như pattern `(getElementById(...) || {}).x = y` cũ.
+  function applyDomField(id, prop, value, missingIds) {
+    const el = document.getElementById(id);
+    if (!el) {
+      if (Array.isArray(missingIds)) missingIds.push(id);
+      return false;
+    }
+    el[prop] = value;
+    return true;
+  }
+
   function renderInlineCVAnalysis(analysis, cvId, jdId) {
     if (!cvAnalysisResultContent || !analysis) return;
     latestCVAnalysisContext = { analysis, cvId, jdId };
@@ -2098,6 +2116,13 @@ function startAppLogic() {
 
     if (scoreEl) scoreEl.textContent = `${score.toFixed(1)}%`;
     scoreRing?.style.setProperty('--match-score', `${Math.max(0, Math.min(100, score)) * 3.6}deg`);
+<<<<<<< HEAD
+
+    const missingIds = [];
+    applyDomField('cv-result-context', 'textContent', `${cvLabel}  ↔  ${jdLabel}`, missingIds);
+    applyDomField('cv-result-summary', 'textContent', analysis.executive_summary
+      || `CV khớp ${matched.length} kỹ năng và cần bổ sung ${missing.length} kỹ năng theo JD.`, missingIds);
+=======
     setText('cv-result-context', `${cvLabel}  ↔  ${jdLabel}`);
     setText('cv-result-summary', analysis.executive_summary || `CV khớp ${matched.length} kỹ năng và cần bổ sung ${missing.length} kỹ năng theo JD.`);
     
@@ -2118,29 +2143,50 @@ function startAppLogic() {
         ${analysis.mandatory_requirement_failed ? '<span>⚠ Thiếu yêu cầu bắt buộc</span>' : ''}
       `);
     }
+>>>>>>> 9f4ac042a3ecb6bfd71ff85a6cab3f07893b59ee
 
     const renderSkills = (items, variant) => items.length
       ? items.map(item => `<span class="cv-result-tag ${variant}">${escapeHtml(item)}</span>`).join('')
       : '<span class="cv-result-empty">Không có dữ liệu.</span>';
+<<<<<<< HEAD
+    applyDomField('cv-result-matching-skills', 'innerHTML', renderSkills(matched, 'matched'), missingIds);
+    applyDomField('cv-result-missing-skills', 'innerHTML', renderSkills(missing, 'missing'), missingIds);
+
+    applyDomField('cv-result-priority-actions', 'innerHTML', priorityActions.length
+=======
     
     setHTML('cv-result-matching-skills', renderSkills(matched, 'matched'));
     setHTML('cv-result-missing-skills', renderSkills(missing, 'missing'));
     setHTML('cv-result-partial-skills', renderSkills(partial, 'partial'));
 
     setHTML('cv-result-priority-actions', priorityActions.length
+>>>>>>> 9f4ac042a3ecb6bfd71ff85a6cab3f07893b59ee
       ? priorityActions.slice(0, 4).map((item, index) => {
         const title = typeof item === 'string' ? item : (item.gap || item.action || `Ưu tiên ${index + 1}`);
         const detail = typeof item === 'string' ? '' : (item.action || item.why_it_matters || '');
         return `<article class="cv-result-action"><span>${escapeHtml(item.priority || index + 1)}</span><div><strong>${escapeHtml(title)}</strong>${detail && detail !== title ? `<p>${escapeHtml(detail)}</p>` : ''}</div></article>`;
       }).join('')
+<<<<<<< HEAD
+      : '<p class="cv-result-empty">Chưa phát hiện khoảng trống ưu tiên.</p>', missingIds);
+
+    applyDomField('cv-result-learning-actions', 'innerHTML', learningActions.length
+=======
       : '<p class="cv-result-empty">Chưa phát hiện khoảng trống ưu tiên.</p>');
 
     setHTML('cv-result-learning-actions', learningActions.length
+>>>>>>> 9f4ac042a3ecb6bfd71ff85a6cab3f07893b59ee
       ? learningActions.slice(0, 4).map((item, index) => {
         const title = typeof item === 'string' ? item : (item.skill || item.learning_goal || `Gợi ý ${index + 1}`);
         const detail = typeof item === 'string' ? '' : (item.learning_goal || item.practice || '');
         return `<article class="cv-result-action learning"><span>${index + 1}</span><div><strong>${escapeHtml(title)}</strong>${detail && detail !== title ? `<p>${escapeHtml(detail)}</p>` : ''}</div></article>`;
       }).join('')
+<<<<<<< HEAD
+      : '<p class="cv-result-empty">Chưa cần lộ trình học bổ sung.</p>', missingIds);
+
+    if (missingIds.length) {
+      console.error(`[renderInlineCVAnalysis] Không tìm thấy ${missingIds.length} phần tử DOM để hiển thị kết quả CV Analysis: ${missingIds.join(', ')}`);
+      showToast(`⚠️ Kết quả đã tính nhưng giao diện thiếu vùng hiển thị (${missingIds.join(', ')}). Vui lòng tải lại trang.`, 'error');
+=======
       : '<p class="cv-result-empty">Chưa cần lộ trình học bổ sung.</p>');
 
     const scoreLabels = {
@@ -2234,6 +2280,7 @@ function startAppLogic() {
       const passed = (analysis.integrity_guardrail || 'passed') === 'passed';
       guardrail.textContent = passed ? '✓ Guardrail đã kiểm chứng' : '! Cần người dùng kiểm tra';
       guardrail.classList.toggle('is-warning', !passed);
+>>>>>>> 9f4ac042a3ecb6bfd71ff85a6cab3f07893b59ee
     }
 
     if (cvAnalysisEmptyState) cvAnalysisEmptyState.hidden = true;
@@ -3245,16 +3292,20 @@ TÊN CÔNG TY:
         const res = await ApiClient.runGapAnalysis(cvId, jdId);
         currentGapResult = res;
 
-        document.getElementById('page-gap-match-score-badge').textContent = `${res.match_score.toFixed(1)}%`;
+        const missingIds = [];
+        applyDomField('page-gap-match-score-badge', 'textContent', `${res.match_score.toFixed(1)}%`, missingIds);
 
-        document.getElementById('page-gap-matching-skills').innerHTML = (res.hard_skills_matching || []).map(
+        applyDomField('page-gap-matching-skills', 'innerHTML', (res.hard_skills_matching || []).map(
           s => `<span class="badge badge-ok">${escapeHtml(s)}</span>`
-        ).join('') || `<span style="font-size:11px;color:var(--text-muted);">Không có dữ liệu</span>`;
+        ).join('') || `<span style="font-size:11px;color:var(--text-muted);">Không có dữ liệu</span>`, missingIds);
 
-        document.getElementById('page-gap-missing-skills').innerHTML = (res.hard_skills_missing || []).map(
+        applyDomField('page-gap-missing-skills', 'innerHTML', (res.hard_skills_missing || []).map(
           s => `<span class="badge badge-need">${escapeHtml(s)}</span>`
-        ).join('') || `<span style="font-size:11px;color:var(--text-muted);">Không có dữ liệu</span>`;
+        ).join('') || `<span style="font-size:11px;color:var(--text-muted);">Không có dữ liệu</span>`, missingIds);
 
+<<<<<<< HEAD
+        applyDomField('page-gap-executive-summary', 'textContent', res.executive_summary || '', missingIds);
+=======
         document.getElementById('page-gap-soft-skills').innerHTML = (res.soft_skills_gap || []).map(
           s => `<span class="badge badge-warn">${escapeHtml(s)}</span>`
         ).join('') || `<span style="font-size:11px;color:var(--text-muted);">CV đã có bằng chứng cho các kỹ năng mềm nhận diện được.</span>`;
@@ -3276,24 +3327,25 @@ TÊN CÔNG TY:
           : '<p class="gap-empty">Chưa có dữ liệu phân rã điểm.</p>';
 
         document.getElementById('page-gap-executive-summary').textContent = res.executive_summary || '';
+>>>>>>> 9f4ac042a3ecb6bfd71ff85a6cab3f07893b59ee
 
-        document.getElementById('page-gap-priority-actions').innerHTML = (res.priority_actions || []).map(item => `
+        applyDomField('page-gap-priority-actions', 'innerHTML', (res.priority_actions || []).map(item => `
           <article class="gap-plan-item priority-item">
             <span class="gap-priority-number">${escapeHtml(item.priority)}</span>
             <div><h5>${escapeHtml(item.gap)}</h5><p>${escapeHtml(item.why_it_matters)}</p><strong>${escapeHtml(item.action)}</strong></div>
           </article>
-        `).join('') || '<p class="gap-empty">Không có khoảng cách ưu tiên.</p>';
+        `).join('') || '<p class="gap-empty">Không có khoảng cách ưu tiên.</p>', missingIds);
 
-        document.getElementById('page-gap-learning-list').innerHTML = (res.learning_recommendations || []).map(item => `
+        applyDomField('page-gap-learning-list', 'innerHTML', (res.learning_recommendations || []).map(item => `
           <article class="gap-plan-item">
             <h5>${escapeHtml(item.skill)}</h5>
             <p>${escapeHtml(item.learning_goal)}</p>
             <div class="gap-mini-tags">${(item.topics || []).map(topic => `<span>${escapeHtml(topic)}</span>`).join('')}</div>
             <strong>Bài thực hành: ${escapeHtml(item.practice)}</strong>
           </article>
-        `).join('') || '<p class="gap-empty">Chưa có đề xuất học tập bổ sung.</p>';
+        `).join('') || '<p class="gap-empty">Chưa có đề xuất học tập bổ sung.</p>', missingIds);
 
-        document.getElementById('page-gap-certifications-list').innerHTML = (res.certification_recommendations || []).map(item => `
+        applyDomField('page-gap-certifications-list', 'innerHTML', (res.certification_recommendations || []).map(item => `
           <article class="gap-plan-item certificate-item">
             <span class="gap-card-kicker">${escapeHtml(item.level)} · ${escapeHtml(item.provider)}</span>
             <h5>${escapeHtml(item.name)}</h5>
@@ -3301,9 +3353,9 @@ TÊN CÔNG TY:
             <div class="gap-mini-tags">${(item.related_skills || []).map(skill => `<span>${escapeHtml(skill)}</span>`).join('')}</div>
             <small>${escapeHtml(item.verification_note)}</small>
           </article>
-        `).join('') || '<p class="gap-empty">JD này chưa có chứng chỉ bắt buộc hoặc phù hợp rõ ràng.</p>';
+        `).join('') || '<p class="gap-empty">JD này chưa có chứng chỉ bắt buộc hoặc phù hợp rõ ràng.</p>', missingIds);
 
-        document.getElementById('page-gap-projects-list').innerHTML = (res.project_recommendations || []).map(item => `
+        applyDomField('page-gap-projects-list', 'innerHTML', (res.project_recommendations || []).map(item => `
           <article class="gap-plan-item project-item">
             <span class="gap-card-kicker">ĐỀ XUẤT · CHƯA HOÀN THÀNH</span>
             <h5>${escapeHtml(item.title)}</h5>
@@ -3312,17 +3364,25 @@ TÊN CÔNG TY:
             <ul>${(item.deliverables || []).map(value => `<li>${escapeHtml(value)}</li>`).join('')}</ul>
             <div class="gap-bullet-template">${escapeHtml(item.cv_bullet_template)}</div>
           </article>
-        `).join('') || '<p class="gap-empty">Chưa cần thêm dự án mới; hãy tăng số liệu cho dự án hiện có.</p>';
+        `).join('') || '<p class="gap-empty">Chưa cần thêm dự án mới; hãy tăng số liệu cho dự án hiện có.</p>', missingIds);
 
-        document.getElementById('page-gap-cv-sections-list').innerHTML = (res.cv_section_recommendations || []).map(item => `
+        applyDomField('page-gap-cv-sections-list', 'innerHTML', (res.cv_section_recommendations || []).map(item => `
           <article class="gap-plan-item compact-item">
             <h5>${escapeHtml(item.section)}</h5>
             <p><strong>Vấn đề:</strong> ${escapeHtml(item.issue)}</p>
             <p><strong>Nên sửa:</strong> ${escapeHtml(item.recommendation)}</p>
           </article>
-        `).join('') || '<p class="gap-empty">Không có mục CV cần bổ sung.</p>';
+        `).join('') || '<p class="gap-empty">Không có mục CV cần bổ sung.</p>', missingIds);
+
+        if (missingIds.length) {
+          console.error(`[pageBtnRunGap] Không tìm thấy ${missingIds.length} phần tử DOM để hiển thị kết quả Gap Analysis: ${missingIds.join(', ')}`);
+          showToast(`⚠️ Đã tính xong Gap Analysis nhưng giao diện thiếu vùng hiển thị (${missingIds.join(', ')}). Vui lòng tải lại trang và thử lại.`, 'error');
+        }
 
         const suggestionList = document.getElementById('page-gap-suggestions-list');
+        if (!suggestionList) {
+          throw new Error('Không tìm thấy vùng hiển thị gợi ý Gap Analysis. Vui lòng tải lại trang.');
+        }
         suggestionList.innerHTML = (res.suggestions || []).map((s, index) => `
           <div class="suggestion-decision-card" data-index="${index}">
             <p style="font-size:11px;color:var(--text-muted);margin:0 0 2px 0;"><strong>Gốc:</strong> ${escapeHtml(s.original_text)}</p>
@@ -3359,7 +3419,9 @@ TÊN CÔNG TY:
         }
 
         if (pageGapResultsContainer) pageGapResultsContainer.style.display = 'block';
-        showToast('🎉 Đã phân tích xong Gap Analysis!', 'success');
+        if (!missingIds.length) {
+          showToast('🎉 Đã phân tích xong Gap Analysis!', 'success');
+        }
       } catch (err) {
         showToast(`❌ Lỗi chạy Gap Analysis: ${err.message}`, 'error');
       }
