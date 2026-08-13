@@ -980,7 +980,6 @@ export default function Page() {
         </div>
       </section>
 
-<<<<<<< HEAD
       {/* ===== 5. VIEW: GAP ANALYSIS ===== */}
       <section className="app-view" id="view-gap">
         <div className="page-container">
@@ -1070,6 +1069,16 @@ export default function Page() {
               </div>
 
               <div className="gap-result-block">
+                <p className="block-title title-purple">Kỹ năng mềm cần củng cố:</p>
+                <div id="page-gap-soft-skills" className="tags-row"></div>
+              </div>
+
+              <div className="gap-result-block">
+                <p className="block-title">Phân rã điểm:</p>
+                <div id="page-gap-score-breakdown" className="gap-score-breakdown"></div>
+              </div>
+
+              <div className="gap-result-block">
                 <p className="block-title">Tóm tắt định hướng:</p>
                 <p id="page-gap-executive-summary" className="gap-empty"></p>
               </div>
@@ -1102,9 +1111,6 @@ export default function Page() {
           </div>
         </div>
       </section>
-
-=======
->>>>>>> 9f4ac042a3ecb6bfd71ff85a6cab3f07893b59ee
       {/* ===== 4. VIEW: PHỎNG VẤN STAR ===== */}
       <section className="app-view" id="view-interview">
         <div className="page-container">
