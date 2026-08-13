@@ -708,11 +708,6 @@ export default function Page() {
                     <div id="cv-result-warnings" className="cv-result-warnings"></div>
                   </section>
 
-                  <section className="cv-result-panel cv-result-evidence-panel">
-                    <h5>Ma trận yêu cầu – bằng chứng</h5>
-                    <div id="cv-result-requirement-evidence" className="cv-result-evidence-list"></div>
-                  </section>
-
                   <div className="cv-result-deep-grid">
                     <section className="cv-result-panel">
                       <h5>Kỹ năng mềm còn thiếu bằng chứng</h5>
@@ -1022,12 +1017,19 @@ export default function Page() {
           <div className="interview-workspace">
             <div id="page-interview-setup" className="interview-card">
               <h3 className="card-section-title">Thiết Lập Phiên Phỏng Vấn Thử</h3>
-              <div className="form-row margin-bottom interview-selection-grid">
+              <div className="interview-selection-grid margin-bottom">
                 <div className="form-group flex-1">
-                  <label className="form-label interview-select-label">
-                    <span>Chọn CV phỏng vấn</span>
-                    <small>Hồ sơ ứng viên</small>
-                  </label>
+                  <div className="interview-select-header-row">
+                    <label className="form-label interview-select-label" htmlFor="page-interview-select-cv">
+                      <span>Chọn CV phỏng vấn</span>
+                      <small>Hồ sơ ứng viên</small>
+                    </label>
+                    <label className="interview-quick-upload-btn" htmlFor="page-interview-quick-cv-file">
+                      <span aria-hidden="true">📤</span>
+                      <span>Tải CV mới</span>
+                      <input type="file" id="page-interview-quick-cv-file" accept=".pdf,.docx,.jpg,.jpeg,.png" style={{ display: 'none' }} />
+                    </label>
+                  </div>
                   <div className="gap-select-shell interview-select-shell interview-select-cv">
                     <span className="gap-select-icon" aria-hidden="true">📄</span>
                     <select id="page-interview-select-cv" className="form-input gap-select interview-select" aria-label="Chọn CV phỏng vấn"></select>
@@ -1035,10 +1037,12 @@ export default function Page() {
                   </div>
                 </div>
                 <div className="form-group flex-1">
-                  <label className="form-label interview-select-label">
-                    <span>Chọn vị trí ứng tuyển</span>
-                    <small>Mô tả công việc</small>
-                  </label>
+                  <div className="interview-select-header-row">
+                    <label className="form-label interview-select-label" htmlFor="page-interview-select-jd">
+                      <span>Chọn vị trí ứng tuyển</span>
+                      <small>Mô tả công việc</small>
+                    </label>
+                  </div>
                   <div className="gap-select-shell interview-select-shell interview-select-jd">
                     <span className="gap-select-icon" aria-hidden="true">💼</span>
                     <select id="page-interview-select-jd" className="form-input gap-select interview-select" aria-label="Chọn vị trí ứng tuyển"></select>
@@ -1156,6 +1160,66 @@ export default function Page() {
                   <button className="archive-btn-view" id="btn-archive-view-gap">Xem Lộ Trình ➔</button>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== 6b. VIEW: MISSION ARCHIVE DETAIL ===== */}
+      <section className="app-view" id="view-archive-detail">
+        <div className="page-container">
+          <div className="page-header">
+            <button className="btn-outline archive-detail-back-btn" id="btn-archive-detail-back" type="button">← Quay lại Lịch Sử</button>
+            <div className="page-badge badge-purple" id="archive-detail-badge">DECK EPSILON // CHI TIẾT NHIỆM VỤ</div>
+            <h1 className="page-title" id="archive-detail-title">Chi tiết nhiệm vụ</h1>
+            <p className="page-sub" id="archive-detail-sub"></p>
+          </div>
+
+          {/* --- STAR interview report detail --- */}
+          <div id="archive-detail-star-section" className="profile-settings-card archive-detail-card" style={{ display: 'none' }}>
+            <h3 className="card-section-title">📊 Báo Cáo Chấm Điểm Phỏng Vấn (STAR Rubric)</h3>
+            <div className="archive-detail-score-row">
+              <span>Điểm Tổng Kết Rubric STAR:</span>
+              <strong id="archive-detail-star-score">— / 100 PTS</strong>
+            </div>
+            <div id="archive-detail-star-breakdown" className="archive-detail-star-grid"></div>
+            <div className="archive-detail-block">
+              <p className="archive-detail-label is-positive">Điểm Mạnh:</p>
+              <ul id="archive-detail-star-strengths" className="archive-detail-list"></ul>
+            </div>
+            <div className="archive-detail-block">
+              <p className="archive-detail-label is-warning">Cần Cải Thiện:</p>
+              <ul id="archive-detail-star-improvements" className="archive-detail-list"></ul>
+            </div>
+            <div className="archive-detail-block">
+              <p className="archive-detail-label is-info">Khuyên Luyện Tập:</p>
+              <ul id="archive-detail-star-recommendations" className="archive-detail-list"></ul>
+            </div>
+          </div>
+
+          {/* --- CV Gap Analysis / optimized CV detail --- */}
+          <div id="archive-detail-gap-section" className="profile-settings-card archive-detail-card" style={{ display: 'none' }}>
+            <h3 className="card-section-title">🎯 Chi Tiết Gap Analysis &amp; CV Đã Tối Ưu</h3>
+            <p className="archive-detail-context" id="archive-detail-gap-context"></p>
+            <div className="archive-detail-score-row">
+              <span>Tỷ lệ phù hợp với JD:</span>
+              <strong id="archive-detail-gap-score">—%</strong>
+            </div>
+            <div className="archive-detail-block">
+              <p className="archive-detail-label is-positive">Kỹ năng đã khớp:</p>
+              <div id="archive-detail-gap-matched" className="cv-result-tags"></div>
+            </div>
+            <div className="archive-detail-block">
+              <p className="archive-detail-label is-warning">Kỹ năng còn thiếu:</p>
+              <div id="archive-detail-gap-missing" className="cv-result-tags"></div>
+            </div>
+            <div className="archive-detail-block">
+              <p className="archive-detail-label is-info">Hành động ưu tiên:</p>
+              <div id="archive-detail-gap-actions" className="cv-result-action-list"></div>
+            </div>
+            <div className="archive-detail-block">
+              <p className="archive-detail-label is-info">Đề xuất chỉnh sửa CV (cần Accept/Reject):</p>
+              <div id="archive-detail-gap-suggestions" className="cv-result-action-list"></div>
             </div>
           </div>
         </div>
