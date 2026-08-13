@@ -454,6 +454,28 @@ async def search_market_jobs(
             parsed_cv=parsed,
             limit=limit,
         )
+        if total == 0 and (query.strip() or cv_text):
+            # Qdrant answered without raising, but returned zero hits while the
+            # caller actually gave us a keyword or CV to search on. This can
+            # legitimately mean "no match", but it's indistinguishable from an
+            # empty/unsynced collection (e.g. embedding quota exhausted during
+            # sync_market_jobs_safely()). Try the deterministic keyword catalog
+            # as a fallback — it costs nothing and, if the collection genuinely
+            # is empty, it's the only way to return real results.
+            logger.warning(
+                "Qdrant search returned 0 hits for query=%r cv_text=%s; "
+                "trying keyword catalog fallback.",
+                query,
+                bool(cv_text),
+            )
+            fallback_jobs, fallback_total = search_enterprise_jobs(
+                query=query,
+                cv_text=cv_text,
+                parsed_cv=parsed,
+                limit=limit,
+            )
+            if fallback_total > 0:
+                return fallback_jobs, fallback_total, "keyword_fallback"
         return jobs, total, "qdrant"
     except Exception:
         logger.warning("Qdrant RAG unavailable; using deterministic catalog fallback.", exc_info=True)

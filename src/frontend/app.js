@@ -267,6 +267,10 @@ class ApiClient {
     });
   }
 
+  static async getAnalysisHistory() {
+    return await this.request('/analysis/history');
+  }
+
   // --- Mock Interview APIs ---
   static async startInterview(cvId, jdId, totalQuestions = 5) {
     return await this.request('/interviews/start', {
@@ -1000,6 +1004,40 @@ function startAppLogic() {
     return node.innerHTML;
   }
 
+  /* ── STAR score badge grid (Situation/Task/Action/Result) ──
+     Shared by loadPageSTARReport(), renderArchiveDetailStarSection() and the
+     legacy loadSTARReport() modal so the 4 score cards look identical
+     everywhere. Colors come from the --situation/--task/--action/--result
+     CSS variables (light-mode pastel palette, dark-mode neon palette) —
+     no hex is hardcoded here. `fallback` mirrors each caller's previous
+     behavior: a number (e.g. 80) to substitute for missing scores, or null
+     to render an em dash instead. */
+  const STAR_BADGE_ICONS = {
+    situation: '<svg viewBox="0 0 24 24" fill="none"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>',
+    task: '<svg viewBox="0 0 24 24" fill="none"><rect x="9" y="3" width="6" height="4" rx="1" stroke="currentColor" stroke-width="1.5"/><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 12h6M9 16h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    action: '<svg viewBox="0 0 24 24" fill="none"><path d="M12 20h9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>',
+    result: '<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="7.5" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg>',
+  };
+  const STAR_BADGE_LABELS = [
+    ['situation', 'Situation'],
+    ['task', 'Task'],
+    ['action', 'Action'],
+    ['result', 'Result'],
+  ];
+  function renderStarBadgeGrid(scores = {}, fallback = null) {
+    return STAR_BADGE_LABELS.map(([key, label]) => {
+      const raw = scores ? scores[key] : null;
+      const value = raw != null ? raw : (fallback != null ? fallback : '—');
+      return `
+        <div class="star-badge ${key}">
+          <div class="star-badge-icon">${STAR_BADGE_ICONS[key]}</div>
+          <span class="star-badge-label">${label}</span>
+          <p class="star-badge-value">${value}</p>
+        </div>
+      `;
+    }).join('');
+  }
+
   /* ── Toast Notification Helper ── */
   function showToast(msg, type = 'info') {
     const old = document.querySelector('.toast');
@@ -1021,7 +1059,7 @@ function startAppLogic() {
   /* ============================================================
      🚀 ROUTER & SPACESHIP SINGLE PAGE VIEW SWITCHER
   ============================================================ */
-  const ALL_VIEWS = ['dashboard', 'cv', 'find-jobs', 'jobs', 'interview', 'history', 'profile', 'counselor', 'enterprise', 'admin'];
+  const ALL_VIEWS = ['dashboard', 'cv', 'find-jobs', 'jobs', 'interview', 'history', 'archive-detail', 'profile', 'counselor', 'enterprise', 'admin'];
   const ROLE_HOME_VIEWS = Object.freeze({
     student: 'dashboard',
     counselor: 'counselor',
@@ -1060,6 +1098,7 @@ function startAppLogic() {
     jobs: 'DECK BETA // CAREER MAP',
     interview: 'DECK GAMMA // SIMULATION CHAMBER',
     history: 'DECK EPSILON // MISSION ARCHIVE',
+    'archive-detail': 'DECK EPSILON // CHI TIẾT NHIỆM VỤ',
     profile: 'DECK ZETA // CREW TERMINAL',
     counselor: 'HITL DECK // COUNSELOR',
     enterprise: 'RECRUITMENT DECK // ENTERPRISE',
@@ -1074,7 +1113,7 @@ function startAppLogic() {
       showToast('Bạn đã được chuyển về dashboard phù hợp với vai trò.', 'info');
     }
 
-    const VIEW_ORDER = ['dashboard', 'cv', 'find-jobs', 'jobs', 'interview', 'history', 'profile', 'counselor', 'enterprise', 'admin'];
+    const VIEW_ORDER = ['dashboard', 'cv', 'find-jobs', 'jobs', 'interview', 'history', 'archive-detail', 'profile', 'counselor', 'enterprise', 'admin'];
     const currentIndex = VIEW_ORDER.indexOf(currentViewName);
     const targetIndex = VIEW_ORDER.indexOf(targetViewName);
     const direction = targetIndex >= currentIndex ? 'right' : 'left';
@@ -2073,6 +2112,20 @@ function startAppLogic() {
     }
   }
 
+  // Gán textContent/innerHTML an toàn cho 1 phần tử DOM theo id.
+  // Nếu không tìm thấy phần tử: KHÔNG âm thầm bỏ qua — ghi vào mảng `missingIds`
+  // (để caller log console.error + showToast báo người dùng biết UI thiếu vùng hiển thị)
+  // thay vì để lỗi trôi qua trong im lặng như pattern `(getElementById(...) || {}).x = y` cũ.
+  function applyDomField(id, prop, value, missingIds) {
+    const el = document.getElementById(id);
+    if (!el) {
+      if (Array.isArray(missingIds)) missingIds.push(id);
+      return false;
+    }
+    el[prop] = value;
+    return true;
+  }
+
   function renderInlineCVAnalysis(analysis, cvId, jdId) {
     if (!cvAnalysisResultContent || !analysis) return;
     latestCVAnalysisContext = { analysis, cvId, jdId };
@@ -2098,9 +2151,12 @@ function startAppLogic() {
 
     if (scoreEl) scoreEl.textContent = `${score.toFixed(1)}%`;
     scoreRing?.style.setProperty('--match-score', `${Math.max(0, Math.min(100, score)) * 3.6}deg`);
-    setText('cv-result-context', `${cvLabel}  ↔  ${jdLabel}`);
-    setText('cv-result-summary', analysis.executive_summary || `CV khớp ${matched.length} kỹ năng và cần bổ sung ${missing.length} kỹ năng theo JD.`);
-    
+
+    const missingIds = [];
+    applyDomField('cv-result-context', 'textContent', `${cvLabel}  ↔  ${jdLabel}`, missingIds);
+    applyDomField('cv-result-summary', 'textContent', analysis.executive_summary
+      || `CV khớp ${matched.length} kỹ năng và cần bổ sung ${missing.length} kỹ năng theo JD.`, missingIds);
+
     const confidenceSummary = document.getElementById('cv-result-confidence-summary');
     if (confidenceSummary) {
       const matchLabels = {
@@ -2122,26 +2178,25 @@ function startAppLogic() {
     const renderSkills = (items, variant) => items.length
       ? items.map(item => `<span class="cv-result-tag ${variant}">${escapeHtml(item)}</span>`).join('')
       : '<span class="cv-result-empty">Không có dữ liệu.</span>';
-    
-    setHTML('cv-result-matching-skills', renderSkills(matched, 'matched'));
-    setHTML('cv-result-missing-skills', renderSkills(missing, 'missing'));
+    applyDomField('cv-result-matching-skills', 'innerHTML', renderSkills(matched, 'matched'), missingIds);
+    applyDomField('cv-result-missing-skills', 'innerHTML', renderSkills(missing, 'missing'), missingIds);
     setHTML('cv-result-partial-skills', renderSkills(partial, 'partial'));
 
-    setHTML('cv-result-priority-actions', priorityActions.length
+    applyDomField('cv-result-priority-actions', 'innerHTML', priorityActions.length
       ? priorityActions.slice(0, 4).map((item, index) => {
         const title = typeof item === 'string' ? item : (item.gap || item.action || `Ưu tiên ${index + 1}`);
         const detail = typeof item === 'string' ? '' : (item.action || item.why_it_matters || '');
         return `<article class="cv-result-action"><span>${escapeHtml(item.priority || index + 1)}</span><div><strong>${escapeHtml(title)}</strong>${detail && detail !== title ? `<p>${escapeHtml(detail)}</p>` : ''}</div></article>`;
       }).join('')
-      : '<p class="cv-result-empty">Chưa phát hiện khoảng trống ưu tiên.</p>');
+      : '<p class="cv-result-empty">Chưa phát hiện khoảng trống ưu tiên.</p>', missingIds);
 
-    setHTML('cv-result-learning-actions', learningActions.length
+    applyDomField('cv-result-learning-actions', 'innerHTML', learningActions.length
       ? learningActions.slice(0, 4).map((item, index) => {
         const title = typeof item === 'string' ? item : (item.skill || item.learning_goal || `Gợi ý ${index + 1}`);
         const detail = typeof item === 'string' ? '' : (item.learning_goal || item.practice || '');
         return `<article class="cv-result-action learning"><span>${index + 1}</span><div><strong>${escapeHtml(title)}</strong>${detail && detail !== title ? `<p>${escapeHtml(detail)}</p>` : ''}</div></article>`;
       }).join('')
-      : '<p class="cv-result-empty">Chưa cần lộ trình học bổ sung.</p>');
+      : '<p class="cv-result-empty">Chưa cần lộ trình học bổ sung.</p>', missingIds);
 
     const scoreLabels = {
       hard_skills: 'Kỹ năng cứng',
@@ -2190,24 +2245,6 @@ function startAppLogic() {
     const warnings = Array.isArray(analysis.warnings) ? analysis.warnings : [];
     setHTML('cv-result-warnings', warnings.map(item => `<p>⚠ ${escapeHtml(item)}</p>`).join(''));
 
-    const evidenceMatrix = Array.isArray(analysis.requirement_evidence) ? analysis.requirement_evidence : [];
-    const evidenceList = document.getElementById('cv-result-requirement-evidence');
-    if (evidenceList) {
-      const statusLabels = { matched: 'Đã đáp ứng', partial: 'Một phần', missing: 'Chưa có', unknown: 'Chưa rõ' };
-      evidenceList.innerHTML = evidenceMatrix.length
-        ? evidenceMatrix.map(item => {
-          const sources = Array.isArray(item.evidence) ? item.evidence : [];
-          const quotes = sources.length
-            ? sources.slice(0, 2).map(source => `<p>“${escapeHtml(source.quote)}” <small>· ${escapeHtml(source.section)} · BM25 ${source.bm25_score == null ? '—' : Number(source.bm25_score).toFixed(3)} · Semantic ${source.semantic_score == null ? '—' : Number(source.semantic_score).toFixed(3)} · RRF ${source.fusion_score == null ? '—' : Number(source.fusion_score).toFixed(5)}</small></p>`).join('')
-            : `<p>${escapeHtml(item.reason || 'Chưa tìm thấy bằng chứng trong CV.')}</p>`;
-          return `<article class="cv-result-evidence-item">
-            <div><strong>${escapeHtml(item.requirement)}</strong><small>${escapeHtml(item.requirement_type)} · trọng số ${Number(item.importance || 0).toFixed(0)}</small><br><span class="cv-result-evidence-status ${escapeHtml(item.status)}">${escapeHtml(statusLabels[item.status] || item.status)}</span></div>
-            <div>${quotes}<small>Confidence ${Math.round(Number(item.confidence || 0) * 100)}% · ${escapeHtml(item.reason || '')}</small></div>
-          </article>`;
-        }).join('')
-        : '<p class="cv-result-empty">JD chưa có yêu cầu đủ rõ để lập ma trận bằng chứng.</p>';
-    }
-
     setHTML('cv-result-soft-skills', renderSkills(softGaps, 'missing'));
     setHTML('cv-result-section-recommendations', sectionRecommendations.length
       ? sectionRecommendations.slice(0, 4).map(item => `
@@ -2234,6 +2271,11 @@ function startAppLogic() {
       const passed = (analysis.integrity_guardrail || 'passed') === 'passed';
       guardrail.textContent = passed ? '✓ Guardrail đã kiểm chứng' : '! Cần người dùng kiểm tra';
       guardrail.classList.toggle('is-warning', !passed);
+    }
+
+    if (missingIds.length) {
+      console.error(`[renderInlineCVAnalysis] Không tìm thấy ${missingIds.length} phần tử DOM để hiển thị kết quả CV Analysis: ${missingIds.join(', ')}`);
+      showToast(`⚠️ Kết quả đã tính nhưng giao diện thiếu vùng hiển thị (${missingIds.join(', ')}). Vui lòng tải lại trang.`, 'error');
     }
 
     if (cvAnalysisEmptyState) cvAnalysisEmptyState.hidden = true;
@@ -2320,6 +2362,7 @@ function startAppLogic() {
         const analysis = await ApiClient.runGapAnalysis(selectedCvId, selectedJdId);
         setAgentProgress('match');
         renderInlineCVAnalysis(analysis, selectedCvId, selectedJdId);
+        refreshDashboardOverview();
         setAgentProgress('save');
         const llmSucceeded = Boolean(uploadedCV?.parsed_json?.agent_metadata?.llm_succeeded);
         showToast(
@@ -2730,7 +2773,7 @@ TÊN CÔNG TY:
   function renderJobCatalogCard(job) {
     const skills = (job.skills || []).slice(0, 7);
     const matched = new Set((job.matched_skills || []).map(skill => skill.toLocaleLowerCase()));
-    const hasMatchScore = Number.isFinite(Number(job.match_score));
+    const hasMatchScore = job.match_score !== null && job.match_score !== undefined && Number.isFinite(Number(job.match_score));
     const sourceLink = job.source_url
       ? `<a class="job-source-link" href="${escapeHtml(job.source_url)}" target="_blank" rel="noopener noreferrer">Xem tin gốc ↗</a>`
       : '';
@@ -3282,19 +3325,22 @@ TÊN CÔNG TY:
         const res = await ApiClient.runGapAnalysis(cvId, jdId);
         currentGapResult = res;
 
-        document.getElementById('page-gap-match-score-badge').textContent = `${res.match_score.toFixed(1)}%`;
+        const missingIds = [];
+        applyDomField('page-gap-match-score-badge', 'textContent', `${res.match_score.toFixed(1)}%`, missingIds);
 
-        document.getElementById('page-gap-matching-skills').innerHTML = (res.hard_skills_matching || []).map(
+        applyDomField('page-gap-matching-skills', 'innerHTML', (res.hard_skills_matching || []).map(
           s => `<span class="badge badge-ok">${escapeHtml(s)}</span>`
-        ).join('') || `<span style="font-size:11px;color:var(--text-muted);">Không có dữ liệu</span>`;
+        ).join('') || `<span style="font-size:11px;color:var(--text-muted);">Không có dữ liệu</span>`, missingIds);
 
-        document.getElementById('page-gap-missing-skills').innerHTML = (res.hard_skills_missing || []).map(
+        applyDomField('page-gap-missing-skills', 'innerHTML', (res.hard_skills_missing || []).map(
           s => `<span class="badge badge-need">${escapeHtml(s)}</span>`
-        ).join('') || `<span style="font-size:11px;color:var(--text-muted);">Không có dữ liệu</span>`;
+        ).join('') || `<span style="font-size:11px;color:var(--text-muted);">Không có dữ liệu</span>`, missingIds);
 
-        document.getElementById('page-gap-soft-skills').innerHTML = (res.soft_skills_gap || []).map(
+        applyDomField('page-gap-executive-summary', 'textContent', res.executive_summary || '', missingIds);
+
+        applyDomField('page-gap-soft-skills', 'innerHTML', (res.soft_skills_gap || []).map(
           s => `<span class="badge badge-warn">${escapeHtml(s)}</span>`
-        ).join('') || `<span style="font-size:11px;color:var(--text-muted);">CV đã có bằng chứng cho các kỹ năng mềm nhận diện được.</span>`;
+        ).join('') || `<span style="font-size:11px;color:var(--text-muted);">CV đã có bằng chứng cho các kỹ năng mềm nhận diện được.</span>`, missingIds);
 
         const pageScoreLabels = {
           hard_skills: 'Kỹ năng cứng',
@@ -3303,34 +3349,32 @@ TÊN CÔNG TY:
           experience_fit: 'Bằng chứng kinh nghiệm',
         };
         const scoreEntries = Object.entries(res.score_breakdown || {});
-        document.getElementById('page-gap-score-breakdown').innerHTML = scoreEntries.length
+        applyDomField('page-gap-score-breakdown', 'innerHTML', scoreEntries.length
           ? scoreEntries.map(([key, value]) => `
             <article class="gap-score-item">
               <div><span>${escapeHtml(pageScoreLabels[key] || key)}</span><strong>${Number(value).toFixed(1)}%</strong></div>
               <div class="gap-score-track"><i style="width:${Math.max(0, Math.min(100, Number(value)))}%"></i></div>
             </article>
           `).join('')
-          : '<p class="gap-empty">Chưa có dữ liệu phân rã điểm.</p>';
+          : '<p class="gap-empty">Chưa có dữ liệu phân rã điểm.</p>', missingIds);
 
-        document.getElementById('page-gap-executive-summary').textContent = res.executive_summary || '';
-
-        document.getElementById('page-gap-priority-actions').innerHTML = (res.priority_actions || []).map(item => `
+        applyDomField('page-gap-priority-actions', 'innerHTML', (res.priority_actions || []).map(item => `
           <article class="gap-plan-item priority-item">
             <span class="gap-priority-number">${escapeHtml(item.priority)}</span>
             <div><h5>${escapeHtml(item.gap)}</h5><p>${escapeHtml(item.why_it_matters)}</p><strong>${escapeHtml(item.action)}</strong></div>
           </article>
-        `).join('') || '<p class="gap-empty">Không có khoảng cách ưu tiên.</p>';
+        `).join('') || '<p class="gap-empty">Không có khoảng cách ưu tiên.</p>', missingIds);
 
-        document.getElementById('page-gap-learning-list').innerHTML = (res.learning_recommendations || []).map(item => `
+        applyDomField('page-gap-learning-list', 'innerHTML', (res.learning_recommendations || []).map(item => `
           <article class="gap-plan-item">
             <h5>${escapeHtml(item.skill)}</h5>
             <p>${escapeHtml(item.learning_goal)}</p>
             <div class="gap-mini-tags">${(item.topics || []).map(topic => `<span>${escapeHtml(topic)}</span>`).join('')}</div>
             <strong>Bài thực hành: ${escapeHtml(item.practice)}</strong>
           </article>
-        `).join('') || '<p class="gap-empty">Chưa có đề xuất học tập bổ sung.</p>';
+        `).join('') || '<p class="gap-empty">Chưa có đề xuất học tập bổ sung.</p>', missingIds);
 
-        document.getElementById('page-gap-certifications-list').innerHTML = (res.certification_recommendations || []).map(item => `
+        applyDomField('page-gap-certifications-list', 'innerHTML', (res.certification_recommendations || []).map(item => `
           <article class="gap-plan-item certificate-item">
             <span class="gap-card-kicker">${escapeHtml(item.level)} · ${escapeHtml(item.provider)}</span>
             <h5>${escapeHtml(item.name)}</h5>
@@ -3338,9 +3382,9 @@ TÊN CÔNG TY:
             <div class="gap-mini-tags">${(item.related_skills || []).map(skill => `<span>${escapeHtml(skill)}</span>`).join('')}</div>
             <small>${escapeHtml(item.verification_note)}</small>
           </article>
-        `).join('') || '<p class="gap-empty">JD này chưa có chứng chỉ bắt buộc hoặc phù hợp rõ ràng.</p>';
+        `).join('') || '<p class="gap-empty">JD này chưa có chứng chỉ bắt buộc hoặc phù hợp rõ ràng.</p>', missingIds);
 
-        document.getElementById('page-gap-projects-list').innerHTML = (res.project_recommendations || []).map(item => `
+        applyDomField('page-gap-projects-list', 'innerHTML', (res.project_recommendations || []).map(item => `
           <article class="gap-plan-item project-item">
             <span class="gap-card-kicker">ĐỀ XUẤT · CHƯA HOÀN THÀNH</span>
             <h5>${escapeHtml(item.title)}</h5>
@@ -3349,17 +3393,25 @@ TÊN CÔNG TY:
             <ul>${(item.deliverables || []).map(value => `<li>${escapeHtml(value)}</li>`).join('')}</ul>
             <div class="gap-bullet-template">${escapeHtml(item.cv_bullet_template)}</div>
           </article>
-        `).join('') || '<p class="gap-empty">Chưa cần thêm dự án mới; hãy tăng số liệu cho dự án hiện có.</p>';
+        `).join('') || '<p class="gap-empty">Chưa cần thêm dự án mới; hãy tăng số liệu cho dự án hiện có.</p>', missingIds);
 
-        document.getElementById('page-gap-cv-sections-list').innerHTML = (res.cv_section_recommendations || []).map(item => `
+        applyDomField('page-gap-cv-sections-list', 'innerHTML', (res.cv_section_recommendations || []).map(item => `
           <article class="gap-plan-item compact-item">
             <h5>${escapeHtml(item.section)}</h5>
             <p><strong>Vấn đề:</strong> ${escapeHtml(item.issue)}</p>
             <p><strong>Nên sửa:</strong> ${escapeHtml(item.recommendation)}</p>
           </article>
-        `).join('') || '<p class="gap-empty">Không có mục CV cần bổ sung.</p>';
+        `).join('') || '<p class="gap-empty">Không có mục CV cần bổ sung.</p>', missingIds);
+
+        if (missingIds.length) {
+          console.error(`[pageBtnRunGap] Không tìm thấy ${missingIds.length} phần tử DOM để hiển thị kết quả Gap Analysis: ${missingIds.join(', ')}`);
+          showToast(`⚠️ Đã tính xong Gap Analysis nhưng giao diện thiếu vùng hiển thị (${missingIds.join(', ')}). Vui lòng tải lại trang và thử lại.`, 'error');
+        }
 
         const suggestionList = document.getElementById('page-gap-suggestions-list');
+        if (!suggestionList) {
+          throw new Error('Không tìm thấy vùng hiển thị gợi ý Gap Analysis. Vui lòng tải lại trang.');
+        }
         suggestionList.innerHTML = (res.suggestions || []).map((s, index) => `
           <div class="suggestion-decision-card" data-index="${index}">
             <p style="font-size:11px;color:var(--text-muted);margin:0 0 2px 0;"><strong>Gốc:</strong> ${escapeHtml(s.original_text)}</p>
@@ -3396,7 +3448,9 @@ TÊN CÔNG TY:
         }
 
         if (pageGapResultsContainer) pageGapResultsContainer.style.display = 'block';
-        showToast('🎉 Đã phân tích xong Gap Analysis!', 'success');
+        if (!missingIds.length) {
+          showToast('🎉 Đã phân tích xong Gap Analysis!', 'success');
+        }
       } catch (err) {
         showToast(`❌ Lỗi chạy Gap Analysis: ${err.message}`, 'error');
       }
@@ -3574,28 +3628,18 @@ TÊN CÔNG TY:
 
       const totalScoreEl = document.getElementById('page-report-total-score');
       if (totalScoreEl) totalScoreEl.textContent = `${report.total_score.toFixed(1)} / 100`;
+      // This is the live "Phòng phỏng vấn" full-page flow (view-interview / page-*
+      // elements) — distinct from the older interview-*/report-* modal flow below.
+      // It previously never notified the dashboard at all, which is why the STAR
+      // Score gauge on Trang chủ kept showing a stale value after finishing a real
+      // interview here until a manual F5 (Việc 1).
+      updateDashboardGaugeScores(NaN, Number(report.total_score));
+      refreshDashboardOverview();
 
       const scores = report.star_scores || {};
       const starBrkEl = document.getElementById('page-report-star-breakdown');
       if (starBrkEl) {
-        starBrkEl.innerHTML = `
-          <div style="background:rgba(255,255,255,0.04);padding:8px;border-radius:6px;text-align:center;">
-            <span style="font-size:10px;color:var(--text-dim);">Situation</span>
-            <p style="font-size:14px;font-weight:700;color:#00e676;margin:2px 0 0 0;">${scores.situation || 80}</p>
-          </div>
-          <div style="background:rgba(255,255,255,0.04);padding:8px;border-radius:6px;text-align:center;">
-            <span style="font-size:10px;color:var(--text-dim);">Task</span>
-            <p style="font-size:14px;font-weight:700;color:#00bcd4;margin:2px 0 0 0;">${scores.task || 80}</p>
-          </div>
-          <div style="background:rgba(255,255,255,0.04);padding:8px;border-radius:6px;text-align:center;">
-            <span style="font-size:10px;color:var(--text-dim);">Action</span>
-            <p style="font-size:14px;font-weight:700;color:#b084fc;margin:2px 0 0 0;">${scores.action || 80}</p>
-          </div>
-          <div style="background:rgba(255,255,255,0.04);padding:8px;border-radius:6px;text-align:center;">
-            <span style="font-size:10px;color:var(--text-dim);">Result</span>
-            <p style="font-size:14px;font-weight:700;color:#ff8c42;margin:2px 0 0 0;">${scores.result || 80}</p>
-          </div>
-        `;
+        starBrkEl.innerHTML = renderStarBadgeGrid(scores, 80);
       }
 
       const stEl = document.getElementById('page-report-strengths-list');
@@ -3758,7 +3802,7 @@ TÊN CÔNG TY:
               <p class="archive-card-sub">JD Mục Tiêu: <strong>${escapeHtml(jdTitle)}</strong> • ${suggestionsCount} đề xuất chỉnh sửa chuẩn ATS</p>
               <div class="archive-card-footer">
                 <span class="badge badge-ok" style="background:rgba(124,77,255,0.2);color:#b388ff;border-color:rgba(124,77,255,0.4);">MATCH: ${score}%</span>
-                <button class="archive-btn-view export-optimized-pdf-btn" data-cv-id="${escapeHtml(analysis.cv_id)}" data-analysis-id="${escapeHtml(analysis.id)}">⚡ Xuất CV Tối Ưu (PDF)</button>
+                <button class="archive-btn-view view-archive-detail-btn" data-type="gap" data-id="${escapeHtml(analysis.id)}">🔍 Xem chi tiết</button>
               </div>
             </div>
           `
@@ -3787,7 +3831,7 @@ TÊN CÔNG TY:
               <div class="archive-card-footer">
                 <span class="badge ${isCompleted ? 'badge-ok' : 'badge-warn'}">${isCompleted ? `PASSED // ${scoreText}` : 'ONGOING'}</span>
                 ${isCompleted ? `
-                  <button class="archive-btn-view view-star-report-btn" data-session-id="${escapeHtml(session.id)}">📊 Xem Báo Cáo STAR</button>
+                  <button class="archive-btn-view view-archive-detail-btn" data-type="interview" data-id="${escapeHtml(session.id)}">🔍 Xem chi tiết</button>
                 ` : `
                   <button class="archive-btn-view resume-interview-btn" data-session-id="${escapeHtml(session.id)}">▶ Tiếp Tục</button>
                 `}
@@ -3840,35 +3884,6 @@ TÊN CÔNG TY:
       return;
     }
 
-    const optPdfBtn = event.target.closest('.export-optimized-pdf-btn');
-    if (optPdfBtn) {
-      const cvId = optPdfBtn.dataset.cvId;
-      const analysisId = optPdfBtn.dataset.analysisId;
-      try {
-        optPdfBtn.disabled = true;
-        showToast('⚡ Đang tạo file PDF CV Tối Ưu chuẩn ATS...', 'info');
-        const blob = await ApiClient.downloadCV(cvId, analysisId);
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `CV-Optimized-${cvId.slice(0, 8)}.pdf`;
-        a.click();
-        URL.revokeObjectURL(url);
-        showToast('✅ Đã xuất CV Tối Ưu thành công!', 'success');
-      } catch (err) {
-        showToast(`Không thể xuất CV Tối Ưu: ${err.message}`, 'error');
-      } finally {
-        optPdfBtn.disabled = false;
-      }
-      return;
-    }
-
-    const starReportBtn = event.target.closest('.view-star-report-btn');
-    if (starReportBtn) {
-      openStarReportModal(starReportBtn.dataset.sessionId);
-      return;
-    }
-
     const resumeBtn = event.target.closest('.resume-interview-btn');
     if (resumeBtn) {
       switchView('interview');
@@ -3880,7 +3895,133 @@ TÊN CÔNG TY:
       switchView('cv');
       return;
     }
+
+    const detailBtn = event.target.closest('.view-archive-detail-btn');
+    if (detailBtn) {
+      openMissionDetailView(detailBtn.dataset.type, detailBtn.dataset.id);
+      return;
+    }
   });
+
+  // ===== Mission Archive Detail view (Việc 4: gộp "Xem Báo Cáo STAR" + "Xuất CV Tối Ưu" thành 1 nút "Xem chi tiết") =====
+  // Note: the "Xuất CV Tối Ưu (PDF)" action was intentionally removed from this
+  // view (2026-08-13) — the team hasn't finalized the CV PDF template yet, so
+  // the export entry point is hidden from the UI until it's ready. The backend
+  // ApiClient.downloadCV(cvId, analysisId) endpoint itself is left untouched
+  // for reuse once a template is finalized.
+  function renderArchiveDetailStarSection(report) {
+    const starSection = document.getElementById('archive-detail-star-section');
+    const gapSection = document.getElementById('archive-detail-gap-section');
+    if (gapSection) gapSection.style.display = 'none';
+    if (!starSection) return;
+
+    const title = document.getElementById('archive-detail-title');
+    const sub = document.getElementById('archive-detail-sub');
+    if (title) title.textContent = '🎙️ Chi Tiết Phỏng Vấn STAR';
+    if (sub) sub.textContent = 'Báo cáo chấm điểm đầy đủ theo rubric STAR (huấn luyện, không phán xét).';
+
+    const scoreEl = document.getElementById('archive-detail-star-score');
+    if (scoreEl) scoreEl.textContent = `${Number(report.total_score || 0).toFixed(1)} / 100 PTS`;
+
+    const scores = report.star_scores || {};
+    const breakdownEl = document.getElementById('archive-detail-star-breakdown');
+    if (breakdownEl) {
+      breakdownEl.innerHTML = renderStarBadgeGrid(scores, null);
+    }
+
+    const strengths = Array.isArray(report.strengths) ? report.strengths : [];
+    const improvements = Array.isArray(report.improvements) ? report.improvements : [];
+    const recommendations = Array.isArray(report.recommendations) ? report.recommendations : [];
+    const strEl = document.getElementById('archive-detail-star-strengths');
+    if (strEl) strEl.innerHTML = strengths.map(s => `<li>💪 ${escapeHtml(s)}</li>`).join('') || '<li>Chưa ghi nhận</li>';
+    const impEl = document.getElementById('archive-detail-star-improvements');
+    if (impEl) impEl.innerHTML = improvements.map(i => `<li>🛠️ ${escapeHtml(i)}</li>`).join('') || '<li>Chưa ghi nhận</li>';
+    const recEl = document.getElementById('archive-detail-star-recommendations');
+    if (recEl) recEl.innerHTML = recommendations.map(r => `<li>🚀 ${escapeHtml(r)}</li>`).join('') || '<li>Chưa ghi nhận</li>';
+
+    starSection.style.display = 'block';
+  }
+
+  function renderArchiveDetailGapSection(analysis) {
+    const starSection = document.getElementById('archive-detail-star-section');
+    const gapSection = document.getElementById('archive-detail-gap-section');
+    if (starSection) starSection.style.display = 'none';
+    if (!gapSection) return;
+
+    const title = document.getElementById('archive-detail-title');
+    const sub = document.getElementById('archive-detail-sub');
+    if (title) title.textContent = '🎯 Chi Tiết Gap Analysis & CV Đã Tối Ưu';
+    if (sub) sub.textContent = 'Đề xuất chỉnh sửa CV vẫn cần bạn Accept/Reject — không tự áp dụng.';
+
+    const cvTitle = archiveDataCache.cvMap.get(analysis.cv_id) || 'CV Hồ Sơ';
+    const jdTitle = archiveDataCache.jdMap.get(analysis.jd_id) || 'Vị Trí Mục Tiêu';
+    const contextEl = document.getElementById('archive-detail-gap-context');
+    if (contextEl) contextEl.textContent = `${cvTitle}  ↔  ${jdTitle}`;
+
+    const scoreEl = document.getElementById('archive-detail-gap-score');
+    if (scoreEl) scoreEl.textContent = `${Number(analysis.match_score || 0).toFixed(1)}%`;
+
+    const matched = Array.isArray(analysis.hard_skills_matching) ? analysis.hard_skills_matching : [];
+    const partial = Array.isArray(analysis.hard_skills_partial) ? analysis.hard_skills_partial : [];
+    const missingRaw = Array.isArray(analysis.hard_skills_missing) ? analysis.hard_skills_missing : [];
+    const missing = missingRaw.filter(skill => !partial.includes(skill));
+    const renderSkills = (items, variant) => items.length
+      ? items.map(item => `<span class="cv-result-tag ${variant}">${escapeHtml(item)}</span>`).join('')
+      : '<span class="cv-result-empty">Không có dữ liệu.</span>';
+    const matchedEl = document.getElementById('archive-detail-gap-matched');
+    if (matchedEl) matchedEl.innerHTML = renderSkills(matched, 'matched');
+    const missingEl = document.getElementById('archive-detail-gap-missing');
+    if (missingEl) missingEl.innerHTML = renderSkills(missing, 'missing');
+
+    const priorityActions = Array.isArray(analysis.priority_actions) ? analysis.priority_actions : [];
+    const actionsEl = document.getElementById('archive-detail-gap-actions');
+    if (actionsEl) {
+      actionsEl.innerHTML = priorityActions.length
+        ? priorityActions.slice(0, 6).map((item, index) => {
+          const itemTitle = typeof item === 'string' ? item : (item.gap || item.action || `Ưu tiên ${index + 1}`);
+          const detail = typeof item === 'string' ? '' : (item.action || item.why_it_matters || '');
+          return `<article class="cv-result-action"><span>${escapeHtml(item.priority || index + 1)}</span><div><strong>${escapeHtml(itemTitle)}</strong>${detail && detail !== itemTitle ? `<p>${escapeHtml(detail)}</p>` : ''}</div></article>`;
+        }).join('')
+        : '<p class="cv-result-empty">Chưa phát hiện khoảng trống ưu tiên.</p>';
+    }
+
+    const suggestions = Array.isArray(analysis.suggestions) ? analysis.suggestions : [];
+    const suggEl = document.getElementById('archive-detail-gap-suggestions');
+    if (suggEl) {
+      suggEl.innerHTML = suggestions.length
+        ? suggestions.slice(0, 6).map((item, index) => `
+          <article class="cv-result-action learning"><span>${index + 1}</span><div><small>Gốc: ${escapeHtml(item.original_text)}</small><strong>${escapeHtml(item.suggested_improvement)}</strong><p>${escapeHtml(item.reason)}</p></div></article>
+        `).join('')
+        : '<p class="cv-result-empty">Không có câu viết lại đủ bằng chứng.</p>';
+    }
+
+    gapSection.style.display = 'block';
+  }
+
+  async function openMissionDetailView(type, id) {
+    if (type === 'interview') {
+      try {
+        showToast('Đang tải báo cáo STAR...', 'info');
+        const report = await ApiClient.getInterviewReport(id);
+        renderArchiveDetailStarSection(report);
+        switchView('archive-detail');
+      } catch (err) {
+        showToast(`Không thể xem báo cáo phỏng vấn: ${err.message}`, 'error');
+      }
+      return;
+    }
+    if (type === 'gap') {
+      const analysis = (archiveDataCache.analyses || []).find(item => String(item.id) === String(id));
+      if (!analysis) {
+        showToast('Không tìm thấy dữ liệu phân tích này. Vui lòng tải lại trang Lịch sử.', 'error');
+        return;
+      }
+      renderArchiveDetailGapSection(analysis);
+      switchView('archive-detail');
+    }
+  }
+
+  document.getElementById('btn-archive-detail-back')?.addEventListener('click', () => switchView('history'));
 
   // Modal display for STAR interview report
   async function openStarReportModal(sessionId) {
@@ -4143,6 +4284,52 @@ TÊN CÔNG TY:
     switchView('dashboard');
   }
 
+  // Dashboard gauge labels bake the score into the translated string (e.g. "Match Score (85%)"),
+  // so a fixed prefix per language is kept here to re-render the label with real data without
+  // touching the full TRANSLATIONS dictionary.
+  const GAUGE_LABEL_PREFIX = {
+    vi: { cv: 'Match Score', interview: 'STAR Score' },
+    en: { cv: 'Match Score', interview: 'STAR Score' },
+    ja: { cv: 'マッチスコア', interview: 'STARスコア' },
+    ko: { cv: '매칭 점수', interview: 'STAR 점수' },
+    zh: { cv: '匹配得分', interview: 'STAR 得分' },
+  };
+
+  function updateDashboardGaugeScores(matchScore, starScore) {
+    const lang = localStorage.getItem('career_copilot_lang') || 'vi';
+    const prefix = GAUGE_LABEL_PREFIX[lang] || GAUGE_LABEL_PREFIX.vi;
+    const gaugeCvLabel = document.getElementById('gauge-cv-label');
+    const gaugeInterviewLabel = document.getElementById('gauge-interview-label');
+    if (gaugeCvLabel && Number.isFinite(matchScore)) {
+      gaugeCvLabel.textContent = `${prefix.cv} (${Math.round(matchScore)}%)`;
+    }
+    if (gaugeInterviewLabel && Number.isFinite(starScore)) {
+      gaugeInterviewLabel.textContent = `${prefix.interview} (${Math.round(starScore)}/100)`;
+    }
+  }
+
+  async function refreshDashboardOverview() {
+    if (!ApiClient.isAuthenticated()) return;
+    const user = ApiClient.getUser();
+    if (!user || user.role !== 'student') return;
+    try {
+      const [analyses, interviews] = await Promise.all([
+        ApiClient.getAnalysisHistory().catch(() => []),
+        ApiClient.listInterviews().catch(() => []),
+      ]);
+      const latestAnalysis = Array.isArray(analyses) ? analyses[0] : null;
+      const latestInterview = Array.isArray(interviews)
+        ? interviews.find(session => session.total_score !== null && session.total_score !== undefined && Number.isFinite(Number(session.total_score)))
+        : null;
+      updateDashboardGaugeScores(
+        latestAnalysis ? Number(latestAnalysis.match_score) : NaN,
+        latestInterview ? Number(latestInterview.total_score) : NaN,
+      );
+    } catch (err) {
+      console.error('[refreshDashboardOverview] Không thể tải dữ liệu tổng quan Dashboard:', err);
+    }
+  }
+
   function checkUserSession() {
     const user = ApiClient.getUser();
     const navAdmin = document.getElementById('nav-admin');
@@ -4153,6 +4340,7 @@ TÊN CÔNG TY:
       if (userRoleEl) userRoleEl.textContent = `Vai trò: ${user.role.toUpperCase()}`;
       const roleHomeView = getRoleHomeView(user);
       if (currentViewName !== roleHomeView) switchView(roleHomeView);
+      refreshDashboardOverview();
       if (navAdmin) {
         if (user.role === 'admin') {
           navAdmin.classList.add('visible');
@@ -5381,28 +5569,16 @@ TÊN CÔNG TY:
 
       const totalScoreEl = document.getElementById('report-total-score');
       if (totalScoreEl) totalScoreEl.textContent = `${report.total_score.toFixed(1)} / 100`;
+      // Update the dashboard gauge immediately with the score we already have
+      // from this report response, instead of relying solely on a re-fetch of
+      // the interviews list (which can race with the backend write of total_score).
+      updateDashboardGaugeScores(NaN, Number(report.total_score));
+      refreshDashboardOverview();
 
       const scores = report.star_scores || {};
       const starBrkEl = document.getElementById('report-star-breakdown');
       if (starBrkEl) {
-        starBrkEl.innerHTML = `
-          <div style="background:rgba(255,255,255,0.04);padding:8px;border-radius:6px;">
-            <span style="font-size:10px;color:var(--text-dim);">Situation</span>
-            <p style="font-size:14px;font-weight:700;color:#00e676;margin:2px 0 0 0;">${scores.situation || 80}</p>
-          </div>
-          <div style="background:rgba(255,255,255,0.04);padding:8px;border-radius:6px;">
-            <span style="font-size:10px;color:var(--text-dim);">Task</span>
-            <p style="font-size:14px;font-weight:700;color:#00bcd4;margin:2px 0 0 0;">${scores.task || 80}</p>
-          </div>
-          <div style="background:rgba(255,255,255,0.04);padding:8px;border-radius:6px;">
-            <span style="font-size:10px;color:var(--text-dim);">Action</span>
-            <p style="font-size:14px;font-weight:700;color:#b084fc;margin:2px 0 0 0;">${scores.action || 80}</p>
-          </div>
-          <div style="background:rgba(255,255,255,0.04);padding:8px;border-radius:6px;">
-            <span style="font-size:10px;color:var(--text-dim);">Result</span>
-            <p style="font-size:14px;font-weight:700;color:#ff8c42;margin:2px 0 0 0;">${scores.result || 80}</p>
-          </div>
-        `;
+        starBrkEl.innerHTML = renderStarBadgeGrid(scores, 80);
       }
 
       const stEl = document.getElementById('report-strengths-list');
