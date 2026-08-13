@@ -45,7 +45,7 @@ export default function DashboardView() {
 
         <div className="buddy-hero-visual">
           <Image
-            src="/images/buddy.png"
+            src="/images/buddy2.png"
             alt="Career Buddy đang giúp chỉnh sửa CV với điểm ATS và mức độ phù hợp công việc"
             width={1536}
             height={1024}
