@@ -75,13 +75,13 @@ export default function DashboardView() {
 
         <div className={'dashboard-hero-copy'}>
           <h1 className={'dashboard-hero-title'}>
-            Chu?n b? t?t h�n
-            <span> cho c�ng vi?c b?n mu?n.</span>
+            Chuẩn bị tốt hơn
+            <span> cho công việc bạn muốn.</span>
           </h1>
 
           <p className={'dashboard-hero-description'}>
-            T?o ho?c c?i thi?n CV, ki?m tra �? ph� h?p v� luy?n ph?ng v?n.
-            B?t �?u t? vi?c b?n c?n nh?t h�m nay.
+            Tạo hoặc cải thiện CV, kiểm tra độ phù hợp và luyện phỏng vấn.
+            Bắt đầu từ việc bạn cần nhất hôm nay.
           </p>
 
           <div className={'dashboard-hero-actions'}>
@@ -91,7 +91,7 @@ export default function DashboardView() {
               onClick={() => goTo('nav-cv')}
             >
               <FileText size={18} />
-              Qu?n l? CV
+              Quản lý CV
               <ArrowRight size={17} />
             </button>
 
@@ -131,7 +131,7 @@ export default function DashboardView() {
             <div>
               <small>YOUR CV</small>
               <strong>AI Engineer CV</strong>
-              <span>Python � RAG � FastAPI</span>
+              <span>Python · RAG · FastAPI</span>
             </div>
 
             <div className={'dashboard-success-dot'}>
@@ -148,13 +148,13 @@ export default function DashboardView() {
             <div>
               <small>TARGET JOB</small>
               <strong>AI Engineer</strong>
-              <span>H� N?i � Hybrid</span>
+              <span>Hà Nội · Hybrid</span>
             </div>
           </div>
 
           {/* Demo Match */}
           <div className={'dashboard-match-demo'}>
-            <div className={'dashboard-demo-label'}>MINH H?A</div>
+            <div className={'dashboard-demo-label'}>MINH HỌA</div>
 
             <div className={'dashboard-demo-score'}>
               <span>87</span>
@@ -189,13 +189,13 @@ export default function DashboardView() {
         <header className={'dashboard-section-header'}>
           <div>
             <h2 id="intent-workspace-title">
-              H�m nay b?n mu?n l�m g??
+              Hôm nay bạn muốn làm gì?
             </h2>
           </div>
 
           <p>
-            Kh�ng c� b�?c b?t bu?c. Ch?n ��ng c�ng c? cho nhu c?u hi?n t?i
-            c?a b?n.
+            Không có bước bắt buộc. Chọn đúng công cụ cho nhu cầu hiện tại
+            của bạn.
           </p>
         </header>
 
@@ -216,10 +216,10 @@ export default function DashboardView() {
 
             <div className={'dashboard-match-card-content'}>
               <div>
-                <h3>Match CV v?i c�ng vi?c</h3>
+                <h3>Match CV với công việc</h3>
 
                 <p>
-                  Ch?n m?t CV v� c�ng vi?c �? xem nh?ng �i?m ph� h?p v� c?n b? sung.
+                  Chọn một CV và công việc để xem những điểm phù hợp và cần bổ sung.
                 </p>
               </div>
 
@@ -249,7 +249,7 @@ export default function DashboardView() {
             </div>
 
             <div className={'dashboard-tool-footer'}>
-              <span>Xem m?c �? ph� h?p</span>
+              <span>Xem mức độ phù hợp</span>
               <ToolArrow />
             </div>
           </button>
@@ -268,10 +268,10 @@ export default function DashboardView() {
 
             </div>
 
-            <h3>T?o ho?c c?p nh?t CV</h3>
+            <h3>Tạo hoặc cập nhật CV</h3>
 
             <p>
-              B?t �?u t? m?u c� s?n ho?c t?i l�n CV hi?n c�.
+              Bắt đầu từ mẫu có sẵn hoặc tải lên CV hiện có.
             </p>
 
             <div className={'dashboard-paper-stack'} aria-hidden="true">
@@ -286,7 +286,7 @@ export default function DashboardView() {
             </div>
 
             <div className={'dashboard-tool-footer'}>
-              <span>T?o & ch?nh s?a CV</span>
+              <span>Tạo & chỉnh sửa CV</span>
               <ToolArrow />
             </div>
           </button>
@@ -308,10 +308,10 @@ export default function DashboardView() {
 
             <span className={'dashboard-tool-label'}>JOB DISCOVERY</span>
 
-            <h3>T?m vi?c ph� h?p</h3>
+            <h3>Tìm việc phù hợp</h3>
 
             <p>
-              Kh�m ph� v? tr�, xem y�u c?u v� l�u c�ng vi?c b?n quan t�m.
+              Khám phá vị trí, xem yêu cầu và lưu công việc bạn quan tâm.
             </p>
 
             <div className={'dashboard-job-preview-list'} aria-hidden="true">
@@ -319,7 +319,7 @@ export default function DashboardView() {
                 <i>AI</i>
                 <span>
                   <strong>AI Engineer</strong>
-                  <small>Python � RAG</small>
+                  <small>Python · RAG</small>
                 </span>
               </div>
 
@@ -327,13 +327,13 @@ export default function DashboardView() {
                 <i>BE</i>
                 <span>
                   <strong>Backend Engineer</strong>
-                  <small>Java � Docker</small>
+                  <small>Java · Docker</small>
                 </span>
               </div>
             </div>
 
             <div className={'dashboard-tool-footer'}>
-              <span>Kh�m ph� Jobs</span>
+              <span>Khám phá Jobs</span>
               <ToolArrow />
             </div>
           </button>
@@ -354,14 +354,14 @@ export default function DashboardView() {
 
             <span className={'dashboard-tool-label'}>CV OPTIMIZATION</span>
 
-            <h3>C?i thi?n n?i dung CV</h3>
+            <h3>Cải thiện nội dung CV</h3>
 
             <p>
-              Di?n �?t kinh nghi?m r? r�ng h�n, d?a tr�n nh?ng g? b?n �? l�m.
+              Diễn đạt kinh nghiệm rõ ràng hơn, dựa trên những gì bạn đã làm.
             </p>
 
             <div className={'dashboard-rewrite-preview'} aria-hidden="true">
-              <span>Tr�?c</span>
+              <span>Trước</span>
               <i />
               <ArrowRight size={14} />
               <span>Sau</span>
@@ -369,7 +369,7 @@ export default function DashboardView() {
             </div>
 
             <div className={'dashboard-tool-footer'}>
-              <span>T?i �u CV</span>
+              <span>Tối ưu CV</span>
               <ToolArrow />
             </div>
           </button>
@@ -387,10 +387,10 @@ export default function DashboardView() {
 
             </div>
 
-            <h3>Luy?n ph?ng v?n</h3>
+            <h3>Luyện phỏng vấn</h3>
 
             <p>
-              Ch?n CV v� c�ng vi?c �? th?c h�nh, r?i xem ph?n h?i c? th?.
+              Chọn CV và công việc để thực hành, rồi xem phản hồi cụ thể.
             </p>
 
             <div className={'dashboard-wave'} aria-hidden="true">
@@ -400,7 +400,7 @@ export default function DashboardView() {
             </div>
 
             <div className={'dashboard-tool-footer'}>
-              <span>Luy?n ph?ng v?n</span>
+              <span>Luyện phỏng vấn</span>
               <ToolArrow />
             </div>
           </button>
@@ -408,7 +408,7 @@ export default function DashboardView() {
       </section>
 
       {/* =========================================================
-          ECOSYSTEM - KH�NG PH?I PIPELINE
+          ECOSYSTEM - KHÔNG PHẢI PIPELINE
       ========================================================== */}
       <section className={'dashboard-ecosystem-section'}>
         <div className={'dashboard-ecosystem-intro'}>
@@ -417,14 +417,14 @@ export default function DashboardView() {
           </span>
 
           <h2>
-            M?i c�ng c? �?ng �?c l?p.
+            Mỗi công cụ hoạt động độc lập.
             <br />
-            <span>K?t n?i khi b?n c?n.</span>
+            <span>Kết nối khi bạn cần.</span>
           </h2>
 
           <p>
-            B?n c� th? ch? vi?t CV, ch? t?m vi?c, ho?c ��a ngay CV + JD v�o
-            AI Match. H? th?ng gi? context �? b?n kh�ng ph?i b?t �?u l?i.
+            Bạn có thể chỉ viết CV, chỉ tìm việc, hoặc đưa ngay CV + JD vào
+            AI Match. Hệ thống giữ context để bạn không phải bắt đầu lại.
           </p>
 
           <button
@@ -432,7 +432,7 @@ export default function DashboardView() {
             className={'dashboard-text-button'}
             onClick={() => goTo('nav-match', 'nav-gap')}
           >
-            Th? AI Match
+            Thử AI Match
             <ArrowRight size={17} />
           </button>
         </div>
@@ -483,9 +483,9 @@ export default function DashboardView() {
             <span className={'dashboard-section-eyebrow'}>CV SHOWROOM</span>
 
             <h2 id="dashboard-template-title">
-              Ch?n m?t phong c�ch.
+              Chọn một phong cách.
               <br />
-              Bi?n n� th�nh CV c?a b?n.
+              Biến nó thành CV của bạn.
             </h2>
           </div>
 
@@ -494,7 +494,7 @@ export default function DashboardView() {
             className={'dashboard-text-button'}
             onClick={() => goTo('nav-cv')}
           >
-            Xem t?t c? m?u
+            Xem tất cả mẫu
             <ArrowRight size={17} />
           </button>
         </header>
@@ -504,25 +504,25 @@ export default function DashboardView() {
             {
               variant: 'modern' as CVVariant,
               name: 'Modern Focus',
-              description: 'T?i gi?n � Product & Marketing',
+              description: 'Tối giản · Product & Marketing',
               code: '01',
             },
             {
               variant: 'classic' as CVVariant,
               name: 'Classic ATS',
-              description: 'R? r�ng � D? qu�t ATS',
+              description: 'Rõ ràng · Dễ quét ATS',
               code: '02',
             },
             {
               variant: 'mint' as CVVariant,
               name: 'Tech Portfolio',
-              description: 'Hi?n �?i � Creative & Tech',
+              description: 'Hiện đại · Creative & Tech',
               code: '03',
             },
             {
               variant: 'warm' as CVVariant,
               name: 'Executive',
-              description: 'Tinh g?n � Experienced',
+              description: 'Tinh gọn · Experienced',
               code: '04',
             },
           ].map((template) => (
@@ -532,7 +532,7 @@ export default function DashboardView() {
 
                 <button
                   type="button"
-                  aria-label={`S? d?ng m?u ${template.name}`}
+                  aria-label={`Sử dụng mẫu ${template.name}`}
                   onClick={() => goTo('nav-cv')}
                 >
                   <ArrowRight size={16} />
@@ -564,27 +564,27 @@ export default function DashboardView() {
           <span className={'dashboard-section-eyebrow'}>WRITE WITH EVIDENCE</span>
 
           <h2 id="dashboard-transform-title">
-            CV t?t h�n kh�ng c� ngh?a l�
-            <span> b?a th�m.</span>
+            CV tốt hơn không có nghĩa là
+            <span> bịa thêm.</span>
           </h2>
 
           <p>
-            Career Assistant gi�p b?n l�m n?i b?t ��ng b?ng ch?ng �? c�,
-            di?n �?t r? th�nh t?u v� �?t th�ng tin quan tr?ng v�o ��ng v? tr�.
+            Career Assistant giúp bạn làm nổi bật đúng bằng chứng đã có,
+            diễn đạt rõ thành tựu và đặt thông tin quan trọng vào đúng vị trí.
           </p>
 
           <ul>
             <li>
               <Check size={15} />
-              Gi? nguy�n s? th?t trong CV
+              Giữ nguyên sự thật trong CV
             </li>
             <li>
               <Check size={15} />
-              L�m r? k? n�ng b?ng b?ng ch?ng
+              Làm rõ kỹ năng bằng bằng chứng
             </li>
             <li>
               <Check size={15} />
-              T?i �u theo m?c ti�u khi b?n ch?n Job
+              Tối ưu theo mục tiêu khi bạn chọn Job
             </li>
           </ul>
 
@@ -594,19 +594,19 @@ export default function DashboardView() {
             onClick={() => goTo('nav-cv')}
           >
             <PenTool size={17} />
-            M? CV c?a t�i
+            Mở CV của tôi
             <ArrowRight size={16} />
           </button>
         </div>
 
         <div className={'dashboard-compare-stage'}>
           <div className={`${'dashboard-compare-document'} ${'dashboard-before-doc'}`}>
-            <span className={'dashboard-compare-label'}>TR�?C</span>
+            <span className={'dashboard-compare-label'}>TRƯỚC</span>
 
             <MiniCV variant="classic" />
 
             <div className={'dashboard-compare-note'}>
-              N?i dung c?n chung chung
+              Nội dung còn chung chung
             </div>
           </div>
 
@@ -621,7 +621,7 @@ export default function DashboardView() {
             <MiniCV variant="mint" />
 
             <div className={'dashboard-compare-note-success'}>
-              B?ng ch?ng r? h�n
+              Bằng chứng rõ hơn
             </div>
           </div>
         </div>
@@ -644,10 +644,10 @@ export default function DashboardView() {
             </div>
 
             <strong>
-              �H?y k? v? m?t l?n b?n gi?i quy?t v?n �? kh� trong d? �n.�
+              “Hãy kể về một lần bạn giải quyết vấn đề khó trong dự án.”
             </strong>
 
-            <small>C�u h?i 3 / 5</small>
+            <small>Câu hỏi 3 / 5</small>
           </div>
 
           <div className={'dashboard-interview-wave'} aria-hidden="true">
@@ -668,18 +668,18 @@ export default function DashboardView() {
           <span className={'dashboard-section-eyebrow'}>AI INTERVIEW COACH</span>
 
           <h2 id="dashboard-interview-title">
-            �?ng �? bu?i ph?ng v?n th?t l� l?n �?u b?n th? tr? l?i.
+            Đừng để buổi phỏng vấn thật là lần đầu bạn thử trả lời.
           </h2>
 
           <p>
-            Luy?n ph?ng v?n theo CV ho?c Job b?n ch?n. Sau m?i l�?t, b?n
-            nh?n ph?n h?i �? bi?t m?nh �ang n�i t?t ? ��u v� c?n c?i thi?n
-            �i?u g?.
+            Luyện phỏng vấn theo CV hoặc Job bạn chọn. Sau mỗi lượt, bạn
+            nhận phản hồi để biết mình đang nói tốt ở đâu và cần cải thiện
+            điều gì.
           </p>
 
           <div className={'dashboard-score-rows'}>
             <div>
-              <span>Giao ti?p</span>
+              <span>Giao tiếp</span>
               <b>82</b>
               <i>
                 <em style={{ width: '82%' }} />
@@ -695,7 +695,7 @@ export default function DashboardView() {
             </div>
 
             <div>
-              <span>Chuy�n m�n</span>
+              <span>Chuyên môn</span>
               <b>84</b>
               <i>
                 <em style={{ width: '84%' }} />
@@ -708,7 +708,7 @@ export default function DashboardView() {
             className={'dashboard-text-button'}
             onClick={() => goTo('nav-interview')}
           >
-            B?t �?u luy?n t?p
+            Bắt đầu luyện tập
             <ArrowRight size={17} />
           </button>
         </div>
@@ -727,11 +727,11 @@ export default function DashboardView() {
           </span>
 
           <h2>
-            Kh�ng c?n bi?t ph?i b?t �?u t? �pipeline� n�o.
+            Không cần biết phải bắt đầu từ “pipeline” nào.
           </h2>
 
           <p>
-            Ch? c?n ch?n �i?u b?n mu?n l�m ngay l�c n�y.
+            Chỉ cần chọn điều bạn muốn làm ngay lúc này.
           </p>
         </div>
 
@@ -742,7 +742,7 @@ export default function DashboardView() {
             onClick={() => goTo('nav-cv')}
           >
             <FileText size={17} />
-            T?o CV
+            Tạo CV
           </button>
 
           <button

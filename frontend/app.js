@@ -267,6 +267,22 @@ class ApiClient {
     });
   }
 
+  // Match jobs run in the background so the UI can show deterministic pipeline progress.
+  static async startMatch(cvId, jdId) {
+    return await this.request('/matches', {
+      method: 'POST',
+      body: JSON.stringify({ cv_id: cvId, job_id: jdId }),
+    });
+  }
+
+  static async getMatch(matchId) {
+    return await this.request(`/matches/${matchId}`);
+  }
+
+  static async getMatchReport(matchId) {
+    return await this.request(`/matches/${matchId}/report`);
+  }
+
   static async getAnalysisHistory() {
     return await this.request('/analysis/history');
   }
@@ -1429,6 +1445,27 @@ function startAppLogic() {
     }, 3500);
   }
 
+  async function waitForMatchResult(matchId, { timeoutMs = 120000, intervalMs = 1200 } = {}) {
+    const startedAt = Date.now();
+    let latest = null;
+    while (Date.now() - startedAt < timeoutMs) {
+      latest = await ApiClient.getMatch(matchId);
+      if (latest.status === 'COMPLETED') {
+        const result = latest.result || await ApiClient.getMatchReport(matchId);
+        if (latest.analysis_id && !result.id) result.id = latest.analysis_id;
+        return result;
+      }
+      if (latest.status === 'FAILED') {
+        throw new Error(latest.error?.message || 'Không thể hoàn tất Match CV với JD.');
+      }
+      const step = String(latest.current_step || '').toUpperCase();
+      if (step === 'PARSING') setAnalysisJourneyStage(2);
+      if (step === 'EVALUATING') beginEvidenceCheckJourney();
+      await new Promise(resolve => window.setTimeout(resolve, intervalMs));
+    }
+    throw new Error('Match đang xử lý lâu hơn dự kiến. Vui lòng thử lại sau ít phút.');
+  }
+
   function finishAnalysisJourney() {
     window.clearInterval(analysisJourneyTimer);
     setAnalysisJourneyStage(5, { done: true });
@@ -1982,7 +2019,9 @@ function startAppLogic() {
         setAnalysisJourneyStage(2);
         setAgentProgress('guardrail');
         beginEvidenceCheckJourney();
-        const analysis = await ApiClient.runGapAnalysis(selectedCvId, selectedJdId);
+        const match = await ApiClient.startMatch(selectedCvId, selectedJdId);
+        const analysis = await waitForMatchResult(match.match_id);
+        analysis.match_id = analysis.match_id || match.match_id;
         setAgentProgress('match');
         finishAnalysisJourney();
         renderInlineCVAnalysis(analysis, selectedCvId, selectedJdId);
@@ -2436,7 +2475,37 @@ TÊN CÔNG TY:
   const jobSearchResults = document.getElementById('job-search-results');
   const jobResultsSummary = document.getElementById('job-results-summary');
   const jobResultsMode = document.getElementById('job-results-mode');
+  const jobPagination = document.getElementById('job-pagination');
   let activeJobSearchCV = '';
+  let jobSearchPage = 1;
+  const JOBS_PER_PAGE = 9;
+  let visibleJobResults = [];
+
+  function renderJobPagination() {
+    if (!jobPagination) return;
+    const totalPages = Math.ceil(visibleJobResults.length / JOBS_PER_PAGE);
+    if (totalPages <= 1) {
+      jobPagination.hidden = true;
+      jobPagination.innerHTML = '';
+      return;
+    }
+    const start = (jobSearchPage - 1) * JOBS_PER_PAGE;
+    const end = Math.min(start + JOBS_PER_PAGE, visibleJobResults.length);
+    const pageButtons = Array.from({ length: totalPages }, (_, index) => {
+      const page = index + 1;
+      return `<button type="button" class="${page === jobSearchPage ? 'is-current' : ''}" data-job-page="${page}" aria-label="Trang ${page}" aria-current="${page === jobSearchPage ? 'page' : 'false'}">${page}</button>`;
+    }).join('');
+    jobPagination.hidden = false;
+    jobPagination.innerHTML = `<span>${start + 1}–${end} / ${visibleJobResults.length} công việc</span><div><button type="button" data-job-page="prev" ${jobSearchPage === 1 ? 'disabled' : ''}>Trước</button>${pageButtons}<button type="button" data-job-page="next" ${jobSearchPage === totalPages ? 'disabled' : ''}>Sau</button></div>`;
+  }
+
+  function renderJobSearchPage() {
+    if (!jobSearchResults) return;
+    const start = (jobSearchPage - 1) * JOBS_PER_PAGE;
+    const pageJobs = visibleJobResults.slice(start, start + JOBS_PER_PAGE);
+    jobSearchResults.innerHTML = pageJobs.map(renderJobCatalogCard).join('');
+    renderJobPagination();
+  }
 
   function getCompanyInitials(company = '') {
     if (!company || typeof company !== 'string') return 'JD';
@@ -2527,6 +2596,9 @@ TÊN CÔNG TY:
     if (!jobSearchResults) return;
     const query = jobSearchInput?.value.trim() || '';
     activeJobSearchCV = cvId || '';
+    jobSearchPage = 1;
+    visibleJobResults = [];
+    if (jobPagination) jobPagination.hidden = true;
     jobSearchResults.innerHTML = '<div class="job-search-loading"><span></span><p>AI đang phân tích kho JD doanh nghiệp...</p></div>';
     if (jobResultsSummary) jobResultsSummary.textContent = 'Đang tìm việc làm phù hợp...';
     if (jobResultsMode) jobResultsMode.textContent = activeJobSearchCV ? 'AI xếp hạng theo CV' : 'Tất cả JD';
@@ -2538,12 +2610,16 @@ TÊN CÔNG TY:
           ? `${jobs.length} JD phù hợp nhất với CV đã chọn`
           : `${result.total} JD doanh nghiệp${query ? ` cho “${query}”` : ''}`;
       }
-      jobSearchResults.innerHTML = jobs.length
-        ? jobs.map(renderJobCatalogCard).join('')
-        : `<div class="job-search-empty"><span>⌕</span><h3>Chưa tìm thấy JD phù hợp</h3><p>Thử từ khóa ngắn hơn hoặc xóa bộ lọc CV.</p></div>`;
+      visibleJobResults = jobs;
+      if (jobs.length) {
+        renderJobSearchPage();
+      } else {
+        jobSearchResults.innerHTML = `<div class="job-search-empty"><span>⌕</span><h3>Chưa tìm thấy JD phù hợp</h3><p>Thử từ khóa ngắn hơn hoặc xóa bộ lọc CV.</p></div>`;
+      }
     } catch (err) {
       const loginHint = err.status === 401 ? ' Hãy đăng nhập bằng tài khoản sinh viên.' : '';
       if (jobResultsSummary) jobResultsSummary.textContent = 'Không thể tải kho JD';
+      if (jobPagination) jobPagination.hidden = true;
       jobSearchResults.innerHTML = `<div class="job-search-empty error"><span>!</span><h3>Không thể tải việc làm</h3><p>${escapeHtml(err.message)}${loginHint}</p></div>`;
     }
   }
@@ -2578,6 +2654,18 @@ TÊN CÔNG TY:
     if (jobSearchCVSelect) jobSearchCVSelect.value = '';
     if (jobMatchCVButton) jobMatchCVButton.disabled = true;
     await loadJobSearchResults({ cvId: '' });
+  });
+
+  jobPagination?.addEventListener('click', event => {
+    const button = event.target.closest('[data-job-page]');
+    if (!button || button.disabled) return;
+    const totalPages = Math.ceil(visibleJobResults.length / JOBS_PER_PAGE);
+    const target = button.dataset.jobPage;
+    const nextPage = target === 'prev' ? jobSearchPage - 1 : target === 'next' ? jobSearchPage + 1 : Number(target);
+    if (!Number.isInteger(nextPage) || nextPage < 1 || nextPage > totalPages || nextPage === jobSearchPage) return;
+    jobSearchPage = nextPage;
+    renderJobSearchPage();
+    jobSearchResults?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
 
   const pageJdListContainer = document.getElementById('page-jd-list-container');
@@ -3213,7 +3301,7 @@ TÊN CÔNG TY:
           try {
             const question = await ApiClient.resumeInterview(ongoing.id);
             pageSessionId = ongoing.id;
-            pageSetupSec.style.display = 'none'; pageChatSec.style.display = 'block';
+            pageSetupSec.style.display = 'none'; pageChatSec.style.display = 'flex';
             pageChatHistory.innerHTML = '';
             appendPageMessage('interviewer', question.follow_up_question || question.question_text);
             pageProgressText.textContent = `Câu hỏi ${question.question_index + 1} / ${ongoing.total_questions}`;
@@ -3244,7 +3332,7 @@ TÊN CÔNG TY:
         pageSessionId = sessionData.session_id;
         if (pageSetupSec) pageSetupSec.style.display = 'none';
         if (pageReportSec) pageReportSec.style.display = 'none';
-        if (pageChatSec) pageChatSec.style.display = 'block';
+        if (pageChatSec) pageChatSec.style.display = 'flex';
         if (pageChatHistory) pageChatHistory.innerHTML = '';
 
         appendPageMessage('interviewer', sessionData.question_text);

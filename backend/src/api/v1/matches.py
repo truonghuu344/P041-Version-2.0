@@ -43,6 +43,7 @@ class MatchJobResponse(BaseModel):
     match_id: str
     status: str
     current_step: str
+    analysis_id: str | None = None
     final_score: float | None = None
     rating: str | None = None
     error: dict[str, Any] | None = None
@@ -222,6 +223,7 @@ async def get_match(
         match_id=match.id,
         status=match.status,
         current_step=match.current_step,
+        analysis_id=match.analysis_id,
         final_score=match.final_score,
         rating=match.rating,
         error=error,

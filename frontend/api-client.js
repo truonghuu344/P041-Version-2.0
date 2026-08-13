@@ -271,6 +271,21 @@ export class ApiClient {
     });
   }
 
+  static async startMatch(cvId, jdId) {
+    return await this.request('/matches', {
+      method: 'POST',
+      body: JSON.stringify({ cv_id: cvId, job_id: jdId }),
+    });
+  }
+
+  static async getMatch(matchId) {
+    return await this.request(`/matches/${matchId}`);
+  }
+
+  static async getMatchReport(matchId) {
+    return await this.request(`/matches/${matchId}/report`);
+  }
+
   // --- Mock Interview APIs ---
   static async startInterview(cvId, jdId, totalQuestions = 5, context = {}) {
     return await this.request('/interviews/start', {
