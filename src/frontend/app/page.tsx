@@ -8,6 +8,7 @@ type CVTemplateName = 'modern' | 'classic' | 'compact';
 
 import DashboardView from '../components/candidate/DashboardView';
 import CVView from '../components/candidate/CVView';
+import MatchView from '../components/candidate/MatchView';
 import FindJobsView from '../components/candidate/FindJobsView';
 import JobsView from '../components/candidate/JobsView';
 import GapView from '../components/candidate/GapView';
@@ -59,9 +60,9 @@ export default function Page() {
           </a>
           <nav className="nav-links" id="nav-links">
             <a href="#" className="nav-link active" id="nav-dashboard"><span className="nav-text" data-i18n="nav-dashboard">Trang chủ</span></a>
-            <a href="#" className="nav-link" id="nav-cv"><span className="nav-text" data-i18n="nav-cv">Phân tích CV</span></a>
+            <a href="#" className="nav-link" id="nav-cv"><span className="nav-text" data-i18n="nav-cv">CV của tôi</span></a>
             <a href="#" className="nav-link" id="nav-find-jobs"><span className="nav-text" data-i18n="nav-find-jobs">Tìm việc</span></a>
-            <a href="#" className="nav-link" id="nav-jobs"><span className="nav-text" data-i18n="nav-jobs">Danh sách JD</span></a>
+            <a href="#" className="nav-link" id="nav-match"><span className="nav-text">AI Match</span></a>
             <a href="#" className="nav-link" id="nav-interview"><span className="nav-text" data-i18n="nav-interview">Phòng phỏng vấn</span></a>
             <a href="#" className="nav-link" id="nav-history" hidden><span className="nav-text" data-i18n="nav-history">Lịch sử &amp; Báo cáo</span></a>
             <a href="#" className="nav-link role-only-link" id="nav-counselor" hidden><span className="nav-text">Sinh viên của tôi</span></a>
@@ -87,9 +88,6 @@ export default function Page() {
               <div className="lang-dropdown" id="lang-dropdown">
                 <button className="lang-option active" data-lang="vi"><span className="lang-short">VI</span><span className="lang-name">Tiếng Việt</span><span className="lang-check">✓</span></button>
                 <button className="lang-option" data-lang="en"><span className="lang-short">EN</span><span className="lang-name">English</span><span className="lang-check">✓</span></button>
-                <button className="lang-option" data-lang="ko"><span className="lang-short">KR</span><span className="lang-name">한국어</span><span className="lang-check">✓</span></button>
-                <button className="lang-option" data-lang="ja"><span className="lang-short">JP</span><span className="lang-name">日本語</span><span className="lang-check">✓</span></button>
-                <button className="lang-option" data-lang="zh"><span className="lang-short">CN</span><span className="lang-name">中文</span><span className="lang-check">✓</span></button>
               </div>
             </div>
 
@@ -124,6 +122,7 @@ export default function Page() {
         <CVView selectedCVTemplate={selectedCVTemplate} setIsTemplateGalleryOpen={setIsTemplateGalleryOpen} selectCVTemplate={selectCVTemplate} />
         <FindJobsView />
         <JobsView />
+        <MatchView />
         <GapView />
         <InterviewView />
         <HistoryView />
@@ -135,11 +134,13 @@ export default function Page() {
       </main>
 
       <div className="modal-overlay" id="modal-overlay" role="dialog">
-        <div className="modal-card" id="modal-card">
-          <button className="modal-close" id="modal-close">&times;</button>
+        <div className="modal-card auth-modal-card" id="modal-card" aria-modal="true" aria-labelledby="auth-title">
+          <button className="modal-close" id="modal-close" aria-label="Đóng">&times;</button>
           <div className="modal-header">
+            <div className="auth-welcome-mark" aria-hidden="true"><span>✦</span></div>
+            <p className="auth-eyebrow">CV ASSISTANT</p>
             <h2 className="modal-title" id="auth-title" data-i18n="auth-title-login">Chào mừng trở lại</h2>
-            <p className="modal-sub" id="auth-sub" data-i18n="auth-sub-login">Đăng nhập để tiếp tục hành trình nâng cấp sự nghiệp cùng AI Agent</p>
+            <p className="modal-sub" id="auth-sub" data-i18n="auth-sub-login">Đăng nhập để tiếp tục hành trình chinh phục công việc phù hợp.</p>
           </div>
           {/* Google Sign-in / Register Option */}
           <div className="google-auth-wrap">
@@ -156,9 +157,9 @@ export default function Page() {
               <span>hoặc dùng Email</span>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: '10px', marginBottom: '16px', background: 'rgba(255,255,255,0.05)', padding: '4px', borderRadius: '8px' }}>
-            <button type="button" id="tab-auth-login" className="tab active" style={{ flex: 1 }} data-i18n="tab-auth-login">Đăng Nhập</button>
-            <button type="button" id="tab-auth-register" className="tab" style={{ flex: 1 }} data-i18n="tab-auth-register">Đăng Ký</button>
+          <div className="auth-tabs" role="tablist" aria-label="Đăng nhập hoặc đăng ký">
+            <button type="button" id="tab-auth-login" className="tab active" role="tab" aria-selected="true" data-i18n="tab-auth-login">Đăng Nhập</button>
+            <button type="button" id="tab-auth-register" className="tab" role="tab" aria-selected="false" data-i18n="tab-auth-register">Đăng Ký</button>
           </div>
           <form className="login-form" id="login-form">
             <div className="form-group" id="form-fullname-group" style={{ display: 'none' }}>

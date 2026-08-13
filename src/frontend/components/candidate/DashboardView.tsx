@@ -1,134 +1,806 @@
+﻿'use client';
+
 import Image from 'next/image';
 import {
   ArrowRight,
   BriefcaseBusiness,
-  CheckCircle2,
+  Check,
   FileText,
+  Layers3,
   MessageSquareText,
   Mic,
+  PenTool,
   Search,
   Sparkles,
-  Upload,
+  Target,
+  WandSparkles,
 } from 'lucide-react';
+import BuddyTourGuide from './BuddyTourGuide';
 
 const cvLines = [92, 76, 88, 67, 82];
 
-function MiniCV({ variant = 'modern' }: { variant?: 'modern' | 'classic' | 'mint' | 'warm' }) {
+type CVVariant = 'modern' | 'classic' | 'mint' | 'warm';
+
+function goTo(primaryId: string, fallbackId?: string) {
+  const target =
+    document.getElementById(primaryId) ||
+    (fallbackId ? document.getElementById(fallbackId) : null);
+
+  target?.click();
+}
+
+function MiniCV({ variant = 'modern' }: { variant?: CVVariant }) {
   return (
-    <div className={`buddy-mini-cv buddy-mini-cv-${variant}`} aria-hidden="true">
-      <div className="buddy-mini-cv-head"><i></i><span></span></div>
-      <b></b><em></em>
-      <div className="buddy-mini-cv-rule"></div>
-      {cvLines.map((width, index) => <i key={index} style={{ width: `${width}%` }}></i>)}
+    <div
+      className={`dashboard-mini-cv dashboard-mini-cv-${variant}`}
+      aria-hidden="true"
+    >
+      <div className={'dashboard-mini-cvheader'}>
+        <i />
+        <span />
+      </div>
+
+      <b />
+      <em />
+
+      <div className={'dashboard-mini-cvrule'} />
+
+      {cvLines.map((width, index) => (
+        <i key={index} style={{ width: `${width}%` }} />
+      ))}
     </div>
+  );
+}
+
+function ToolArrow() {
+  return (
+    <span className={'dashboard-tool-arrow'}>
+      <ArrowRight size={17} />
+    </span>
   );
 }
 
 export default function DashboardView() {
   return (
-    <section className="app-view active buddy-landing" id="view-dashboard">
-      <div className="buddy-hero-shell">
-        <div className="buddy-hero-copy">
-          <span className="buddy-kicker"><Sparkles size={15} /> Career Buddy của bạn</span>
-          <h1>CV tốt hơn.<br /><span>Cơ hội tốt hơn.</span></h1>
-          <p>Tải CV, chọn công việc bạn muốn và cùng Career Buddy chuẩn bị cho vòng phỏng vấn.</p>
-          <div className="buddy-hero-actions">
-            <button className="buddy-primary-button" id="btn-consult">
-              <Upload size={19} /> Tải CV để bắt đầu
+    <section
+      className={`app-view active ${'dashboard-dashboard'}`}
+      id="view-dashboard"
+    >
+      {/* =========================================================
+          HERO
+      ========================================================== */}
+      <section className={'dashboard-hero'}>
+        <div className={'dashboard-hero-glow-one'} aria-hidden="true" />
+        <div className={'dashboard-hero-glow-two'} aria-hidden="true" />
+        <div className={'dashboard-hero-grid'} aria-hidden="true" />
+
+        <div className={'dashboard-hero-copy'}>
+          <div className={'dashboard-kicker'}>
+            <Sparkles size={15} />
+            <span>AI CAREER WORKSPACE</span>
+          </div>
+
+          <h1 className={'dashboard-hero-title'}>
+            Một nơi để
+            <span> xây CV tốt hơn,</span>
+            <br />
+            tìm đúng cơ hội hơn.
+          </h1>
+
+          <p className={'dashboard-hero-description'}>
+            Tạo CV, khám phá công việc, đối chiếu CV với JD hoặc luyện
+            phỏng vấn. Mỗi công cụ hoạt động độc lập — bạn bắt đầu từ điều
+            mình cần nhất.
+          </p>
+
+          <div className={'dashboard-hero-actions'}>
+            <button
+              type="button"
+              className={'dashboard-primary-button'}
+              onClick={() => goTo('nav-cv')}
+            >
+              <FileText size={18} />
+              Bắt đầu với CV
+              <ArrowRight size={17} />
             </button>
-            <button className="buddy-text-button" id="btn-try-free">
-              Luyện phỏng vấn <ArrowRight size={18} />
+
+            <button
+              type="button"
+              className={'dashboard-secondary-button'}
+              onClick={() => goTo('nav-find-jobs')}
+            >
+              <Search size={17} />
+              Khám phá công việc
             </button>
           </div>
-          <div className="buddy-proof"><CheckCircle2 size={17} /> PDF hoặc DOCX · miễn phí để bắt đầu</div>
+
+          <div className={'dashboard-hero-benefits'}>
+            <span>
+              <Check size={14} />
+              CV không phụ thuộc JD
+            </span>
+
+            <span>
+              <Check size={14} />
+              Job có sẵn hoặc JD riêng
+            </span>
+
+            <span>
+              <Check size={14} />
+              Match khi bạn muốn
+            </span>
+          </div>
         </div>
 
-        <div className="buddy-hero-visual">
-          <Image
-            src="/images/buddy2.png"
-            alt="Career Buddy đang giúp chỉnh sửa CV với điểm ATS và mức độ phù hợp công việc"
-            width={1536}
-            height={1024}
-            priority
-          />
-        </div>
-      </div>
+        {/* Hero Visual */}
+        <div className={'dashboard-hero-visual'}>
+          <div className={'dashboard-visual-aura'} aria-hidden="true" />
 
-      <section className="buddy-journey" aria-labelledby="buddy-journey-title">
-        <div className="buddy-section-intro">
-          <span>Chỉ 3 bước</span>
-          <h2 id="buddy-journey-title">Từ CV đến buổi phỏng vấn.</h2>
-        </div>
-        <div className="buddy-journey-grid">
-          <article className="buddy-scene buddy-scene-cv">
-            <div className="buddy-scene-art"><FileText /><div className="buddy-paper-lines"><i></i><i></i><i></i></div><span className="buddy-scene-mascot">✦</span></div>
-            <div><strong>Chỉnh CV</strong><p>Biết ngay cần giữ và cần sửa.</p></div>
-          </article>
-          <article className="buddy-scene buddy-scene-job">
-            <div className="buddy-scene-art"><BriefcaseBusiness /><Search className="buddy-search-icon" /><span className="buddy-match-pill">87% phù hợp</span></div>
-            <div><strong>Tìm việc phù hợp</strong><p>Ưu tiên JD hợp với CV của bạn.</p></div>
-          </article>
-          <article className="buddy-scene buddy-scene-interview">
-            <div className="buddy-scene-art"><Mic /><div className="buddy-sound-wave"><i></i><i></i><i></i><i></i></div><span className="buddy-scene-mascot">✓</span></div>
-            <div><strong>Luyện phỏng vấn</strong><p>Tập trả lời, nhận điểm và tiến bộ.</p></div>
-          </article>
+          <div className={'dashboard-buddy-stage'}>
+            <Image
+              src="/images/buddy2.png"
+              alt="Career Buddy"
+              width={1536}
+              height={1024}
+              className={'dashboard-buddy-image'}
+              priority
+            />
+          </div>
+
+          {/* Floating CV */}
+          <div className={`${'dashboard-float-card'} ${'dashboard-float-cv'}`}>
+            <div className={'dashboard-float-icon'}>
+              <FileText size={17} />
+            </div>
+
+            <div>
+              <small>YOUR CV</small>
+              <strong>AI Engineer CV</strong>
+              <span>Python · RAG · FastAPI</span>
+            </div>
+
+            <div className={'dashboard-success-dot'}>
+              <Check size={11} />
+            </div>
+          </div>
+
+          {/* Floating Job */}
+          <div className={`${'dashboard-float-card'} ${'dashboard-float-job'}`}>
+            <div className={'dashboard-float-icon'}>
+              <BriefcaseBusiness size={17} />
+            </div>
+
+            <div>
+              <small>TARGET JOB</small>
+              <strong>AI Engineer</strong>
+              <span>Hà Nội · Hybrid</span>
+            </div>
+          </div>
+
+          {/* Demo Match */}
+          <div className={'dashboard-match-demo'}>
+            <div className={'dashboard-demo-label'}>MINH HỌA</div>
+
+            <div className={'dashboard-demo-score'}>
+              <span>87</span>
+              <small>%</small>
+            </div>
+
+            <strong>Strong Match</strong>
+
+            <div className={'dashboard-demo-progress'}>
+              <i />
+            </div>
+
+            <div className={'dashboard-demo-meta'}>
+              <span>12 matched</span>
+              <span>3 gaps</span>
+            </div>
+          </div>
+
+          <div className={'dashboard-ai-core'} aria-hidden="true">
+            <Sparkles size={20} />
+          </div>
         </div>
       </section>
 
-      <section className="buddy-template-section" aria-labelledby="buddy-template-title">
-        <div className="buddy-section-heading">
-          <div><span>Showroom CV</span><h2 id="buddy-template-title">Chọn một mẫu, rồi làm nó thành của bạn.</h2></div>
-          <button className="buddy-link-button" onClick={() => document.getElementById('nav-cv')?.click()}><span>Xem tất cả mẫu</span><ArrowRight size={17} /></button>
+      {/* =========================================================
+          INTENT / BENTO WORKSPACE
+      ========================================================== */}
+      <section
+        className={'dashboard-intent-section'}
+        aria-labelledby="intent-workspace-title"
+      >
+        <header className={'dashboard-section-header'}>
+          <div>
+            <span className={'dashboard-section-eyebrow'}>BẮT ĐẦU THEO CÁCH CỦA BẠN</span>
+            <h2 id="intent-workspace-title">
+              Hôm nay bạn muốn làm gì?
+            </h2>
+          </div>
+
+          <p>
+            Không có bước bắt buộc. Chọn đúng công cụ cho nhu cầu hiện tại
+            của bạn.
+          </p>
+        </header>
+
+        <div className={'dashboard-bento-grid'}>
+          {/* Featured Match */}
+          <button
+            type="button"
+            id="intent-card-match"
+            className={`${'dashboard-tool-card'} ${'dashboard-match-card'}`}
+            onClick={() => goTo('nav-match', 'nav-gap')}
+          >
+            <div className={'dashboard-tool-top'}>
+              <div className={`${'dashboard-tool-icon'} ${'dashboard-tool-icon-dark'}`}>
+                <Target size={21} />
+              </div>
+
+              <span className={'dashboard-feature-badge'}>
+                <Sparkles size={12} />
+                AI MATCH
+              </span>
+            </div>
+
+            <div className={'dashboard-match-card-content'}>
+              <div>
+                <span className={'dashboard-tool-label'}>CV ↔ JOB MATCH</span>
+
+                <h3>
+                  CV của bạn phù hợp
+                  <br />
+                  đến đâu?
+                </h3>
+
+                <p>
+                  Chọn bất kỳ CV nào và một Job/JD. AI đối chiếu kỹ năng,
+                  kinh nghiệm và bằng chứng thực tế.
+                </p>
+              </div>
+
+              <div className={'dashboard-match-illustration'} aria-hidden="true">
+                <div className={'dashboard-match-source'}>
+                  <FileText size={18} />
+                  <span>CV</span>
+                </div>
+
+                <div className={'dashboard-match-line'}>
+                  <i />
+                </div>
+
+                <div className={'dashboard-match-core'}>
+                  <Sparkles size={18} />
+                </div>
+
+                <div className={'dashboard-match-line'}>
+                  <i />
+                </div>
+
+                <div className={'dashboard-match-source'}>
+                  <BriefcaseBusiness size={18} />
+                  <span>JOB</span>
+                </div>
+              </div>
+            </div>
+
+            <div className={'dashboard-tool-footer'}>
+              <span>Xem mức độ phù hợp</span>
+              <ToolArrow />
+            </div>
+          </button>
+
+          {/* Create CV */}
+          <button
+            type="button"
+            id="intent-card-cv"
+            className={`${'dashboard-tool-card'} ${'dashboard-cv-card'}`}
+            onClick={() => goTo('nav-cv')}
+          >
+            <div className={'dashboard-tool-top'}>
+              <div className={'dashboard-tool-icon'}>
+                <FileText size={20} />
+              </div>
+
+              <span className={'dashboard-tool-number'}>01</span>
+            </div>
+
+            <span className={'dashboard-tool-label'}>MY CV</span>
+
+            <h3>Tạo phiên bản CV tiếp theo của bạn.</h3>
+
+            <p>
+              Bắt đầu từ template hoặc tải CV hiện có. Không cần chọn JD.
+            </p>
+
+            <div className={'dashboard-paper-stack'} aria-hidden="true">
+              <div />
+              <div />
+              <div>
+                <span />
+                <i />
+                <i />
+                <i />
+              </div>
+            </div>
+
+            <div className={'dashboard-tool-footer'}>
+              <span>Tạo & chỉnh sửa CV</span>
+              <ToolArrow />
+            </div>
+          </button>
+
+          {/* Jobs */}
+          <button
+            type="button"
+            id="intent-card-jobs"
+            className={`${'dashboard-tool-card'} ${'dashboard-jobs-card'}`}
+            onClick={() => goTo('nav-find-jobs')}
+          >
+            <div className={'dashboard-tool-top'}>
+              <div className={'dashboard-tool-icon'}>
+                <BriefcaseBusiness size={20} />
+              </div>
+
+              <span className={'dashboard-tool-number'}>02</span>
+            </div>
+
+            <span className={'dashboard-tool-label'}>JOB DISCOVERY</span>
+
+            <h3>Tìm một công việc đáng để thử sức.</h3>
+
+            <p>
+              Khám phá Job trong hệ thống, xem yêu cầu và Match khi bạn muốn.
+            </p>
+
+            <div className={'dashboard-job-preview-list'} aria-hidden="true">
+              <div>
+                <i>AI</i>
+                <span>
+                  <strong>AI Engineer</strong>
+                  <small>Python · RAG</small>
+                </span>
+              </div>
+
+              <div>
+                <i>BE</i>
+                <span>
+                  <strong>Backend Engineer</strong>
+                  <small>Java · Docker</small>
+                </span>
+              </div>
+            </div>
+
+            <div className={'dashboard-tool-footer'}>
+              <span>Khám phá Jobs</span>
+              <ToolArrow />
+            </div>
+          </button>
+
+          {/* Optimize */}
+          <button
+            type="button"
+            className={`${'dashboard-tool-card'} ${'dashboard-optimize-card'}`}
+            onClick={() => goTo('nav-gap')}
+          >
+            <div className={'dashboard-tool-top'}>
+              <div className={'dashboard-tool-icon'}>
+                <WandSparkles size={20} />
+              </div>
+
+              <span className={'dashboard-tool-number'}>03</span>
+            </div>
+
+            <span className={'dashboard-tool-label'}>CV OPTIMIZATION</span>
+
+            <h3>Làm rõ điều bạn thật sự đã làm.</h3>
+
+            <p>
+              Tối ưu cách diễn đạt và cấu trúc CV mà không bịa thêm kinh
+              nghiệm.
+            </p>
+
+            <div className={'dashboard-rewrite-preview'} aria-hidden="true">
+              <span>Trước</span>
+              <i />
+              <ArrowRight size={14} />
+              <span>Sau</span>
+              <b />
+            </div>
+
+            <div className={'dashboard-tool-footer'}>
+              <span>Tối ưu CV</span>
+              <ToolArrow />
+            </div>
+          </button>
+
+          {/* Interview */}
+          <button
+            type="button"
+            className={`${'dashboard-tool-card'} ${'dashboard-interview-card'}`}
+            onClick={() => goTo('nav-interview')}
+          >
+            <div className={'dashboard-tool-top'}>
+              <div className={'dashboard-tool-icon'}>
+                <Mic size={20} />
+              </div>
+
+              <span className={'dashboard-tool-number'}>04</span>
+            </div>
+
+            <span className={'dashboard-tool-label'}>AI INTERVIEW</span>
+
+            <h3>Luyện trước để tự tin hơn khi phỏng vấn thật.</h3>
+
+            <p>
+              Thực hành STAR, nhận phản hồi và xem điểm cần cải thiện.
+            </p>
+
+            <div className={'dashboard-wave'} aria-hidden="true">
+              {[30, 55, 85, 45, 70, 36, 64, 26].map((height, index) => (
+                <i key={index} style={{ height: `${height}%` }} />
+              ))}
+            </div>
+
+            <div className={'dashboard-tool-footer'}>
+              <span>Luyện phỏng vấn</span>
+              <ToolArrow />
+            </div>
+          </button>
         </div>
-        <div className="buddy-template-grid">
+      </section>
+
+      {/* =========================================================
+          ECOSYSTEM - KHÔNG PHẢI PIPELINE
+      ========================================================== */}
+      <section className={'dashboard-ecosystem-section'}>
+        <div className={'dashboard-ecosystem-intro'}>
+          <span className={'dashboard-section-eyebrow'}>
+            MODULAR CAREER TOOLS
+          </span>
+
+          <h2>
+            Mỗi công cụ đứng độc lập.
+            <br />
+            <span>Kết nối khi bạn cần.</span>
+          </h2>
+
+          <p>
+            Bạn có thể chỉ viết CV, chỉ tìm việc, hoặc đưa ngay CV + JD vào
+            AI Match. Hệ thống giữ context để bạn không phải bắt đầu lại.
+          </p>
+
+          <button
+            type="button"
+            className={'dashboard-text-button'}
+            onClick={() => goTo('nav-match', 'nav-gap')}
+          >
+            Thử AI Match
+            <ArrowRight size={17} />
+          </button>
+        </div>
+
+        <div className={'dashboard-ecosystem-visual'}>
+          <div className={'dashboard-ecosystem-core'}>
+            <div>
+              <Sparkles size={24} />
+            </div>
+            <strong>Career AI</strong>
+            <span>Context-aware</span>
+          </div>
+
+          <div className={`${'dashboard-orbit-item'} ${'dashboard-orbit-cv'}`}>
+            <FileText size={17} />
+            <span>CV</span>
+          </div>
+
+          <div className={`${'dashboard-orbit-item'} ${'dashboard-orbit-job'}`}>
+            <BriefcaseBusiness size={17} />
+            <span>Jobs</span>
+          </div>
+
+          <div className={`${'dashboard-orbit-item'} ${'dashboard-orbit-match'}`}>
+            <Target size={17} />
+            <span>Match</span>
+          </div>
+
+          <div className={`${'dashboard-orbit-item'} ${'dashboard-orbit-interview'}`}>
+            <Mic size={17} />
+            <span>Interview</span>
+          </div>
+
+          <div className={'dashboard-orbit-circle-one'} aria-hidden="true" />
+          <div className={'dashboard-orbit-circle-two'} aria-hidden="true" />
+        </div>
+      </section>
+
+      {/* =========================================================
+          CV SHOWROOM
+      ========================================================== */}
+      <section
+        className={'dashboard-template-section'}
+        aria-labelledby="dashboard-template-title"
+      >
+        <header className={'dashboard-section-header'}>
+          <div>
+            <span className={'dashboard-section-eyebrow'}>CV SHOWROOM</span>
+
+            <h2 id="dashboard-template-title">
+              Chọn một phong cách.
+              <br />
+              Biến nó thành CV của bạn.
+            </h2>
+          </div>
+
+          <button
+            type="button"
+            className={'dashboard-text-button'}
+            onClick={() => goTo('nav-cv')}
+          >
+            Xem tất cả mẫu
+            <ArrowRight size={17} />
+          </button>
+        </header>
+
+        <div className={'dashboard-template-grid'}>
           {[
-            ['modern', 'Tối giản hiện đại', 'Phù hợp Product, Marketing'],
-            ['classic', 'Classic ATS', 'Rõ ràng, dễ quét'],
-            ['mint', 'Portfolio Mint', 'Cho Creative và Tech'],
-            ['warm', 'Executive', 'Gọn gàng cho người có kinh nghiệm'],
-          ].map(([variant, name, description]) => (
-            <article className="buddy-template-card" key={variant}>
-              <div className="buddy-template-preview"><MiniCV variant={variant as 'modern' | 'classic' | 'mint' | 'warm'} /></div>
-              <div className="buddy-template-info"><h3>{name}</h3><p>{description}</p></div>
-              <div className="buddy-template-actions"><button onClick={() => document.getElementById('nav-cv')?.click()}>Xem mẫu</button><button onClick={() => document.getElementById('nav-cv')?.click()}>Dùng mẫu này</button></div>
+            {
+              variant: 'modern' as CVVariant,
+              name: 'Modern Focus',
+              description: 'Tối giản · Product & Marketing',
+              code: '01',
+            },
+            {
+              variant: 'classic' as CVVariant,
+              name: 'Classic ATS',
+              description: 'Rõ ràng · Dễ quét ATS',
+              code: '02',
+            },
+            {
+              variant: 'mint' as CVVariant,
+              name: 'Tech Portfolio',
+              description: 'Hiện đại · Creative & Tech',
+              code: '03',
+            },
+            {
+              variant: 'warm' as CVVariant,
+              name: 'Executive',
+              description: 'Tinh gọn · Experienced',
+              code: '04',
+            },
+          ].map((template) => (
+            <article className={'dashboard-template-card'} key={template.variant}>
+              <div className={'dashboard-template-top'}>
+                <span>{template.code}</span>
+
+                <button
+                  type="button"
+                  aria-label={`Sử dụng mẫu ${template.name}`}
+                  onClick={() => goTo('nav-cv')}
+                >
+                  <ArrowRight size={16} />
+                </button>
+              </div>
+
+              <div className={'dashboard-template-preview'}>
+                <div className={'dashboard-sheet-back'} />
+                <MiniCV variant={template.variant} />
+              </div>
+
+              <div className={'dashboard-template-info'}>
+                <h3>{template.name}</h3>
+                <p>{template.description}</p>
+              </div>
             </article>
           ))}
         </div>
       </section>
 
-      <section className="buddy-before-after" aria-labelledby="buddy-before-after-title">
-        <div className="buddy-before-copy">
-          <span>Trước &amp; sau</span>
-          <h2 id="buddy-before-after-title">Một CV tốt không cần dài hơn. Chỉ cần đúng hơn.</h2>
-          <p>Career Buddy giúp bạn đưa thành tựu, kỹ năng và từ khóa quan trọng vào đúng chỗ.</p>
-          <button className="buddy-primary-button" onClick={() => document.getElementById('nav-cv')?.click()}>Xem CV của tôi <ArrowRight size={18} /></button>
+      {/* =========================================================
+          BEFORE AFTER
+      ========================================================== */}
+      <section
+        className={'dashboard-transform-section'}
+        aria-labelledby="dashboard-transform-title"
+      >
+        <div className={'dashboard-transform-copy'}>
+          <span className={'dashboard-section-eyebrow'}>WRITE WITH EVIDENCE</span>
+
+          <h2 id="dashboard-transform-title">
+            CV tốt hơn không có nghĩa là
+            <span> bịa thêm.</span>
+          </h2>
+
+          <p>
+            Career Assistant giúp bạn làm nổi bật đúng bằng chứng đã có,
+            diễn đạt rõ thành tựu và đặt thông tin quan trọng vào đúng vị trí.
+          </p>
+
+          <ul>
+            <li>
+              <Check size={15} />
+              Giữ nguyên sự thật trong CV
+            </li>
+            <li>
+              <Check size={15} />
+              Làm rõ kỹ năng bằng bằng chứng
+            </li>
+            <li>
+              <Check size={15} />
+              Tối ưu theo mục tiêu khi bạn chọn Job
+            </li>
+          </ul>
+
+          <button
+            type="button"
+            className={'dashboard-primary-button'}
+            onClick={() => goTo('nav-cv')}
+          >
+            <PenTool size={17} />
+            Mở CV của tôi
+            <ArrowRight size={16} />
+          </button>
         </div>
-        <div className="buddy-compare-card" aria-label="Minh họa CV trước và sau tối ưu">
-          <div className="buddy-compare-side buddy-before"><span>TRƯỚC</span><MiniCV variant="classic" /></div>
-          <div className="buddy-compare-divider"><div><ArrowRight size={19} /></div></div>
-          <div className="buddy-compare-side buddy-after"><span>SAU</span><MiniCV variant="mint" /><div className="buddy-improved-chip">+12 điểm ATS</div></div>
+
+        <div className={'dashboard-compare-stage'}>
+          <div className={`${'dashboard-compare-document'} ${'dashboard-before-doc'}`}>
+            <span className={'dashboard-compare-label'}>TRƯỚC</span>
+
+            <MiniCV variant="classic" />
+
+            <div className={'dashboard-compare-note'}>
+              Nội dung còn chung chung
+            </div>
+          </div>
+
+          <div className={'dashboard-transform-arrow'}>
+            <Sparkles size={20} />
+            <span>AI</span>
+          </div>
+
+          <div className={`${'dashboard-compare-document'} ${'dashboard-after-doc'}`}>
+            <span className={'dashboard-compare-label'}>SAU</span>
+
+            <MiniCV variant="mint" />
+
+            <div className={'dashboard-compare-note-success'}>
+              Bằng chứng rõ hơn
+            </div>
+          </div>
         </div>
       </section>
 
-      <section className="buddy-interview-section" aria-labelledby="buddy-interview-title">
-        <div className="buddy-interview-visual" aria-hidden="true">
-          <div className="buddy-interview-desk"></div>
-          <div className="buddy-interview-person buddy-interview-user"></div>
-          <div className="buddy-interview-person buddy-interview-mascot"><Mic size={24} /></div>
-          <div className="buddy-interview-card"><MessageSquareText size={18} /><span>Câu hỏi 3 / 5</span></div>
-        </div>
-        <div className="buddy-interview-copy">
-          <span>Luyện phỏng vấn</span>
-          <h2 id="buddy-interview-title">Nói tự tin hơn trong buổi phỏng vấn thật.</h2>
-          <p>Trả lời theo STAR. Sau mỗi lượt, bạn biết ngay điểm mạnh và điều cần cải thiện.</p>
-          <div className="buddy-score-list">
-            <div><span>Giao tiếp</span><b>82</b><i style={{ width: '82%' }}></i></div>
-            <div><span>STAR</span><b>76</b><i style={{ width: '76%' }}></i></div>
-            <div><span>Chuyên môn</span><b>84</b><i style={{ width: '84%' }}></i></div>
+      {/* =========================================================
+          INTERVIEW EXPERIENCE
+      ========================================================== */}
+      <section
+        className={'dashboard-interview-section'}
+        aria-labelledby="dashboard-interview-title"
+      >
+        <div className={'dashboard-interview-visual'}>
+          <div className={'dashboard-interview-orb'} aria-hidden="true" />
+
+          <div className={'dashboard-question-card'}>
+            <div>
+              <MessageSquareText size={16} />
+              <span>AI Interview</span>
+            </div>
+
+            <strong>
+              “Hãy kể về một lần bạn giải quyết vấn đề khó trong dự án.”
+            </strong>
+
+            <small>Câu hỏi 3 / 5</small>
           </div>
-          <button className="buddy-text-button" onClick={() => document.getElementById('nav-interview')?.click()}>Thử một buổi phỏng vấn <ArrowRight size={18} /></button>
+
+          <div className={'dashboard-interview-wave'} aria-hidden="true">
+            {[42, 74, 54, 88, 65, 40, 78, 52, 70, 36].map(
+              (height, index) => (
+                <i key={index} style={{ height: `${height}%` }} />
+              )
+            )}
+          </div>
+
+          <div className={'dashboard-score-bubble'}>
+            <span>STAR</span>
+            <strong>82</strong>
+          </div>
+        </div>
+
+        <div className={'dashboard-interview-copy'}>
+          <span className={'dashboard-section-eyebrow'}>AI INTERVIEW COACH</span>
+
+          <h2 id="dashboard-interview-title">
+            Đừng để buổi phỏng vấn thật là lần đầu bạn thử trả lời.
+          </h2>
+
+          <p>
+            Luyện phỏng vấn theo CV hoặc Job bạn chọn. Sau mỗi lượt, bạn
+            nhận phản hồi để biết mình đang nói tốt ở đâu và cần cải thiện
+            điều gì.
+          </p>
+
+          <div className={'dashboard-score-rows'}>
+            <div>
+              <span>Giao tiếp</span>
+              <b>82</b>
+              <i>
+                <em style={{ width: '82%' }} />
+              </i>
+            </div>
+
+            <div>
+              <span>STAR</span>
+              <b>76</b>
+              <i>
+                <em style={{ width: '76%' }} />
+              </i>
+            </div>
+
+            <div>
+              <span>Chuyên môn</span>
+              <b>84</b>
+              <i>
+                <em style={{ width: '84%' }} />
+              </i>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            className={'dashboard-text-button'}
+            onClick={() => goTo('nav-interview')}
+          >
+            Bắt đầu luyện tập
+            <ArrowRight size={17} />
+          </button>
         </div>
       </section>
+
+      {/* =========================================================
+          FINAL CTA
+      ========================================================== */}
+      <section className={'dashboard-final-cta'}>
+        <div className={'dashboard-final-glow'} aria-hidden="true" />
+
+        <div>
+          <span>
+            <Sparkles size={14} />
+            CAREER BUDDY
+          </span>
+
+          <h2>
+            Không cần biết phải bắt đầu từ “pipeline” nào.
+          </h2>
+
+          <p>
+            Chỉ cần chọn điều bạn muốn làm ngay lúc này.
+          </p>
+        </div>
+
+        <div className={'dashboard-final-actions'}>
+          <button
+            type="button"
+            className={'dashboard-light-button'}
+            onClick={() => goTo('nav-cv')}
+          >
+            <FileText size={17} />
+            Tạo CV
+          </button>
+
+          <button
+            type="button"
+            className={'dashboard-white-button'}
+            onClick={() => goTo('nav-match', 'nav-gap')}
+          >
+            <Target size={17} />
+            AI Match
+            <ArrowRight size={16} />
+          </button>
+        </div>
+      </section>
+      <BuddyTourGuide />
     </section>
   );
 }

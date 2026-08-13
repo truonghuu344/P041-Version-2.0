@@ -1008,9 +1008,9 @@ function startAppLogic() {
     t.className = `toast ${type}`;
     t.textContent = msg;
     document.body.appendChild(t);
-    requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add('show')));
+    requestAnimationFrame(() => requestAnimationFrame(() => t?.classList.add('show')));
     setTimeout(() => {
-      t.classList.remove('show');
+      t?.classList.remove('show');
       setTimeout(() => t.remove(), 350);
     }, 3200);
   }
@@ -1021,7 +1021,7 @@ function startAppLogic() {
   /* ============================================================
      🚀 ROUTER & SPACESHIP SINGLE PAGE VIEW SWITCHER
   ============================================================ */
-  const ALL_VIEWS = ['dashboard', 'cv', 'find-jobs', 'jobs', 'interview', 'history', 'profile', 'counselor', 'enterprise', 'admin'];
+  const ALL_VIEWS = ['dashboard', 'cv', 'find-jobs', 'jobs', 'match', 'gap', 'interview', 'history', 'profile', 'counselor', 'enterprise', 'admin'];
   const ROLE_HOME_VIEWS = Object.freeze({
     student: 'dashboard',
     counselor: 'counselor',
@@ -1029,8 +1029,8 @@ function startAppLogic() {
     admin: 'admin'
   });
   const ROLE_NAV_ITEMS = Object.freeze({
-    guest: ['nav-dashboard'],
-    student: ['nav-dashboard', 'nav-cv', 'nav-find-jobs', 'nav-interview', 'nav-history'],
+    guest: ['nav-dashboard', 'nav-cv', 'nav-find-jobs', 'nav-match', 'nav-interview', 'nav-gap'],
+    student: ['nav-dashboard', 'nav-cv', 'nav-find-jobs', 'nav-match', 'nav-interview', 'nav-history', 'nav-gap'],
     counselor: ['nav-counselor', 'nav-counselor-reports'],
     enterprise: ['nav-enterprise', 'nav-jobs', 'nav-enterprise-applications'],
     admin: ['nav-admin']
@@ -1058,6 +1058,7 @@ function startAppLogic() {
     cv: 'DECK ALPHA // RESUME LAB',
     'find-jobs': 'DECK BETA // AI JOB DISCOVERY',
     jobs: 'DECK BETA // CAREER MAP',
+    match: 'DECK MATCH // AI ANALYSIS',
     interview: 'DECK GAMMA // SIMULATION CHAMBER',
     history: 'DECK EPSILON // MISSION ARCHIVE',
     profile: 'DECK ZETA // CREW TERMINAL',
@@ -1074,7 +1075,7 @@ function startAppLogic() {
       showToast('Bạn đã được chuyển về dashboard phù hợp với vai trò.', 'info');
     }
 
-    const VIEW_ORDER = ['dashboard', 'cv', 'find-jobs', 'jobs', 'interview', 'history', 'profile', 'counselor', 'enterprise', 'admin'];
+    const VIEW_ORDER = ['dashboard', 'cv', 'find-jobs', 'jobs', 'match', 'gap', 'interview', 'history', 'profile', 'counselor', 'enterprise', 'admin'];
     const currentIndex = VIEW_ORDER.indexOf(currentViewName);
     const targetIndex = VIEW_ORDER.indexOf(targetViewName);
     const direction = targetIndex >= currentIndex ? 'right' : 'left';
@@ -1082,10 +1083,10 @@ function startAppLogic() {
     // Trigger Spaceship Corridor Hatch Sweep Line
     const corridorSweep = document.getElementById('spaceship-corridor-sweep');
     if (corridorSweep) {
-      corridorSweep.classList.remove('sweep-left', 'sweep-right');
+      corridorSweep?.classList.remove('sweep-left', 'sweep-right');
       void corridorSweep.offsetWidth; // Force reflow
-      corridorSweep.classList.add(`sweep-${direction}`, 'active');
-      setTimeout(() => corridorSweep.classList.remove('active'), 550);
+      corridorSweep?.classList.add(`sweep-${direction}`, 'active');
+      setTimeout(() => corridorSweep?.classList.remove('active'), 550);
     }
 
     ALL_VIEWS.forEach(key => {
@@ -1093,25 +1094,26 @@ function startAppLogic() {
       const navEl = document.getElementById(`nav-${key}`);
       if (vEl) {
         if (key === targetViewName) {
-          vEl.classList.add('active');
+          vEl?.classList.add('active');
           vEl.style.display = 'block';
         } else {
-          vEl.classList.remove('active');
+          vEl?.classList.remove('active');
           vEl.style.display = 'none';
         }
       }
       if (navEl) {
         if (key === targetViewName) {
-          navEl.classList.add('active');
+          navEl?.classList.add('active');
         } else {
-          navEl.classList.remove('active');
+          navEl?.classList.remove('active');
         }
       }
     });
 
     currentViewName = targetViewName;
+    document.body.classList.toggle('focus-mode', targetViewName === 'match');
     document.querySelectorAll('[data-mobile-view]').forEach(button => {
-      button.classList.toggle('active', button.dataset.mobileView === targetViewName);
+      button?.classList.toggle('active', button.dataset.mobileView === targetViewName);
     });
 
     // Nova nằm ngoài các app-view và luôn khả dụng trên mọi trang/role.
@@ -1131,7 +1133,11 @@ function startAppLogic() {
     if (targetViewName === 'cv') {
       loadSpaceshipCVList();
       loadCVAgentStatus();
+    } else if (targetViewName === 'match') {
+      loadSpaceshipCVList();
       loadCVJDOptions();
+    } else if (targetViewName === 'gap') {
+      renderGapDetailFromCurrentMatch();
     } else if (targetViewName === 'find-jobs') {
       initializeJobSearchView();
     } else if (targetViewName === 'jobs') {
@@ -1158,9 +1164,9 @@ function startAppLogic() {
   function initStarMapNodes() {
     const nodes = document.querySelectorAll('.star-map-container .node-job');
     nodes.forEach(node => {
-      node.addEventListener('click', () => {
-        nodes.forEach(n => n.classList.remove('active'));
-        node.classList.add('active');
+      node?.addEventListener('click', () => {
+        nodes.forEach(n => n?.classList.remove('active'));
+        node?.classList.add('active');
         showToast(`Đã định vị mục tiêu: ${node.querySelector('.node-title')?.textContent || 'Vị trí công việc'}`);
       });
     });
@@ -1677,9 +1683,9 @@ function startAppLogic() {
 
       document.querySelectorAll('.lang-option').forEach(opt => {
         if (opt.dataset.lang === lang) {
-          opt.classList.add('active');
+          opt?.classList.add('active');
         } else {
-          opt.classList.remove('active');
+          opt?.classList.remove('active');
         }
       });
 
@@ -1713,25 +1719,25 @@ function startAppLogic() {
     }
 
     if (langBtn && langSwitcher) {
-      langBtn.addEventListener('click', (e) => {
+      langBtn?.addEventListener('click', (e) => {
         e.stopPropagation();
-        const isOpen = langSwitcher.classList.contains('open');
-        langSwitcher.classList.toggle('open', !isOpen);
+        const isOpen = langSwitcher?.classList.contains('open');
+        langSwitcher?.classList.toggle('open', !isOpen);
         langBtn.setAttribute('aria-expanded', !isOpen);
       });
 
       document.addEventListener('click', (e) => {
         if (!langSwitcher.contains(e.target)) {
-          langSwitcher.classList.remove('open');
+          langSwitcher?.classList.remove('open');
           langBtn.setAttribute('aria-expanded', 'false');
         }
       });
 
       document.querySelectorAll('.lang-option').forEach(opt => {
-        opt.addEventListener('click', () => {
+        opt?.addEventListener('click', () => {
           const selectedLang = opt.dataset.lang;
           applyLanguage(selectedLang);
-          langSwitcher.classList.remove('open');
+          langSwitcher?.classList.remove('open');
           langBtn.setAttribute('aria-expanded', 'false');
         });
       });
@@ -1763,9 +1769,9 @@ function startAppLogic() {
     }
 
     if (themeBtn) {
-      themeBtn.addEventListener('click', () => {
-        themeBtn.classList.add('animating');
-        setTimeout(() => themeBtn.classList.remove('animating'), 400);
+      themeBtn?.addEventListener('click', () => {
+        themeBtn?.classList.add('animating');
+        setTimeout(() => themeBtn?.classList.remove('animating'), 400);
 
         const isLight = document.body.classList.contains('light-mode') || document.documentElement.classList.contains('light-mode');
         applyTheme(isLight ? 'dark' : 'light');
@@ -1808,6 +1814,11 @@ function startAppLogic() {
     switchView('interview');
   });
 
+  document.getElementById('nav-gap')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    switchView('gap');
+  });
+
   document.getElementById('nav-history')?.addEventListener('click', (e) => {
     e.preventDefault();
     switchView('history');
@@ -1825,9 +1836,9 @@ function startAppLogic() {
 
   // Archive Filter Handlers
   document.querySelectorAll('.archive-filter-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.archive-filter-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
+    btn?.addEventListener('click', () => {
+      document.querySelectorAll('.archive-filter-btn').forEach(b => b?.classList.remove('active'));
+      btn?.classList.add('active');
       const filter = btn.getAttribute('data-filter');
       document.querySelectorAll('.archive-card').forEach(card => {
         if (filter === 'all' || card.getAttribute('data-type') === filter) {
@@ -1841,9 +1852,9 @@ function startAppLogic() {
 
   // Persona Selector Handlers
   document.querySelectorAll('.persona-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.persona-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
+    btn?.addEventListener('click', () => {
+      document.querySelectorAll('.persona-btn').forEach(b => b?.classList.remove('active'));
+      btn?.classList.add('active');
       const persona = btn.getAttribute('data-persona');
       localStorage.setItem('ai_persona', persona);
       showToast(`Đã đổi phong cách Trợ Lý AI: ${btn.querySelector('.persona-title')?.textContent}`);
@@ -1882,6 +1893,12 @@ function startAppLogic() {
   const cvDropzone = document.getElementById('cv-dropzone');
   const selectedFileNameEl = document.getElementById('selected-file-name');
   const cvPageListContainer = document.getElementById('cv-page-list-container');
+  const careerCVTableBody = document.getElementById('career-cv-table-body');
+  const careerSnapshot = document.getElementById('career-portfolio-snapshot');
+  const careerVersionsSection = document.getElementById('career-versions-section');
+  const careerEmptyState = document.getElementById('career-portfolio-empty');
+  const careerBuddyInsight = document.getElementById('career-buddy-insight');
+  const careerSearchInput = document.getElementById('career-cv-search');
   const cvBulkToolbar = document.getElementById('cv-bulk-toolbar');
   const cvSelectAll = document.getElementById('cv-select-all');
   const cvSelectedCount = document.getElementById('cv-selected-count');
@@ -1897,6 +1914,13 @@ function startAppLogic() {
   const cvAnalysisResultsCard = document.getElementById('cv-analysis-results-card');
   const cvAnalysisEmptyState = document.getElementById('cv-analysis-empty-state');
   const cvAnalysisResultContent = document.getElementById('cv-analysis-result-content');
+  const analysisJourney = document.getElementById('p1-analysis-journey');
+  const analysisTitle = document.getElementById('p1-analysis-title');
+  const analysisSupporting = document.getElementById('p1-analysis-supporting');
+  const analysisInsightTitle = document.getElementById('p1-analysis-insight-title');
+  const analysisInsightBody = document.getElementById('p1-analysis-insight-body');
+  const analysisError = document.getElementById('p1-analysis-error');
+  let analysisJourneyTimer = null;
 
   const inspectorDeck = document.getElementById('cv-detail-inspector');
   const btnCloseInspector = document.getElementById('btn-close-cv-detail');
@@ -1904,6 +1928,81 @@ function startAppLogic() {
   let inspectedCV = null;
   let selectedCVIds = new Set();
   let latestCVAnalysisContext = null;
+  let targetJobCatalog = [];
+  let activeTargetJobFilter = '';
+
+  const analysisCopy = {
+    1: ['AI đang đọc CV của bạn', 'AI đang nhận diện kỹ năng, kinh nghiệm và các dự án nổi bật.'],
+    2: ['AI đang hiểu công việc mục tiêu', 'Đang xác định những yêu cầu quan trọng trong JD.'],
+    3: ['AI đang đối chiếu CV với JD', 'AI đang tìm những điểm CV của bạn đáp ứng tốt.'],
+    4: ['AI đang kiểm tra bằng chứng chưa rõ', 'Đang xem các yêu cầu nào chưa được thể hiện rõ trong CV.'],
+    5: ['AI đang chuẩn bị báo cáo dành cho bạn', 'Đang sắp xếp các insight quan trọng nhất để bạn hành động.'],
+  };
+
+  function setAnalysisJourneyStage(stage, { done = false, error = false } = {}) {
+    if (!analysisJourney) return;
+    const [title, supporting] = analysisCopy[stage] || analysisCopy[3];
+    if (analysisTitle) analysisTitle.textContent = error ? 'Phân tích chưa hoàn tất' : title;
+    if (analysisSupporting) analysisSupporting.textContent = error
+      ? 'Kết nối bị gián đoạn khi AI đang đối chiếu dữ liệu.'
+      : supporting;
+    analysisJourney.querySelectorAll('[data-stage]').forEach(item => {
+      const itemStage = Number(item.dataset.stage);
+      item.classList.toggle('is-done', done || itemStage < stage);
+      item.classList.toggle('is-active', !done && !error && itemStage === stage);
+      item.classList.toggle('is-error', error && itemStage === stage);
+    });
+    analysisJourney.querySelectorAll('[data-check]').forEach((chip, index) => {
+      chip.classList.toggle('is-done', done || index < Math.max(0, stage - 2));
+      chip.classList.toggle('is-active', !done && !error && index === Math.min(4, Math.max(0, stage - 2)));
+    });
+  }
+
+  function showAnalysisJourney(cvLabel, jdLabel) {
+    if (!analysisJourney) return;
+    window.clearInterval(analysisJourneyTimer);
+    analysisJourney.hidden = false;
+    if (analysisError) analysisError.hidden = true;
+    const cvLabelEl = document.getElementById('p1-analysis-cv-label');
+    const jdLabelEl = document.getElementById('p1-analysis-jd-label');
+    if (cvLabelEl) cvLabelEl.textContent = cvLabel || 'CV của bạn';
+    if (jdLabelEl) jdLabelEl.textContent = jdLabel || 'JD mục tiêu';
+    if (analysisInsightTitle) analysisInsightTitle.textContent = 'Đang tìm bằng chứng phù hợp';
+    if (analysisInsightBody) analysisInsightBody.textContent = 'Một kỹ năng chỉ được xem là điểm mạnh khi CV có bằng chứng trong kinh nghiệm, dự án hoặc thành tích.';
+    setAnalysisJourneyStage(1);
+    analysisJourney.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  function beginEvidenceCheckJourney() {
+    setAnalysisJourneyStage(3);
+    const educationalInsights = [
+      ['Đang tìm bằng chứng phù hợp', 'AI đang đối chiếu yêu cầu trong JD với nội dung thực tế xuất hiện trong CV của bạn.'],
+      ['AI đang kiểm tra nhiều hơn từ khóa', 'Kết quả ưu tiên bằng chứng trong kinh nghiệm, dự án hoặc thành tích; không chỉ đếm từ khóa trùng nhau.'],
+      ['Đang chuẩn bị insight', 'Báo cáo sẽ làm rõ điều gì đã được hỗ trợ, hỗ trợ một phần và chưa tìm thấy bằng chứng trong CV.'],
+    ];
+    let index = 0;
+    window.clearInterval(analysisJourneyTimer);
+    analysisJourneyTimer = window.setInterval(() => {
+      index = (index + 1) % educationalInsights.length;
+      const stage = index === 0 ? 3 : index === 1 ? 4 : 5;
+      setAnalysisJourneyStage(stage);
+      if (analysisInsightTitle) analysisInsightTitle.textContent = educationalInsights[index][0];
+      if (analysisInsightBody) analysisInsightBody.textContent = educationalInsights[index][1];
+    }, 3500);
+  }
+
+  function finishAnalysisJourney() {
+    window.clearInterval(analysisJourneyTimer);
+    setAnalysisJourneyStage(5, { done: true });
+    if (analysisTitle) analysisTitle.textContent = 'Phân tích hoàn tất';
+    if (analysisSupporting) analysisSupporting.textContent = 'Báo cáo đối chiếu CV và JD của bạn đã sẵn sàng.';
+  }
+
+  function failAnalysisJourney(stage = 3) {
+    window.clearInterval(analysisJourneyTimer);
+    setAnalysisJourneyStage(stage, { error: true });
+    if (analysisError) analysisError.hidden = false;
+  }
 
   function updateCVBulkSelectionUI() {
     const selectedCount = selectedCVIds.size;
@@ -1916,7 +2015,7 @@ function startAppLogic() {
       cvSelectAll.indeterminate = selectedCount > 0 && selectedCount < loadedCVs.length;
     }
     cvPageListContainer?.querySelectorAll('.cv-manifest-item').forEach(item => {
-      item.classList.toggle('is-selected', selectedCVIds.has(item.dataset.cvId));
+      item?.classList.toggle('is-selected', selectedCVIds.has(item.dataset.cvId));
     });
   }
 
@@ -1926,8 +2025,8 @@ function startAppLogic() {
     const order = ['upload', 'extract', 'llm', 'guardrail', 'match', 'save'];
     const activeIndex = order.indexOf(activeStep);
     cvAgentProgress.querySelectorAll('[data-agent-step]').forEach((element, index) => {
-      element.classList.toggle('active', index === activeIndex);
-      element.classList.toggle('done', index < activeIndex);
+      element?.classList.toggle('active', index === activeIndex);
+      element?.classList.toggle('done', index < activeIndex);
     });
   }
 
@@ -1946,15 +2045,15 @@ function startAppLogic() {
 
   // Dropzone drag & drop handlers
   if (cvDropzone) {
-    cvDropzone.addEventListener('click', () => cvPageFileInput?.click());
-    cvDropzone.addEventListener('dragover', (e) => {
+    cvDropzone?.addEventListener('click', () => cvPageFileInput?.click());
+    cvDropzone?.addEventListener('dragover', (e) => {
       e.preventDefault();
-      cvDropzone.classList.add('dragover');
+      cvDropzone?.classList.add('dragover');
     });
-    cvDropzone.addEventListener('dragleave', () => cvDropzone.classList.remove('dragover'));
-    cvDropzone.addEventListener('drop', (e) => {
+    cvDropzone?.addEventListener('dragleave', () => cvDropzone?.classList.remove('dragover'));
+    cvDropzone?.addEventListener('drop', (e) => {
       e.preventDefault();
-      cvDropzone.classList.remove('dragover');
+      cvDropzone?.classList.remove('dragover');
       if (e.dataTransfer.files && e.dataTransfer.files[0]) {
         cvPageFileInput.files = e.dataTransfer.files;
         updateSelectedFileName();
@@ -1963,7 +2062,7 @@ function startAppLogic() {
   }
 
   if (cvPageFileInput) {
-    cvPageFileInput.addEventListener('change', updateSelectedFileName);
+    cvPageFileInput?.addEventListener('change', updateSelectedFileName);
   }
 
   function updateSelectedFileName() {
@@ -1983,11 +2082,11 @@ function startAppLogic() {
       const selectedLabel = selected.textContent.trim();
       cvSelectedJdHint.textContent = `✓ AI Agent sẽ phân tích theo: ${selectedLabel}`;
       cvSelectedJdHint.title = selectedLabel;
-      cvSelectedJdHint.classList.add('is-selected');
+      cvSelectedJdHint?.classList.add('is-selected');
     } else {
       cvSelectedJdHint.textContent = 'JD là bắt buộc để AI Agent phân tích đúng vị trí ứng tuyển.';
       cvSelectedJdHint.removeAttribute('title');
-      cvSelectedJdHint.classList.remove('is-selected');
+      cvSelectedJdHint?.classList.remove('is-selected');
     }
   }
 
@@ -1996,10 +2095,10 @@ function startAppLogic() {
     const selected = cvAnalysisCvSelect.options[cvAnalysisCvSelect.selectedIndex];
     if (cvAnalysisCvSelect.value && selected) {
       cvSelectedCvHint.textContent = `✓ CV sẽ được phân tích: ${selected.textContent}`;
-      cvSelectedCvHint.classList.add('is-selected');
+      cvSelectedCvHint?.classList.add('is-selected');
     } else {
       cvSelectedCvHint.textContent = 'Chọn CV trong kho hoặc tải file mới ngay bên dưới.';
-      cvSelectedCvHint.classList.remove('is-selected');
+      cvSelectedCvHint?.classList.remove('is-selected');
     }
   }
 
@@ -2019,6 +2118,7 @@ function startAppLogic() {
         ApiClient.searchJobs('', '', 100).catch(() => ({ jobs: [] })),
       ]);
       const catalogJobs = catalogResult.jobs || [];
+      targetJobCatalog = catalogJobs;
       const storedCatalogBySource = new Map(
         (jds || [])
           .filter(jd => jd.normalized_json?.source === 'data/jds' && jd.normalized_json?.source_id)
@@ -2040,13 +2140,103 @@ function startAppLogic() {
       if ([...cvAnalysisJdSelect.options].some(option => option.value === previousValue)) {
         cvAnalysisJdSelect.value = previousValue;
       }
+      const preselectedJDId = window.sessionStorage.getItem('career-preselected-jd-id');
+      if (preselectedJDId && [...cvAnalysisJdSelect.options].some(option => option.value === preselectedJDId)) {
+        cvAnalysisJdSelect.value = preselectedJDId;
+        window.sessionStorage.removeItem('career-preselected-jd-id');
+      }
       enhanceGapSelect(cvAnalysisJdSelect);
       updateCVJDSelectionHint();
+      renderTargetJobDiscovery();
+      updateP1UI();
     } catch (err) {
       cvAnalysisJdSelect.innerHTML = '<option value="">Không thể tải danh sách JD</option>';
       cvAnalysisJdSelect.disabled = true;
       enhanceGapSelect(cvAnalysisJdSelect);
       showToast(`Không thể tải JD: ${err.message}`, 'error');
+    }
+  }
+
+  function careerCVDate(cv) {
+    const value = cv.updated_at || cv.created_at;
+    if (!value) return 'Chưa có thời gian cập nhật';
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? 'Chưa có thời gian cập nhật' : `Cập nhật ${date.toLocaleDateString('vi-VN')}`;
+  }
+
+  function careerCVSkills(cv) {
+    const parsed = cv.parsed_json || {};
+    const skills = Array.isArray(parsed.hard_skills) ? parsed.hard_skills : (Array.isArray(parsed.skills) ? parsed.skills : []);
+    return skills.slice(0, 3).map(skill => String(skill)).filter(Boolean);
+  }
+
+  function careerPreviewMarkup() {
+    return `<div class="career-document-preview" aria-hidden="true"><div class="career-document-sheet"><span class="career-document-name">CAREER PROFILE</span><span class="career-document-title"></span><span class="career-document-label">EXPERIENCE</span><span class="career-document-line"></span><span class="career-document-line short"></span><span class="career-document-label">SKILLS</span><span class="career-document-skills"><i></i><i></i><i></i></span></div></div>`;
+  }
+
+  function renderCareerPortfolioCVs(cvs, query = '') {
+    if (!careerCVTableBody) return;
+    const normalizedQuery = String(query).trim().toLocaleLowerCase('vi');
+    const ordered = [...(cvs || [])].sort((a, b) => new Date(b.updated_at || b.created_at || 0) - new Date(a.updated_at || a.created_at || 0));
+    const matching = normalizedQuery ? ordered.filter(cv => `${cv.title || ''} ${cv.file_name || ''}`.toLocaleLowerCase('vi').includes(normalizedQuery)) : ordered;
+    const rowMarkup = (cv, index) => {
+      const title = escapeHtml(cv.title || cv.file_name || 'CV chưa đặt tên');
+      const skills = careerCVSkills(cv);
+      return `<tr><td><strong>${title}</strong><small>${escapeHtml(cv.file_name || 'CV đã lưu')}</small></td><td>${escapeHtml(careerCVDate(cv))}</td><td><div class="career-skill-list">${skills.length ? skills.map(skill => `<span>${escapeHtml(skill)}</span>`).join('') : '<span>Chưa trích xuất</span>'}</div></td><td><span class="career-table-status">Đã lưu</span></td><td class="career-table-actions-cell"><button type="button" data-career-open-index="${index}">Mở</button><button type="button" data-career-match-id="${escapeHtml(cv.id)}">Match với Job</button></td></tr>`;
+    };
+
+    const hasCVs = ordered.length > 0;
+    careerEmptyState.hidden = hasCVs;
+    careerVersionsSection.hidden = !hasCVs;
+    careerBuddyInsight.hidden = !hasCVs;
+    careerSnapshot.hidden = !hasCVs;
+    if (!hasCVs) return;
+
+    careerSnapshot.innerHTML = `<span class="career-snapshot-item"><strong>${ordered.length}</strong> CV đã lưu</span>`;
+    careerCVTableBody.innerHTML = matching.length ? matching.map(cv => rowMarkup(cv, ordered.indexOf(cv))).join('') : '<tr><td colspan="5" class="career-table-empty">Không tìm thấy CV phù hợp.</td></tr>';
+  }
+
+  function renderTargetJobDiscovery() {
+    const grid = document.getElementById('p1-job-grid');
+    const empty = document.getElementById('p1-job-empty');
+    const count = document.getElementById('p1-job-count');
+    const query = document.getElementById('p1-job-search')?.value.trim().toLocaleLowerCase('vi') || '';
+    if (!grid) return;
+    const jobs = targetJobCatalog.filter(job => {
+      const haystack = [job.title, job.company, job.domain, ...(job.skills || [])].join(' ').toLocaleLowerCase('vi');
+      const matchesQuery = !query || haystack.includes(query);
+      const matchesFilter = !activeTargetJobFilter || haystack.includes(activeTargetJobFilter.toLocaleLowerCase('vi'));
+      return matchesQuery && matchesFilter;
+    }).slice(0, 6);
+    if (count) count.textContent = jobs.length ? `${jobs.length} công việc` : '';
+    if (empty) empty.hidden = jobs.length > 0;
+    grid.innerHTML = jobs.map(job => {
+      const allSkills = job.skills || [];
+      const skills = allSkills.slice(0, 3);
+      const remainingSkills = Math.max(0, allSkills.length - skills.length);
+      const meta = [job.location, job.remote_type, job.job_level].filter(Boolean).slice(0, 2);
+      return `<article class="p1-job-card" data-target-job="${escapeHtml(String(job.source_id))}" tabindex="0" role="button" aria-label="Xem công việc ${escapeHtml(job.title || '')}">
+        <div class="p1-job-card-head"><span class="p1-job-company-mark">${escapeHtml((job.company || 'DN').slice(0, 2).toUpperCase())}</span><div><h4>${escapeHtml(job.title || 'Vị trí chưa đặt tên')}</h4>${job.company ? `<p>${escapeHtml(job.company)}</p>` : ''}</div></div>
+        ${meta.length ? `<div class="p1-job-meta">${meta.map(item => `<span>${escapeHtml(item)}</span>`).join('')}</div>` : ''}
+        ${skills.length ? `<div class="p1-job-skills">${skills.map(skill => `<span>${escapeHtml(skill)}</span>`).join('')}${remainingSkills ? `<span>+${remainingSkills}</span>` : ''}</div>` : ''}
+        <button type="button" data-target-job-select="${escapeHtml(String(job.source_id))}">Xem công việc →</button>
+      </article>`;
+    }).join('');
+  }
+
+  async function chooseTargetCatalogJob(sourceId) {
+    if (!sourceId || !cvAnalysisJdSelect) return;
+    const selected = targetJobCatalog.find(job => String(job.source_id) === String(sourceId));
+    try {
+      cvAnalysisJdSelect.disabled = true;
+      const selectedJD = await ApiClient.selectCatalogJD(sourceId);
+      await loadCVJDOptions(selectedJD.id);
+      document.getElementById('p1-job-discovery')?.classList.add('is-selected');
+      showToast(`Đã chọn ${selected?.title || 'công việc mục tiêu'}.`, 'success');
+    } catch (err) {
+      showToast(`Không thể chọn công việc: ${err.message}`, 'error');
+    } finally {
+      cvAnalysisJdSelect.disabled = false;
     }
   }
 
@@ -2062,7 +2252,7 @@ function startAppLogic() {
     cvAnalysisJdSelect.disabled = true;
     if (cvSelectedJdHint) {
       cvSelectedJdHint.textContent = 'Đang nạp JD doanh nghiệp từ data/jds...';
-      cvSelectedJdHint.classList.add('is-selected');
+      cvSelectedJdHint?.classList.add('is-selected');
     }
     try {
       const selectedJD = await ApiClient.selectCatalogJD(sourceId);
@@ -2076,6 +2266,50 @@ function startAppLogic() {
       cvAnalysisJdSelect.disabled = false;
     }
   }
+
+  document.getElementById('p1-job-search')?.addEventListener('input', renderTargetJobDiscovery);
+  document.getElementById('p1-job-filters')?.addEventListener('click', event => {
+    const filterButton = event.target.closest('[data-job-filter]');
+    if (!filterButton) return;
+    const nextFilter = filterButton.dataset.jobFilter;
+    activeTargetJobFilter = activeTargetJobFilter === nextFilter ? '' : nextFilter;
+    document.querySelectorAll('[data-job-filter]').forEach(button => button.classList.toggle('is-selected', button.dataset.jobFilter === activeTargetJobFilter));
+    renderTargetJobDiscovery();
+  });
+
+  document.getElementById('nav-match')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    switchView('match');
+  });
+  document.getElementById('p1-job-grid')?.addEventListener('click', event => {
+    const sourceId = event.target.closest('[data-target-job]')?.dataset.targetJob;
+    if (sourceId) chooseTargetCatalogJob(sourceId);
+  });
+  document.getElementById('p1-job-grid')?.addEventListener('keydown', event => {
+    if (!['Enter', ' '].includes(event.key)) return;
+    const sourceId = event.target.closest('[data-target-job]')?.dataset.targetJob;
+    if (sourceId) { event.preventDefault(); chooseTargetCatalogJob(sourceId); }
+  });
+
+  function setTargetJobMode(mode) {
+    const explore = mode === 'explore';
+    document.getElementById('p1-job-explore-tab')?.classList.toggle('is-selected', explore);
+    document.getElementById('p1-job-explore-tab')?.setAttribute('aria-selected', String(explore));
+    document.getElementById('p1-job-upload-tab')?.classList.toggle('is-selected', !explore);
+    document.getElementById('p1-job-upload-tab')?.setAttribute('aria-selected', String(!explore));
+    const discoveryPanel = document.getElementById('p1-job-explore-panel');
+    const uploadPanel = document.getElementById('p1-job-upload-panel');
+    const uploadForm = document.getElementById('cv-jd-upload-form');
+    const divider = document.querySelector('.p1-jd-upload-divider');
+    if (discoveryPanel) discoveryPanel.hidden = !explore;
+    if (uploadPanel) uploadPanel.hidden = explore;
+    if (uploadForm) uploadForm.hidden = explore;
+    if (divider) divider.hidden = explore;
+  }
+  document.getElementById('p1-job-explore-tab')?.addEventListener('click', () => setTargetJobMode('explore'));
+  document.getElementById('p1-job-upload-tab')?.addEventListener('click', () => setTargetJobMode('upload'));
+  document.getElementById('p1-job-escape')?.addEventListener('click', () => setTargetJobMode('upload'));
+  document.getElementById('p1-job-empty-upload')?.addEventListener('click', () => setTargetJobMode('upload'));
 
   function renderInlineCVAnalysis(analysis, cvId, jdId) {
     if (!cvAnalysisResultContent || !analysis) return;
@@ -2237,7 +2471,7 @@ function startAppLogic() {
     if (guardrail) {
       const passed = (analysis.integrity_guardrail || 'passed') === 'passed';
       guardrail.textContent = passed ? '✓ Guardrail đã kiểm chứng' : '! Cần người dùng kiểm tra';
-      guardrail.classList.toggle('is-warning', !passed);
+      guardrail?.classList.toggle('is-warning', !passed);
     }
 
     if (cvAnalysisEmptyState) cvAnalysisEmptyState.hidden = true;
@@ -2280,7 +2514,7 @@ function startAppLogic() {
 
   // Handle Spaceship CV Upload Form Submit
   if (cvPageForm) {
-    cvPageForm.addEventListener('submit', async (e) => {
+    cvPageForm?.addEventListener('submit', async (e) => {
       e.preventDefault();
       if (!ApiClient.isAuthenticated()) {
         showToast('⚠️ Vui lòng đăng nhập tài khoản để upload CV', 'warning');
@@ -2304,10 +2538,12 @@ function startAppLogic() {
       const submitButton = document.getElementById('btn-page-do-upload');
       try {
         if (submitButton) submitButton.disabled = true;
+        const selectedCvLabel = selectedFile?.name || [...(cvAnalysisCvSelect?.options || [])].find(option => option.value === String(selectedCvId))?.textContent || 'CV của bạn';
+        const selectedJdLabel = [...(cvAnalysisJdSelect?.options || [])].find(option => option.value === String(selectedJdId))?.textContent || 'JD mục tiêu';
+        showAnalysisJourney(selectedCvLabel, selectedJdLabel);
         let uploadedCV = null;
         if (selectedFile) {
           setAgentProgress('upload');
-          showToast('🤖 Gemini Agent đang parse CV và chuẩn bị so khớp JD...', 'info');
           setAgentProgress('llm');
           uploadedCV = await ApiClient.uploadCV(
             selectedFile,
@@ -2318,11 +2554,13 @@ function startAppLogic() {
           await loadSpaceshipCVList(selectedCvId);
         } else {
           setAgentProgress('extract');
-          showToast('🤖 Gemini AI Agent đang phân tích CV đã chọn theo JD...', 'info');
         }
+        setAnalysisJourneyStage(2);
         setAgentProgress('guardrail');
+        beginEvidenceCheckJourney();
         const analysis = await ApiClient.runGapAnalysis(selectedCvId, selectedJdId);
         setAgentProgress('match');
+        finishAnalysisJourney();
         renderInlineCVAnalysis(analysis, selectedCvId, selectedJdId);
         setAgentProgress('save');
         const llmSucceeded = Boolean(uploadedCV?.parsed_json?.agent_metadata?.llm_succeeded);
@@ -2337,6 +2575,7 @@ function startAppLogic() {
           selectedFileNameEl.style.display = 'none';
         }
       } catch (err) {
+        failAnalysisJourney();
         showToast(`❌ Không thể phân tích CV: ${err.message}`, 'error');
       } finally {
         if (submitButton) submitButton.disabled = false;
@@ -2350,12 +2589,6 @@ function startAppLogic() {
     event.preventDefault();
     if (!ApiClient.isAuthenticated()) {
       showToast('Vui lòng đăng nhập để tạo CV.', 'warning'); openAuthModal(); return;
-    }
-    const selectedJdId = cvAnalysisJdSelect?.value;
-    if (!selectedJdId) {
-      showToast('Vui lòng chọn JD mục tiêu trước khi tạo và phân tích CV.', 'warning');
-      cvAnalysisJdSelect?.focus();
-      return;
     }
     const lineItems = id => (document.getElementById(id)?.value || '')
       .split('\n').map(value => value.trim()).filter(Boolean).map(description => ({ description }));
@@ -2375,11 +2608,9 @@ function startAppLogic() {
     };
     try {
       const cv = await ApiClient.createManualCV(payload);
-      const analysis = await ApiClient.runGapAnalysis(cv.id, selectedJdId);
       await loadSpaceshipCVList(cv.id);
-      renderInlineCVAnalysis(analysis, cv.id, selectedJdId);
       manualCVForm.reset();
-      showToast('✅ Đã tạo CV và AI Agent đã phân tích theo JD.', 'success');
+      showToast('✅ CV đã được lưu vào Career Workspace.', 'success');
     } catch (err) {
       showToast(`❌ ${err.message}`, 'error');
     }
@@ -2387,12 +2618,15 @@ function startAppLogic() {
 
   // Load saved CVs into the analysis selector.
   async function loadSpaceshipCVList(preferredCvId = '') {
-    if (!cvAnalysisCvSelect) return;
+    if (!cvAnalysisCvSelect && !careerCVTableBody) return;
     if (!ApiClient.isAuthenticated()) {
       loadedCVs = [];
-      cvAnalysisCvSelect.innerHTML = '<option value="">Vui lòng đăng nhập để chọn CV</option>';
-      cvAnalysisCvSelect.disabled = true;
-      enhanceGapSelect(cvAnalysisCvSelect);
+      if (cvAnalysisCvSelect) {
+        cvAnalysisCvSelect.innerHTML = '<option value="">Vui lòng đăng nhập để chọn CV</option>';
+        cvAnalysisCvSelect.disabled = true;
+        enhanceGapSelect(cvAnalysisCvSelect);
+      }
+      renderCareerPortfolioCVs([]);
       updateCVSelectionHint();
       return;
     }
@@ -2400,24 +2634,94 @@ function startAppLogic() {
     const previousValue = preferredCvId || cvAnalysisCvSelect.value;
     try {
       loadedCVs = await ApiClient.listCVs();
-      cvAnalysisCvSelect.disabled = false;
-      cvAnalysisCvSelect.innerHTML = [
-        '<option value="">Chọn một CV đã lưu</option>',
-        ...(loadedCVs || []).map(cv => `<option value="${escapeHtml(cv.id)}">${escapeHtml(cv.title || cv.file_name || 'CV Hồ sơ')}</option>`),
-      ].join('');
-      if ([...cvAnalysisCvSelect.options].some(option => option.value === previousValue)) {
-        cvAnalysisCvSelect.value = previousValue;
+      if (cvAnalysisCvSelect) {
+        cvAnalysisCvSelect.disabled = false;
+        cvAnalysisCvSelect.innerHTML = [
+          '<option value="">Chọn một CV đã lưu</option>',
+          ...(loadedCVs || []).map(cv => `<option value="${escapeHtml(cv.id)}">${escapeHtml(cv.title || cv.file_name || 'CV Hồ sơ')}</option>`),
+        ].join('');
+        if ([...cvAnalysisCvSelect.options].some(option => option.value === previousValue)) {
+          cvAnalysisCvSelect.value = previousValue;
+        }
+        const preselectedCVId = window.sessionStorage.getItem('career-preselected-cv-id');
+        if (preselectedCVId && [...cvAnalysisCvSelect.options].some(option => option.value === preselectedCVId)) {
+          cvAnalysisCvSelect.value = preselectedCVId;
+          window.sessionStorage.removeItem('career-preselected-cv-id');
+        }
+        enhanceGapSelect(cvAnalysisCvSelect);
       }
-      enhanceGapSelect(cvAnalysisCvSelect);
+      renderCareerPortfolioCVs(loadedCVs, careerSearchInput?.value || '');
       updateCVSelectionHint();
     } catch (err) {
-      cvAnalysisCvSelect.innerHTML = '<option value="">Không thể tải danh sách CV</option>';
-      cvAnalysisCvSelect.disabled = true;
-      enhanceGapSelect(cvAnalysisCvSelect);
+      if (cvAnalysisCvSelect) {
+        cvAnalysisCvSelect.innerHTML = '<option value="">Không thể tải danh sách CV</option>';
+        cvAnalysisCvSelect.disabled = true;
+        enhanceGapSelect(cvAnalysisCvSelect);
+      }
       updateCVSelectionHint();
       showToast(`Không thể tải CV: ${err.message}`, 'error');
     }
   }
+
+  function renderGapDetailFromCurrentMatch() {
+    const result = latestCVAnalysisContext?.analysis;
+    const container = document.getElementById('page-gap-results-container');
+    const empty = document.getElementById('gap-detail-empty');
+    if (!container || !empty) return;
+    if (!result) { container.hidden = true; empty.hidden = false; return; }
+    empty.hidden = true;
+    container.hidden = false;
+    const setText = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value || ''; };
+    const tags = values => (values || []).map(value => `<span class="cv-result-tag">${escapeHtml(value)}</span>`).join('') || '<span class="cv-result-empty">Chưa có dữ liệu.</span>';
+    setText('page-gap-match-score-badge', `${Number(result.match_score || 0).toFixed(1)}%`);
+    setText('page-gap-executive-summary', result.executive_summary || 'Kết quả được tổng hợp từ bằng chứng có trong CV.');
+    document.getElementById('page-gap-matching-skills').innerHTML = tags(result.hard_skills_matching);
+    document.getElementById('page-gap-partial-skills').innerHTML = tags(result.hard_skills_partial);
+    document.getElementById('page-gap-missing-skills').innerHTML = tags(result.hard_skills_missing);
+    document.getElementById('page-gap-priority-actions').innerHTML = (result.priority_actions || []).slice(0, 4).map((item, index) => `<p>${index + 1}. ${escapeHtml(typeof item === 'string' ? item : (item.action || item.gap || 'Cần xem xét'))}</p>`).join('') || '<p>Chưa có ưu tiên cụ thể.</p>';
+    document.getElementById('page-gap-suggestions-list').innerHTML = (result.suggestions || []).slice(0, 3).map(item => `<p>${escapeHtml(item.suggested_improvement || item)}</p>`).join('') || '<p>Chưa có gợi ý diễn đạt đủ bằng chứng.</p>';
+  }
+
+  document.getElementById('btn-open-full-gap-result')?.addEventListener('click', () => {
+    switchView('gap');
+  });
+  document.getElementById('gap-start-match')?.addEventListener('click', () => switchView('match'));
+
+  careerSearchInput?.addEventListener('input', () => renderCareerPortfolioCVs(loadedCVs, careerSearchInput.value));
+
+  async function uploadCareerPortfolioCV(file) {
+    if (!file) return;
+    if (!ApiClient.isAuthenticated()) {
+      showToast('Vui lòng đăng nhập để lưu CV của bạn.', 'warning');
+      return;
+    }
+    try {
+      showToast('Đang tải CV và trích xuất nội dung...', 'info');
+      await ApiClient.uploadCV(file, '', true);
+      await loadSpaceshipCVList();
+      showToast('CV đã được thêm vào Career Workspace.', 'success');
+    } catch (err) {
+      showToast(`Không thể tải CV: ${err.message}`, 'error');
+    }
+  }
+
+  ['portfolio-cv-upload-input', 'portfolio-cv-upload-empty-input'].forEach(id => {
+    document.getElementById(id)?.addEventListener('change', event => uploadCareerPortfolioCV(event.target.files?.[0]));
+  });
+
+  document.getElementById('career-portfolio-workspace')?.addEventListener('click', event => {
+    const matchButton = event.target.closest('[data-career-match-id], [data-career-start-match]');
+    if (matchButton) {
+      const cvId = matchButton.dataset.careerMatchId || loadedCVs[0]?.id;
+      if (cvId) window.sessionStorage.setItem('career-preselected-cv-id', cvId);
+      switchView('match');
+      return;
+    }
+    const openButton = event.target.closest('[data-career-open-index], [data-career-cv-index]');
+    if (!openButton) return;
+    const index = Number(openButton.dataset.careerOpenIndex ?? openButton.dataset.careerCvIndex);
+    if (loadedCVs[index]) inspectCVDetail(loadedCVs[index]);
+  });
 
   document.getElementById('btn-compare-multi-position')?.addEventListener('click', async () => {
     if (!latestCVAnalysisContext) return;
@@ -2440,7 +2744,7 @@ function startAppLogic() {
   });
 
   if (cvPageListContainer) {
-    cvPageListContainer.addEventListener('change', event => {
+    cvPageListContainer?.addEventListener('change', event => {
       const checkbox = event.target.closest('[data-cv-select-id]');
       if (!checkbox) return;
       if (checkbox.checked) selectedCVIds.add(checkbox.dataset.cvSelectId);
@@ -2448,7 +2752,7 @@ function startAppLogic() {
       updateCVBulkSelectionUI();
     });
 
-    cvPageListContainer.addEventListener('click', async event => {
+    cvPageListContainer?.addEventListener('click', async event => {
       const inspectButton = event.target.closest('[data-cv-inspect-index]');
       if (inspectButton) {
         const cv = loadedCVs[Number(inspectButton.dataset.cvInspectIndex)];
@@ -2471,7 +2775,7 @@ function startAppLogic() {
 
       try {
         deleteButton.disabled = true;
-        deleteButton.classList.add('is-loading');
+        deleteButton?.classList.add('is-loading');
         await ApiClient.deleteCV(cv.id);
         selectedCVIds.delete(cv.id);
         if (inspectedCV?.id === cv.id) {
@@ -2482,7 +2786,7 @@ function startAppLogic() {
         showToast(`🗑️ Đã xóa CV ${cv.title || 'CV Hồ sơ'}`, 'success');
       } catch (err) {
         deleteButton.disabled = false;
-        deleteButton.classList.remove('is-loading');
+        deleteButton?.classList.remove('is-loading');
         showToast(`❌ Không thể xóa CV: ${err.message}`, 'error');
       }
     });
@@ -2504,7 +2808,7 @@ function startAppLogic() {
   });
   function openRoleMenuSection(viewName, navId, sectionId) {
     switchView(viewName);
-    document.querySelectorAll('.role-only-link').forEach(link => link.classList.remove('active'));
+    document.querySelectorAll('.role-only-link').forEach(link => link?.classList.remove('active'));
     document.getElementById(navId)?.classList.add('active');
     requestAnimationFrame(() => document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
   }
@@ -2532,7 +2836,7 @@ function startAppLogic() {
 
     try {
       btnDeleteSelectedCVs.disabled = true;
-      btnDeleteSelectedCVs.classList.add('is-loading');
+      btnDeleteSelectedCVs?.classList.add('is-loading');
       const result = await ApiClient.bulkDeleteCVs(selectedCVs.map(cv => cv.id));
       if (inspectedCV && selectedCVIds.has(inspectedCV.id)) {
         inspectedCV = null;
@@ -2544,7 +2848,7 @@ function startAppLogic() {
     } catch (err) {
       showToast(`❌ Không thể xóa các CV đã chọn: ${err.message}`, 'error');
     } finally {
-      btnDeleteSelectedCVs.classList.remove('is-loading');
+      btnDeleteSelectedCVs?.classList.remove('is-loading');
       updateCVBulkSelectionUI();
     }
   });
@@ -2612,7 +2916,7 @@ function startAppLogic() {
   }
 
   if (btnCloseInspector) {
-    btnCloseInspector.addEventListener('click', () => {
+    btnCloseInspector?.addEventListener('click', () => {
       if (inspectorDeck) inspectorDeck.style.display = 'none';
     });
   }
@@ -2741,7 +3045,7 @@ TÊN CÔNG TY:
           <summary>Xem mô tả công việc</summary>
           <p>${escapeHtml(job.description || 'Chưa có mô tả chi tiết.')}</p>
         </details>
-        <footer>${sourceLink}<span>Dữ liệu doanh nghiệp trong kho JD</span></footer>
+        <footer>${sourceLink}<button type="button" class="job-match-action" data-job-match-source="${escapeHtml(job.source_id)}">Match CV với công việc này →</button></footer>
       </article>
     `;
   }
@@ -2813,12 +3117,12 @@ TÊN CÔNG TY:
     const cvId = jobSearchCVSelect?.value || '';
     if (!cvId) return;
     jobMatchCVButton.disabled = true;
-    jobMatchCVButton.classList.add('is-loading');
+    jobMatchCVButton?.classList.add('is-loading');
     try {
       await loadJobSearchResults({ cvId });
     } finally {
       jobMatchCVButton.disabled = false;
-      jobMatchCVButton.classList.remove('is-loading');
+      jobMatchCVButton?.classList.remove('is-loading');
     }
   });
   jobSearchResetButton?.addEventListener('click', async () => {
@@ -2842,15 +3146,15 @@ TÊN CÔNG TY:
   bindJDFileName(pageUploadJdFile, document.getElementById('page-upload-jd-file-name'));
 
   if (pageBtnTabSys) {
-    pageBtnTabSys.addEventListener('click', () => {
-      pageBtnTabSys.classList.add('active'); pageBtnTabCust?.classList.remove('active');
+    pageBtnTabSys?.addEventListener('click', () => {
+      pageBtnTabSys?.classList.add('active'); pageBtnTabCust?.classList.remove('active');
       if (pageSecSysJds) pageSecSysJds.style.display = 'block';
       if (pageSecCustJd) pageSecCustJd.style.display = 'none';
     });
   }
   if (pageBtnTabCust) {
-    pageBtnTabCust.addEventListener('click', () => {
-      pageBtnTabCust.classList.add('active'); pageBtnTabSys?.classList.remove('active');
+    pageBtnTabCust?.addEventListener('click', () => {
+      pageBtnTabCust?.classList.add('active'); pageBtnTabSys?.classList.remove('active');
       if (pageSecCustJd) pageSecCustJd.style.display = 'block';
       if (pageSecSysJds) pageSecSysJds.style.display = 'none';
     });
@@ -2877,7 +3181,7 @@ TÊN CÔNG TY:
           ${currentUser?.role === 'student' && !jd.is_system && jd.is_published ? `<div class="jd-apply-row"><select class="form-input jd-application-cv">${cvs.map(cv => `<option value="${escapeHtml(cv.id)}">${escapeHtml(cv.title)}</option>`).join('')}</select><button type="button" class="btn-primary apply-jd" data-id="${escapeHtml(jd.id)}" ${cvs.length ? '' : 'disabled'}>Chia sẻ CV ứng tuyển</button></div>` : ''}
         </div>
       `).join('');
-      pageJdListContainer.querySelectorAll('.apply-jd').forEach(button => button.addEventListener('click', async () => {
+      pageJdListContainer.querySelectorAll('.apply-jd').forEach(button => button?.addEventListener('click', async () => {
         const cvId = button.closest('div').querySelector('.jd-application-cv')?.value;
         if (!cvId) return;
         try { await ApiClient.shareCV(button.dataset.id, cvId); showToast('Đã chia sẻ CV cho doanh nghiệp.', 'success'); }
@@ -2889,7 +3193,7 @@ TÊN CÔNG TY:
   }
 
   if (pageCustomJdForm) {
-    pageCustomJdForm.addEventListener('submit', async (e) => {
+    pageCustomJdForm?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const title = document.getElementById('page-custom-jd-title').value.trim();
       const company = document.getElementById('page-custom-jd-company').value.trim();
@@ -2955,7 +3259,7 @@ TÊN CÔNG TY:
   function closeGapSelectMenus(exceptShell = null) {
     document.querySelectorAll('.gap-select-shell.is-open').forEach(shell => {
       if (shell === exceptShell) return;
-      shell.classList.remove('is-open');
+      shell?.classList.remove('is-open');
       shell.querySelector('.gap-select-trigger')?.setAttribute('aria-expanded', 'false');
     });
   }
@@ -3020,12 +3324,12 @@ TÊN CÔNG TY:
     const openUpward = roomBelow < Math.min(260, preferredHeight) && roomAbove > roomBelow;
     const availableHeight = openUpward ? roomAbove : roomBelow;
 
-    shell.classList.toggle('opens-upward', openUpward);
+    shell?.classList.toggle('opens-upward', openUpward);
     menu.style.setProperty('--gap-select-menu-max-height', `${Math.max(120, Math.min(preferredHeight, availableHeight))}px`);
   }
 
   if (pageUploadJdForm) {
-    pageUploadJdForm.addEventListener('submit', async (e) => {
+    pageUploadJdForm?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const file = pageUploadJdFile?.files?.[0];
       if (!file) {
@@ -3064,7 +3368,7 @@ TÊN CÔNG TY:
     let trigger = shell.querySelector('.gap-select-trigger');
     let menu = shell.querySelector('.gap-select-menu');
     if (!trigger || !menu) {
-      select.classList.add('gap-select-native-hidden');
+      select?.classList.add('gap-select-native-hidden');
       trigger = document.createElement('button');
       trigger.type = 'button';
       trigger.className = 'gap-select-trigger';
@@ -3084,10 +3388,10 @@ TÊN CÔNG TY:
       menu.setAttribute('aria-label', select.getAttribute('aria-label') || 'Danh sách lựa chọn');
       shell.append(trigger, menu);
 
-      trigger.addEventListener('click', () => {
-        const shouldOpen = !shell.classList.contains('is-open');
+      trigger?.addEventListener('click', () => {
+        const shouldOpen = !shell?.classList.contains('is-open');
         closeGapSelectMenus(shell);
-        shell.classList.toggle('is-open', shouldOpen);
+        shell?.classList.toggle('is-open', shouldOpen);
         trigger.setAttribute('aria-expanded', String(shouldOpen));
         if (shouldOpen) {
           positionGapSelectMenu(shell, menu);
@@ -3095,11 +3399,11 @@ TÊN CÔNG TY:
         }
       });
 
-      trigger.addEventListener('keydown', event => {
+      trigger?.addEventListener('keydown', event => {
         if (!['ArrowDown', 'ArrowUp', 'Enter', ' '].includes(event.key)) return;
         event.preventDefault();
         closeGapSelectMenus(shell);
-        shell.classList.add('is-open');
+        shell?.classList.add('is-open');
         trigger.setAttribute('aria-expanded', 'true');
         positionGapSelectMenu(shell, menu);
         const items = [...menu.querySelectorAll('.gap-select-menu-item:not(:disabled):not([hidden])')];
@@ -3108,12 +3412,12 @@ TÊN CÔNG TY:
         items[targetIndex]?.focus();
       });
 
-      menu.addEventListener('keydown', event => {
+      menu?.addEventListener('keydown', event => {
         const items = [...menu.querySelectorAll('.gap-select-menu-item:not(:disabled):not([hidden])')];
         const currentIndex = items.indexOf(document.activeElement);
         if (event.key === 'Escape') {
           event.preventDefault();
-          shell.classList.remove('is-open');
+          shell?.classList.remove('is-open');
           trigger.setAttribute('aria-expanded', 'false');
           trigger.focus();
         } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
@@ -3197,11 +3501,11 @@ TÊN CÔNG TY:
     });
 
     menu.querySelectorAll('.gap-select-menu-item:not(:disabled)').forEach(item => {
-      item.addEventListener('click', () => {
+      item?.addEventListener('click', () => {
         select.value = item.dataset.value;
         select.dispatchEvent(new Event('change', { bubbles: true }));
         enhanceGapSelect(select);
-        shell.classList.remove('is-open');
+        shell?.classList.remove('is-open');
         trigger.setAttribute('aria-expanded', 'false');
         trigger.focus();
       });
@@ -3228,6 +3532,11 @@ TÊN CÔNG TY:
       const [cvs, jds] = await Promise.all([ApiClient.listCVs(), ApiClient.listJDs()]);
       pageSelectGapCv.innerHTML = buildGapCvOptions(cvs);
       pageSelectGapJd.innerHTML = buildGapJdOptions(jds);
+      const preselectedCvId = window.sessionStorage.getItem('career-preselected-cv-id');
+      if (preselectedCvId && [...pageSelectGapCv.options].some(option => option.value === preselectedCvId)) {
+        pageSelectGapCv.value = preselectedCvId;
+        window.sessionStorage.removeItem('career-preselected-cv-id');
+      }
       enhanceGapSelect(pageSelectGapCv);
       enhanceGapSelect(pageSelectGapJd);
     } catch (err) {
@@ -3236,7 +3545,7 @@ TÊN CÔNG TY:
   }
 
   if (pageBtnRunGap) {
-    pageBtnRunGap.addEventListener('click', async () => {
+    pageBtnRunGap?.addEventListener('click', async () => {
       const cvId = pageSelectGapCv?.value;
       const jdId = pageSelectGapJd?.value;
       if (!cvId || !jdId) {
@@ -3347,8 +3656,8 @@ TÊN CÔNG TY:
               showToast(accepted ? 'Đã lưu nội dung được duyệt.' : 'Đã loại gợi ý.', 'success');
             } catch (err) { showToast(`Không lưu được quyết định: ${err.message}`, 'error'); }
           };
-          card.querySelector('.suggestion-accept').addEventListener('click', () => save(true));
-          card.querySelector('.suggestion-reject').addEventListener('click', () => save(false));
+          card.querySelector('.suggestion-accept')?.addEventListener('click', () => save(true));
+          card.querySelector('.suggestion-reject')?.addEventListener('click', () => save(false));
         });
         const exportBar = document.getElementById('page-cv-export-bar');
         if (exportBar) exportBar.hidden = false;
@@ -3356,7 +3665,7 @@ TÊN CÔNG TY:
         const guardrailStatus = document.getElementById('page-gap-guardrail-status');
         if (guardrailStatus) {
           const passed = (res.integrity_guardrail || 'passed') === 'passed';
-          guardrailStatus.classList.toggle('is-warning', !passed);
+          guardrailStatus?.classList.toggle('is-warning', !passed);
           guardrailStatus.querySelector('strong').textContent = passed
             ? '✓ Guardrail kiểm chứng bằng chứng đã đạt'
             : '! Kết quả cần được kiểm tra thêm';
@@ -3408,7 +3717,7 @@ TÊN CÔNG TY:
         resumeButton.type = 'button';
         resumeButton.className = 'btn-outline full-width';
         resumeButton.textContent = `Tiếp tục phiên đang lưu (${ongoing.current_question_index + 1}/${ongoing.total_questions})`;
-        resumeButton.addEventListener('click', async () => {
+        resumeButton?.addEventListener('click', async () => {
           try {
             const question = await ApiClient.resumeInterview(ongoing.id);
             pageSessionId = ongoing.id;
@@ -3426,7 +3735,7 @@ TÊN CÔNG TY:
   }
 
   if (pageBtnStartInt) {
-    pageBtnStartInt.addEventListener('click', async () => {
+    pageBtnStartInt?.addEventListener('click', async () => {
       const cvId = pageSelectIntCv?.value;
       const jdId = pageSelectIntJd?.value;
       if (!cvId || !jdId) {
@@ -3474,7 +3783,7 @@ TÊN CÔNG TY:
   }
 
   if (pageAnswerForm) {
-    pageAnswerForm.addEventListener('submit', async (e) => {
+    pageAnswerForm?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const ansText = pageAnswerInput?.value.trim();
       if (!ansText || !pageSessionId) return;
@@ -3579,7 +3888,7 @@ TÊN CÔNG TY:
         <article class="hitl-item"><div><strong>${escapeHtml(item.counselor_name)}</strong><small>${escapeHtml(item.counselor_email)} · ${escapeHtml(item.status)}</small></div>
         ${item.status === 'active' ? `<button class="btn-outline revoke-consent" data-id="${escapeHtml(item.id)}">Thu hồi</button>` : ''}</article>
       `).join('') || '<p class="gap-empty">Bạn chưa cấp quyền cho cố vấn nào.</p>';
-      list.querySelectorAll('.revoke-consent').forEach(button => button.addEventListener('click', async () => {
+      list.querySelectorAll('.revoke-consent').forEach(button => button?.addEventListener('click', async () => {
         await ApiClient.revokeCounselor(button.dataset.id); showToast('Đã thu hồi quyền cố vấn.', 'success'); loadStudentCounselorConsents();
       }));
     } catch (err) { list.innerHTML = `<p class="gap-empty">${escapeHtml(err.message)}</p>`; }
@@ -3603,7 +3912,7 @@ TÊN CÔNG TY:
         ApiClient.getProductMetrics().catch(() => null),
       ]);
       list.innerHTML = assignments.map(item => `<button class="hitl-item hitl-student" data-id="${escapeHtml(item.student_id)}"><span><strong>${escapeHtml(item.student_name)}</strong><small>${escapeHtml(item.student_email)}</small></span><span>›</span></button>`).join('') || '<p class="gap-empty">Chưa có sinh viên cấp quyền.</p>';
-      list.querySelectorAll('.hitl-student').forEach(button => button.addEventListener('click', () => loadCounselorStudent(button.dataset.id)));
+      list.querySelectorAll('.hitl-student').forEach(button => button?.addEventListener('click', () => loadCounselorStudent(button.dataset.id)));
       const kpi = document.getElementById('counselor-kpi-overview');
       if (kpi && metrics) {
         const adoptionMet = Boolean(metrics.adoption_target_met);
@@ -3757,9 +4066,9 @@ TÊN CÔNG TY:
 
   // Filter Buttons Handler
   document.querySelectorAll('.archive-filter-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.archive-filter-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
+    btn?.addEventListener('click', () => {
+      document.querySelectorAll('.archive-filter-btn').forEach(b => b?.classList.remove('active'));
+      btn?.classList.add('active');
       currentArchiveFilter = btn.dataset.filter || 'all';
       renderMissionArchiveCards();
     });
@@ -3868,8 +4177,8 @@ TÊN CÔNG TY:
         </div>
       `;
       document.body.appendChild(modal);
-      modal.querySelector('.archive-modal-close').addEventListener('click', () => modal.remove());
-      modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+      modal.querySelector('.archive-modal-close')?.addEventListener('click', () => modal.remove());
+      modal?.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
     } catch (err) {
       showToast(`Không thể xem báo cáo phỏng vấn: ${err.message}`, 'error');
     }
@@ -3899,7 +4208,7 @@ TÊN CÔNG TY:
           </div>
           <span class="badge badge-ok" style="background:rgba(124,77,255,0.2);color:#b388ff;">Match ${Number(analysis.match_score).toFixed(1)}%</span>
         </div>
-      `).join('') || '<p class="gap-empty">Chưa có phân tích Gap Match.</p>';
+      `).join('');
 
       const interviewsHtml = (data.interviews || []).map(session => `
         <div class="student-item-card">
@@ -3947,7 +4256,7 @@ TÊN CÔNG TY:
       `;
 
       detail.querySelectorAll('.view-student-star-report').forEach(btn => {
-        btn.addEventListener('click', () => openStarReportModal(btn.dataset.sessionId));
+        btn?.addEventListener('click', () => openStarReportModal(btn.dataset.sessionId));
       });
 
       document.getElementById('counselor-feedback-student-id').value = studentId;
@@ -3974,8 +4283,8 @@ TÊN CÔNG TY:
     try {
       const jds = await ApiClient.listEnterpriseJDs();
       list.innerHTML = jds.map(jd => `<article class="hitl-item"><div><strong>${escapeHtml(jd.title)}</strong><small>${jd.is_published ? 'Đã công bố' : 'Bản nháp'}</small></div><div>${!jd.is_published ? `<button class="btn-outline publish-jd" data-id="${escapeHtml(jd.id)}">Công bố</button>` : ''}<button class="btn-primary view-candidates" data-id="${escapeHtml(jd.id)}">Ứng viên</button></div></article>`).join('') || '<p class="gap-empty">Hãy tạo JD trong Thư viện Jobs.</p>';
-      list.querySelectorAll('.publish-jd').forEach(button => button.addEventListener('click', async () => { await ApiClient.publishJD(button.dataset.id); showToast('Đã công bố JD.', 'success'); loadEnterpriseDashboard(); }));
-      list.querySelectorAll('.view-candidates').forEach(button => button.addEventListener('click', () => loadEnterpriseCandidates(button.dataset.id)));
+      list.querySelectorAll('.publish-jd').forEach(button => button?.addEventListener('click', async () => { await ApiClient.publishJD(button.dataset.id); showToast('Đã công bố JD.', 'success'); loadEnterpriseDashboard(); }));
+      list.querySelectorAll('.view-candidates').forEach(button => button?.addEventListener('click', () => loadEnterpriseCandidates(button.dataset.id)));
     } catch (err) { list.innerHTML = `<p class="gap-empty">${escapeHtml(err.message)}</p>`; }
   }
 
@@ -3984,7 +4293,7 @@ TÊN CÔNG TY:
     try {
       const candidates = await ApiClient.listCandidates(jdId);
       list.innerHTML = candidates.map(item => `<article class="candidate-card"><div><strong>${escapeHtml(item.candidate_name)}</strong><small>${escapeHtml(item.candidate_email)}</small></div><b>${Number(item.match_score).toFixed(1)}%</b><button class="btn-outline view-shared-cv" data-id="${escapeHtml(item.id)}">Xem CV đã chia sẻ</button><select class="form-input candidate-decision" data-id="${escapeHtml(item.id)}"><option value="submitted" ${item.status === 'submitted' ? 'selected' : ''}>Đã nộp</option><option value="shortlisted" ${item.status === 'shortlisted' ? 'selected' : ''}>Shortlist</option><option value="interview" ${item.status === 'interview' ? 'selected' : ''}>Mời phỏng vấn</option><option value="rejected" ${item.status === 'rejected' ? 'selected' : ''}>Từ chối</option></select></article>`).join('') || '<p class="gap-empty">Chưa có ứng viên chủ động chia sẻ CV.</p>';
-      list.querySelectorAll('.view-shared-cv').forEach(button => button.addEventListener('click', async () => {
+      list.querySelectorAll('.view-shared-cv').forEach(button => button?.addEventListener('click', async () => {
         const detail = document.getElementById('enterprise-candidate-cv');
         try {
           const cv = await ApiClient.getCandidateCV(button.dataset.id);
@@ -3993,7 +4302,7 @@ TÊN CÔNG TY:
           detail.innerHTML = `<h3>${escapeHtml(cv.title)}</h3><p>${escapeHtml(parsed.summary || '')}</p><h4>Kỹ năng</h4><p>${escapeHtml((parsed.skills || []).join(', '))}</p><h4>Nội dung CV đã chia sẻ</h4><pre>${escapeHtml(cv.raw_text || '')}</pre>`;
         } catch (err) { showToast(err.message, 'error'); }
       }));
-      list.querySelectorAll('.candidate-decision').forEach(select => select.addEventListener('change', async () => { await ApiClient.decideCandidate(select.dataset.id, select.value); showToast('Đã cập nhật quyết định.', 'success'); }));
+      list.querySelectorAll('.candidate-decision').forEach(select => select?.addEventListener('change', async () => { await ApiClient.decideCandidate(select.dataset.id, select.value); showToast('Đã cập nhật quyết định.', 'success'); }));
     } catch (err) { list.innerHTML = `<p class="gap-empty">${escapeHtml(err.message)}</p>`; }
   }
 
@@ -4011,13 +4320,20 @@ TÊN CÔNG TY:
     const visibleNavItems = new Set(ROLE_NAV_ITEMS[roleKey]);
     ALL_ROLE_NAV_IDS.forEach(id => {
       const element = document.getElementById(id);
-      if (element) element.hidden = !visibleNavItems.has(id);
+      if (element) {
+        element.hidden = !visibleNavItems.has(id);
+        if (element.hidden) {
+          element.style.setProperty('display', 'none', 'important');
+        } else {
+          element.style.removeProperty('display');
+        }
+      }
     });
     const isAdmin = user?.role === 'admin';
     const adminNav = document.getElementById('nav-admin');
     if (adminNav) {
       adminNav.hidden = !isAdmin;
-      adminNav.classList.toggle('visible', isAdmin);
+      adminNav?.classList.toggle('visible', isAdmin);
     }
     const consentPanel = document.getElementById('student-counselor-consent-panel');
     if (consentPanel) consentPanel.hidden = user?.role !== 'student';
@@ -4051,7 +4367,7 @@ TÊN CÔNG TY:
     document.querySelectorAll('select').forEach(select => {
       select.selectedIndex = 0;
     });
-    document.querySelectorAll('.modal-overlay.open').forEach(modal => modal.classList.remove('open'));
+    document.querySelectorAll('.modal-overlay.open').forEach(modal => modal?.classList.remove('open'));
     const selectedFileBadge = document.getElementById('selected-file-name');
     if (selectedFileBadge) {
       selectedFileBadge.textContent = '';
@@ -4102,9 +4418,9 @@ TÊN CÔNG TY:
       if (currentViewName !== roleHomeView) switchView(roleHomeView);
       if (navAdmin) {
         if (user.role === 'admin') {
-          navAdmin.classList.add('visible');
+          navAdmin?.classList.add('visible');
         } else {
-          navAdmin.classList.remove('visible');
+          navAdmin?.classList.remove('visible');
         }
       }
       if (authContainer) {
@@ -4128,11 +4444,11 @@ TÊN CÔNG TY:
           const open = accountMenu?.classList.toggle('open');
           accountTrigger.setAttribute('aria-expanded', String(Boolean(open)));
         });
-        accountMenu?.querySelectorAll('[data-account-action]').forEach(button => button.addEventListener('click', () => {
-          accountMenu.classList.remove('open');
+        accountMenu?.querySelectorAll('[data-account-action]').forEach(button => button?.addEventListener('click', () => {
+          accountMenu?.classList.remove('open');
           switchView('profile');
         }));
-        document.getElementById('btn-logout').addEventListener('click', () => {
+        document.getElementById('btn-logout')?.addEventListener('click', () => {
           performLogout();
         });
       }
@@ -4140,10 +4456,10 @@ TÊN CÔNG TY:
       applyRoleAccess(null);
       if (userNameEl) userNameEl.textContent = 'Chưa đăng nhập';
       if (userRoleEl) userRoleEl.textContent = 'Hệ thống Trợ Lý Nghề Nghiệp X';
-      if (navAdmin) navAdmin.classList.remove('visible');
+      if (navAdmin) navAdmin?.classList.remove('visible');
       if (authContainer) {
         authContainer.innerHTML = `<button class="btn-login" id="btn-login">Đăng nhập</button>`;
-        document.getElementById('btn-login').addEventListener('click', openAuthModal);
+        document.getElementById('btn-login')?.addEventListener('click', openAuthModal);
       }
     }
   }
@@ -4325,7 +4641,7 @@ TÊN CÔNG TY:
 
     // Attach edit and delete button events
     tbody.querySelectorAll('.btn-edit-user').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn?.addEventListener('click', () => {
         const uId = btn.getAttribute('data-user-id');
         const targetUser = adminUsersData.find(x => x.id === uId);
         if (targetUser) openAdminUserModal('edit', targetUser);
@@ -4333,7 +4649,7 @@ TÊN CÔNG TY:
     });
 
     tbody.querySelectorAll('.btn-delete-user').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn?.addEventListener('click', () => {
         const uId = btn.getAttribute('data-user-id');
         const targetUser = adminUsersData.find(x => x.id === uId);
         if (targetUser) deleteAdminUser(targetUser);
@@ -4373,11 +4689,11 @@ TÊN CÔNG TY:
   const btnAdminCloseUser = document.getElementById('modal-admin-user-close');
 
   if (btnAdminAddUser) {
-    btnAdminAddUser.addEventListener('click', () => openAdminUserModal('add'));
+    btnAdminAddUser?.addEventListener('click', () => openAdminUserModal('add'));
   }
 
   if (btnAdminCloseUser) {
-    btnAdminCloseUser.addEventListener('click', () => closeAdminUserModal());
+    btnAdminCloseUser?.addEventListener('click', () => closeAdminUserModal());
   }
 
   // Update modal header icon for edit mode
@@ -4439,23 +4755,23 @@ TÊN CÔNG TY:
       updateAdminModalIcon('add');
     }
 
-    adminUserModal.classList.add('open');
+    adminUserModal?.classList.add('open');
   }
 
   function closeAdminUserModal() {
-    if (adminUserModal) adminUserModal.classList.remove('open');
+    if (adminUserModal) adminUserModal?.classList.remove('open');
   }
 
   // Close admin modal when clicking overlay background
   if (adminUserModal) {
-    adminUserModal.addEventListener('click', (e) => {
+    adminUserModal?.addEventListener('click', (e) => {
       if (e.target === adminUserModal) closeAdminUserModal();
     });
   }
 
 
   if (adminUserForm) {
-    adminUserForm.addEventListener('submit', async (e) => {
+    adminUserForm?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const uId = document.getElementById('admin-edit-user-id')?.value;
       const fullName = document.getElementById('admin-input-fullname')?.value.trim();
@@ -4506,12 +4822,12 @@ TÊN CÔNG TY:
       if (deleteConfirmDesc) deleteConfirmDesc.innerHTML = description;
       if (deleteConfirmWarning) deleteConfirmWarning.textContent = warning;
       if (deleteConfirmOk) deleteConfirmOk.textContent = confirmLabel;
-      if (deleteConfirmOverlay) deleteConfirmOverlay.classList.add('open');
+      if (deleteConfirmOverlay) deleteConfirmOverlay?.classList.add('open');
     });
   }
 
   function closeDeleteConfirm(result) {
-    if (deleteConfirmOverlay) deleteConfirmOverlay.classList.remove('open');
+    if (deleteConfirmOverlay) deleteConfirmOverlay?.classList.remove('open');
     if (pendingDeleteResolve) {
       pendingDeleteResolve(result);
       pendingDeleteResolve = null;
@@ -4519,13 +4835,13 @@ TÊN CÔNG TY:
   }
 
   if (deleteConfirmCancel) {
-    deleteConfirmCancel.addEventListener('click', () => closeDeleteConfirm(false));
+    deleteConfirmCancel?.addEventListener('click', () => closeDeleteConfirm(false));
   }
   if (deleteConfirmOk) {
-    deleteConfirmOk.addEventListener('click', () => closeDeleteConfirm(true));
+    deleteConfirmOk?.addEventListener('click', () => closeDeleteConfirm(true));
   }
   if (deleteConfirmOverlay) {
-    deleteConfirmOverlay.addEventListener('click', (e) => {
+    deleteConfirmOverlay?.addEventListener('click', (e) => {
       if (e.target === deleteConfirmOverlay) closeDeleteConfirm(false);
     });
   }
@@ -4595,14 +4911,14 @@ TÊN CÔNG TY:
   let googleIdentityInitialized = false;
 
   function openAuthModal() {
-    if (authOverlay) authOverlay.classList.add('open');
+    if (authOverlay) authOverlay?.classList.add('open');
     renderGoogleSignInButton();
   }
   function closeAuthModal() {
-    if (authOverlay) authOverlay.classList.remove('open');
+    if (authOverlay) authOverlay?.classList.remove('open');
     document.getElementById('auth-role-select')?.classList.remove('is-open');
   }
-  if (authClose) authClose.addEventListener('click', closeAuthModal);
+  if (authClose) authClose?.addEventListener('click', closeAuthModal);
 
   function setAuthMode(register) {
     if (forgotPasswordButton) forgotPasswordButton.hidden = register;
@@ -4613,6 +4929,8 @@ TÊN CÔNG TY:
     if (register) {
       tabRegister?.classList.add('active'); if (tabRegister) tabRegister.style.color = '#fff';
       tabLogin?.classList.remove('active'); if (tabLogin) tabLogin.style.color = 'var(--text-dim)';
+      tabRegister?.setAttribute('aria-selected', 'true');
+      tabLogin?.setAttribute('aria-selected', 'false');
       if (fullnameGroup) fullnameGroup.style.display = 'block';
       if (roleGroup) roleGroup.style.display = 'block';
       if (authTitle) authTitle.textContent = dict['auth-title-reg'] || 'Tạo tài khoản mới';
@@ -4621,6 +4939,8 @@ TÊN CÔNG TY:
     } else {
       tabLogin?.classList.add('active'); if (tabLogin) tabLogin.style.color = '#fff';
       tabRegister?.classList.remove('active'); if (tabRegister) tabRegister.style.color = 'var(--text-dim)';
+      tabLogin?.setAttribute('aria-selected', 'true');
+      tabRegister?.setAttribute('aria-selected', 'false');
       if (fullnameGroup) fullnameGroup.style.display = 'none';
       if (roleGroup) roleGroup.style.display = 'none';
       if (authTitle) authTitle.textContent = dict['auth-title-login'] || 'Chào mừng trở lại';
@@ -4630,8 +4950,8 @@ TÊN CÔNG TY:
     if (authOverlay?.classList.contains('open')) renderGoogleSignInButton();
   }
 
-  if (tabLogin) tabLogin.addEventListener('click', () => setAuthMode(false));
-  if (tabRegister) tabRegister.addEventListener('click', () => setAuthMode(true));
+  if (tabLogin) tabLogin?.addEventListener('click', () => setAuthMode(false));
+  if (tabRegister) tabRegister?.addEventListener('click', () => setAuthMode(true));
 
   function updateResetSteps() {
     if (resetStep1) resetStep1.hidden = (currentResetStep !== 1);
@@ -4641,7 +4961,7 @@ TÊN CÔNG TY:
 
   function setPasswordResetMode(enabled) {
     if (!passwordResetForm || !passwordResetOverlay) return;
-    passwordResetOverlay.classList.toggle('open', enabled);
+    passwordResetOverlay?.classList.toggle('open', enabled);
     if (enabled) {
       closeAuthModal();
       currentResetStep = 1;
@@ -4779,18 +5099,18 @@ TÊN CÔNG TY:
       menu.setAttribute('aria-label', 'Danh sách vai trò');
       shell.append(trigger, menu);
 
-      trigger.addEventListener('click', () => {
-        const shouldOpen = !shell.classList.contains('is-open');
-        shell.classList.toggle('is-open', shouldOpen);
+      trigger?.addEventListener('click', () => {
+        const shouldOpen = !shell?.classList.contains('is-open');
+        shell?.classList.toggle('is-open', shouldOpen);
         trigger.setAttribute('aria-expanded', String(shouldOpen));
         if (shouldOpen) menu.querySelector('[aria-selected="true"]')?.focus();
       });
-      menu.addEventListener('keydown', event => {
+      menu?.addEventListener('keydown', event => {
         const items = [...menu.querySelectorAll('.auth-role-option')];
         const currentIndex = items.indexOf(document.activeElement);
         if (event.key === 'Escape') {
           event.preventDefault();
-          shell.classList.remove('is-open');
+          shell?.classList.remove('is-open');
           trigger.setAttribute('aria-expanded', 'false');
           trigger.focus();
         } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
@@ -4816,11 +5136,11 @@ TÊN CÔNG TY:
         <span class="auth-role-check" aria-hidden="true">✓</span>
       </button>`;
     }).join('');
-    menu.querySelectorAll('.auth-role-option').forEach(item => item.addEventListener('click', () => {
+    menu.querySelectorAll('.auth-role-option').forEach(item => item?.addEventListener('click', () => {
       select.value = item.dataset.value;
       select.dispatchEvent(new Event('change', { bubbles: true }));
       enhanceAuthRoleSelect();
-      shell.classList.remove('is-open');
+      shell?.classList.remove('is-open');
       trigger.setAttribute('aria-expanded', 'false');
       trigger.focus();
     }));
@@ -4830,7 +5150,7 @@ TÊN CÔNG TY:
   document.addEventListener('click', event => {
     const shell = document.getElementById('auth-role-select');
     if (shell && !event.target.closest('#auth-role-select')) {
-      shell.classList.remove('is-open');
+      shell?.classList.remove('is-open');
       shell.querySelector('.auth-role-trigger')?.setAttribute('aria-expanded', 'false');
     }
   });
@@ -4920,7 +5240,7 @@ TÊN CÔNG TY:
   }
 
   if (loginForm) {
-    loginForm.addEventListener('submit', async (e) => {
+    loginForm?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = document.getElementById('input-email').value.trim();
       const password = document.getElementById('input-password').value;
@@ -4963,11 +5283,11 @@ TÊN CÔNG TY:
       openAuthModal();
       return;
     }
-    if (cvOverlay) cvOverlay.classList.add('open');
+    if (cvOverlay) cvOverlay?.classList.add('open');
     loadCVList();
   }
-  function closeCVModal() { if (cvOverlay) cvOverlay.classList.remove('open'); }
-  if (cvClose) cvClose.addEventListener('click', closeCVModal);
+  function closeCVModal() { if (cvOverlay) cvOverlay?.classList.remove('open'); }
+  if (cvClose) cvClose?.addEventListener('click', closeCVModal);
 
   document.getElementById('icon-cv-btn')?.addEventListener('click', openCVModal);
 
@@ -4994,7 +5314,7 @@ TÊN CÔNG TY:
   }
 
   if (cvForm) {
-    cvForm.addEventListener('submit', async (e) => {
+    cvForm?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const fileInput = document.getElementById('cv-file-input');
       const titleInput = document.getElementById('cv-title-input');
@@ -5038,24 +5358,24 @@ TÊN CÔNG TY:
       openAuthModal();
       return;
     }
-    if (jdOverlay) jdOverlay.classList.add('open');
+    if (jdOverlay) jdOverlay?.classList.add('open');
     loadJDList();
   }
-  function closeJDModal() { if (jdOverlay) jdOverlay.classList.remove('open'); }
-  if (jdClose) jdClose.addEventListener('click', closeJDModal);
+  function closeJDModal() { if (jdOverlay) jdOverlay?.classList.remove('open'); }
+  if (jdClose) jdClose?.addEventListener('click', closeJDModal);
 
   document.getElementById('icon-location-btn')?.addEventListener('click', openJDModal);
 
   if (btnTabSysJd) {
-    btnTabSysJd.addEventListener('click', () => {
-      btnTabSysJd.classList.add('active'); btnTabCustJd?.classList.remove('active');
+    btnTabSysJd?.addEventListener('click', () => {
+      btnTabSysJd?.classList.add('active'); btnTabCustJd?.classList.remove('active');
       if (secSysJd) secSysJd.style.display = 'block';
       if (secCustJd) secCustJd.style.display = 'none';
     });
   }
   if (btnTabCustJd) {
-    btnTabCustJd.addEventListener('click', () => {
-      btnTabCustJd.classList.add('active'); btnTabSysJd?.classList.remove('active');
+    btnTabCustJd?.addEventListener('click', () => {
+      btnTabCustJd?.classList.add('active'); btnTabSysJd?.classList.remove('active');
       if (secCustJd) secCustJd.style.display = 'block';
       if (secSysJd) secSysJd.style.display = 'none';
     });
@@ -5085,7 +5405,7 @@ TÊN CÔNG TY:
   }
 
   if (customJdForm) {
-    customJdForm.addEventListener('submit', async (e) => {
+    customJdForm?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const title = document.getElementById('custom-jd-title').value.trim();
       const company = document.getElementById('custom-jd-company').value.trim();
@@ -5105,7 +5425,7 @@ TÊN CÔNG TY:
   }
 
   if (uploadJdForm) {
-    uploadJdForm.addEventListener('submit', async (e) => {
+    uploadJdForm?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const file = uploadJdFile?.files?.[0];
       if (!file) {
@@ -5152,11 +5472,11 @@ TÊN CÔNG TY:
       openAuthModal();
       return;
     }
-    if (gapOverlay) gapOverlay.classList.add('open');
+    if (gapOverlay) gapOverlay?.classList.add('open');
     populateGapOptions();
   }
-  function closeGapModal() { if (gapOverlay) gapOverlay.classList.remove('open'); }
-  if (gapClose) gapClose.addEventListener('click', closeGapModal);
+  function closeGapModal() { if (gapOverlay) gapOverlay?.classList.remove('open'); }
+  if (gapClose) gapClose?.addEventListener('click', closeGapModal);
 
   document.getElementById('icon-search-btn')?.addEventListener('click', openGapModal);
 
@@ -5174,7 +5494,7 @@ TÊN CÔNG TY:
   }
 
   if (btnRunGap) {
-    btnRunGap.addEventListener('click', async () => {
+    btnRunGap?.addEventListener('click', async () => {
       const cvId = selectGapCv?.value;
       const jdId = selectGapJd?.value;
       if (!cvId || !jdId) {
@@ -5236,11 +5556,11 @@ TÊN CÔNG TY:
       openAuthModal();
       return;
     }
-    if (intOverlay) intOverlay.classList.add('open');
+    if (intOverlay) intOverlay?.classList.add('open');
     populateInterviewOptions();
   }
-  function closeInterviewModal() { if (intOverlay) intOverlay.classList.remove('open'); }
-  if (intClose) intClose.addEventListener('click', closeInterviewModal);
+  function closeInterviewModal() { if (intOverlay) intOverlay?.classList.remove('open'); }
+  if (intClose) intClose?.addEventListener('click', closeInterviewModal);
 
   document.getElementById('icon-megaphone-btn')?.addEventListener('click', openInterviewModal);
 
@@ -5263,7 +5583,7 @@ TÊN CÔNG TY:
   }
 
   if (btnStartInt) {
-    btnStartInt.addEventListener('click', async () => {
+    btnStartInt?.addEventListener('click', async () => {
       const cvId = selectIntCv?.value;
       const jdId = selectIntJd?.value;
       if (!cvId || !jdId) {
@@ -5311,7 +5631,7 @@ TÊN CÔNG TY:
   }
 
   if (answerForm) {
-    answerForm.addEventListener('submit', async (e) => {
+    answerForm?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const ansText = answerInput?.value.trim();
       if (!ansText || !currentSessionId) return;
@@ -5426,7 +5746,7 @@ TÊN CÔNG TY:
       historyOpen = Boolean(open);
       if (historyPanel) historyPanel.hidden = !historyOpen;
       historyButton?.setAttribute('aria-expanded', String(historyOpen));
-      panel.classList.toggle('history-open', historyOpen);
+      panel?.classList.toggle('history-open', historyOpen);
     }
 
     function formatConversationDate(value) {
@@ -5524,7 +5844,7 @@ TÊN CÔNG TY:
       panel.hidden = !isOpen;
       panel.setAttribute('aria-hidden', String(!isOpen));
       avatar.setAttribute('aria-expanded', String(isOpen));
-      companion.classList.toggle('chat-open', isOpen);
+      companion?.classList.toggle('chat-open', isOpen);
       hint?.classList.add('is-hidden');
       companion.hidden = isOpen;
       if (isOpen) {
@@ -5576,25 +5896,25 @@ TÊN CÔNG TY:
     async function loadAssistantStatus() {
       try {
         const status = await ApiClient.getAssistantStatus();
-        companion.classList.toggle('is-online', Boolean(status.configured));
+        companion?.classList.toggle('is-online', Boolean(status.configured));
         if (statusText) {
           statusText.textContent = status.configured
             ? `${status.weather_configured ? 'Gemini + Weather online' : 'Gemini online'} · ${status.model}`
             : 'Thiếu GEMINI_API_KEY';
         }
       } catch (_err) {
-        companion.classList.remove('is-online');
+        companion?.classList.remove('is-online');
         if (statusText) statusText.textContent = 'Backend agent chưa sẵn sàng';
       }
     }
 
-    avatar.addEventListener('pointerdown', event => {
+    avatar?.addEventListener('pointerdown', event => {
       if (event.button !== 0 && event.pointerType === 'mouse') return;
       toggleChat(true);
       event.preventDefault();
     });
 
-    avatar.addEventListener('click', event => {
+    avatar?.addEventListener('click', event => {
       if (event.detail === 0) toggleChat(true);
     });
     closeButton?.addEventListener('click', () => toggleChat(false));
@@ -5634,7 +5954,7 @@ TÊN CÔNG TY:
       toggleChat(false);
     });
 
-    form.addEventListener('submit', async event => {
+    form?.addEventListener('submit', async event => {
       event.preventDefault();
       const text = input.value.trim();
       if (!text || sendButton?.disabled) return;
@@ -5662,7 +5982,7 @@ TÊN CÔNG TY:
         currentConversationId = result.conversation_id;
         appendChatMessage('assistant', result.response, result.suggested_actions || []);
         conversationHistory.push({ role: 'assistant', content: result.response });
-        companion.classList.toggle('is-online', Boolean(result.llm_succeeded));
+        companion?.classList.toggle('is-online', Boolean(result.llm_succeeded));
         if (statusText) {
           statusText.textContent = result.llm_succeeded
             ? `Gemini online · ${result.model}`
@@ -5686,18 +6006,18 @@ TÊN CÔNG TY:
       }
     });
 
-    input.addEventListener('keydown', event => {
+    input?.addEventListener('keydown', event => {
       if (event.key === 'Enter' && !event.shiftKey) {
         event.preventDefault();
         form.requestSubmit();
       }
     });
-    input.addEventListener('input', () => {
+    input?.addEventListener('input', () => {
       input.style.height = 'auto';
       input.style.height = `${Math.min(input.scrollHeight, 100)}px`;
     });
 
-    panel.addEventListener('click', event => {
+    panel?.addEventListener('click', event => {
       const promptButton = event.target.closest('[data-assistant-prompt]');
       if (promptButton) {
         input.value = promptButton.dataset.assistantPrompt;
@@ -5736,16 +6056,16 @@ TÊN CÔNG TY:
             }
             spriteContext.putImageData(frame, 0, 0);
           } catch (_err) {
-            spriteCanvas.classList.add('is-hidden');
-            sourceImage.classList.add('is-fallback');
+            spriteCanvas?.classList.add('is-hidden');
+            sourceImage?.classList.add('is-fallback');
           }
         }
         requestAnimationFrame(renderSprite);
       }
       requestAnimationFrame(renderSprite);
-      sourceImage.addEventListener('error', () => {
-        spriteCanvas.classList.add('is-hidden');
-        sourceImage.classList.add('is-fallback');
+      sourceImage?.addEventListener('error', () => {
+        spriteCanvas?.classList.add('is-hidden');
+        sourceImage?.classList.add('is-fallback');
       });
     }
 
@@ -5765,4 +6085,276 @@ if (document.readyState === 'loading') {
   startAppLogic();
 }
 
+/* ============================================================
+   PIPELINE 1 – UI STATE CONTROLLER
+   Syncs the guided-workflow UI (step indicator, card states,
+   CTA enable/disable, loading steps) to existing app logic.
+   Does NOT change any business logic or API calls.
+============================================================ */
+(function initP1UI() {
+  // ── Element refs ──
+  const cvSelect     = () => document.getElementById('cv-analysis-cv-select');
+  const jdSelect     = () => document.getElementById('cv-analysis-jd-select');
+  const cvFileInput  = () => document.getElementById('cv-page-file-input');
+  const jdFileInput  = () => document.getElementById('cv-jd-file-input');
+  const analyzeBtn   = document.getElementById('p1-analyze-btn');
+  const ctaHint      = document.getElementById('p1-cta-hint');
+  const cvCard       = document.getElementById('p1-cv-card');
+  const jdCard       = document.getElementById('p1-jd-card');
+  const step1        = document.getElementById('p1-step-1');
+  const step2        = document.getElementById('p1-step-2');
+  const step3        = document.getElementById('p1-step-3');
+  const cvReadiness  = document.getElementById('p1-cv-readiness-item');
+  const jdReadiness  = document.getElementById('p1-jd-readiness-item');
+  const cvBanner     = document.getElementById('p1-cv-ready-banner');
+  const jdBanner     = document.getElementById('p1-jd-ready-banner');
+  const cvReadyName  = document.getElementById('p1-cv-ready-name');
+  const jdReadyName  = document.getElementById('p1-jd-ready-name');
+  const cvInputArea  = document.getElementById('p1-cv-input-area');
+  const jdInputArea  = document.getElementById('p1-jd-input-area');
+  const cvToggle     = document.getElementById('p1-cv-list-toggle');
+  const cvListSec    = document.getElementById('p1-cv-list-section');
+  const cvLoginGate  = document.getElementById('p1-cv-login-gate');
+  const cvSelectSec  = document.getElementById('p1-cv-select-section');
+  const jdLoginGate  = document.getElementById('p1-jd-login-gate');
+  const jdSelectSec  = document.getElementById('p1-jd-select-section');
+  const jdTitleField = document.getElementById('p1-jd-title-field');
+  const cvJdDropzone = document.getElementById('cv-jd-dropzone');
+
+  // ── Helper: check if CV is selected ──
+  function hasCVSelected() {
+    const sel = cvSelect();
+    const file = cvFileInput();
+    return (sel && sel.value) || (file && file.files && file.files.length > 0);
+  }
+
+  // ── Helper: check if JD is selected ──
+  function hasJDSelected() {
+    const sel = jdSelect();
+    return sel && sel.value && !sel.value.startsWith('catalog:');
+  }
+
+  // ── Get display label for CV ──
+  function getCVLabel() {
+    const sel = cvSelect();
+    const file = cvFileInput();
+    if (sel && sel.value) {
+      const opt = [...(sel.options || [])].find(o => o.value === sel.value);
+      return opt ? opt.textContent.trim() : 'CV đã chọn';
+    }
+    if (file && file.files && file.files[0]) {
+      const f = file.files[0];
+      return `${f.name} · ${(f.size / 1024 / 1024).toFixed(1)} MB`;
+    }
+    return '';
+  }
+
+  // ── Get display label for JD ──
+  function getJDLabel() {
+    const sel = jdSelect();
+    if (sel && sel.value) {
+      const opt = [...(sel.options || [])].find(o => o.value === sel.value);
+      return opt ? opt.textContent.trim() : 'JD đã chọn';
+    }
+    return '';
+  }
+
+  // ── Main UI update ──
+  function updateP1UI() {
+    const cvOk = hasCVSelected();
+    const jdOk = hasJDSelected();
+
+    // Step indicator
+    if (step1) step1.className = 'p1-step' + (cvOk ? ' is-done' : ' is-active');
+    if (step2) step2.className = 'p1-step' + (jdOk ? ' is-done' : (cvOk ? ' is-active' : ''));
+    if (step3) step3.className = 'p1-step' + (cvOk && jdOk ? ' is-active' : '');
+
+    // CV card state
+    if (cvCard) cvCard.classList.toggle('is-ready', cvOk);
+    if (cvReadiness) cvReadiness.classList.toggle('is-ready', cvOk);
+    if (cvReadyName && cvOk) cvReadyName.textContent = getCVLabel();
+
+    // JD card state
+    if (jdCard) jdCard.classList.toggle('is-ready', jdOk);
+    if (jdReadiness) jdReadiness.classList.toggle('is-ready', jdOk);
+    if (jdReadyName && jdOk) jdReadyName.textContent = getJDLabel();
+
+    // CTA
+    if (analyzeBtn) {
+      const canAnalyze = cvOk && jdOk;
+      analyzeBtn.disabled = !canAnalyze;
+      analyzeBtn.setAttribute('aria-disabled', String(!canAnalyze));
+    }
+    if (ctaHint) {
+      if (!hasCVSelected() && !hasJDSelected()) {
+        ctaHint.textContent = 'Chọn CV và JD để bắt đầu.';
+      } else if (!hasCVSelected()) {
+        ctaHint.textContent = 'Chọn thêm CV để bắt đầu phân tích.';
+      } else if (!hasJDSelected()) {
+        ctaHint.textContent = 'Chọn thêm JD để bắt đầu phân tích.';
+      } else {
+        ctaHint.textContent = 'AI sẽ đối chiếu CV với yêu cầu JD và tạo báo cáo chi tiết.';
+      }
+    }
+  }
+
+  // ── Auth-aware login gate ──
+  function updateLoginGates() {
+    const isLoggedIn = typeof ApiClient !== 'undefined' && ApiClient.isAuthenticated && ApiClient.isAuthenticated();
+    if (cvLoginGate) cvLoginGate.style.display = isLoggedIn ? 'none' : 'flex';
+    if (cvSelectSec) cvSelectSec.style.display = isLoggedIn ? 'block' : 'none';
+    if (jdLoginGate) jdLoginGate.style.display = isLoggedIn ? 'none' : 'flex';
+    if (jdSelectSec) jdSelectSec.style.display = isLoggedIn ? 'block' : 'none';
+  }
+
+  // ── Login gate buttons ──
+  document.getElementById('p1-cv-login-btn')?.addEventListener('click', () => {
+    if (typeof openAuthModal === 'function') openAuthModal();
+  });
+  document.getElementById('p1-jd-login-btn')?.addEventListener('click', () => {
+    if (typeof openAuthModal === 'function') openAuthModal();
+  });
+
+  // ── "Change" buttons reset the card ──
+  document.getElementById('p1-cv-change-btn')?.addEventListener('click', () => {
+    const sel = cvSelect();
+    const fi  = cvFileInput();
+    if (sel) sel.value = '';
+    if (fi) fi.value = '';
+    const badge = document.getElementById('selected-file-name');
+    if (badge) { badge.textContent = ''; badge.style.display = 'none'; }
+    updateP1UI();
+  });
+
+  document.getElementById('p1-jd-change-btn')?.addEventListener('click', () => {
+    const sel = jdSelect();
+    if (sel) sel.value = '';
+    updateP1UI();
+  });
+
+  // ── JD file input: show title field ──
+  jdFileInput()?.addEventListener('change', () => {
+    if (jdTitleField) {
+      const fi = jdFileInput();
+      jdTitleField.style.display = fi && fi.files && fi.files[0] ? 'flex' : 'none';
+    }
+  });
+
+  // ── JD dropzone click-to-select ──
+  if (cvJdDropzone) {
+    cvJdDropzone.addEventListener('click', () => jdFileInput()?.click());
+    cvJdDropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      cvJdDropzone.classList.add('dragover');
+    });
+    cvJdDropzone.addEventListener('dragleave', () => cvJdDropzone.classList.remove('dragover'));
+    cvJdDropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      cvJdDropzone.classList.remove('dragover');
+      const fi = jdFileInput();
+      if (fi && e.dataTransfer.files && e.dataTransfer.files[0]) {
+        fi.files = e.dataTransfer.files;
+        fi.dispatchEvent(new Event('change'));
+      }
+    });
+    cvJdDropzone.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); jdFileInput()?.click(); }
+    });
+  }
+
+  // ── Wire CTA button to the hidden submit ──
+  analyzeBtn?.addEventListener('click', () => {
+    if (analyzeBtn.disabled) return;
+    // Trigger the real form submit which app.js handles
+    const realSubmit = document.getElementById('btn-page-do-upload');
+    if (realSubmit) {
+      realSubmit.click();
+    }
+  });
+
+  // ── CTA state mirrors the in-page AI Analysis Journey ──
+  const realBtn = document.getElementById('btn-page-do-upload');
+  if (realBtn && analyzeBtn) {
+    const observer = new MutationObserver(() => {
+      const isLoading = realBtn.disabled;
+      if (isLoading) {
+        analyzeBtn.innerHTML = 'AI đang đối chiếu CV với JD';
+        analyzeBtn.classList.add('is-loading');
+      } else {
+        analyzeBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/></svg> Phân tích CV với JD`;
+        analyzeBtn.classList.remove('is-loading');
+        updateP1UI();
+      }
+    });
+    observer.observe(realBtn, { attributes: true, attributeFilter: ['disabled'] });
+  }
+
+  document.getElementById('p1-analysis-retry')?.addEventListener('click', () => {
+    if (!realBtn?.disabled) realBtn?.click();
+  });
+  jobSearchResults?.addEventListener('click', async event => {
+    const sourceId = event.target.closest('[data-job-match-source]')?.dataset.jobMatchSource;
+    if (!sourceId) return;
+    try {
+      const jd = await ApiClient.selectCatalogJD(sourceId);
+      window.sessionStorage.setItem('career-preselected-jd-id', jd.id);
+      switchView('match');
+    } catch (err) { showToast(`Không thể chọn công việc: ${err.message}`, 'error'); }
+  });
+
+  // ── CV list toggle ──
+  if (cvToggle && cvListSec) {
+    cvToggle.addEventListener('click', () => {
+      const open = cvListSec.classList.toggle('is-open');
+      cvToggle.classList.toggle('is-open', open);
+      cvToggle.setAttribute('aria-expanded', String(open));
+    });
+  }
+
+  // ── Listen to select changes ──
+  document.addEventListener('change', (e) => {
+    if (e.target && (e.target.id === 'cv-analysis-cv-select' || e.target.id === 'cv-analysis-jd-select')) {
+      updateP1UI();
+    }
+  });
+
+  // ── Listen to file input changes ──
+  document.addEventListener('change', (e) => {
+    if (e.target && e.target.id === 'cv-page-file-input') {
+      updateP1UI();
+    }
+  });
+
+  // ── After JD upload, selects refresh – poll for change ──
+  const jdUploadForm = document.getElementById('cv-jd-upload-form');
+  jdUploadForm?.addEventListener('submit', () => {
+    // Give app.js time to update the select, then refresh UI
+    setTimeout(updateP1UI, 500);
+    setTimeout(updateP1UI, 2000);
+    setTimeout(updateP1UI, 4000);
+  });
+
+  // ── Initial run (wait for app.js to populate selects) ──
+  function scheduleInit() {
+    updateLoginGates();
+    updateP1UI();
+    // Re-run after selects are populated by app.js
+    setTimeout(() => { updateLoginGates(); updateP1UI(); }, 400);
+    setTimeout(() => { updateLoginGates(); updateP1UI(); }, 1500);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', scheduleInit);
+  } else {
+    scheduleInit();
+  }
+
+  // ── Listen for auth state changes (login/logout) ──
+  document.addEventListener('auth:changed', () => {
+    updateLoginGates();
+    updateP1UI();
+  });
+})();
+
 export {};
+

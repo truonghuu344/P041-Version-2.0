@@ -2,162 +2,117 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React from 'react';
 import {
-  Briefcase, Check, CloudUpload, FileText, Mic, Moon, PencilLine, Search, Sparkles, Sun, Target, Terminal, Upload, X
+  Briefcase, Check, CloudUpload, FileText, Mic, Moon, PencilLine, Search, Sparkles, Sun, Target, Terminal, Upload, X, Navigation
 } from 'lucide-react';
 
 export default function JobsView(props: any) {
   return (
     <>
-        <section className="app-view" id="view-jobs">
-          <div className="page-container">
-            <div className="page-header">
-              <div className="page-badge">DECK BETA // CAREER NAVIGATION ROOM</div>
-              <h1 className="page-title ux-page-title"><Briefcase aria-hidden="true" /> Thư viện mô tả công việc</h1>
-              <p className="page-sub">Khám phá các vị trí mục tiêu, phân tích quỹ đạo phù hợp & quản lý JD doanh nghiệp</p>
+      <section className="app-view buddy-landing" id="view-jobs">
+        <div className="buddy-hero-shell" style={{ display: 'block', padding: '40px 0', minHeight: 'auto' }}>
+          
+          <div className="buddy-section-heading" style={{ marginBottom: 32 }}>
+            <div>
+              <span className="buddy-kicker" style={{ marginBottom: 8 }}><Navigation size={15} /> Bước 1 · Công việc mục tiêu</span>
+              <h2 id="buddy-journey-title">Thêm JD để xác định tiêu chí đối chiếu.</h2>
             </div>
-
-            <div className="career-nav-map-card">
-              <div className="map-header">
-                <div className="map-title-wrap">
-                  <span className="pulse-dot green"></span>
-                  <h3 className="map-title">BẢN ĐỒ QUỸ ĐẠO SỰ NGHIỆP VŨ TRỤ (STAR NAVIGATION MAP)</h3>
-                </div>
-                <span className="map-subtitle">Click vào các tọa độ Vị Trí (Nodes) để định vị mục tiêu & xem tỷ lệ khớp</span>
-              </div>
-
-              <div className="star-map-container" id="star-map-container">
-                <svg className="map-svg-overlay" viewBox="0 0 800 240" preserveAspectRatio="none">
-                  <line x1="100" y1="120" x2="280" y2="60" stroke="rgba(0, 229, 255, 0.4)" strokeWidth="2" strokeDasharray="6 4" className="dash-anim" />
-                  <line x1="100" y1="120" x2="300" y2="180" stroke="rgba(124, 77, 255, 0.4)" strokeWidth="2" strokeDasharray="6 4" className="dash-anim" />
-                  <line x1="280" y1="60" x2="540" y2="70" stroke="rgba(0, 229, 255, 0.3)" strokeWidth="1.5" />
-                  <line x1="300" y1="180" x2="560" y2="170" stroke="rgba(255, 78, 154, 0.3)" strokeWidth="1.5" />
-                  <line x1="540" y1="70" x2="720" y2="120" stroke="rgba(55, 214, 122, 0.5)" strokeWidth="2" />
-                  <line x1="560" y1="170" x2="720" y2="120" stroke="rgba(55, 214, 122, 0.5)" strokeWidth="2" />
-                </svg>
-
-                <div className="map-node node-origin">
-                  <div className="node-pulse"></div>
-                  <span className="node-icon">🧑‍🚀</span>
-                  <span className="node-label">CURRENT PROFILE</span>
-                </div>
-
-                <div className="map-node node-job active" style={{ left: '34%', top: '22%' }} data-job="ai-eng">
-                  <div className="node-badge">94% MATCH</div>
-                  <span className="node-icon">🤖</span>
-                  <span className="node-title">AI Engineer</span>
-                </div>
-
-                <div className="map-node node-job" style={{ left: '36%', top: '70%' }} data-job="fullstack">
-                  <div className="node-badge">88% MATCH</div>
-                  <span className="node-icon">💻</span>
-                  <span className="node-title">Fullstack Lead</span>
-                </div>
-
-                <div className="map-node node-job" style={{ left: '66%', top: '28%' }} data-job="data-sci">
-                  <div className="node-badge">82% MATCH</div>
-                  <span className="node-icon">📊</span>
-                  <span className="node-title">Data Scientist</span>
-                </div>
-
-                <div className="map-node node-job" style={{ left: '68%', top: '68%' }} data-job="product-mgr">
-                  <div className="node-badge">76% MATCH</div>
-                  <span className="node-icon"><Target aria-hidden="true" /></span>
-                  <span className="node-title">Product Owner</span>
-                </div>
-
-                <div className="map-node node-target" style={{ left: '88%', top: '50%' }}>
-                  <div className="node-star-glow"></div>
-                  <span className="node-icon">🏆</span>
-                  <span className="node-title">CHIEF AI ARCHITECT</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="jobs-layout">
-              <div className="jobs-tabs-bar">
-                <button id="page-btn-tab-sys" className="tab active">JD Mẫu Hệ Thống</button>
-                <button id="page-btn-tab-cust" className="tab">Dán JD Tùy Chỉnh</button>
-              </div>
-
-              <div id="page-section-sys-jds" className="jobs-panel">
-                <div id="page-jd-list-container" className="jd-cards-grid">
-                  <p className="loading-text">Đang tải danh sách Job Description...</p>
-                </div>
-              </div>
-
-              <div id="page-section-cust-jd" className="jobs-panel" style={{ display: 'none' }}>
-                <div className="jd-create-grid">
-                  <section className="card-form jd-create-card jd-upload-card">
-                    <div className="jd-create-heading">
-                      <div className="jd-create-icon"><FileText size={32} /></div>
-                      <div>
-                        <h3>Tải file JD theo mẫu</h3>
-                        <p>Hỗ trợ PDF, DOCX hoặc TXT, tối đa 5 MB.</p>
-                      </div>
-                    </div>
-                    <button type="button" id="page-download-jd-template" className="jd-template-button">⬇ Tải mẫu JD (.txt)</button>
-                    <form id="page-upload-jd-form">
-                      <div className="form-group">
-                        <label className="form-label">Tên vị trí <span className="field-note">(có thể để trống)</span></label>
-                        <input type="text" id="page-upload-jd-title" className="form-input" placeholder="Tự lấy theo tên file nếu để trống" />
-                      </div>
-                      <div className="form-row">
-                        <div className="form-group flex-1">
-                          <label className="form-label">Công ty</label>
-                          <input type="text" id="page-upload-jd-company" className="form-input" placeholder="Tên doanh nghiệp" />
-                        </div>
-                        <div className="form-group flex-1">
-                          <label className="form-label">Địa điểm</label>
-                          <input type="text" id="page-upload-jd-location" className="form-input" placeholder="Hà Nội / Remote" />
-                        </div>
-                      </div>
-                      <label className="jd-file-drop" htmlFor="page-upload-jd-file">
-                        <div className="jd-file-drop-icon" style={{ color: "var(--accent)", marginBottom: "15px" }}><Upload size={48} /></div>
-                        <strong>Chọn file JD đã điền</strong>
-                        <span id="page-upload-jd-file-name">PDF, DOCX hoặc TXT</span>
-                      </label>
-                      <input type="file" id="page-upload-jd-file" className="visually-hidden-file" accept=".pdf,.docx,.txt" required />
-                      <button type="submit" className="btn-primary full-width">Tải lên &amp; lưu JD</button>
-                    </form>
-                  </section>
-
-                  <div className="jd-create-or" aria-hidden="true"><span>HOẶC</span></div>
-
-                  <section className="card-form jd-create-card">
-                    <div className="jd-create-heading">
-                      <div className="jd-create-icon"><FileText size={32} /></div>
-                      <div>
-                        <h3>Tự điền nội dung JD</h3>
-                        <p>Nhập hoặc dán mô tả công việc trực tiếp.</p>
-                      </div>
-                    </div>
-                    <form id="page-custom-jd-form">
-                      <div className="form-group">
-                        <label className="form-label">Tên vị trí công việc</label>
-                        <input type="text" id="page-custom-jd-title" className="form-input" placeholder="Ví dụ: Senior Fullstack Developer" required />
-                      </div>
-                      <div className="form-row">
-                        <div className="form-group flex-1">
-                          <label className="form-label">Tên công ty</label>
-                          <input type="text" id="page-custom-jd-company" className="form-input" placeholder="Tech Global Corp" />
-                        </div>
-                        <div className="form-group flex-1">
-                          <label className="form-label">Địa điểm</label>
-                          <input type="text" id="page-custom-jd-location" className="form-input" placeholder="TP. Hồ Chí Minh / Hà Nội" />
-                        </div>
-                      </div>
-                      <div className="form-group">
-                        <label className="form-label">Nội dung yêu cầu công việc</label>
-                        <textarea id="page-custom-jd-requirements" className="form-input textarea-large" placeholder="Dán nội dung chi tiết mô tả công việc, yêu cầu kỹ năng vào đây..." required></textarea>
-                      </div>
-                      <button type="submit" className="btn-primary full-width">Lưu JD từ nội dung</button>
-                    </form>
-                  </section>
-                </div>
-              </div>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+              <span style={{ fontSize: '13px', color: '#607184', fontWeight: 600 }}>Chọn JD mẫu hoặc dán JD bạn muốn ứng tuyển</span>
             </div>
           </div>
-        </section>
+
+          <div style={{ display: 'flex', gap: '12px', marginBottom: '32px' }}>
+            <button id="page-btn-tab-sys" className="buddy-primary-button" style={{ padding: '0 24px', height: '44px' }}>JD Mẫu Hệ Thống</button>
+            <button id="page-btn-tab-cust" className="buddy-text-button" style={{ padding: '0 24px', height: '44px', background: '#fff', border: '1px solid #dcece5' }}>Dán JD Tùy Chỉnh</button>
+          </div>
+
+          <div id="page-section-sys-jds" className="buddy-template-card" style={{ padding: '32px', background: '#fff', borderRadius: '24px' }}>
+            <div id="page-jd-list-container" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
+              <p style={{ color: '#a0aab2', fontSize: '15px' }}>Đang tải danh sách Job Description...</p>
+            </div>
+          </div>
+
+          <div id="page-section-cust-jd" style={{ display: 'none', gap: '24px', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))' }}>
+            
+            {/* Cột 1: File JD */}
+            <div className="buddy-template-card" style={{ padding: '32px', background: '#fff', borderRadius: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              <div>
+                <h3 style={{ fontSize: '18px', color: 'var(--buddy-navy)', margin: '0 0 8px', display: 'flex', alignItems: 'center', gap: '8px' }}><Upload color="var(--buddy-emerald)" size={20}/> Tải file JD theo mẫu</h3>
+                <p style={{ margin: 0, fontSize: '14px', color: '#607184' }}>Hỗ trợ PDF, DOCX hoặc TXT, tối đa 5 MB.</p>
+              </div>
+
+              <button type="button" id="page-download-jd-template" className="buddy-text-button" style={{ justifyContent: 'center', background: '#f8faf9', border: '1px solid #dcece5' }}>
+                ⬇ Tải mẫu JD (.txt)
+              </button>
+
+              <form id="page-upload-jd-form" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <div>
+                  <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--buddy-navy)', display: 'block', marginBottom: '8px' }}>Tên vị trí <span style={{ fontWeight: 400, color: '#7d8a90' }}>(có thể để trống)</span></label>
+                  <input type="text" id="page-upload-jd-title" placeholder="Tự lấy theo tên file" style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #dcece5', background: '#f8faf9' }} />
+                </div>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div>
+                    <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--buddy-navy)', display: 'block', marginBottom: '8px' }}>Công ty</label>
+                    <input type="text" id="page-upload-jd-company" placeholder="Tên doanh nghiệp" style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #dcece5', background: '#f8faf9' }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--buddy-navy)', display: 'block', marginBottom: '8px' }}>Địa điểm</label>
+                    <input type="text" id="page-upload-jd-location" placeholder="Hà Nội / Remote" style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #dcece5', background: '#f8faf9' }} />
+                  </div>
+                </div>
+
+                <label htmlFor="page-upload-jd-file" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', padding: '32px 20px', border: '2px dashed #c4d7cd', borderRadius: '16px', background: '#fbfcfc', cursor: 'pointer' }}>
+                  <CloudUpload color="var(--buddy-emerald)" size={40} />
+                  <strong style={{ fontSize: '15px', color: 'var(--buddy-navy)' }}>Chọn file JD đã điền</strong>
+                  <span id="page-upload-jd-file-name" style={{ fontSize: '13px', color: '#7d8a90' }}>PDF, DOCX hoặc TXT</span>
+                </label>
+                <input type="file" id="page-upload-jd-file" accept=".pdf,.docx,.txt" required style={{ display: 'none' }} />
+                
+                <button type="submit" className="buddy-primary-button" style={{ width: '100%', justifyContent: 'center' }}>
+                  Tải lên &amp; lưu JD
+                </button>
+              </form>
+            </div>
+
+            {/* Cột 2: Text JD */}
+            <div className="buddy-template-card" style={{ padding: '32px', background: '#fff', borderRadius: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              <div>
+                <h3 style={{ fontSize: '18px', color: 'var(--buddy-navy)', margin: '0 0 8px', display: 'flex', alignItems: 'center', gap: '8px' }}><PencilLine color="var(--buddy-emerald)" size={20}/> Tự điền nội dung JD</h3>
+                <p style={{ margin: 0, fontSize: '14px', color: '#607184' }}>Nhập hoặc dán mô tả công việc trực tiếp.</p>
+              </div>
+
+              <form id="page-custom-jd-form" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <div>
+                  <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--buddy-navy)', display: 'block', marginBottom: '8px' }}>Tên vị trí công việc *</label>
+                  <input type="text" id="page-custom-jd-title" placeholder="Ví dụ: Senior Fullstack Developer" required style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #dcece5', background: '#f8faf9' }} />
+                </div>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div>
+                    <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--buddy-navy)', display: 'block', marginBottom: '8px' }}>Tên công ty</label>
+                    <input type="text" id="page-custom-jd-company" placeholder="Tech Global Corp" style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #dcece5', background: '#f8faf9' }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--buddy-navy)', display: 'block', marginBottom: '8px' }}>Địa điểm</label>
+                    <input type="text" id="page-custom-jd-location" placeholder="TP. Hồ Chí Minh / Hà Nội" style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #dcece5', background: '#f8faf9' }} />
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--buddy-navy)', display: 'block', marginBottom: '8px' }}>Nội dung yêu cầu công việc *</label>
+                  <textarea id="page-custom-jd-requirements" placeholder="Dán nội dung chi tiết mô tả công việc, yêu cầu kỹ năng vào đây..." required style={{ width: '100%', padding: '16px', borderRadius: '12px', border: '1px solid #dcece5', background: '#f8faf9', minHeight: '160px', resize: 'vertical' }}></textarea>
+                </div>
+
+                <button type="submit" className="buddy-primary-button" style={{ width: '100%', justifyContent: 'center' }}>
+                  Lưu JD từ nội dung
+                </button>
+              </form>
+            </div>
+
+          </div>
+        </div>
+      </section>
     </>
   );
 }
