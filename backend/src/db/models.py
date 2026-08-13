@@ -88,6 +88,7 @@ class CV(Base):
     user: Mapped["User"] = relationship("User", back_populates="cvs")
     analyses: Mapped[list["CVAnalysis"]] = relationship("CVAnalysis", back_populates="cv", cascade="all, delete-orphan")
     interview_sessions: Mapped[list["InterviewSession"]] = relationship("InterviewSession", back_populates="cv", cascade="all, delete-orphan")
+    snapshots: Mapped[list["CVSnapshot"]] = relationship("CVSnapshot", back_populates="cv", cascade="all, delete-orphan")
 
 
 class JobDescription(Base):
@@ -107,6 +108,52 @@ class JobDescription(Base):
     # Relationships
     analyses: Mapped[list["CVAnalysis"]] = relationship("CVAnalysis", back_populates="jd", cascade="all, delete-orphan")
     interview_sessions: Mapped[list["InterviewSession"]] = relationship("InterviewSession", back_populates="jd", cascade="all, delete-orphan")
+    snapshots: Mapped[list["JDSnapshot"]] = relationship("JDSnapshot", back_populates="jd", cascade="all, delete-orphan")
+
+
+class CVSnapshot(Base):
+    """Immutable normalized CV version used by matching, optimization and interviews."""
+
+    __tablename__ = "cv_snapshots"
+    __table_args__ = (Index("uq_cv_snapshot_version", "cv_id", "version_number", unique=True),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    cv_id: Mapped[str] = mapped_column(String(36), ForeignKey("cvs.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    version_number: Mapped[int] = mapped_column(Integer, nullable=False)
+    source_hash: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    raw_text: Mapped[str] = mapped_column(Text, nullable=False)
+    profile_json: Mapped[Any] = mapped_column(JSON, nullable=False)
+    pages_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+    parser_version: Mapped[str] = mapped_column(String(40), default="2.0", nullable=False)
+    normalizer_version: Mapped[str] = mapped_column(String(40), default="1.0", nullable=False)
+    source_language: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    status: Mapped[str] = mapped_column(String(20), default="ready", nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    cv: Mapped["CV"] = relationship("CV", back_populates="snapshots")
+
+
+class JDSnapshot(Base):
+    """Immutable normalized JD version used by matching, optimization and interviews."""
+
+    __tablename__ = "jd_snapshots"
+    __table_args__ = (Index("uq_jd_snapshot_version", "jd_id", "version_number", unique=True),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    jd_id: Mapped[str] = mapped_column(String(36), ForeignKey("job_descriptions.id", ondelete="CASCADE"), nullable=False, index=True)
+    version_number: Mapped[int] = mapped_column(Integer, nullable=False)
+    source_hash: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    raw_text: Mapped[str] = mapped_column(Text, nullable=False)
+    requirements_json: Mapped[Any] = mapped_column(JSON, nullable=False)
+    pages_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+    parser_version: Mapped[str] = mapped_column(String(40), default="1.0", nullable=False)
+    normalizer_version: Mapped[str] = mapped_column(String(40), default="1.0", nullable=False)
+    source_language: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    status: Mapped[str] = mapped_column(String(20), default="ready", nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    jd: Mapped["JobDescription"] = relationship("JobDescription", back_populates="snapshots")
 
 
 class MarketJobEmbedding(Base):
@@ -129,6 +176,9 @@ class CVAnalysis(Base):
     user_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     cv_id: Mapped[str] = mapped_column(String(36), ForeignKey("cvs.id", ondelete="CASCADE"), nullable=False)
     jd_id: Mapped[str] = mapped_column(String(36), ForeignKey("job_descriptions.id", ondelete="CASCADE"), nullable=False)
+    cv_snapshot_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("cv_snapshots.id", ondelete="SET NULL"), nullable=True, index=True)
+    jd_snapshot_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("jd_snapshots.id", ondelete="SET NULL"), nullable=True, index=True)
+    pipeline_version: Mapped[str] = mapped_column(String(40), default="1.0", nullable=False)
     match_score: Mapped[float] = mapped_column(Float, nullable=False)
     gap_analysis_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
     optimized_suggestions_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
@@ -147,6 +197,8 @@ class MatchRun(Base):
     user_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     cv_id: Mapped[str] = mapped_column(String(36), ForeignKey("cvs.id", ondelete="CASCADE"), nullable=False, index=True)
     jd_id: Mapped[str] = mapped_column(String(36), ForeignKey("job_descriptions.id", ondelete="CASCADE"), nullable=False, index=True)
+    cv_snapshot_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("cv_snapshots.id", ondelete="SET NULL"), nullable=True, index=True)
+    jd_snapshot_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("jd_snapshots.id", ondelete="SET NULL"), nullable=True, index=True)
     analysis_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("cv_analyses.id", ondelete="SET NULL"), nullable=True, index=True)
     trace_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
     status: Mapped[str] = mapped_column(String(30), default="PENDING", nullable=False, index=True)
@@ -154,7 +206,11 @@ class MatchRun(Base):
     final_score: Mapped[float | None] = mapped_column(Float, nullable=True)
     rating: Mapped[str | None] = mapped_column(String(30), nullable=True)
     mandatory_requirement_failed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    # Rubric IDs are versioned application identifiers. Keep this scalar
+    # backwards-compatible while existing installations migrate their data.
     rubric_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    pipeline_version: Mapped[str] = mapped_column(String(40), default="1.0", nullable=False)
+    pipeline_config_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
     versions_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
     result_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
     error_code: Mapped[str | None] = mapped_column(String(80), nullable=True)
@@ -301,6 +357,7 @@ class DocumentArtifact(Base):
     )
     document_type: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
     source_entity_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    source_snapshot_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
     raw_text: Mapped[str] = mapped_column(Text, nullable=False)
     structured_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
     normalized_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
@@ -395,6 +452,11 @@ class InterviewSession(Base):
     user_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     cv_id: Mapped[str] = mapped_column(String(36), ForeignKey("cvs.id", ondelete="CASCADE"), nullable=False)
     jd_id: Mapped[str] = mapped_column(String(36), ForeignKey("job_descriptions.id", ondelete="CASCADE"), nullable=False)
+    cv_snapshot_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("cv_snapshots.id", ondelete="SET NULL"), nullable=True, index=True)
+    jd_snapshot_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("jd_snapshots.id", ondelete="SET NULL"), nullable=True, index=True)
+    match_id: Mapped[str | None] = mapped_column(String(64), ForeignKey("matches.id", ondelete="SET NULL"), nullable=True, index=True)
+    language: Mapped[str] = mapped_column(String(16), default="vi", nullable=False)
+    mode: Mapped[str] = mapped_column(String(16), default="text", nullable=False)
     status: Mapped[str] = mapped_column(String(50), default="ongoing", nullable=False)  # ongoing, completed
     total_questions: Mapped[int] = mapped_column(Integer, default=5, nullable=False)
     current_question_index: Mapped[int] = mapped_column(Integer, default=0, nullable=False)

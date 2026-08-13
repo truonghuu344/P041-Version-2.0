@@ -86,6 +86,9 @@ class Settings(BaseSettings):
     cv_jd_rating_poor_max: float = Field(default=49.9, ge=0.0, le=100.0)
     cv_jd_rating_average_max: float = Field(default=69.9, ge=0.0, le=100.0)
     cv_jd_rating_good_max: float = Field(default=84.9, ge=0.0, le=100.0)
+    # LLM may only draft explanatory guidance after deterministic scoring.
+    # Keep it opt-in to make cost and data sharing explicit.
+    match_explanation_llm_enabled: bool = False
 
     @property
     def google_genai_api_key(self) -> str:

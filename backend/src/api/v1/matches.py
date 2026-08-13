@@ -16,6 +16,7 @@ from src.db.database import AsyncSessionLocal, get_db
 from src.db.models import CV, CVAnalysis, JobDescription, MatchRun, RubricDefinition, UsageEvent, User
 from src.services.gap_analysis_service import perform_cv_jd_gap_analysis
 from src.services.match_persistence import persist_match_artifacts
+from src.services.pipeline_context import PIPELINE_VERSION, get_or_create_cv_snapshot, get_or_create_jd_snapshot
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/matches", tags=["CV-JD Match Jobs"])
@@ -86,6 +87,9 @@ async def _process_match(
                 user_id=user_id,
                 cv_id=cv_id,
                 jd_id=jd_id,
+                cv_snapshot_id=match.cv_snapshot_id,
+                jd_snapshot_id=match.jd_snapshot_id,
+                pipeline_version=PIPELINE_VERSION,
                 match_score=result.get("match_score", 0.0),
                 gap_analysis_json=result,
                 optimized_suggestions_json=result.get("suggestions", []),
@@ -176,8 +180,13 @@ async def start_match(
         rubric_id=payload.rubric_id,
         status="PENDING",
         current_step="PENDING",
+        pipeline_version=PIPELINE_VERSION,
     )
     db.add(match)
+    cv_snapshot = await get_or_create_cv_snapshot(db, cv)
+    jd_snapshot = await get_or_create_jd_snapshot(db, jd)
+    match.cv_snapshot_id = cv_snapshot.id
+    match.jd_snapshot_id = jd_snapshot.id
     await db.commit()
     session_factory = async_sessionmaker(
         bind=db.bind,

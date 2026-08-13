@@ -247,6 +247,8 @@ class GapAnalysisResponse(BaseModel):
     id: str
     cv_id: str
     jd_id: str
+    cv_snapshot_id: str | None = None
+    jd_snapshot_id: str | None = None
     pipeline_version: str = "1.0"
     match_score: float
     final_score: float = 0.0
@@ -335,6 +337,9 @@ class InterviewStartRequest(BaseModel):
     cv_id: str
     jd_id: str
     total_questions: int = Field(default=5, ge=3, le=10)
+    match_id: str | None = None
+    language: Literal["vi", "en", "bilingual"] = "vi"
+    mode: Literal["text", "voice"] = "text"
 
 
 class InterviewQuestionOut(BaseModel):
@@ -455,6 +460,11 @@ class InterviewSessionSummaryOut(BaseModel):
     id: str
     cv_id: str
     jd_id: str
+    cv_snapshot_id: str | None = None
+    jd_snapshot_id: str | None = None
+    match_id: str | None = None
+    language: str = "vi"
+    mode: str = "text"
     status: str
     total_questions: int
     current_question_index: int

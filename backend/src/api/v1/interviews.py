@@ -33,6 +33,7 @@ from src.services.interview_service import (
     generate_final_star_report,
     generate_interview_questions,
 )
+from src.services.pipeline_context import get_or_create_cv_snapshot, get_or_create_jd_snapshot
 
 router = APIRouter(prefix="/interviews", tags=["Mock Interview Engine"])
 
@@ -81,10 +82,26 @@ async def start_interview_session(
     )
 
     # Create InterviewSession
+    cv_snapshot = await get_or_create_cv_snapshot(db, cv)
+    jd_snapshot = await get_or_create_jd_snapshot(db, jd)
+    match_id = payload.match_id
+    if match_id:
+        from src.db.models import MatchRun
+
+        match = await db.scalar(
+            select(MatchRun).where(MatchRun.id == match_id, MatchRun.user_id == current_user.id)
+        )
+        if not match or match.cv_id != cv.id or match.jd_id != jd.id:
+            raise HTTPException(status_code=422, detail="Match context không khớp CV và JD đã chọn.")
     session = InterviewSession(
         user_id=current_user.id,
         cv_id=cv.id,
         jd_id=jd.id,
+        cv_snapshot_id=cv_snapshot.id,
+        jd_snapshot_id=jd_snapshot.id,
+        match_id=match_id,
+        language=payload.language,
+        mode=payload.mode,
         status="ongoing",
         total_questions=len(question_texts),
         current_question_index=0,
@@ -301,6 +318,11 @@ async def list_interview_history(
             id=session.id,
             cv_id=session.cv_id,
             jd_id=session.jd_id,
+            cv_snapshot_id=session.cv_snapshot_id,
+            jd_snapshot_id=session.jd_snapshot_id,
+            match_id=session.match_id,
+            language=session.language,
+            mode=session.mode,
             status=session.status,
             total_questions=session.total_questions,
             current_question_index=session.current_question_index,

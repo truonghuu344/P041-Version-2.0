@@ -83,6 +83,26 @@ async def init_db() -> None:
                 )
                 await conn.execute(text("ALTER TABLE cv_chunks ADD COLUMN IF NOT EXISTS embedding_model VARCHAR(255)"))
                 await conn.execute(text("ALTER TABLE cv_chunks ADD COLUMN IF NOT EXISTS embedding_json JSON"))
+                for statement in (
+                    "ALTER TABLE cv_analyses ADD COLUMN IF NOT EXISTS cv_snapshot_id VARCHAR(36)",
+                    "ALTER TABLE cv_analyses ADD COLUMN IF NOT EXISTS jd_snapshot_id VARCHAR(36)",
+                    "ALTER TABLE cv_analyses ADD COLUMN IF NOT EXISTS pipeline_version VARCHAR(40) NOT NULL DEFAULT '1.0'",
+                    "ALTER TABLE matches ADD COLUMN IF NOT EXISTS cv_snapshot_id VARCHAR(36)",
+                    "ALTER TABLE matches ADD COLUMN IF NOT EXISTS jd_snapshot_id VARCHAR(36)",
+                    "ALTER TABLE matches ADD COLUMN IF NOT EXISTS pipeline_version VARCHAR(40) NOT NULL DEFAULT '1.0'",
+                    "ALTER TABLE matches ADD COLUMN IF NOT EXISTS pipeline_config_json JSON",
+                    "ALTER TABLE cv_snapshots ADD COLUMN IF NOT EXISTS raw_text TEXT NOT NULL DEFAULT ''",
+                    "ALTER TABLE cv_snapshots ADD COLUMN IF NOT EXISTS pages_json JSON",
+                    "ALTER TABLE jd_snapshots ADD COLUMN IF NOT EXISTS raw_text TEXT NOT NULL DEFAULT ''",
+                    "ALTER TABLE jd_snapshots ADD COLUMN IF NOT EXISTS pages_json JSON",
+                    "ALTER TABLE documents ADD COLUMN IF NOT EXISTS source_snapshot_id VARCHAR(36)",
+                    "ALTER TABLE interview_sessions ADD COLUMN IF NOT EXISTS cv_snapshot_id VARCHAR(36)",
+                    "ALTER TABLE interview_sessions ADD COLUMN IF NOT EXISTS jd_snapshot_id VARCHAR(36)",
+                    "ALTER TABLE interview_sessions ADD COLUMN IF NOT EXISTS match_id VARCHAR(64)",
+                    "ALTER TABLE interview_sessions ADD COLUMN IF NOT EXISTS language VARCHAR(16) NOT NULL DEFAULT 'vi'",
+                    "ALTER TABLE interview_sessions ADD COLUMN IF NOT EXISTS mode VARCHAR(16) NOT NULL DEFAULT 'text'",
+                ):
+                    await conn.execute(text(statement))
             # create_all không thêm index mới vào bảng đã tồn tại. Lệnh này
             # bảo vệ invariant một-admin cho cả PostgreSQL và SQLite.
             await conn.execute(

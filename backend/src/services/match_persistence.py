@@ -31,6 +31,8 @@ from src.db.models import (
     RubricDefinition,
 )
 from src.services.cv_jd_pipeline import DEFAULT_RUBRIC
+from src.services.pipeline_context import PIPELINE_VERSION, get_or_create_cv_snapshot, get_or_create_jd_snapshot
+from src.config import get_settings
 
 
 def _evaluated_requirements(result: dict[str, Any]) -> list[dict[str, Any]]:
@@ -54,6 +56,35 @@ def _cv_records(model: type, match_id: str, records: list[dict[str, Any]]) -> li
         model(match_id=match_id, source_page=item.get("source_page"), payload_json=item)
         for item in records
     ]
+
+
+def _pipeline_config_snapshot() -> dict[str, Any]:
+    """Persist score-affecting settings so a Match can be reproduced later."""
+    settings = get_settings()
+    return {
+        "embedding": {
+            "provider": settings.cv_jd_embedding_provider,
+            "model": settings.cv_jd_embedding_model,
+            "dimensions": settings.cv_jd_embedding_dimensions,
+        },
+        "retrieval": {
+            "bm25_top_k": settings.cv_jd_bm25_top_k,
+            "semantic_top_k": settings.cv_jd_semantic_top_k,
+            "semantic_min_score": settings.cv_jd_semantic_min_score,
+            "rrf_k": settings.cv_jd_rrf_k,
+            "hybrid_top_k": settings.cv_jd_hybrid_top_k,
+        },
+        "evaluation": {
+            "evidence_max_per_requirement": settings.cv_jd_evidence_max_per_requirement,
+            "extraction_min_confidence": settings.cv_jd_extraction_min_confidence,
+            "score_decimal_places": settings.cv_jd_score_decimal_places,
+            "rating_thresholds": {
+                "poor_max": settings.cv_jd_rating_poor_max,
+                "average_max": settings.cv_jd_rating_average_max,
+                "good_max": settings.cv_jd_rating_good_max,
+            },
+        },
+    }
 
 
 async def persist_match_artifacts(
@@ -82,6 +113,7 @@ async def persist_match_artifacts(
     match.rating = result.get("rating")
     match.mandatory_requirement_failed = result.get("mandatory_requirement_failed", False)
     match.rubric_id = match.rubric_id or "RUBRIC_DEFAULT_V1"
+    match.pipeline_config_json = _pipeline_config_snapshot()
     match.versions_json = result.get("versions", {})
     match.result_json = result
     match.completed_at = datetime.now(UTC) if result.get("status") == "COMPLETED" else None
@@ -104,34 +136,42 @@ async def persist_match_artifacts(
 
     cv = await db.get(CV, cv_id)
     jd = await db.get(JobDescription, jd_id)
-    cv_document_id = str(result.get("document_id") or structured_cv.get("document_id") or f"DOC_CV_{cv_id}")
+    if cv and jd:
+        cv_snapshot = await get_or_create_cv_snapshot(db, cv)
+        jd_snapshot = await get_or_create_jd_snapshot(db, jd)
+        match.cv_snapshot_id = cv_snapshot.id
+        match.jd_snapshot_id = jd_snapshot.id
+        match.pipeline_version = PIPELINE_VERSION
+    cv_document_id = f"DOC_CV_{match.cv_snapshot_id or cv_id}"
     if await db.get(DocumentArtifact, cv_document_id) is None:
-        cv_raw_text = (cv.raw_text if cv else "") or ""
+        cv_raw_text = (cv_snapshot.raw_text if cv and jd else (cv.raw_text if cv else "")) or ""
         db.add(
             DocumentArtifact(
                 id=cv_document_id,
                 user_id=user_id,
                 document_type="CV",
                 source_entity_id=cv_id,
+                source_snapshot_id=match.cv_snapshot_id,
                 raw_text=cv_raw_text,
-                structured_json=(cv.parsed_json if cv else {}) or {},
+                structured_json=(cv_snapshot.profile_json if cv and jd else (cv.parsed_json if cv else {})) or {},
                 normalized_json=structured_cv,
-                pages_json=_pages(cv_raw_text),
+                pages_json=(cv_snapshot.pages_json if cv and jd else _pages(cv_raw_text)),
             )
         )
-    jd_document_id = f"DOC_JD_{jd_id}"
+    jd_document_id = f"DOC_JD_{match.jd_snapshot_id or jd_id}"
     if await db.get(DocumentArtifact, jd_document_id) is None:
-        jd_raw_text = (jd.requirements_text if jd else "") or ""
+        jd_raw_text = (jd_snapshot.raw_text if cv and jd else (jd.requirements_text if jd else "")) or ""
         db.add(
             DocumentArtifact(
                 id=jd_document_id,
                 user_id=user_id,
                 document_type="JD",
                 source_entity_id=jd_id,
+                source_snapshot_id=match.jd_snapshot_id,
                 raw_text=jd_raw_text,
-                structured_json=(jd.normalized_json if jd else {}) or {},
+                structured_json=(jd_snapshot.requirements_json if cv and jd else (jd.normalized_json if jd else {})) or {},
                 normalized_json=structured_jd,
-                pages_json=_pages(jd_raw_text),
+                pages_json=(jd_snapshot.pages_json if cv and jd else _pages(jd_raw_text)),
             )
         )
 

@@ -15,6 +15,7 @@ from src.models.schemas import (
 )
 from src.services.gap_analysis_service import perform_cv_jd_gap_analysis
 from src.services.match_persistence import persist_match_artifacts
+from src.services.pipeline_context import PIPELINE_VERSION, get_or_create_cv_snapshot, get_or_create_jd_snapshot
 
 router = APIRouter(prefix="/analysis", tags=["CV Match & Gap Analysis"])
 
@@ -94,13 +95,18 @@ async def analyze_cv_jd_gap(
         ) from exc
 
     # Save to database
+    cv_snapshot = await get_or_create_cv_snapshot(db, cv)
+    jd_snapshot = await get_or_create_jd_snapshot(db, jd)
     new_analysis = CVAnalysis(
         user_id=current_user.id,
         cv_id=cv.id,
         jd_id=jd.id,
+        cv_snapshot_id=cv_snapshot.id,
+        jd_snapshot_id=jd_snapshot.id,
+        pipeline_version=PIPELINE_VERSION,
         match_score=analysis_result.get("match_score", 0.0),
         gap_analysis_json={
-            "pipeline_version": analysis_result.get("pipeline_version", "1.0"),
+            "pipeline_version": PIPELINE_VERSION,
             "trace_id": analysis_result.get("trace_id", ""),
             "match_id": analysis_result.get("match_id", ""),
             "candidate_id": analysis_result.get("candidate_id", ""),
@@ -170,7 +176,9 @@ async def analyze_cv_jd_gap(
         id=new_analysis.id,
         cv_id=new_analysis.cv_id,
         jd_id=new_analysis.jd_id,
-        pipeline_version=analysis_result.get("pipeline_version", "1.0"),
+        cv_snapshot_id=new_analysis.cv_snapshot_id,
+        jd_snapshot_id=new_analysis.jd_snapshot_id,
+        pipeline_version=new_analysis.pipeline_version,
         trace_id=analysis_result.get("trace_id", ""),
         match_id=analysis_result.get("match_id", ""),
         candidate_id=analysis_result.get("candidate_id", ""),
@@ -235,7 +243,9 @@ async def get_analysis_history(
                 id=item.id,
                 cv_id=item.cv_id,
                 jd_id=item.jd_id,
-                pipeline_version=gap_data.get("pipeline_version", "1.0"),
+                cv_snapshot_id=item.cv_snapshot_id,
+                jd_snapshot_id=item.jd_snapshot_id,
+                pipeline_version=item.pipeline_version or gap_data.get("pipeline_version", "1.0"),
                 trace_id=gap_data.get("trace_id", ""),
                 match_id=gap_data.get("match_id", ""),
                 candidate_id=gap_data.get("candidate_id", ""),

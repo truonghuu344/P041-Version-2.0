@@ -108,7 +108,7 @@ async def draft_gap_analysis(state: GapAnalysisState) -> dict[str, Any]:
         "suggestions": deterministic_cv_suggestions(state["cv_raw_text"], evidence["hard_skills_matching"]),
     }
     settings = get_settings()
-    if not settings.google_genai_api_key:
+    if not settings.match_explanation_llm_enabled or not settings.google_genai_api_key:
         return {"draft_result": fallback}
 
     system_prompt = """Bạn là CV Gap Analysis & Career Action Plan Agent.
@@ -121,6 +121,9 @@ Hãy so sánh bằng chứng CV với JD và tạo kế hoạch cụ thể gồm
 - tối đa 3 cách diễn đạt lại bullet CV.
 
 RÀNG BUỘC LIÊM CHÍNH:
+- Bạn KHÔNG được trả, suy diễn, đề xuất thay đổi hay diễn giải lại match_score, final_score,
+  rating, trạng thái requirement hoặc evidence. Các giá trị này do thuật toán cố định quyết định.
+- Chỉ dùng danh sách verified requirement-evidence matrix làm nguồn sự thật về những gì CV có.
 - original_text phải là câu trích nguyên văn từ CV.
 - Không thêm kỹ năng, công ty, dự án, chức danh, bằng cấp, số liệu hoặc thành tích không xuất hiện trong CV.
 - Kỹ năng CV còn thiếu chỉ là khoảng trống học tập, tuyệt đối không chèn vào câu tối ưu.
@@ -316,6 +319,8 @@ async def enforce_gap_integrity(state: GapAnalysisState) -> dict[str, Any]:
             }
         )
 
+    # These matching fields are copied exclusively from the deterministic evidence
+    # pipeline.  Never read them from the LLM draft.
     result = {
         "pipeline_version": evidence.get("pipeline_version", "1.0"),
         "trace_id": evidence.get("trace_id", ""),
@@ -363,5 +368,10 @@ async def enforce_gap_integrity(state: GapAnalysisState) -> dict[str, Any]:
         "cv_section_recommendations": cv_section_recommendations or fallback_plan["cv_section_recommendations"],
         "score_breakdown": evidence["score_breakdown"],
         "integrity_guardrail": "passed",
+        "explanation_provider": (
+            "gemini_guarded"
+            if get_settings().match_explanation_llm_enabled and get_settings().google_genai_api_key
+            else "deterministic"
+        ),
     }
     return {"gap_analysis_result": result}
