@@ -61,6 +61,7 @@ class Settings(BaseSettings):
 
     # Database
     database_url: str = "postgresql+asyncpg://postgres:postgrespassword@localhost:5432/career_assistant_db"
+    database_echo: bool = False
 
     # Vector Store / Market JD RAG
     qdrant_enabled: bool = False

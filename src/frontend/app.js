@@ -358,7 +358,7 @@ class ApiClient {
     }
   }
 
-  static async chatWithAssistant(message, history = [], currentPage = 'dashboard', conversationId = null) {
+  static async chatWithAssistant(message, history = [], currentPage = 'dashboard', conversationId = null, operation = null) {
     const options = {
       method: 'POST',
       body: JSON.stringify({
@@ -367,6 +367,7 @@ class ApiClient {
         current_page: currentPage,
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || null,
         conversation_id: conversationId,
+        operation,
       }),
     };
     return await this.requestAssistant('/assistant/chat', options);
@@ -2146,12 +2147,10 @@ function startAppLogic() {
     const scoreEl = document.getElementById('cv-result-match-score');
     const scoreRing = scoreEl?.closest('.cv-result-score-ring');
 
-    const setText = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
     const setHTML = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
 
     if (scoreEl) scoreEl.textContent = `${score.toFixed(1)}%`;
     scoreRing?.style.setProperty('--match-score', `${Math.max(0, Math.min(100, score)) * 3.6}deg`);
-
     const missingIds = [];
     applyDomField('cv-result-context', 'textContent', `${cvLabel}  ↔  ${jdLabel}`, missingIds);
     applyDomField('cv-result-summary', 'textContent', analysis.executive_summary
@@ -2180,7 +2179,7 @@ function startAppLogic() {
       : '<span class="cv-result-empty">Không có dữ liệu.</span>';
     applyDomField('cv-result-matching-skills', 'innerHTML', renderSkills(matched, 'matched'), missingIds);
     applyDomField('cv-result-missing-skills', 'innerHTML', renderSkills(missing, 'missing'), missingIds);
-    setHTML('cv-result-partial-skills', renderSkills(partial, 'partial'));
+    applyDomField('cv-result-partial-skills', 'innerHTML', renderSkills(partial, 'partial'), missingIds);
 
     applyDomField('cv-result-priority-actions', 'innerHTML', priorityActions.length
       ? priorityActions.slice(0, 4).map((item, index) => {
@@ -3299,8 +3298,6 @@ TÊN CÔNG TY:
           s => `<span class="badge badge-need">${escapeHtml(s)}</span>`
         ).join('') || `<span style="font-size:11px;color:var(--text-muted);">Không có dữ liệu</span>`, missingIds);
 
-        applyDomField('page-gap-executive-summary', 'textContent', res.executive_summary || '', missingIds);
-
         applyDomField('page-gap-soft-skills', 'innerHTML', (res.soft_skills_gap || []).map(
           s => `<span class="badge badge-warn">${escapeHtml(s)}</span>`
         ).join('') || `<span style="font-size:11px;color:var(--text-muted);">CV đã có bằng chứng cho các kỹ năng mềm nhận diện được.</span>`, missingIds);
@@ -3320,6 +3317,7 @@ TÊN CÔNG TY:
             </article>
           `).join('')
           : '<p class="gap-empty">Chưa có dữ liệu phân rã điểm.</p>', missingIds);
+        applyDomField('page-gap-executive-summary', 'textContent', res.executive_summary || '', missingIds);
 
         applyDomField('page-gap-priority-actions', 'innerHTML', (res.priority_actions || []).map(item => `
           <article class="gap-plan-item priority-item">
@@ -5703,10 +5701,73 @@ TÊN CÔNG TY:
         const actionList = document.createElement('div');
         actionList.className = 'ai-chat-actions';
         actions.forEach(action => {
-          if (!ALL_VIEWS.includes(action.page)) return;
+          if (action.action_type === 'evidence') {
+            const details = document.createElement('details');
+            details.className = 'ai-chat-evidence';
+            const summary = document.createElement('summary');
+            summary.textContent = action.label || 'Nguồn và bằng chứng';
+            details.appendChild(summary);
+            (action.sources || []).forEach(source => {
+              const item = document.createElement('div');
+              item.className = 'ai-chat-source';
+              const title = document.createElement('strong');
+              title.textContent = source.title || source.source_type;
+              const meta = document.createElement('small');
+              const provenanceLabels = {
+                user_data: 'Dữ liệu người dùng',
+                verified_analysis: 'Phân tích đã kiểm chứng',
+                system_data: 'Dữ liệu hệ thống',
+                recommendation: 'Khuyến nghị tương lai',
+              };
+              meta.textContent = `${provenanceLabels[source.provenance] || source.provenance || 'Nguồn'}${source.updated_at ? ` · ${formatConversationDate(source.updated_at)}` : ''}`;
+              item.append(title, meta);
+              if (source.quote) {
+                const quote = document.createElement('blockquote');
+                quote.textContent = source.quote;
+                item.appendChild(quote);
+              }
+              details.appendChild(item);
+            });
+            actionList.appendChild(details);
+            return;
+          }
+          if (['run_gap_analysis', 'start_interview'].includes(action.action_type)) {
+            const card = document.createElement('div');
+            card.className = 'ai-chat-operation';
+            card.dataset.actionType = action.action_type;
+            const cvSelect = document.createElement('select');
+            cvSelect.dataset.resourceType = 'cv';
+            cvSelect.setAttribute('aria-label', 'Chọn CV cho Nova');
+            const jdSelect = document.createElement('select');
+            jdSelect.dataset.resourceType = 'jd';
+            jdSelect.setAttribute('aria-label', 'Chọn JD cho Nova');
+            const fillOptions = (select, placeholder, options) => {
+              const initial = document.createElement('option');
+              initial.value = '';
+              initial.textContent = placeholder;
+              select.appendChild(initial);
+              (options || []).forEach(option => {
+                const element = document.createElement('option');
+                element.value = option.id;
+                element.textContent = `${option.label}${option.meta ? ` · ${option.meta}` : ''}`;
+                select.appendChild(element);
+              });
+            };
+            fillOptions(cvSelect, 'Chọn CV…', action.options?.cvs);
+            fillOptions(jdSelect, 'Chọn JD…', action.options?.jds);
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'ai-chat-operation-confirm';
+            button.textContent = action.label;
+            card.append(cvSelect, jdSelect, button);
+            actionList.appendChild(card);
+            return;
+          }
+          const targetPage = action.page === 'gap' ? 'cv' : action.page;
+          if (!ALL_VIEWS.includes(targetPage)) return;
           const button = document.createElement('button');
           button.type = 'button';
-          button.dataset.assistantTarget = action.page;
+          button.dataset.assistantTarget = targetPage;
           button.textContent = action.label;
           actionList.appendChild(button);
         });
@@ -5715,6 +5776,52 @@ TÊN CÔNG TY:
       messagesElement.appendChild(message);
       messagesElement.scrollTop = messagesElement.scrollHeight;
       return message;
+    }
+
+    async function submitAssistantRequest(text, operation = null) {
+      const previousHistory = conversationHistory.slice(-10);
+      appendChatMessage('user', text);
+      conversationHistory.push({ role: 'user', content: text });
+      if (sendButton) sendButton.disabled = true;
+      const typing = appendTypingIndicator();
+      try {
+        const result = await ApiClient.chatWithAssistant(
+          text,
+          previousHistory,
+          currentViewName,
+          currentConversationId,
+          operation
+        );
+        typing.remove();
+        currentConversationId = result.conversation_id;
+        appendChatMessage('assistant', result.response, result.suggested_actions || []);
+        conversationHistory.push({ role: 'assistant', content: result.response });
+        companion.classList.toggle('is-online', Boolean(result.llm_succeeded));
+        if (statusText) {
+          statusText.textContent = result.provider === 'nova_orchestrator'
+            ? 'Nova Orchestrator · đã kiểm chứng'
+            : result.llm_succeeded
+              ? `Gemini online · ${result.model}`
+              : 'Gemini chưa phản hồi';
+        }
+        return result;
+      } catch (err) {
+        typing.remove();
+        if (err.status === 401) {
+          performLogout({ notify: false });
+          appendChatMessage('assistant', 'Phiên đăng nhập đã hết hạn. Bạn hãy đăng nhập lại.');
+          openAuthModal();
+          return null;
+        }
+        const message = err.status === 404
+          ? 'Nova backend hoặc dữ liệu đã chọn không còn sẵn sàng.'
+          : `Mình chưa thể thực hiện: ${err.message}`;
+        appendChatMessage('assistant', message);
+        return null;
+      } finally {
+        if (sendButton) sendButton.disabled = false;
+        input.focus();
+      }
     }
 
     function appendTypingIndicator() {
@@ -5798,46 +5905,9 @@ TÊN CÔNG TY:
         return;
       }
 
-      const previousHistory = conversationHistory.slice(-10);
-      appendChatMessage('user', text);
-      conversationHistory.push({ role: 'user', content: text });
       input.value = '';
       input.style.height = 'auto';
-      if (sendButton) sendButton.disabled = true;
-      const typing = appendTypingIndicator();
-      try {
-        const result = await ApiClient.chatWithAssistant(
-          text,
-          previousHistory,
-          currentViewName,
-          currentConversationId
-        );
-        typing.remove();
-        currentConversationId = result.conversation_id;
-        appendChatMessage('assistant', result.response, result.suggested_actions || []);
-        conversationHistory.push({ role: 'assistant', content: result.response });
-        companion.classList.toggle('is-online', Boolean(result.llm_succeeded));
-        if (statusText) {
-          statusText.textContent = result.llm_succeeded
-            ? `Gemini online · ${result.model}`
-            : 'Gemini chưa phản hồi';
-        }
-      } catch (err) {
-        typing.remove();
-        if (err.status === 401) {
-          performLogout({ notify: false });
-          appendChatMessage('assistant', 'Phiên đăng nhập đã hết hạn. Bạn hãy đăng nhập lại rồi gửi câu hỏi thời tiết.');
-          openAuthModal();
-          return;
-        }
-        const message = err.status === 404
-          ? 'Nova backend chưa sẵn sàng. Vui lòng thử lại sau ít phút.'
-          : `Mình chưa thể trả lời: ${err.message}`;
-        appendChatMessage('assistant', message);
-      } finally {
-        if (sendButton) sendButton.disabled = false;
-        input.focus();
-      }
+      await submitAssistantRequest(text);
     });
 
     input.addEventListener('keydown', event => {
@@ -5851,11 +5921,34 @@ TÊN CÔNG TY:
       input.style.height = `${Math.min(input.scrollHeight, 100)}px`;
     });
 
-    panel.addEventListener('click', event => {
+    panel.addEventListener('click', async event => {
       const promptButton = event.target.closest('[data-assistant-prompt]');
       if (promptButton) {
         input.value = promptButton.dataset.assistantPrompt;
         form.requestSubmit();
+        return;
+      }
+      const operationButton = event.target.closest('.ai-chat-operation-confirm');
+      if (operationButton) {
+        const card = operationButton.closest('.ai-chat-operation');
+        const cvSelect = card?.querySelector('[data-resource-type="cv"]');
+        const jdSelect = card?.querySelector('[data-resource-type="jd"]');
+        const cvId = cvSelect?.value;
+        const jdId = jdSelect?.value;
+        if (!cvId || !jdId) {
+          showToast('Vui lòng chọn cả CV và JD.', 'warning');
+          return;
+        }
+        const cvLabel = cvSelect.options[cvSelect.selectedIndex]?.textContent || 'CV đã chọn';
+        const jdLabel = jdSelect.options[jdSelect.selectedIndex]?.textContent || 'JD đã chọn';
+        const actionType = card.dataset.actionType;
+        const actionLabel = actionType === 'start_interview' ? 'tạo phiên phỏng vấn' : 'chạy Gap Analysis';
+        if (!window.confirm(`Bạn muốn dùng ${cvLabel} và ${jdLabel} để ${actionLabel} không?`)) return;
+        operationButton.disabled = true;
+        await submitAssistantRequest(
+          `Xác nhận ${actionLabel} với ${cvLabel} và ${jdLabel}.`,
+          { action_type: actionType, cv_id: cvId, jd_id: jdId, confirmed: true, total_questions: 5 }
+        );
         return;
       }
       const actionButton = event.target.closest('[data-assistant-target]');
