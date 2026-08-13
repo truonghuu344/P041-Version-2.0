@@ -2,7 +2,8 @@ from datetime import UTC, datetime, timedelta
 from time import perf_counter
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import func, select
+from fastapi.encoders import jsonable_encoder
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -17,6 +18,7 @@ from src.db.models import (
     ChatMessage,
     CVAnalysis,
     InterviewSession,
+    JobDescription,
     User,
 )
 from src.models.schemas import (
@@ -30,6 +32,209 @@ from src.models.schemas import (
 )
 
 router = APIRouter(prefix="/assistant", tags=["Career Assistant Agent"])
+
+
+def _iso(value) -> str:
+    return value.isoformat() if value else ""
+
+
+async def _load_orchestration_resources(db: AsyncSession, user_id: str) -> dict:
+    cvs = (
+        await db.execute(
+            select(CV)
+            .where(CV.user_id == user_id)
+            .order_by(CV.updated_at.desc())
+            .limit(20)
+        )
+    ).scalars().all()
+    jds = (
+        await db.execute(
+            select(JobDescription)
+            .where(
+                or_(
+                    JobDescription.is_system.is_(True),
+                    JobDescription.created_by_user_id == user_id,
+                )
+            )
+            .order_by(JobDescription.created_at.desc())
+            .limit(20)
+        )
+    ).scalars().all()
+    analyses = (
+        await db.execute(
+            select(CVAnalysis)
+            .where(CVAnalysis.user_id == user_id)
+            .options(selectinload(CVAnalysis.cv), selectinload(CVAnalysis.jd))
+            .order_by(CVAnalysis.created_at.desc())
+            .limit(20)
+        )
+    ).scalars().all()
+
+    analysis_items = []
+    for analysis in analyses:
+        details = analysis.gap_analysis_json or {}
+        evidence_items = []
+        for requirement in details.get("requirement_evidence", [])[:8]:
+            sources = requirement.get("evidence") or []
+            if not sources:
+                continue
+            quote = str(sources[0].get("quote") or sources[0].get("text") or "").strip()
+            if not quote:
+                continue
+            evidence_items.append(
+                {
+                    "requirement": str(requirement.get("requirement") or "Yêu cầu JD")[:240],
+                    "quote": quote[:360],
+                }
+            )
+        analysis_items.append(
+            {
+                "id": analysis.id,
+                "cv_id": analysis.cv_id,
+                "cv_title": analysis.cv.title,
+                "jd_id": analysis.jd_id,
+                "jd_title": analysis.jd.title,
+                "company": analysis.jd.company or "",
+                "match_score": float(analysis.match_score),
+                "created_at": _iso(analysis.created_at),
+                "matching": details.get("hard_skills_matching", []),
+                "missing": details.get("hard_skills_missing", []),
+                "evidence": evidence_items,
+                "priority_actions": details.get("priority_actions", []),
+                "learning": details.get("learning_recommendations", []),
+                "integrity_guardrail": details.get("integrity_guardrail", "passed"),
+            }
+        )
+
+    return {
+        "cvs": [
+            {"id": cv.id, "title": cv.title, "updated_at": _iso(cv.updated_at)}
+            for cv in cvs
+        ],
+        "jds": [
+            {
+                "id": jd.id,
+                "title": jd.title,
+                "company": jd.company or "",
+                "location": jd.location or "",
+                "created_at": _iso(jd.created_at),
+                "owned": jd.created_by_user_id == user_id,
+            }
+            for jd in jds
+        ],
+        "analyses": analysis_items,
+    }
+
+
+def _resource_by_id(resources: list[dict], resource_id: str) -> dict | None:
+    return next((item for item in resources if item["id"] == resource_id), None)
+
+
+async def _execute_confirmed_operation(
+    payload: AssistantChatRequest,
+    resources: dict,
+    db: AsyncSession,
+    current_user: User,
+) -> dict:
+    operation = payload.operation
+    if operation is None:
+        raise ValueError("Thiếu operation")
+    cv = _resource_by_id(resources.get("cvs", []), operation.cv_id)
+    jd = _resource_by_id(resources.get("jds", []), operation.jd_id)
+    if not cv or not jd:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="CV hoặc JD không tồn tại, không thuộc tài khoản, hoặc bạn không có quyền sử dụng.",
+        )
+    if not operation.confirmed:
+        return {
+            "response": f"Nova chưa thực hiện tác vụ vì bạn chưa xác nhận dùng CV “{cv['title']}” và JD “{jd['title']}”.",
+            "provider": "nova_orchestrator",
+            "model": "deterministic_orchestration",
+            "llm_succeeded": True,
+            "suggested_actions": [],
+            "tools_used": ["confirmation_guardrail"],
+        }
+
+    if operation.action_type == "run_gap_analysis":
+        from src.api.v1.analysis import analyze_cv_jd_gap
+        from src.models.schemas import GapAnalysisRequest
+
+        analysis = await analyze_cv_jd_gap(
+            GapAnalysisRequest(cv_id=operation.cv_id, jd_id=operation.jd_id),
+            db=db,
+            current_user=current_user,
+        )
+        evidence_sources = []
+        for item in analysis.requirement_evidence[:5]:
+            if not item.evidence:
+                continue
+            evidence_sources.append(
+                {
+                    "source_type": "analysis",
+                    "source_id": analysis.id,
+                    "title": item.requirement,
+                    "quote": item.evidence[0].quote[:360],
+                    "updated_at": analysis.created_at,
+                    "provenance": "verified_analysis",
+                }
+            )
+        evidence_sources.extend(
+            [
+                {"source_type": "cv", "source_id": cv["id"], "title": cv["title"], "updated_at": cv.get("updated_at") or None, "provenance": "user_data"},
+                {"source_type": "jd", "source_id": jd["id"], "title": jd["title"], "updated_at": jd.get("created_at") or None, "provenance": "user_data" if jd.get("owned") else "system_data"},
+            ]
+        )
+        missing = ", ".join(analysis.hard_skills_missing[:5]) or "chưa ghi nhận"
+        return {
+            "response": (
+                f"Đã hoàn thành Gap Analysis cho CV “{cv['title']}” và JD “{jd['title']}”. "
+                f"Điểm phù hợp: {analysis.match_score:.1f}%. Kỹ năng còn thiếu: {missing}. "
+                "Các mục học tập/dự án là khuyến nghị tương lai, không phải thành tích đã hoàn thành."
+            ),
+            "provider": "nova_orchestrator",
+            "model": "gap_analysis_agent",
+            "llm_succeeded": True,
+            "suggested_actions": [
+                {"label": "Nguồn và bằng chứng", "action_type": "evidence", "sources": evidence_sources},
+                {"label": "Mở kết quả Gap Analysis", "page": "gap"},
+            ],
+            "tools_used": ["gap_analysis_agent", "integrity_guardrail"],
+        }
+
+    from src.api.v1.interviews import start_interview_session
+    from src.models.schemas import InterviewStartRequest
+
+    question = await start_interview_session(
+        InterviewStartRequest(
+            cv_id=operation.cv_id,
+            jd_id=operation.jd_id,
+            total_questions=operation.total_questions,
+        ),
+        db=db,
+        current_user=current_user,
+    )
+    return {
+        "response": (
+            f"Đã tạo phiên phỏng vấn cho CV “{cv['title']}” và JD “{jd['title']}”. "
+            f"Câu hỏi đầu tiên: {question.question_text}"
+        ),
+        "provider": "nova_orchestrator",
+        "model": "interview_agent",
+        "llm_succeeded": True,
+        "suggested_actions": [
+            {
+                "label": "Dữ liệu phiên phỏng vấn",
+                "action_type": "evidence",
+                "sources": [
+                    {"source_type": "cv", "source_id": cv["id"], "title": cv["title"], "updated_at": cv.get("updated_at") or None, "provenance": "user_data"},
+                    {"source_type": "jd", "source_id": jd["id"], "title": jd["title"], "updated_at": jd.get("created_at") or None, "provenance": "user_data" if jd.get("owned") else "system_data"},
+                ],
+            },
+            {"label": "Vào phòng phỏng vấn", "page": "interview", "payload": {"session_id": question.session_id}},
+        ],
+        "tools_used": ["interview_agent"],
+    }
 
 
 def _conversation_title(prompt: str) -> str:
@@ -182,23 +387,35 @@ async def assistant_chat(
         .order_by(CV.created_at.desc())
         .limit(1)
     )
+    orchestration_resources = await _load_orchestration_resources(db, current_user.id)
 
     started_at = perf_counter()
     try:
-        result = await career_assistant_agent.run(
-            message=payload.message,
-            history=history,
-            user_context={
-                "full_name": current_user.full_name,
-                "role": current_user.role,
-                "current_page": payload.current_page,
-                "timezone": payload.timezone or get_settings().app_timezone,
-                "cv_count": cv_count or 0,
-                "latest_cv_title": latest_cv.title if latest_cv else None,
-                "analysis_count": analysis_count or 0,
-                "interview_count": interview_count or 0,
-            },
-        )
+        if payload.operation:
+            result = await _execute_confirmed_operation(
+                payload,
+                orchestration_resources,
+                db,
+                current_user,
+            )
+        else:
+            result = await career_assistant_agent.run(
+                message=payload.message,
+                history=history,
+                user_context={
+                    "full_name": current_user.full_name,
+                    "role": current_user.role,
+                    "current_page": payload.current_page,
+                    "timezone": payload.timezone or get_settings().app_timezone,
+                    "cv_count": cv_count or 0,
+                    "latest_cv_title": latest_cv.title if latest_cv else None,
+                    "analysis_count": analysis_count or 0,
+                    "interview_count": interview_count or 0,
+                    "_resources": orchestration_resources,
+                },
+            )
+    except HTTPException:
+        raise
     except Exception as exc:
         result = {
             "response": "Nova đang gặp lỗi khi xử lý yêu cầu. Vui lòng thử lại sau ít phút.",
@@ -215,7 +432,7 @@ async def assistant_chat(
     provider = result.get("provider", "google_gemini")
     model = result.get("model", get_settings().model_name)
     llm_succeeded = bool(result.get("llm_succeeded"))
-    suggested_actions = result.get("suggested_actions", [])
+    suggested_actions = jsonable_encoder(result.get("suggested_actions", []))
 
     message_time = datetime.now(UTC)
     user_message = ChatMessage(

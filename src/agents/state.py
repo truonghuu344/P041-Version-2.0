@@ -83,6 +83,7 @@ class CareerAssistantState(TypedDict, total=False):
     message: str
     history: list[dict[str, str]]
     user_context: dict[str, Any]
+    resource_context: dict[str, Any]
     intent: str
     suggested_actions: list[dict[str, str]]
     weather_context: dict[str, Any]

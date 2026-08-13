@@ -1497,8 +1497,9 @@ html.light .page-title,
 .spaceship-stage {
   width: 100%;
   max-width: 1140px;
-  margin: 76px auto 40px auto;
-  padding: 0 20px;
+  /* Keep the tallest center porthole clear of the fixed 60px navbar. */
+  margin: 88px auto 48px;
+  padding: 0 clamp(12px, 2.5vw, 24px);
   position: relative;
   z-index: 2;
 }
@@ -1508,20 +1509,22 @@ html.light .page-title,
   display: flex;
   justify-content: center;
   align-items: flex-end;
-  gap: 24px;
-  margin-bottom: -32px;
+  gap: clamp(16px, 3vw, 32px);
+  margin-bottom: -18px;
+  padding: 0 clamp(8px, 3vw, 40px);
   position: relative;
   z-index: 3;
 }
 
 .porthole-window {
-  width: 180px;
-  height: 110px;
+  flex: 0 1 190px;
+  width: clamp(150px, 18vw, 190px);
+  height: 104px;
   border-radius: 55px;
   position: relative;
   background: radial-gradient(circle at 50% 50%, rgba(6,7,26,0.3) 0%, rgba(4,5,20,0.9) 100%);
-  border: 3px solid #b9ecfb;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.6), inset 0 0 20px rgba(0,210,255,0.30), 0 0 16px rgba(0,229,255,0.55), 0 0 5px rgba(0,229,255,0.9);
+  border: 2px solid #b9ecfb;
+  box-shadow: 0 12px 28px rgba(2, 6, 23, 0.42), inset 0 0 20px rgba(0,210,255,0.24), 0 0 14px rgba(0,229,255,0.42);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -1530,17 +1533,20 @@ html.light .page-title,
   padding-bottom: 8px;
 }
 .center-porthole {
-  width: 260px;
-  height: 130px;
+  flex-basis: 280px;
+  width: clamp(220px, 26vw, 280px);
+  height: 124px;
   border-radius: 65px;
-  border-width: 4px;
+  border-width: 3px;
   border-color: #ffffff;
-  box-shadow: 0 10px 32px rgba(0,0,0,0.7), inset 0 0 25px rgba(0,229,255,0.3), 0 0 20px rgba(255,255,255,0.6);
+  box-shadow: 0 14px 34px rgba(2, 6, 23, 0.5), inset 0 0 24px rgba(0,229,255,0.24), 0 0 18px rgba(255,255,255,0.48);
 }
 .porthole-glass {
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.35) 0%, transparent 45%, rgba(0,229,255,0.1) 100%);
+  background:
+    linear-gradient(180deg, rgba(4, 8, 24, 0.1), rgba(4, 8, 24, 0.32)),
+    linear-gradient(135deg, rgba(255,255,255,0.24) 0%, transparent 42%, rgba(0,229,255,0.08) 100%);
   pointer-events: none;
 }
 .porthole-ring {
@@ -1552,15 +1558,19 @@ html.light .page-title,
 }
 .porthole-label {
   font-size: 12px;
-  font-weight: 800;
-  color: var(--accent-cyan);
-  letter-spacing: 0.3px;
-  text-shadow: 0 0 6px rgba(0,229,255,0.8);
+  font-weight: 850;
+  color: #67e8f9;
+  letter-spacing: 0.55px;
+  text-shadow: 0 0 7px rgba(0,229,255,0.85), 0 1px 2px rgba(2, 6, 23, 0.9);
   position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
   z-index: 2;
-  background: rgba(0,0,0,0.45);
-  padding: 2px 9px; width: fit-content; max-width: 150px; text-align: center; white-space: normal; line-height: 1.18;
-  border-radius: 10px;
+  background: transparent;
+  padding: 0;
+  width: calc(100% - 34px);
+  max-width: 190px;
+  text-align: center;
+  white-space: normal;
+  line-height: 1.25;
 }
 
 /* White Spaceship Cockpit Vessel Card */
@@ -1568,10 +1578,11 @@ html.light .page-title,
   background: linear-gradient(160deg, #ffffff 0%, #f1f5f9 60%, #e2e8f0 100%);
   color: #0f172a;
   border-radius: 28px;
-  padding: 44px 32px 32px 32px;
+  padding: 48px clamp(22px, 3vw, 36px) 32px;
   border: 2px solid #ffffff;
-  box-shadow: 0 30px 80px rgba(0,0,0,0.6), inset 0 2px 4px rgba(255,255,255,0.9), 0 0 40px rgba(0, 229, 255, 0.2);
+  box-shadow: 0 28px 68px rgba(2, 6, 23, 0.42), inset 0 2px 4px rgba(255,255,255,0.9), 0 0 32px rgba(0, 229, 255, 0.16);
   position: relative;
+  overflow: hidden;
 }
 
 .vessel-header {
@@ -1584,15 +1595,16 @@ html.light .page-title,
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: #0f172a;
-  color: var(--accent-cyan);
-  padding: 6px 16px;
+  background: linear-gradient(135deg, rgba(236, 254, 255, 0.92), rgba(238, 242, 255, 0.82));
+  color: #0e7490;
+  padding: 7px 16px;
+  border: 1px solid rgba(6, 182, 212, 0.3);
   border-radius: 20px;
   font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 1px;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.3);
-  margin-bottom: 12px;
+  font-weight: 800;
+  letter-spacing: 0.85px;
+  box-shadow: 0 8px 20px rgba(8, 145, 178, 0.1);
+  margin-bottom: 18px;
 }
 .pulse-dot {
   width: 8px; height: 8px;
@@ -1607,24 +1619,28 @@ html.light .page-title,
 }
 
 .vessel-title {
-  font-size: 24px;
+  font-size: clamp(21px, 2.2vw, 28px);
   font-weight: 800;
   color: #0f172a;
   letter-spacing: -0.5px;
-  margin-bottom: 12px;
+  line-height: 1.2;
+  margin: 0 0 14px;
+  text-wrap: balance;
 }
 
 .vessel-status-pills {
   display: flex;
   justify-content: center;
-  gap: 16px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
 .create-cv-template-cta {
   position: relative;
   z-index: 8;
-  min-width: 310px;
+  flex: 0 1 290px;
+  width: min(290px, 100%);
+  min-width: 250px;
   min-height: 62px;
   padding: 12px 20px;
   border: 1px solid #a5b4fc;
@@ -1756,7 +1772,17 @@ html.light .page-title,
   text-decoration: none;
   transition: transform 0.16s ease, opacity 0.16s ease, background 0.16s ease;
 }
-.vessel-header-row { position: relative; z-index: 7; }
+.vessel-header-row {
+  position: relative;
+  z-index: 7;
+  width: 100%;
+  text-align: left;
+}
+.vessel-header-row > div:first-child {
+  flex: 1 1 560px;
+  min-width: 0;
+}
+.vessel-header-row .vessel-status-pills { justify-content: flex-start; }
 .template-card-actions button:hover,
 .template-card-actions a:hover { transform: translateY(-1px); }
 .template-card-actions button:disabled { cursor: wait; opacity: 0.55; transform: none; }
@@ -1789,6 +1815,22 @@ html.light .page-title,
 @media (max-width: 860px) {
   .vessel-grid { grid-template-columns: 1fr; }
   .spaceship-windows-bar { display: none; }
+  .spaceship-stage { margin-top: 84px; }
+  .spaceship-vessel { padding-top: 30px; }
+}
+
+@media (max-width: 1040px) {
+  .vessel-header-row {
+    flex-direction: column;
+    align-items: stretch !important;
+  }
+  .vessel-header-row > div:first-child { flex-basis: auto; }
+  .create-cv-template-cta {
+    flex: 0 0 auto;
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+  }
 }
 
 .vessel-card {
@@ -3839,6 +3881,56 @@ html.light .gap-select-menu,
 
 .ai-chat-actions {
   margin-top: 8px;
+}
+
+.ai-chat-operation,
+.ai-chat-evidence {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid rgba(103, 232, 249, 0.2);
+  border-radius: 10px;
+  background: rgba(2, 6, 23, 0.34);
+}
+
+.ai-chat-operation {
+  display: grid;
+  gap: 7px;
+}
+
+.ai-chat-operation select {
+  width: 100%;
+  padding: 7px 8px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 8px;
+  background: #111936;
+  color: #e2e8f0;
+  font-size: 10px;
+}
+
+.ai-chat-evidence summary {
+  color: #a5f3fc;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.ai-chat-source {
+  display: grid;
+  gap: 2px;
+  margin-top: 7px;
+  padding-top: 7px;
+  border-top: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.ai-chat-source small {
+  color: #94a3b8;
+}
+
+.ai-chat-source blockquote {
+  margin: 4px 0 0;
+  padding-left: 8px;
+  border-left: 2px solid rgba(103, 232, 249, 0.5);
+  color: #cbd5e1;
+  font-style: italic;
 }
 
 .ai-chat-actions button,

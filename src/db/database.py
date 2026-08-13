@@ -21,7 +21,9 @@ elif db_url.startswith("sqlite://"):
 
 # Sử dụng NullPool khi chạy test để không giữ connection trong pool
 engine_kwargs = {
-    "echo": (settings.app_env == "development"),
+    # SQL echo can leak CV/JD content and raises UnicodeEncodeError on Windows
+    # consoles whose legacy code page cannot represent Vietnamese text.
+    "echo": settings.database_echo,
     "future": True,
 }
 if settings.app_env == "testing" or "pytest" in os.environ.get("_", ""):
