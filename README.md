@@ -1,214 +1,184 @@
-# 🤖 AI20K Agent Template
+# 🤖 Career Assistant X (CV Assistant)
 
-Template chính thức cho học viên **VinUni AI20K Build Phase** — cung cấp sẵn cấu trúc dự án, code mẫu, và hướng dẫn kỹ thuật chi tiết để xây dựng AI Agent đạt điểm cao (35+/50).
+Trợ lý nghề nghiệp AI cho sinh viên năm 3–4/mới ra trường — phân tích CV theo JD (Gap Analysis, không bịa/thổi phồng kinh nghiệm), phỏng vấn thử theo Rubric STAR, và chatbot AI **Nova** hỗ trợ định hướng nghề nghiệp. Dự án capstone **VinUni AI20K Build Phase**, nhóm **WinTop**.
 
-> 📖 **Technical Guidebook:** [phoenix.note.transformerlabs.ai/technical-book](https://phoenix.note.transformerlabs.ai/technical-book)
+## 🌐 Demo
 
-## 🎯 Template này dùng để làm gì?
+Dự án hiện chạy local: backend qua Docker, frontend qua Next.js, chưa deploy public:
 
-Khi tham gia AI20K Build Phase, mỗi đội cần xây dựng một AI Agent hoàn chỉnh — từ kiến trúc, code, test, đến deploy. Thay vì bắt đầu từ con số không, template này cung cấp:
-
-- **Cấu trúc thư mục chuẩn** — đã được thiết kế theo best practices (separation of concerns)
-- **Code mẫu** cho các phần cốt lõi: LangGraph agent, FastAPI API, config, schemas
-- **Docker + CI/CD sẵn** — Dockerfile multi-stage, GitHub Actions workflow
-- **Hướng dẫn kỹ thuật 10 chương** — từ clone template đến nộp bài Demo Day
-- **Checklist 10 deliverables** — đảm bảo không bỏ sót yêu cầu BTC
-- **AI Usage Logging tự động** — Pre-configured hooks cho Claude Code, Cursor, Codex, Gemini CLI, Antigravity, và GitHub Copilot
-
-## ⚡ Quick Start
-
-### Bước 1: Fork hoặc Clone
-
-```bash
-# Clone template
-git clone https://github.com/AI20K-Build-Cohort-2/starter-code-template.git team-YOUR_TEAM_NAME
-cd team-YOUR_TEAM_NAME
-
-# Xóa git history cũ và khởi tạo lại
-rm -rf .git
-git init
-git add .
-git commit -m "feat: khởi tạo dự án từ template"
+```
+http://localhost:3000
 ```
 
-### Bước 2: Setup môi trường
+Xem [Cách chạy demo](#-cách-chạy-demo-first-mvp) bên dưới để dựng lên trên máy bạn.
+
+## 🎯 Sản phẩm gồm những gì
+
+- **Phân tích CV theo JD** — upload CV (PDF/DOCX), so khớp với JD (thư viện mẫu hoặc dán tùy chỉnh), ra **Match Score** kèm bằng chứng cụ thể (evidence-based), không tự thêm kỹ năng/kinh nghiệm không có thật.
+- **Gap Analysis chi tiết** — kỹ năng phù hợp/cần bổ sung, việc cần ưu tiên, lộ trình học đề xuất, gợi ý sửa CV theo chuẩn ATS — mọi gợi ý đều phải qua **Accept/Reject (HITL)** của sinh viên trước khi áp dụng.
+- **Phỏng vấn thử theo Rubric STAR** — 5 câu hỏi chính + follow-up theo CV/JD đã chọn, chấm điểm theo 4 tiêu chí (Situation/Task/Action/Result), có báo cáo và gợi ý luyện tập.
+- **Chatbot Nova** — trợ lý AI hội thoại, trả lời dựa trên CV/JD của sinh viên, có tool tra thời tiết.
+- **Dashboard cố vấn hướng nghiệp (HITL)** — cố vấn xem tiến độ/báo cáo của sinh viên được cấp quyền.
+- **CV–JD Matching Pipeline v1** — BM25 + semantic embedding (Gemini) → RRF fusion → evidence classification → rubric có thể cấu hình, lưu đầy đủ chuỗi truy vết từ Final Score về CV chunk/trang nguồn. Xem đặc tả tại [`docs/pipeline/Phrase_2/CV_JD.md`](docs/pipeline/Phrase_2/CV_JD.md).
+
+## 🚀 Cách chạy demo (First MVP)
+
+### Yêu cầu
+
+- Docker Desktop đang chạy.
+- 1 API key Gemini miễn phí từ [Google AI Studio](https://aistudio.google.com/apikey).
+
+### Bước 1 — Cấu hình `.env`
 
 ```bash
-# Tạo virtual environment
-python3.11 -m venv .venv
-source .venv/bin/activate
-
-# Cài dependencies
-pip install -e ".[dev]"
-
-# Cấu hình API keys
 cp .env.example .env
-# Mở .env và thêm GEMINI_API_KEY của bạn (lấy từ Google AI Studio)
-# Đồng thời cập nhật AI_LOG_API_KEY bằng key riêng từ link mời của BTC
-# (giá trị trong .env.example chỉ là placeholder)
 ```
 
-### Bước 3: Cài AI Logging Hooks
+Điền tối thiểu các biến sau (xem chú thích trong `.env.example` cho từng biến):
+
+| Biến | Bắt buộc? | Ghi chú |
+|---|---|---|
+| `POSTGRES_PASSWORD` | ✅ Bắt buộc | Docker Compose sẽ báo lỗi ngay nếu thiếu |
+| `SECRET_KEY` | ✅ Bắt buộc (production mode) | ≥32 ký tự ngẫu nhiên, không dùng giá trị mẫu |
+| `INITIAL_ADMIN_PASSWORD` | ✅ Bắt buộc (production mode) | Mật khẩu cho tài khoản admin seed sẵn (`admin@cva.com`) |
+| `GEMINI_API_KEY` | ✅ Bắt buộc để có AI thật | Không set thì Nova/Gap Analysis/Interview chạy ở chế độ fallback |
+| `MODEL_NAME` | Khuyến nghị | Đặt `gemini-3.1-flash-lite` — đã xác nhận hoạt động ổn định (một số model khác như `gemini-2.0-flash` đã bị Google ngừng hỗ trợ) |
+| `GOOGLE_OAUTH_CLIENT_ID` | Tùy chọn | Chỉ cần nếu muốn nút "Đăng nhập Google" hoạt động — lấy từ Google Cloud Console (Web application, Authorized JavaScript origins: `http://localhost:3000`) |
+
+Lưu ý: `docker-compose.yml` tự đặt `APP_ENV=production` cho backend — khi đó `SECRET_KEY` và `INITIAL_ADMIN_PASSWORD` là **bắt buộc**, không có giá trị mặc định an toàn.
+
+### Bước 2 — Khởi tạo backend bằng Docker
 
 ```bash
-# Linux / macOS / Git Bash
-bash scripts/setup_hooks.sh
-
-# Windows PowerShell
-# powershell -ExecutionPolicy Bypass -File scripts\setup_hooks.ps1
-```
-
-Hooks tự động log mọi AI prompt khi dùng Claude Code, Cursor, Codex, Gemini CLI, Antigravity, hoặc GitHub Copilot. Không cần thao tác thủ công.
-
-### Bước 4: Chạy server
-
-```bash
-# Chạy FastAPI backend
-uvicorn src.main:app --reload --port 8000
-
-# Mở Swagger UI
-# http://localhost:8000/docs
-```
-
-### Chạy full-stack với Docker
-
-Yêu cầu Docker Desktop đang chạy. Sao chép `.env.example` thành `.env`, điền các API key cần dùng, và đặt `POSTGRES_PASSWORD` thành một mật khẩu mạnh. Sau đó chạy:
-
-```bash
+# Build lại image backend khi lần đầu chạy hoặc sau khi đổi Dockerfile/dependency/code backend
 docker compose up --build -d
+docker compose ps
+docker compose logs -f backend
 ```
 
-Truy cập ứng dụng qua Nginx Gateway tại [http://localhost:8080](http://localhost:8080); API documentation có tại [http://localhost:8080/docs](http://localhost:8080/docs). Chỉ Gateway được publish ra host, còn frontend/backend nằm trong mạng Docker. Kiểm tra trạng thái bằng `docker compose ps` hoặc `docker compose logs -f`.
+`docker compose up --build -d` khởi động PostgreSQL + pgvector, ClamAV và FastAPI. API có tại `http://localhost:8000`; kiểm tra nhanh bằng `http://localhost:8000/health`.
 
-Khi đưa lên Internet, trỏ Cloudflare Tunnel hoặc reverse proxy của máy chủ vào `http://localhost:8080`. Đặt `APP_ENV=production`, `CORS_ORIGINS=https://ten-mien-cua-ban`, `SECRET_KEY`, `INITIAL_ADMIN_PASSWORD`, `POSTGRES_PASSWORD` và `GOOGLE_OAUTH_CLIENT_ID` bằng giá trị thật; không dùng URL `trycloudflare.com` lâu dài cho đăng nhập hoặc dữ liệu thật.
+### Bước 3 — Khởi tạo frontend local
 
-Để dừng stack, dùng `docker compose down`. Thêm `-v` chỉ khi muốn xóa toàn bộ dữ liệu PostgreSQL và dữ liệu ứng dụng.
-
-### Bước 5: Đọc hướng dẫn
-
-📖 Mở **[Technical Guidebook](https://phoenix.note.transformerlabs.ai/technical-book)** và làm theo từng chương.
-
-## 📁 Cấu trúc dự án
-
-```
-├── src/
-│   ├── agents/           # 🧠 LangGraph Agent
-│   │   ├── graph.py      #    State graph (nodes + edges)
-│   │   ├── state.py      #    State schema (TypedDict)
-│   │   ├── nodes/        #    Node functions
-│   │   └── tools/        #    Agent tools (@tool)
-│   ├── api/              # 🌐 FastAPI Backend
-│   │   └── routes.py     #    API endpoints
-│   ├── models/           # 📋 Pydantic schemas
-│   ├── services/         # 🔧 Business logic (LLM, etc.)
-│   ├── config.py         # ⚙️ Pydantic Settings
-│   └── main.py           # 🚀 App entry point
-├── tests/                # 🧪 pytest suite
-│   ├── test_agents/      #    Agent/graph tests
-│   └── test_api/         #    API endpoint tests
-├── scripts/              # 🔌 AI Logging Hooks
-│   ├── log_hook.py       #    Auto-log cho Claude/Cursor/Codex/Gemini/Copilot
-│   ├── log_antigravity.py#    Antigravity IDE prompt scanner
-│   ├── log_manual.py     #    Manual log cho ChatGPT / web tools
-│   ├── submit_log.py     #    Submit logs on git push
-│   └── setup_hooks.sh    #    One-time hook installer
-├── .claude/ .codex/ .cursor/ .gemini/  # Per-tool hook configs
-├── .agents/              # Antigravity rules + workflows
-├── .ai-log/              # 📊 AI usage logs (auto-generated)
-├── docs/
-│   ├── guide/            # 📖 Technical Guidebook (10 chapters)
-│   └── architecture_diagram.md
-├── eval/                 # 📊 Evaluation results
-├── presentation/         # 🎤 Demo Day slides
-├── .github/workflows/    # ⚡ CI/CD (GitHub Actions)
-├── .github/hooks/        # 🪝 Copilot hook config
-├── Dockerfile            # 🐳 Multi-stage build
-├── docker-compose.yml    # 🐙 Full stack orchestration
-└── README_boilerplate.md # 📝 README template cho đội của bạn
+```bash
+cd frontend && npm install
+Copy-Item .env.local.example .env.local # PowerShell (chạy một lần)
+npm run dev
 ```
 
-## 📚 Technical Guidebook — 10 Chương
+Trên macOS/Linux, thay lệnh copy bằng `cp .env.local.example .env.local`. Frontend có tại `http://localhost:3000`.
 
-| Chương | Nội dung | Thời gian |
-|---------|----------|-----------|
-| 1 | Lời mở đầu — Mục tiêu, cách sử dụng | 15 phút |
-| 2 | Khởi tạo dự án — Clone, setup, git workflow | 4 giờ |
-| 3 | Thiết kế kiến trúc — 3-tier, diagrams, ADR | 6 giờ |
-| 4 | **LangGraph Agent** — State, nodes, edges, tools, RAG | 8 giờ |
-| 5 | FastAPI — Routes, validation, error handling, streaming | 6 giờ |
-| 6 | Giao diện — Next.js + Streamlit quickstart | 6 giờ |
-| 7 | DevOps — Docker, CI/CD, deploy, logging | 6 giờ |
-| 8 | Kiểm thử — Unit test, integration test, RAGAS | 4 giờ |
-| 9 | Demo Day — 10 deliverables, checklist, tips | 2 giờ |
-| 10 | Tài nguyên — Khóa học, docs, BMAD method | tham khảo |
+### Bước 4 — Mở app
 
-📖 **Đọc online:** [phoenix.note.transformerlabs.ai/technical-book](https://phoenix.note.transformerlabs.ai/technical-book)
+Truy cập [http://localhost:3000](http://localhost:3000). Next.js local tự proxy các request `/api/v1/*` đến backend Docker tại `http://localhost:8000`.
 
-## 📋 10 Deliverables cho Demo Day
+- Đăng nhập admin: `admin@cva.com` + mật khẩu bạn đặt ở `INITIAL_ADMIN_PASSWORD`.
+- Hoặc đăng ký tài khoản sinh viên mới ngay trên giao diện để test luồng chính (upload CV → chọn JD → Gap Analysis → phỏng vấn thử).
 
-| # | Deliverable | File vị trí | Template có sẵn |
-|---|-------------|-------------|:---:|
-| 1 | Source Code | `src/` | ✅ |
-| 2 | README.md | `README_boilerplate.md` → copy thành `README.md` | ✅ |
-| 3 | Architecture Diagram | `docs/architecture_diagram.md` | ✅ |
-| 4 | AI Logs | LangSmith (3 env vars) + Auto AI Usage Logging | ✅ |
-| 5 | Live URL | Deploy lên Render/Vercel | ⚡ CI/CD sẵn |
-| 6 | Video Demo | `presentation/` | 📝 |
-| 7 | Pitch Deck | `presentation/` | 📝 |
-| 8 | Development Journal | `JOURNAL.md` | ✅ |
-| 9 | Worklog | `WORKLOG.md` | ✅ |
-| 10 | Evaluation Evidence | `eval/` | 📝 |
+### Lệnh vận hành thường dùng
+
+```bash
+# Docker backend
+docker compose up -d                  # Bật lại các container đã build
+docker compose up --build -d           # Build image backend rồi khởi động
+docker compose ps                      # Xem trạng thái service
+docker compose logs -f backend         # Xem log FastAPI theo thời gian thực
+docker compose restart backend          # Khởi động lại FastAPI
+docker compose down                    # Dừng và xóa container/network, giữ data PostgreSQL
+docker compose down -v                 # Xóa cả PostgreSQL/ClamAV/upload volumes — không thể khôi phục
+
+# Frontend local (chạy trong frontend/)
+npm run dev                            # Development server, http://localhost:3000
+npm run typecheck                      # Kiểm tra TypeScript
+npm run build && npm run start         # Build và chạy Next.js production local
+```
+
+Khi sửa mã backend hoặc dependency, dùng `docker compose up --build -d`. Khi chỉ sửa frontend, Next.js dev server tự reload; không cần Docker build.
+
+### RAG JD thị trường với pgvector
+
+Backend tự đồng bộ ~98 JD mẫu trong `data/jds` vào PostgreSQL/pgvector lúc khởi động. Nếu embedding lỗi hoặc quota Gemini API hết, API tự chuyển về tìm kiếm theo catalog để giao diện vẫn hoạt động bình thường (chỉ tính năng "AI lọc JD theo CV" bị ảnh hưởng, tìm việc theo từ khóa vẫn chạy).
+
+```bash
+# Đồng bộ thủ công từ thư mục root (hoặc sau khi quota reset)
+python scripts/index_market_jds.py
+
+# Hoặc gọi endpoint quản trị (cần token admin)
+curl -X POST http://localhost:8000/api/v1/jobs/rag/sync \
+  -H "Authorization: Bearer <admin-token>"
+```
+
 
 ## 🛠 Tech Stack
 
-| Layer | Technology | Version |
-|-------|-----------|---------|
-| AI Agent | LangGraph + LangChain | Latest |
-| Backend | FastAPI + Uvicorn | 0.100+ |
-| LLM | Google Gemini 3.5 Flash | Gemini Developer API |
-| Frontend | Next.js / Streamlit | 14+ / 1.30+ |
-| Database | SQLite (dev) / PostgreSQL (prod) | — |
-| DevOps | Docker + GitHub Actions | — |
-| Testing | pytest + pytest-asyncio | 8+ |
+| Layer | Công nghệ |
+|---|---|
+| Backend | FastAPI + Uvicorn (async) |
+| Frontend | Next.js (App Router) |
+| LLM | Google Gemini (`gemini-3.1-flash-lite`, cấu hình qua `MODEL_NAME`) |
+| Database | PostgreSQL + pgvector |
+| Vector Search / RAG | PostgreSQL pgvector + Gemini Embedding (fallback offline hashing khi không có API key) |
+| Malware Scan | ClamAV (`MALWARE_SCAN_MODE`) |
+| DevOps | Docker Compose (3 service: db, clamav, backend) + GitHub Actions; Next.js chạy local |
+| Testing | pytest + pytest-asyncio |
 
-## 📊 AI Usage Logging
+## 📁 Cấu trúc dự án (rút gọn)
 
-Template đã tích hợp sẵn auto-logging hooks cho 6 AI tools:
+```
+├── backend/                # FastAPI service (Python)
+│   ├── src/                # API, agents, services, database, core, config
+│   ├── tests/              # pytest suite (unit, API, e2e, guardrails, UI contracts)
+│   ├── Dockerfile
+│   └── pyproject.toml, requirements*.txt
+├── frontend/               # Next.js application (TypeScript/JavaScript/CSS)
+│   ├── app/, components/, public/
+│   └── package.json, Dockerfile
+├── eval/                   # Bộ eval CV parser + CV-JD matching (golden cases)
+├── docs/
+│   ├── gate 1/             # Brief, PRD, wireframe (Gate 1)
+│   ├── pipeline/            # Đặc tả kỹ thuật pipeline (Phrase_2: CV-JD Matching, Phrase_3: Voice Interview)
+│   └── OVERNIGHT_RUN_LOG_*.md  # Nhật ký các phiên fix/test tự động
+├── scripts/                 # AI Logging Hooks (BTC) + tiện ích đồng bộ pgvector
+├── docker-compose.yml       # Backend stack: db, clamav, backend
+└── Makefile                 # Local backend entry points
+```
 
-| Tool | Cơ chế | Config |
-|------|--------|--------|
-| Claude Code | `.claude/settings.json` hooks | Tự động |
-| Cursor | `.cursor/hooks.json` | Tự động |
-| OpenAI Codex CLI | `.codex/hooks.json` | Tự động |
-| Gemini CLI | `.gemini/settings.json` | Tự động |
-| GitHub Copilot | `.github/hooks/hooks.json` | Tự động |
-| Antigravity IDE | Pre-push scan transcript | Tự động trên `git push` |
+## 📊 AI Usage Logging (yêu cầu BTC — không thay đổi)
 
-Tất cả prompts và tool calls được log vào `.ai-log/session.jsonl` và tự động submit lên grading server mỗi khi `git push`.
+Template tích hợp sẵn auto-logging hooks cho Claude Code, Cursor, Codex CLI, Gemini CLI, GitHub Copilot, Antigravity IDE — log vào `.ai-log/session.jsonl`, tự động submit lên grading server mỗi khi `git push`.
 
-**ChatGPT / web tools khác** — log thủ công:
 ```bash
+# Cài hook 1 lần sau khi clone
+bash scripts/setup_hooks.sh
+
+# Log thủ công cho ChatGPT / web tools khác
 bash scripts/_pyrun.sh scripts/log_manual.py --tool chatgpt --prompt "What you asked"
 ```
 
-> ⚠️ Chạy `bash scripts/setup_hooks.sh` một lần sau khi clone để cài pre-push hook.
+## 📋 10 Deliverables cho Demo Day
 
-## 📖 Đọc Technical Guidebook
+| # | Deliverable | Trạng thái |
+|---|---|:---:|
+| 1 | Source Code | ✅ |
+| 2 | README.md | ✅ |
+| 3 | Architecture Diagram | 📝 Cần điền (`ARCHITECTURE.md`, `docs/architecture_diagram.md`) |
+| 4 | AI Logs | ✅ Tự động |
+| 5 | Live URL | ⏳ Chưa deploy public — hiện chạy local qua Docker |
+| 6 | Video Demo | 📝 Cần làm (`presentation/`) |
+| 7 | Pitch Deck | 📝 Cần làm (`presentation/`) |
+| 8 | Development Journal | 📝 Cần điền (`JOURNAL.md`) |
+| 9 | Worklog | 📝 Cần điền (`WORKLOG.md`) |
+| 10 | Evaluation Evidence | ✅ `eval/` (CV parser + CV-JD matching, 15/15 case pass) |
 
-**Online (khuyến nghị):** [phoenix.note.transformerlabs.ai/technical-book](https://phoenix.note.transformerlabs.ai/technical-book)
+## 📖 Technical Guidebook (tài liệu chung khóa học)
 
-Đăng nhập bằng GitHub (cùng account đã được BTC mời vào org `AI20K-Build-Cohort-2`)
-→ chọn tab **Technical Book** ở sidebar trái → đọc 10 chương + topic sections,
-có table of contents bên phải, hỗ trợ light/dark/cyberpunk theme.
-
-**Offline:** mọi chương đều ở thư mục `docs/guide/` trong template này — mở bằng
-bất kỳ markdown viewer/editor nào (VS Code, Obsidian, GitHub UI, …).
+**Online:** [phoenix.note.transformerlabs.ai/technical-book](https://phoenix.note.transformerlabs.ai/technical-book) — đăng nhập GitHub (org `AI20K-Build-Cohort-2`).
+**Offline:** `docs/guide/` (10 chương).
 
 ## 🔗 Liên kết
 
-- 📖 **Technical Guidebook:** [phoenix.note.transformerlabs.ai/technical-book](https://phoenix.note.transformerlabs.ai/technical-book)
-- 🏫 **AI20K Program:** VinUni AI20K Build Phase
-- 👨‍🏫 **Mentor:** Đặng Hải Lộc
+- 🏫 **AI20K Program:** VinUni AI20K Build Phase, nhóm WinTop
+- 👨‍🏫 **Mentor:** Trần Vũ Anh (Andy)
 
 ## 📄 License
 

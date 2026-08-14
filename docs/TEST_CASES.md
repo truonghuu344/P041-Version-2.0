@@ -6,9 +6,9 @@ Các test tự động không gọi Gemini, OpenWeather hoặc WeatherAPI thật
 ## Cách chạy
 
 ```powershell
-pytest tests -q -p no:cacheprovider
+PYTHONPATH=backend pytest backend/tests -q -p no:cacheprovider
 ruff check src tests
-cd src/frontend
+cd frontend
 npm run build
 ```
 
