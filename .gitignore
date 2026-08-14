@@ -16,6 +16,8 @@ env/
 .env
 .env.local
 .env.production
+.env.development
+.env*.local
 
 # IDE
 .vscode/
@@ -32,24 +34,30 @@ Thumbs.db
 *.db
 *.sqlite3
 postgres_data/
+data/raw/
 
 # Chroma DB (using PostgreSQL instead)
 chroma_db/
+qdrant_storage/
 
 # Logs
 logs/
 *.log
 
-# Test coverage
+# Test coverage & Temp
 htmlcov/
 .coverage
 coverage.xml
+.pytest_cache/
+.pytest_tmp/
+
 
 # Docker
 docker-compose.override.yml
 
 # Node (frontend)
 node_modules/
+*.tsbuildinfo
 .next/
 out/
 .nuxt/
@@ -60,4 +68,14 @@ out/
 
 # AI logs — tracked structure, ignored content
 .ai-log/*.jsonl
+.ai-log/codex-state.json
 .ai-log/archive/
+.vercel
+
+.claude
+.codex
+.cursor
+.gemini
+
+# Note
+note.txt

@@ -32,7 +32,7 @@ cp .env.example .env
 
 ```bash
 # Chạy server
-uvicorn src.main:app --reload
+uvicorn src.main:app --app-dir backend --reload
 
 # Mở browser: http://localhost:8000/docs
 # → Phải thấy Swagger UI
