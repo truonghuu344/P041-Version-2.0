@@ -22,7 +22,7 @@ if [ ! -f .env ]; then
     echo "Created .env — please edit with your API keys"
 fi
 
-# Create mutable application data directory (Qdrant runs as its own service)
+# Create mutable application data directory
 mkdir -p data/uploads
 
-echo "Setup complete! Run: uvicorn src.main:app --reload"
+echo "Setup complete! Run: uvicorn src.main:app --app-dir backend --reload"

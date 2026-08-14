@@ -1,0 +1,853 @@
+/* ============================================================
+   Match CV — pixel-aligned with product mockup
+============================================================ */
+
+#view-match,
+#view-match.buddy-landing,
+#view-match.app-view {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  background: var(--background);
+}
+
+#view-match .match-workspace {
+  width: min(1420px, calc(100% - 104px));
+  margin: 0 auto;
+  padding: 28px 0 72px !important;
+  color: var(--text-primary);
+}
+
+/* Hero */
+#view-match .match-hero {
+  max-width: 680px;
+  margin: 0 0 20px !important;
+}
+
+#view-match .match-hero h2 {
+  margin: 0 !important;
+  color: #1a1a1a !important;
+  font-size: clamp(30px, 3vw, 40px);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.045em;
+}
+
+#view-match .match-hero h2 span {
+  color: #1a1a1a !important;
+}
+
+#view-match .match-hero > span,
+#view-match .match-hero span[data-i18n-text='match-description'] {
+  display: block;
+  max-width: 62ch;
+  margin-top: 10px !important;
+  color: #666 !important;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.6;
+}
+
+/* 3-step workflow bar */
+#view-match .match-workflow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(260px, .76fr);
+  margin-bottom: 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  background: #f9fafb;
+  overflow: hidden;
+}
+
+#view-match .match-source-grid {
+  display: contents;
+}
+
+#view-match .match-source {
+  min-width: 0;
+  min-height: 132px;
+  padding: 16px 18px !important;
+  border: 0 !important;
+  border-right: 1px solid #e5e7eb !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+
+#view-match .match-source-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px !important;
+}
+
+#view-match .match-source-head::before {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  flex: 0 0 26px;
+  place-items: center;
+  border-radius: 50%;
+  background: #006d44;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  content: '1';
+}
+
+#view-match #p1-jd-card .match-source-head::before {
+  content: '2';
+}
+
+#view-match .match-source-head > svg {
+  display: none;
+}
+
+#view-match .match-source-head h3 {
+  margin: 0;
+  color: #1a1a1a !important;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+#view-match #p1-cv-card::after,
+#view-match #p1-jd-card::after {
+  display: block;
+  margin-top: 8px;
+  color: #888;
+  font-size: 12px;
+  line-height: 1.5;
+  content: 'Chọn CV ở danh sách bên dưới.';
+}
+
+#view-match #p1-jd-card::after {
+  content: 'Chọn công việc ở danh sách bên dưới.';
+}
+
+#view-match #p1-cv-card.is-ready::after,
+#view-match #p1-jd-card.is-ready::after {
+  display: none;
+}
+
+/* Ready selection cards in workflow */
+#view-match .p1-ready-banner {
+  display: none;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+#view-match .match-selection-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+}
+
+#view-match .match-selection-card-icon {
+  display: grid;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 8px;
+  color: #006d44;
+  background: #e8f5ef;
+}
+
+#view-match .match-selection-card-body {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+#view-match .match-selection-card-body strong {
+  color: #1a1a1a;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#view-match .match-selection-card-body span {
+  color: #666;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+#view-match #p1-jd-ready-company {
+  color: #444;
+  font-weight: 600;
+}
+
+#view-match .match-selection-card-check {
+  display: grid;
+  flex: 0 0 22px;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  border-radius: 50%;
+  color: #006d44;
+  background: #e8f5ef;
+}
+
+#view-match .match-change-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  flex: 0 0 auto;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 8px !important;
+  background: #fff !important;
+  color: #444 !important;
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+#view-match .match-change-btn:hover {
+  border-color: #006d44 !important;
+  color: #006d44 !important;
+  background: #f3faf6 !important;
+}
+
+/* Step 3 — analyze */
+#view-match .match-ready {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 12px;
+  margin: 0 !important;
+  min-height: 132px;
+  padding: 16px 18px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+
+#view-match .match-ready-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#view-match .match-ready-head::before {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  flex: 0 0 26px;
+  place-items: center;
+  border-radius: 50%;
+  background: #006d44;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  content: '3';
+}
+
+#view-match .match-ready-head strong {
+  color: #1a1a1a !important;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+#view-match .match-ready button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 46px;
+  border-radius: 8px !important;
+  background: #006d44 !important;
+  border-color: #006d44 !important;
+  color: #fff !important;
+  font-size: 14px;
+  font-weight: 750;
+}
+
+/* Legacy button rules target nested spans and SVGs, so set the CTA's complete
+   content explicitly rather than relying on inherited color. */
+#view-match #p1-analyze-btn,
+#view-match #p1-analyze-btn span,
+#view-match #p1-analyze-btn svg {
+  color: #fff !important;
+  stroke: currentColor;
+}
+
+#view-match .match-ready button:hover:not(:disabled) {
+  background: #005a38 !important;
+  border-color: #005a38 !important;
+}
+
+#view-match .match-ready button:disabled {
+  opacity: 0.45;
+}
+
+#view-match #p1-cta-hint {
+  color: #888 !important;
+  font-size: 12px;
+  line-height: 1.45;
+  text-align: center;
+}
+
+/* Browser sections */
+#view-match .match-cv-browser,
+#view-match .match-job-browser {
+  margin-top: 0;
+  padding: 16px 18px 18px;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  background: #fff;
+}
+
+/* The analysis CTA belongs to the first decision row and remains visible
+   while a user chooses either a CV or a JD below. */
+#view-match .match-workflow {
+  position: sticky;
+  top: 80px;
+  z-index: 4;
+}
+
+#view-match .match-cv-browser {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  align-items: start;
+  gap: 20px;
+  margin-bottom: 14px;
+}
+
+#view-match .match-cv-browser > header { margin: 0; }
+#view-match .match-cv-browser > #p1-cv-browser-content { min-width: 0; }
+
+#view-match .match-job-browser { margin-top: 0; }
+
+#view-match .match-cv-browser > header,
+#view-match .match-job-browser > header {
+  margin-bottom: 14px;
+}
+
+#view-match .match-cv-browser h3,
+#view-match .match-job-browser h3 {
+  margin: 0;
+  color: #1a1a1a;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+#view-match .match-cv-browser header p {
+  margin: 6px 0 0;
+  color: #666;
+  font-size: 14px;
+}
+
+#view-match .match-cv-browser[hidden],
+#view-match .match-job-browser[hidden] {
+  display: none;
+}
+
+#view-match #p1-cv-browser-content > #p1-cv-input-area,
+#view-match #p1-job-browser-content > #p1-jd-input-area {
+  min-width: 0;
+}
+
+/* Tabs */
+#view-match .match-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+#view-match .match-tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: -1px;
+  min-width: 154px;
+  justify-content: center;
+  padding: 11px 16px;
+  border: 1px solid #e5e7eb !important;
+  border-bottom: 2px solid transparent !important;
+  border-radius: 8px 8px 0 0 !important;
+  background: #fff !important;
+  color: #666 !important;
+  font-size: 14px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+#view-match .match-tabs button.is-selected {
+  border-color: #d4e8de !important;
+  border-bottom-color: #006d44 !important;
+  color: #006d44 !important;
+  background: #f3faf6 !important;
+}
+
+/* Search + filters toolbar */
+#view-match .match-job-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+#view-match .match-job-search {
+  position: relative;
+  display: block;
+}
+
+#view-match .match-job-search svg {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #888;
+  pointer-events: none;
+}
+
+#view-match .match-job-search input,
+#view-match #p1-job-search {
+  width: 100%;
+  min-height: 46px;
+  padding: 0 14px 0 42px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+  color: #1a1a1a;
+  font: inherit;
+  font-size: 14px;
+}
+
+#view-match .match-job-search input:focus,
+#view-match #p1-job-search:focus {
+  outline: none;
+  border-color: #006d44;
+  box-shadow: 0 0 0 3px rgba(0, 109, 68, 0.12);
+}
+
+#view-match .match-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+#view-match .match-filters button {
+  min-height: 34px;
+  padding: 0 14px;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 8px !important;
+  background: #fff !important;
+  color: #555 !important;
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+#view-match .match-filters button.is-selected {
+  border-color: #d4e8de !important;
+  background: #eaf7f0 !important;
+  color: #006d44 !important;
+}
+
+#view-match .match-job-location {
+  position: relative;
+  justify-self: end;
+  width: min(220px, 100%);
+}
+
+#view-match .match-job-location select {
+  width: 100%;
+  min-height: 38px;
+  padding: 0 34px 0 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  appearance: none;
+  background: #fff;
+  color: #444;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+#view-match .match-job-location svg {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #888;
+  pointer-events: none;
+}
+
+@media (min-width: 900px) {
+  #view-match .match-job-toolbar {
+    grid-template-columns: minmax(250px, 1.1fr) minmax(0, 1.9fr) minmax(160px, .62fr);
+    align-items: center;
+  }
+
+  #view-match .match-filters {
+    grid-column: 2;
+    grid-row: 1;
+    flex-wrap: nowrap;
+  }
+
+  #view-match .match-job-location {
+    grid-column: 3;
+    grid-row: 1;
+  }
+}
+
+/* Job grid */
+#view-match #p1-job-grid,
+#view-match .p1-job-grid {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 14px !important;
+  margin-top: 4px !important;
+  max-height: none !important;
+  overflow: visible !important;
+  padding-right: 0 !important;
+}
+
+#view-match .p1-job-card {
+  position: relative;
+  display: flex !important;
+  min-height: 142px;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 4px !important;
+  padding: 12px !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 8px !important;
+  background: #fff !important;
+  box-shadow: none !important;
+  cursor: pointer !important;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease !important;
+  transform: none !important;
+}
+
+#view-match .p1-job-card:hover {
+  border-color: #b8dcc8 !important;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05) !important;
+  transform: none !important;
+}
+
+#view-match .p1-job-card.is-selected {
+  border-color: #006d44 !important;
+  background: #fff !important;
+  box-shadow: inset 0 0 0 1px #006d44 !important;
+}
+
+#view-match .p1-job-card-radio {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #d1d5db;
+  border-radius: 50%;
+  background: #fff;
+}
+
+#view-match .p1-job-card.is-selected .p1-job-card-radio {
+  border-color: #006d44;
+  background: radial-gradient(circle at center, #006d44 0 5px, #fff 5px 100%);
+}
+
+#view-match .p1-job-card-head {
+  display: block !important;
+  width: 100% !important;
+  padding-right: 24px;
+}
+
+#view-match .p1-job-company-mark {
+  display: none !important;
+}
+
+#view-match .p1-job-card h4 {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0 !important;
+  color: #1a1a1a !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  line-height: 1.35;
+  white-space: normal !important;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+#view-match .p1-job-card.is-selected h4 {
+  color: #006d44 !important;
+}
+
+#view-match .p1-job-card p {
+  margin: 2px 0 0 !important;
+  color: #666 !important;
+  font-size: 12px !important;
+  line-height: 1.35;
+}
+
+#view-match .p1-job-meta {
+  display: block !important;
+  margin: 2px 0 0 !important;
+  color: #888 !important;
+  font-size: 12px !important;
+  line-height: 1.45;
+}
+
+#view-match .p1-job-meta span {
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+#view-match .p1-job-meta span + span::before {
+  content: ' • ';
+}
+
+#view-match .p1-job-salary {
+  margin: 2px 0 0;
+  color: #006d44 !important;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+#view-match .p1-job-description {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 4px 0 0;
+  color: #666;
+  font-size: 11px;
+  line-height: 1.45;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+#view-match .p1-job-skills {
+  display: flex !important;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: auto;
+  padding-top: 5px;
+}
+
+#view-match .p1-job-skills span {
+  padding: 3px 7px;
+  border-radius: 6px;
+  background: #f3f4f6;
+  color: #555;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+#view-match #p1-job-count {
+  margin: 0;
+  color: #666 !important;
+  font-size: 13px;
+}
+
+#view-match .match-job-grid-footer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #edf0ee;
+}
+
+#view-match .match-job-grid-footer #p1-job-count {
+  justify-self: start;
+}
+
+#view-match .match-job-grid-footer .p1-job-pagination {
+  justify-self: center;
+}
+
+#view-match .match-job-per-page {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  justify-self: end;
+  color: #666;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+#view-match .match-job-per-page select {
+  min-height: 34px;
+  padding: 0 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  color: #444;
+  font: inherit;
+  font-size: 13px;
+}
+
+#view-match .p1-job-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+#view-match .p1-job-pagination[hidden] {
+  display: none;
+}
+
+#view-match .p1-job-pagination button {
+  min-width: 34px;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  color: #666;
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+#view-match .p1-job-pagination .is-current,
+#view-match .p1-job-pagination button:hover:not(:disabled) {
+  border-color: #006d44;
+  color: #006d44;
+  background: #f3faf6;
+}
+
+#view-match .p1-job-pagination button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+#view-match .p1-pagination-ellipsis {
+  width: 20px;
+  color: #6b7280;
+  font-size: 16px;
+  line-height: 34px;
+  text-align: center;
+}
+
+/* CV selection area */
+#view-match .match-upload {
+  min-height: 96px;
+  padding: 14px 12px !important;
+  border-radius: 10px;
+}
+
+#view-match .match-source-divider {
+  margin: 14px 0 !important;
+  color: #888 !important;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+#view-match .cv-cards-grid {
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+
+#view-match .cv-card {
+  border-color: #e5e7eb;
+  border-radius: 12px;
+}
+
+#view-match .cv-card.is-selected {
+  border-color: #006d44;
+  background: #f3faf6;
+}
+
+/* Results typography */
+#view-match .match-summary h3 {
+  color: #006d44 !important;
+  font-weight: 800;
+}
+
+#view-match .match-summary h4,
+#view-match .cv-result-summary-block h3,
+#view-match .cv-result-panel h4,
+#view-match .cv-result-priority-panel h4,
+#view-match .cv-result-detail-panel h4 {
+  color: #1a1a1a !important;
+  font-weight: 700;
+}
+
+@media (max-width: 1100px) {
+  #view-match #p1-job-grid,
+  #view-match .p1-job-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 900px) {
+  #view-match .match-workflow { position: static; }
+
+  #view-match .match-cv-browser { grid-template-columns: 1fr; gap: 10px; }
+
+  #view-match .match-workflow {
+    grid-template-columns: 1fr;
+  }
+
+  #view-match .match-source {
+    border-right: 0 !important;
+    border-bottom: 1px solid #e5e7eb !important;
+  }
+
+  #view-match #p1-job-grid,
+  #view-match .p1-job-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  #view-match .match-job-grid-footer {
+    grid-template-columns: 1fr;
+  }
+
+  #view-match .match-job-grid-footer #p1-job-count,
+  #view-match .match-job-grid-footer .p1-job-pagination,
+  #view-match .match-job-per-page {
+    justify-self: start;
+  }
+}
+
+@media (max-width: 640px) {
+  #view-match .match-workspace {
+    width: min(100% - 32px, 640px);
+    padding-top: 16px !important;
+  }
+
+  #view-match #p1-job-grid,
+  #view-match .p1-job-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  #view-match .match-filters {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  #view-match .match-filters button {
+    flex: 0 0 auto;
+  }
+}

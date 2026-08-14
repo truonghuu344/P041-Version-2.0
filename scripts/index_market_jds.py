@@ -1,10 +1,14 @@
-"""Incrementally index data/jds into the configured Qdrant collection."""
+"""Incrementally index data/jds into the configured PostgreSQL/pgvector index."""
 
 from __future__ import annotations
 
 import asyncio
 import json
+import sys
+from pathlib import Path
 
+BACKEND_ROOT = Path(__file__).resolve().parents[1] / "backend"
+sys.path.insert(0, str(BACKEND_ROOT))
 from src.services.job_rag import get_market_job_rag
 
 
