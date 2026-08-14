@@ -16,6 +16,8 @@ from src.agents.tools.career_tools import (
     deterministic_cv_suggestions,
     deterministic_gap_career_plan,
     extract_known_terms,
+    is_cv_contact_or_location_line,
+    mentioned_skills,
 )
 from src.config import get_settings
 
@@ -146,6 +148,8 @@ RÀNG BUỘC LIÊM CHÍNH:
   rating, trạng thái requirement hoặc evidence. Các giá trị này do thuật toán cố định quyết định.
 - Chỉ dùng danh sách verified requirement-evidence matrix làm nguồn sự thật về những gì CV có.
 - original_text phải là câu trích nguyên văn từ CV.
+- Chỉ viết lại bullet kinh nghiệm/dự án liên quan trực tiếp tới kỹ năng hoặc yêu cầu của JD đang chọn.
+- Không dùng tên, email, số điện thoại, URL mạng xã hội, địa chỉ hoặc thông tin liên hệ làm original_text.
 - Không thêm kỹ năng, công ty, dự án, chức danh, bằng cấp, số liệu hoặc thành tích không xuất hiện trong CV.
 - Kỹ năng CV còn thiếu chỉ là khoảng trống học tập, tuyệt đối không chèn vào câu tối ưu.
 - Chứng chỉ và dự án là KHUYẾN NGHỊ TƯƠNG LAI, không được mô tả như ứng viên đã hoàn thành.
@@ -219,6 +223,11 @@ async def enforce_gap_integrity(state: GapAnalysisState) -> dict[str, Any]:
         reason = str(item.get("reason", "")).strip()
         if not original or original.casefold() not in cv_text.casefold():
             continue
+        if is_cv_contact_or_location_line(original):
+            continue
+        relevant_jd_skills = mentioned_skills(f"{original} {improved}", evidence["hard_skills_matching"])
+        if not relevant_jd_skills:
+            continue
         if not improved or _contains_missing_skill(improved, evidence["hard_skills_missing"]):
             continue
         if _adds_unverified_claims(improved, original, evidence["cv_skills"]):
@@ -228,7 +237,11 @@ async def enforce_gap_integrity(state: GapAnalysisState) -> dict[str, Any]:
                 "original_text": original,
                 "suggested_improvement": improved,
                 "action_verb": str(item.get("action_verb") or "Thực hiện"),
-                "reason": reason or "Tối ưu cách diễn đạt dựa trên bằng chứng trong CV.",
+                "reason": reason
+                or (
+                    f"Liên quan trực tiếp tới yêu cầu JD về {', '.join(relevant_jd_skills)}; "
+                    "tối ưu cách diễn đạt dựa trên bằng chứng trong CV."
+                ),
             }
         )
         if len(accepted) == 3:

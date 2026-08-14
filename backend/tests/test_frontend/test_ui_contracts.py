@@ -66,7 +66,10 @@ def test_gap_modal_shows_compact_user_facing_result_and_ai_action():
     assert "priorityActions.slice(0, 3)" in APP_JS
     assert "suggestions.slice(0, 3)" in APP_JS
     assert "items.slice(0, 6)" in APP_JS
-    assert "ApiClient.decideSuggestion(analysis.id, index, true" in APP_JS
+    assert "function getJDRelevantOptimizationSuggestions(analysis)" in APP_JS
+    assert "standaloneContactPattern.test(original)" in APP_JS
+    assert "item.sourceIndex ?? index" in APP_JS
+    assert "ApiClient.decideSuggestion(analysis.id, item.sourceIndex ?? index, true" in APP_JS
     assert "CV gốc vẫn được giữ nguyên" in APP_JS
 
 
@@ -84,6 +87,8 @@ def test_job_selection_modal_is_centered_against_the_viewport():
     assert 'class="job-preview-meta"' in APP_JS
     assert 'class="job-preview-skills"' in APP_JS
     assert 'class="job-preview-section"' in APP_JS
+    assert "sections.find(section => section.title === current.title)" in APP_JS
+    assert "current.title === 'Giới thiệu công ty' && looksLikeLooseKeyword" in APP_JS
 
 
 def test_saved_cv_cards_select_the_cv_for_match_directly():

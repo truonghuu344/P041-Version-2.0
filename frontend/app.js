@@ -1859,7 +1859,20 @@ function startAppLogic() {
     let skipMetadataValue = false;
 
     const flush = () => {
-      if (current.items.length) sections.push(current);
+      if (!current.items.length) return;
+      const existing = sections.find(section => section.title === current.title);
+      if (existing) {
+        const knownItems = new Set(existing.items.map(item => item.toLocaleLowerCase('vi')));
+        current.items.forEach(item => {
+          const normalized = item.toLocaleLowerCase('vi');
+          if (!knownItems.has(normalized)) {
+            existing.items.push(item);
+            knownItems.add(normalized);
+          }
+        });
+        return;
+      }
+      sections.push({ title: current.title, items: [...current.items] });
     };
 
     lines.forEach(rawLine => {
@@ -1877,10 +1890,13 @@ function startAppLogic() {
       }
       const heading = headings.find(([pattern]) => pattern.test(line));
       if (heading) {
+        if (current.title === heading[1]) return;
         flush();
         current = { title: heading[1], items: [] };
         return;
       }
+      const looksLikeLooseKeyword = line.split(/\s+/).length <= 3 && !/[.!,:;]/.test(line);
+      if (current.title === 'Giới thiệu công ty' && looksLikeLooseKeyword) return;
       current.items.push(line);
     });
     flush();
@@ -1980,6 +1996,20 @@ function startAppLogic() {
   document.getElementById('p1-job-escape')?.addEventListener('click', () => setTargetJobMode('upload'));
   document.getElementById('p1-job-empty-upload')?.addEventListener('click', () => setTargetJobMode('upload'));
 
+  function getJDRelevantOptimizationSuggestions(analysis) {
+    const matchedSkills = Array.isArray(analysis?.hard_skills_matching) ? analysis.hard_skills_matching : [];
+    const suggestions = Array.isArray(analysis?.suggestions) ? analysis.suggestions : [];
+    const sensitivePattern = /[\w.+-]+@[\w.-]+\.[a-z]{2,}|(?:facebook|linkedin|instagram)\.com\/|(?:^|\s)(?:địa chỉ|address)\s*[:：]|\b(?:xã|phường|quận|huyện|tỉnh|tp\.?|thành phố)\b/i;
+    const standaloneContactPattern = /^(?:(?:https?:\/\/|www\.)\S+|\+?\d[\d\s().-]{7,}\d)$/i;
+    return suggestions.map((item, sourceIndex) => ({ ...item, sourceIndex })).filter(item => {
+      const original = String(item?.original_text || '').trim();
+      const improved = String(item?.suggested_improvement || '').trim();
+      const combined = `${original} ${improved}`.toLocaleLowerCase('vi');
+      if (!original || !improved || sensitivePattern.test(combined) || standaloneContactPattern.test(original)) return false;
+      return matchedSkills.some(skill => combined.includes(String(skill).toLocaleLowerCase('vi')));
+    });
+  }
+
   function renderInlineCVAnalysis(analysis, cvId, jdId) {
     if (!cvAnalysisResultContent || !analysis) return;
     latestCVAnalysisContext = { analysis, cvId, jdId };
@@ -1989,7 +2019,7 @@ function startAppLogic() {
     const missingRaw = Array.isArray(analysis.hard_skills_missing) ? analysis.hard_skills_missing : [];
     const missing = missingRaw.filter(skill => !partial.includes(skill));
     const priorityActions = Array.isArray(analysis.priority_actions) ? analysis.priority_actions : [];
-    const suggestions = Array.isArray(analysis.suggestions) ? analysis.suggestions : [];
+    const suggestions = getJDRelevantOptimizationSuggestions(analysis);
     const cvLabel = [...(cvAnalysisCvSelect?.options || [])].find(option => option.value === String(cvId))?.textContent || 'CV đã chọn';
     const jdLabel = [...(cvAnalysisJdSelect?.options || [])].find(option => option.value === String(jdId))?.textContent || 'JD đã chọn';
     const scoreEl = document.getElementById('cv-result-match-score');
@@ -2361,7 +2391,7 @@ function startAppLogic() {
 
   btnOptimizeCvAI?.addEventListener('click', async () => {
     const analysis = latestCVAnalysisContext?.analysis;
-    const suggestions = Array.isArray(analysis?.suggestions) ? analysis.suggestions : [];
+    const suggestions = getJDRelevantOptimizationSuggestions(analysis);
     if (!analysis?.id) {
       showToast('Không tìm thấy mã kết quả phân tích để lưu bản tối ưu.', 'error');
       return;
@@ -2383,7 +2413,7 @@ function startAppLogic() {
     }
     try {
       const decisions = await Promise.allSettled(suggestions.map((item, index) => (
-        ApiClient.decideSuggestion(analysis.id, index, true, item.suggested_improvement || null)
+        ApiClient.decideSuggestion(analysis.id, item.sourceIndex ?? index, true, item.suggested_improvement || null)
       )));
       const acceptedCount = decisions.filter(item => item.status === 'fulfilled').length;
       if (acceptedCount !== suggestions.length) {
