@@ -1743,7 +1743,19 @@ function startAppLogic() {
     if (empty) empty.hidden = jobs.length > 0;
     if (pagination) {
       pagination.hidden = jobs.length === 0;
-      pagination.innerHTML = jobs.length === 0 ? '' : `<button type="button" data-p1-job-page="prev" ${targetJobPage === 1 ? 'disabled' : ''} aria-label="Trang trước">‹</button>${Array.from({ length: totalPages }, (_, index) => `<button type="button" data-p1-job-page="${index + 1}" class="${index + 1 === targetJobPage ? 'is-current' : ''}" aria-current="${index + 1 === targetJobPage ? 'page' : 'false'}">${index + 1}</button>`).join('')}<button type="button" data-p1-job-page="next" ${targetJobPage === totalPages ? 'disabled' : ''} aria-label="Trang sau">›</button>`;
+      const visiblePages = [...new Set([
+        1,
+        totalPages,
+        targetJobPage - 1,
+        targetJobPage,
+        targetJobPage + 1,
+      ].filter(page => page >= 1 && page <= totalPages))].sort((a, b) => a - b);
+      const pageButtons = visiblePages.map((page, index) => {
+        const previous = visiblePages[index - 1];
+        const gap = previous && page - previous > 1 ? '<span class="p1-pagination-ellipsis" aria-hidden="true">…</span>' : '';
+        return `${gap}<button type="button" data-p1-job-page="${page}" class="${page === targetJobPage ? 'is-current' : ''}" aria-current="${page === targetJobPage ? 'page' : 'false'}">${page}</button>`;
+      }).join('');
+      pagination.innerHTML = jobs.length === 0 ? '' : `<button type="button" data-p1-job-page="prev" ${targetJobPage === 1 ? 'disabled' : ''} aria-label="Trang trước">‹</button>${pageButtons}<button type="button" data-p1-job-page="next" ${targetJobPage === totalPages ? 'disabled' : ''} aria-label="Trang sau">›</button>`;
     }
     grid.innerHTML = pageJobs.map(job => {
       const allSkills = job.skills || [];
@@ -3766,6 +3778,21 @@ TÊN CÔNG TY:
     const container = document.getElementById('archive-timeline-container');
     if (!container) return;
 
+    const matchedCount = (archiveDataCache.analyses || []).length;
+    const optimizedCount = (archiveDataCache.analyses || []).filter(analysis => (
+      (archiveDataCache.acceptedOptimizations.get(analysis.id) || []).length > 0
+    )).length;
+    const interviewCount = (archiveDataCache.interviews || []).length;
+    [['archive-match-count', matchedCount], ['archive-optimized-count', optimizedCount], ['archive-interview-count', interviewCount]]
+      .forEach(([id, value]) => {
+        const element = document.getElementById(id);
+        if (element) element.textContent = String(value);
+      });
+    const getCVSource = (cvId) => {
+      const cv = (archiveDataCache.cvs || []).find(item => String(item.id) === String(cvId));
+      return cv?.file_path ? 'CV tải lên' : 'CV tạo từ biểu mẫu';
+    };
+
     const items = [];
 
     // A Match result and an optimized CV are separate, auditable outputs.
@@ -3774,6 +3801,7 @@ TÊN CÔNG TY:
         const cvTitle = archiveDataCache.cvMap.get(analysis.cv_id) || 'CV Hồ Sơ';
         const jdTitle = archiveDataCache.jdMap.get(analysis.jd_id) || 'Vị Trí Mục Tiêu';
         const score = Number(analysis.match_score || 0).toFixed(1);
+        const cvSource = getCVSource(analysis.cv_id);
         items.push({
           type: 'match',
           date: new Date(analysis.created_at || Date.now()),
@@ -3785,6 +3813,7 @@ TÊN CÔNG TY:
               </div>
               <h3 class="archive-card-title">${escapeHtml(cvTitle)}</h3>
               <p class="archive-card-sub">So khớp với <strong>${escapeHtml(jdTitle)}</strong> • Điểm phù hợp ${score}%</p>
+              <span class="archive-source">${escapeHtml(cvSource)}</span>
               <div class="archive-card-footer">
                 <span class="badge badge-ok">MATCH: ${score}%</span>
                 <button class="archive-btn-view view-archive-detail-btn" data-type="gap" data-id="${escapeHtml(analysis.id)}">Xem báo cáo</button>
@@ -3799,6 +3828,7 @@ TÊN CÔNG TY:
       (archiveDataCache.analyses || []).forEach(analysis => {
         const acceptedCount = (archiveDataCache.acceptedOptimizations.get(analysis.id) || []).length;
         if (!acceptedCount) return;
+        const cvSource = getCVSource(analysis.cv_id);
         const cvTitle = archiveDataCache.cvMap.get(analysis.cv_id) || 'CV Hồ Sơ';
         const jdTitle = archiveDataCache.jdMap.get(analysis.jd_id) || 'Vị Trí Mục Tiêu';
         items.push({
@@ -3806,6 +3836,7 @@ TÊN CÔNG TY:
           date: new Date(analysis.created_at || Date.now()),
           html: `
             <div class="archive-card" data-type="optimized">
+              <span class="archive-source">${escapeHtml(cvSource)} · Đã áp dụng đề xuất AI</span>
               <div class="archive-card-header">
                 <span class="archive-tag tag-optimized">CV ĐÃ TỐI ƯU</span>
                 <span class="archive-time">${new Date(analysis.created_at).toLocaleDateString('vi-VN')}</span>
@@ -3855,6 +3886,8 @@ TÊN CÔNG TY:
     }
 
     items.sort((a, b) => b.date - a.date);
+    const resultCount = document.getElementById('archive-result-count');
+    if (resultCount) resultCount.textContent = `${items.length} kết quả`;
 
     if (items.length === 0) {
       container.innerHTML = `<div class="empty-manifest"><p>Chưa có dữ liệu nhiệm vụ cho mục này.</p></div>`;
@@ -6233,7 +6266,9 @@ if (document.readyState === 'loading') {
     }
     if (cvBanner) cvBanner.style.display = cvOk ? 'grid' : 'none';
     if (cvInputArea) cvInputArea.style.display = 'block';
-    if (cvBrowser) cvBrowser.hidden = cvOk;
+    // CV and JD are independent entry points. Keep both source panels available
+    // so the user can upload or change either document without a forced order.
+    if (cvBrowser) cvBrowser.hidden = false;
 
     // JD card state
     if (jdCard) jdCard.classList.toggle('is-ready', jdOk);
@@ -6251,7 +6286,7 @@ if (document.readyState === 'loading') {
     }
     if (jdBanner) jdBanner.style.display = jdOk ? 'grid' : 'none';
     if (jdInputArea) jdInputArea.style.display = 'block';
-    if (jobBrowser) jobBrowser.hidden = !cvOk;
+    if (jobBrowser) jobBrowser.hidden = false;
 
     // CTA
     if (analyzeBtn) {

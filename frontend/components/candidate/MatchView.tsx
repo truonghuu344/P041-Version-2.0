@@ -187,8 +187,6 @@ export default function MatchView() {
                       Hiển thị
                       <select id="p1-job-per-page" defaultValue="8">
                         <option value="8">8</option>
-                        <option value="12">12</option>
-                        <option value="16">16</option>
                       </select>
                       / trang
                     </label>
@@ -242,7 +240,7 @@ export default function MatchView() {
           <div id="p1-cv-browser-content" />
         </section>
 
-        <section className="match-job-browser" id="p1-job-browser" aria-labelledby="match-job-browser-title" hidden>
+        <section className="match-job-browser" id="p1-job-browser" aria-labelledby="match-job-browser-title">
           <header>
             <h3 id="match-job-browser-title">Chọn công việc</h3>
           </header>
