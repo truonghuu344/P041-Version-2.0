@@ -17,7 +17,7 @@ import sys
 import time
 import urllib.error
 import urllib.request
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 try:
@@ -44,7 +44,7 @@ def _archive(pending: Path) -> None:
     if not pending.exists() or pending.stat().st_size == 0:
         return
     ARCHIVE_DIR.mkdir(parents=True, exist_ok=True)
-    today = datetime.now(UTC).strftime("%Y-%m-%d")
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     archive_file = ARCHIVE_DIR / f"{today}.jsonl"
     with open(pending, "rb") as src, open(archive_file, "ab") as dst:
         shutil.copyfileobj(src, dst)
