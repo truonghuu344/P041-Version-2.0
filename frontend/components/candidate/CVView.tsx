@@ -6,7 +6,7 @@ export default function CVView({ selectedCVTemplate, setIsTemplateGalleryOpen }:
   return <section className="app-view buddy-landing" id="view-cv">
     <div className="career-portfolio-workspace" id="career-portfolio-workspace">
       <header className="career-table-header">
-        <div><p className="career-portfolio-eyebrow"><Sparkles size={13} /> MY CV</p><h2>Quản lý CV của bạn</h2><p>Lưu, tìm kiếm và chọn nhanh phiên bản CV phù hợp cho từng công việc.</p></div>
+        <div><p className="career-portfolio-eyebrow"><Sparkles size={13} /> MY CV</p><h2>Quản lý <span>CV của bạn</span></h2><p>Lưu, tìm kiếm và chọn nhanh phiên bản CV phù hợp cho từng công việc.</p></div>
         <div className="career-table-actions"><button type="button" className="career-create-button" onClick={() => setIsTemplateGalleryOpen(true)}><Plus size={17} /> Tạo CV mới</button><label className="career-upload-button"><Upload size={15} /> Tải CV lên<input id="portfolio-cv-upload-input" type="file" accept=".pdf,.docx" hidden /></label></div>
       </header>
       <div id="career-portfolio-snapshot" className="career-snapshot" hidden aria-label="Tổng quan CV"></div>

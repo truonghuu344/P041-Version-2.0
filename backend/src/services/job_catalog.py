@@ -126,6 +126,7 @@ def load_enterprise_job_catalog() -> tuple[dict[str, Any], ...]:
             "employment_type": str(record.get("employment_type") or "Chưa xác định").strip(),
             "remote_type": str(record.get("remote_type") or "Chưa xác định").strip(),
             "domain": str(record.get("domain_category") or "Khác").strip(),
+            "salary_range": str(record.get("salary_range") or "").strip(),
             "skills": skills,
             "description": description,
             "source_url": str(record.get("source_url") or "").strip() or None,

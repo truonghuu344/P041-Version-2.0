@@ -28,6 +28,10 @@ import { escapeHtml, showToast } from './utils.js';
     let currentConversationId = null;
     let historyOpen = false;
 
+    function getAssistantUnavailableMessage() {
+      return 'Nova đang tạm thời chưa sẵn sàng. Bạn có thể thử lại sau hoặc tiếp tục dùng các công cụ Match CV, tối ưu CV và luyện phỏng vấn trong ứng dụng.';
+    }
+
     function resetConversation() {
       currentConversationId = null;
       conversationHistory = [];
@@ -197,12 +201,12 @@ import { escapeHtml, showToast } from './utils.js';
         companion.classList.toggle('is-online', Boolean(status.configured));
         if (statusText) {
           statusText.textContent = status.configured
-            ? `${status.weather_configured ? 'Gemini + Weather online' : 'Gemini online'} · ${status.model}`
-            : 'Thiếu GEMINI_API_KEY';
+            ? 'Đang sẵn sàng hỗ trợ'
+            : 'Dịch vụ AI tạm thời chưa sẵn sàng';
         }
       } catch (_err) {
         companion.classList.remove('is-online');
-        if (statusText) statusText.textContent = 'Backend agent chưa sẵn sàng';
+        if (statusText) statusText.textContent = 'Dịch vụ AI tạm thời chưa sẵn sàng';
       }
     }
 
@@ -278,13 +282,16 @@ import { escapeHtml, showToast } from './utils.js';
         );
         typing.remove();
         currentConversationId = result.conversation_id;
-        appendChatMessage('assistant', result.response, result.suggested_actions || []);
-        conversationHistory.push({ role: 'assistant', content: result.response });
+        const response = result.llm_succeeded
+          ? result.response
+          : getAssistantUnavailableMessage();
+        appendChatMessage('assistant', response, result.llm_succeeded ? (result.suggested_actions || []) : []);
+        conversationHistory.push({ role: 'assistant', content: response });
         companion.classList.toggle('is-online', Boolean(result.llm_succeeded));
         if (statusText) {
           statusText.textContent = result.llm_succeeded
-            ? `Gemini online · ${result.model}`
-            : 'Gemini chưa phản hồi';
+            ? 'Đang sẵn sàng hỗ trợ'
+            : 'Dịch vụ AI tạm thời chưa sẵn sàng';
         }
       } catch (err) {
         typing.remove();
@@ -295,8 +302,8 @@ import { escapeHtml, showToast } from './utils.js';
           return;
         }
         const message = err.status === 404
-          ? 'Nova backend chưa sẵn sàng. Vui lòng thử lại sau ít phút.'
-          : `Mình chưa thể trả lời: ${err.message}`;
+          ? 'Nova hoặc dữ liệu bạn chọn hiện chưa sẵn sàng. Hãy thử lại sau.'
+          : 'Nova chưa thể hoàn tất yêu cầu này. Hãy thử lại sau.';
         appendChatMessage('assistant', message);
       } finally {
         if (sendButton) sendButton.disabled = false;
@@ -372,4 +379,4 @@ import { escapeHtml, showToast } from './utils.js';
     window.setTimeout(() => hint?.classList.add('is-hidden'), 6500);
   }
 
-  
+  

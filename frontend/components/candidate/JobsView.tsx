@@ -14,7 +14,7 @@ export default function JobsView(props: any) {
           <div className="buddy-section-heading" style={{ marginBottom: 32 }}>
             <div>
               <span className="buddy-kicker" style={{ marginBottom: 8 }}><Navigation size={15} /> Bước 1 · Công việc mục tiêu</span>
-              <h2 id="buddy-journey-title">Thêm JD để xác định tiêu chí đối chiếu.</h2>
+              <h2 id="buddy-journey-title">Thêm JD <span>để xác định tiêu chí đối chiếu.</span></h2>
             </div>
             <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
               <span style={{ fontSize: '13px', color: '#607184', fontWeight: 600 }}>Chọn JD mẫu hoặc dán JD bạn muốn ứng tuyển</span>

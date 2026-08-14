@@ -10,7 +10,7 @@ export default function UpgradeView(props: any) {
         
         <div style={{ maxWidth: '600px', margin: '0 auto 48px' }}>
           <span className="buddy-kicker" style={{ justifyContent: 'center', marginBottom: 12 }}><Zap size={15} /> Nâng cấp sức mạnh AI</span>
-          <h2 id="buddy-journey-title" style={{ fontSize: '36px', marginBottom: '16px' }}>Các Gói Dịch Vụ & Nâng Cấp</h2>
+          <h2 id="buddy-journey-title" style={{ fontSize: '36px', marginBottom: '16px' }}>Các gói dịch vụ <span>&amp; nâng cấp</span></h2>
           <p style={{ fontSize: '16px', color: '#607184', margin: 0, lineHeight: 1.6 }}>Lựa chọn gói phù hợp để làm chủ hành trình chinh phục mọi nhà tuyển dụng cùng Career Buddy.</p>
         </div>
 

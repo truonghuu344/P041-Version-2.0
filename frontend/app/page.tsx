@@ -503,7 +503,7 @@ export default function Page() {
 
       {/* ═══ Fixed Gemini Career Chatbot ═══ */}
       <div id="ai-companion" className="ai-companion" aria-label="Chatbot AI Nova">
-        <div id="ai-companion-hint" className="ai-companion-hint">Bấm để chat với Nova ✨</div>
+        <div id="ai-companion-hint" className="ai-companion-hint"><strong>Hỏi Nova</strong><span>Hỗ trợ CV, JD và phỏng vấn</span></div>
         <button
           type="button"
           id="ai-companion-avatar"
@@ -512,18 +512,18 @@ export default function Page() {
           aria-expanded="false"
           aria-controls="ai-companion-chat"
         >
-          {/* GIF gốc phải là img đang hoạt động để canvas đọc được từng frame animation. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             id="ai-companion-source"
-            className="ai-companion-source"
-            src="/assistant/idle-rotations-8dir.gif"
+            className="ai-companion-source is-fallback"
+            src="/images/chatbot.png"
             alt="Nova - trợ lý nghề nghiệp AI"
             width={64}
             height={64}
             draggable={false}
           />
-          <canvas id="ai-companion-canvas" className="ai-companion-canvas" width="64" height="64" aria-hidden="true"></canvas>
+          <canvas id="ai-companion-canvas" className="ai-companion-canvas is-hidden" width="64" height="64" aria-hidden="true"></canvas>
+          <span className="ai-companion-launcher-copy"><strong>Hỏi Nova</strong><small>Trợ lý nghề nghiệp</small></span>
           <span id="ai-companion-status-dot" className="ai-companion-status-dot" aria-hidden="true"></span>
         </button>
       </div>
@@ -531,10 +531,10 @@ export default function Page() {
       <aside id="ai-companion-chat" className="ai-companion-chat" aria-hidden="true" hidden>
         <header className="ai-chat-header">
           <div className="ai-chat-identity">
-            <span className="ai-chat-orb" aria-hidden="true">✦</span>
+            <span className="ai-chat-orb" aria-hidden="true"><Image src="/images/chatbot.png" alt="" width={38} height={38} className="ai-chat-orb-image" /></span>
             <div>
-              <strong>Nova · Career Agent</strong>
-              <span id="ai-companion-status-text">Đang kiểm tra Gemini…</span>
+              <strong>Nova · Trợ lý nghề nghiệp</strong>
+              <span id="ai-companion-status-text">Đang chuẩn bị hỗ trợ bạn</span>
             </div>
           </div>
           <div className="ai-chat-header-actions">
@@ -553,7 +553,7 @@ export default function Page() {
         <div id="ai-companion-messages" className="ai-chat-messages" aria-live="polite">
           <div className="ai-chat-message assistant">
             <span className="ai-chat-message-name">Nova</span>
-            <p>Chào bạn! Mình có thể hỗ trợ CV, Gap Analysis và luyện phỏng vấn STAR. Bạn muốn bắt đầu từ đâu?</p>
+            <p>Chào bạn. Hãy chọn một gợi ý bên dưới hoặc mô tả mục tiêu của bạn; Nova sẽ hướng dẫn theo CV và JD bạn đang có.</p>
           </div>
         </div>
         <div className="ai-chat-quick-prompts" aria-label="Câu hỏi gợi ý">
@@ -567,7 +567,7 @@ export default function Page() {
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2L11 13" /><path d="M22 2l-7 20-4-9-9-4z" /></svg>
           </button>
         </form>
-        <p className="ai-chat-privacy">Tin nhắn được lưu vào lịch sử tài khoản; Admin có thể xem AI log để kiểm tra chất lượng và lỗi hệ thống.</p>
+        <p className="ai-chat-privacy">Nova là trợ lý AI và có thể mắc sai sót. Hãy kiểm tra lại thông tin quan trọng.</p>
       </aside>
 
       {/* ═══ Delete Confirmation Modal ═══ */}

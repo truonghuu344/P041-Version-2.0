@@ -4,7 +4,7 @@ ROOT = Path(__file__).resolve().parents[3]
 FRONTEND_ROOT = ROOT / "frontend"
 APP_JS = (FRONTEND_ROOT / "app.js").read_text(encoding="utf-8")
 PAGE_JS = (FRONTEND_ROOT / "app" / "page.tsx").read_text(encoding="utf-8")
-STYLE_CSS = (FRONTEND_ROOT / "style.css").read_text(encoding="utf-8")
+STYLE_CSS = (FRONTEND_ROOT / "app" / "styles" / "legacy.css").read_text(encoding="utf-8")
 
 
 def test_cv_and_jd_selection_render_analysis_results_in_place():

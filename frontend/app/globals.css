@@ -1,0 +1,12 @@
+/*
+ * The only global stylesheet imported by the App Router layout.
+ * Import order is intentional: legacy base → theme → page scopes → shared typography.
+ */
+@import url('./styles/legacy.css');
+@import url('./styles/theme.css');
+@import url('./styles/dashboard.css');
+@import url('./styles/interview.css');
+@import url('./styles/jobs.css');
+@import url('./styles/match.css');
+@import url('./styles/typography.css');
+@import url('./styles/assistant.css');

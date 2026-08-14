@@ -1,9 +1,7 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 
-import '../style.css';
-import './design-refresh.css';
-import './dashboard-focus.css';
+import './globals.css';
 
 export const metadata: Metadata = {
   title: 'Career Assistant',

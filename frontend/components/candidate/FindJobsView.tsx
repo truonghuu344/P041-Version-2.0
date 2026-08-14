@@ -6,7 +6,7 @@ export default function FindJobsView() {
       <div className="jobs-shell">
         <header className="jobs-page-header">
           <span className="jobs-eyebrow"><BriefcaseBusiness size={14} /> JOB DISCOVERY</span>
-          <h2>Tìm công việc đáng để bạn ứng tuyển.</h2>
+          <h2>Tìm công việc <span>đáng để bạn ứng tuyển.</span></h2>
           <p>Tìm theo từ khoá, hoặc dùng CV để ưu tiên những JD có kỹ năng liên quan nhất.</p>
         </header>
 
