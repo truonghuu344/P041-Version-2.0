@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileCheck, History, Mic, Sparkles } from 'lucide-react';
+import { FileCheck, Mic, Sparkles } from 'lucide-react';
 
 export default function HistoryView() {
   return (

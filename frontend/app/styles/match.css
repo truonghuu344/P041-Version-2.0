@@ -280,6 +280,15 @@
   font-weight: 750;
 }
 
+/* Legacy button rules target nested spans and SVGs, so set the CTA's complete
+   content explicitly rather than relying on inherited color. */
+#view-match #p1-analyze-btn,
+#view-match #p1-analyze-btn span,
+#view-match #p1-analyze-btn svg {
+  color: #fff !important;
+  stroke: currentColor;
+}
+
 #view-match .match-ready button:hover:not(:disabled) {
   background: #005a38 !important;
   border-color: #005a38 !important;
