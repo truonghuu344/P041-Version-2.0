@@ -4,14 +4,17 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 from pathlib import Path
 from typing import Any
 
 os.environ["CV_JD_EMBEDDING_PROVIDER"] = "hashing"
 
-from src.services.cv_jd_matching import PIPELINE_VERSION, build_cv_jd_evidence
-
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "backend"))
+
+from src.services.cv_jd_matching import PIPELINE_VERSION, build_cv_jd_evidence  # noqa: E402
+
 CASES_PATH = ROOT / "eval" / "cv_jd_cases.json"
 RESULT_PATH = ROOT / "eval" / "results" / "cv_jd_report.json"
 

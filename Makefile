@@ -1,24 +1,28 @@
-.PHONY: run test lint format typecheck check clean
+.PHONY: run test lint format typecheck check frontend-dev frontend-build clean
 
 run:
-	uvicorn src.backend.main:app --reload --host 0.0.0.0 --port 8000
+	uvicorn src.main:app --app-dir backend --reload --host 0.0.0.0 --port 8000
 
 
 test:
-	pytest tests/ -v
+	PYTHONPATH=backend pytest backend/tests/ -v
 
 lint:
-	ruff check src/ tests/
+	ruff check backend/src/ backend/tests/
 
 format:
-	ruff format src/ tests/
+	ruff format backend/src/ backend/tests/
 
 typecheck:
-	mypy src/
+	mypy backend/src/
+
+frontend-dev:
+	cd frontend && npm run dev
+
+frontend-build:
+	cd frontend && npm run build
 
 check: lint format test
 
 clean:
-	find . -type d -name __pycache__ -exec rm -rf {} +
-	find . -type d -name .pytest_cache -exec rm -rf {} +
-	find . -type d -name .ruff_cache -exec rm -rf {} +
+	@echo "Use project-specific cleanup commands for your operating system."

@@ -583,7 +583,7 @@ npm run dev
 
 Truy cập frontend tại `http://localhost:3000`, backend docs tại `http://localhost:8000/docs`.
 
-Lưu ý: target `make run` hiện trỏ tới `src.backend.main:app`, nhưng file đó không tồn tại. Dùng `uvicorn src.main:app ...` hoặc `python main.py` cho tới khi Makefile được sửa.
+Lưu ý: backend hiện nằm trong `backend/`. Dùng `make run`, `uvicorn src.main:app --app-dir backend --reload`, hoặc `python backend/main.py` để chạy ứng dụng.
 
 ### 11.2. Chạy bằng Docker Compose
 

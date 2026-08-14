@@ -21,12 +21,13 @@ jobs:
 
       - name: Install dependencies
         run: pip install -r requirements.txt
+        working-directory: backend
 
       - name: Lint with ruff
-        run: ruff check src/ tests/
+        run: ruff check backend/src/ backend/tests/
 
       - name: Run tests
-        run: pytest tests/ -v --tb=short
+        run: PYTHONPATH=backend pytest backend/tests/ -v --tb=short
         env:
           APP_ENV: test
           OPENAI_API_KEY: test-key
