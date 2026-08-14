@@ -102,6 +102,38 @@ async def test_upload_list_and_detail_cv_success(client, tmp_path, monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_match_upload_uses_auto_llm_policy_and_is_saved_to_cv_library(client, tmp_path, monkeypatch):
+    user, headers = await register_and_login(client, email="match-upload@example.com")
+    monkeypatch.setattr("src.api.v1.cvs.UPLOAD_DIR", str(tmp_path))
+
+    async def fake_extract(_content, _filename, _content_type):
+        return "NGUYEN VAN A\nPROJECTS\nBuilt an API with Python and FastAPI"
+
+    async def fake_parse(_raw_text, *, use_llm):
+        assert use_llm == "auto"
+        return {
+            "skills": ["Python", "FastAPI"],
+            "agent_metadata": {"llm_called": False, "llm_policy": "auto"},
+        }
+
+    monkeypatch.setattr("src.api.v1.cvs.extract_text_from_document", fake_extract)
+    monkeypatch.setattr("src.api.v1.cvs.parse_cv_to_structured_json", fake_parse)
+
+    upload = await client.post(
+        "/api/v1/cvs/upload",
+        headers=headers,
+        data={"parse_mode": "auto", "use_llm": "false"},
+        files={"file": ("match-resume.pdf", b"%PDF-valid", "application/pdf")},
+    )
+
+    assert upload.status_code == 201, upload.text
+    listing = await client.get("/api/v1/cvs", headers=headers)
+    assert listing.status_code == 200
+    assert any(item["id"] == upload.json()["id"] for item in listing.json())
+    assert upload.json()["user_id"] == user["id"]
+
+
+@pytest.mark.asyncio
 async def test_users_cannot_read_delete_or_reanalyze_each_others_cv(client, monkeypatch):
     await register_and_login(client, email="cv-owner@example.com")
     _other, other_headers = await register_and_login(client, email="cv-attacker@example.com")

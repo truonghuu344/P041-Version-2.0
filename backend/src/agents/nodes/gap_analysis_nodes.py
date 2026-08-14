@@ -101,6 +101,18 @@ async def extract_gap_evidence(state: GapAnalysisState) -> dict[str, Any]:
     return {"evidence": evidence}
 
 
+def _match_explanation_needs_llm(evidence: dict[str, Any]) -> tuple[bool, str]:
+    """Use generative explanation only for genuinely ambiguous match results."""
+    confidence = float(evidence.get("confidence_score", 0.0) or 0.0)
+    if confidence < 0.75:
+        return True, "low_or_medium_match_confidence"
+    if evidence.get("unknown_requirements"):
+        return True, "unknown_jd_requirements"
+    if evidence.get("hard_skills_partial"):
+        return True, "partial_skill_evidence"
+    return False, "deterministic_result_is_sufficient"
+
+
 async def draft_gap_analysis(state: GapAnalysisState) -> dict[str, Any]:
     evidence = state["evidence"]
     fallback = {
@@ -108,8 +120,17 @@ async def draft_gap_analysis(state: GapAnalysisState) -> dict[str, Any]:
         "suggestions": deterministic_cv_suggestions(state["cv_raw_text"], evidence["hard_skills_matching"]),
     }
     settings = get_settings()
-    if not settings.match_explanation_llm_enabled or not settings.google_genai_api_key:
-        return {"draft_result": fallback}
+    needs_llm, decision_reason = _match_explanation_needs_llm(evidence)
+    if (
+        not getattr(settings, "match_explanation_llm_enabled", False)
+        or not getattr(settings, "google_genai_api_key", "")
+        or not needs_llm
+    ):
+        return {
+            "draft_result": fallback,
+            "explanation_provider": "deterministic",
+            "llm_decision_reason": decision_reason,
+        }
 
     system_prompt = """Bạn là CV Gap Analysis & Career Action Plan Agent.
 Hãy so sánh bằng chứng CV với JD và tạo kế hoạch cụ thể gồm:
@@ -157,10 +178,18 @@ Confidence score: {evidence.get("confidence_score", 0)}
             [SystemMessage(content=system_prompt), HumanMessage(content=user_prompt)]
         )
         value = response.model_dump() if isinstance(response, BaseModel) else dict(response)
-        return {"draft_result": value}
+        return {
+            "draft_result": value,
+            "explanation_provider": "gemini_guarded",
+            "llm_decision_reason": decision_reason,
+        }
     except Exception as exc:
         logger.warning("Gap Analysis Agent dùng fallback do lỗi LLM: %s", exc)
-        return {"draft_result": fallback}
+        return {
+            "draft_result": fallback,
+            "explanation_provider": "deterministic_fallback",
+            "llm_decision_reason": decision_reason,
+        }
 
 
 def _contains_missing_skill(text: str, missing_skills: list[str]) -> bool:
@@ -368,10 +397,7 @@ async def enforce_gap_integrity(state: GapAnalysisState) -> dict[str, Any]:
         "cv_section_recommendations": cv_section_recommendations or fallback_plan["cv_section_recommendations"],
         "score_breakdown": evidence["score_breakdown"],
         "integrity_guardrail": "passed",
-        "explanation_provider": (
-            "gemini_guarded"
-            if get_settings().match_explanation_llm_enabled and get_settings().google_genai_api_key
-            else "deterministic"
-        ),
+        "explanation_provider": state.get("explanation_provider", "deterministic"),
+        "llm_decision_reason": state.get("llm_decision_reason", "deterministic_result_is_sufficient"),
     }
     return {"gap_analysis_result": result}

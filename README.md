@@ -63,10 +63,11 @@ docker compose logs -f backend
 ```bash
 cd frontend && npm install
 Copy-Item .env.local.example .env.local # PowerShell (chạy một lần)
-npm run dev
+npm run build
+npm run start
 ```
 
-Trên macOS/Linux, thay lệnh copy bằng `cp .env.local.example .env.local`. Frontend có tại `http://localhost:3000`.
+Trên macOS/Linux, thay lệnh copy bằng `cp .env.local.example .env.local`. Frontend có tại `http://localhost:3000`. Cách `build` + `start` được khuyến nghị khi chạy demo, đặc biệt nếu dự án nằm trong OneDrive. Chỉ dùng `npm run dev` khi đang sửa giao diện và cần hot reload.
 
 ### Bước 4 — Mở app
 
@@ -95,9 +96,27 @@ npm run build && npm run start         # Build và chạy Next.js production loc
 
 Khi sửa mã backend hoặc dependency, dùng `docker compose up --build -d`. Khi chỉ sửa frontend, Next.js dev server tự reload; không cần Docker build.
 
+Frontend dùng cache dev tại `frontend/node_modules/.cache/next-dev`, tách biệt với output production `frontend/.next`. Tuy vậy, OneDrive có thể vẫn xóa file cache hot reload theo thời gian. Khi giao diện chỉ còn HTML thô hoặc asset trả 404, hãy dừng dev server rồi chạy `npm run build` và `npm run start`; production server dùng bundle bất biến và ổn định hơn cho kiểm thử/demo.
+
+ESLint của frontend bật kiểm tra `no-undef` cho các file JavaScript để chặn ngay khi build những lỗi runtime như `ReferenceError: <biến> is not defined`.
+
+### Chức năng Match CV
+
+Match CV yêu cầu người dùng đăng nhập và chọn đủ một CV cùng một JD trước khi phân tích:
+
+1. **Chọn CV:** dùng CV đã có trong Kho CV hoặc tải file PDF/DOCX mới. CV tải tại màn Match được lưu vào đúng Kho CV của tài khoản đang đăng nhập. Trong danh sách CV bên dưới, nhấn trực tiếp vào thẻ CV (hoặc dùng `Enter`/`Space`) để chọn; thẻ được tô trạng thái đã chọn và nút phân tích sẽ dùng đúng CV đó.
+2. **Chọn JD:** chọn công việc trong danh sách có sẵn hoặc tải JD riêng dạng PDF, DOCX, TXT hay ảnh. Khi mở một công việc có sẵn, hộp `Chi tiết công việc` luôn được cố định giữa viewport bên dưới navbar; nội dung dài cuộn trong hộp để nút `Chọn Job này` luôn truy cập được. JD được trình bày theo từng phần gồm tiêu đề/công ty, thông tin nhanh, kỹ năng chính, mô tả, trách nhiệm, yêu cầu và quyền lợi; nhãn trùng lặp cùng dữ liệu thô không cần thiết được loại bỏ.
+3. **Phân tích:** nút `Phân tích Match` chỉ hoạt động khi cả CV và JD đã sẵn sàng. Tiến độ thực của backend hiển thị trực tiếp trên nút (`Đang phân tích …%`); trang không chèn thêm khối loading hoặc kết quả ở phía dưới.
+4. **Xem kết quả:** khi phân tích hoàn tất, popup GAP tự mở ở giữa màn hình thay vì chèn kết quả xuống cuối trang. Popup chỉ giữ thông tin cần để người dùng ra quyết định: Match Score, kết luận ngắn, tối đa 6 kỹ năng ở mỗi nhóm phù hợp/thiếu/chưa rõ, 3 việc ưu tiên và tối đa 3 gợi ý sửa CV. Ma trận bằng chứng, công thức chấm điểm và các nội dung kỹ thuật dài không hiển thị trong popup. Có thể đóng bằng nút `×`, nhấn ngoài popup hoặc phím `Esc`.
+5. **Tối ưu bằng AI:** nút `Tối ưu bằng AI` trong popup áp dụng toàn bộ gợi ý viết lại đã có bằng chứng và đã vượt guardrail vào bản CV tối ưu của kết quả phân tích. Các quyết định được lưu qua API hiện có để dùng khi xuất CV; CV gốc trong Kho CV không bị ghi đè. Nếu không có gợi ý đủ bằng chứng hoặc guardrail chưa đạt, hệ thống không tự áp dụng.
+
+Luồng Match ưu tiên tốc độ: CV được parse cục bộ trước; LLM chỉ được yêu cầu khi tài liệu đủ dài nhưng dữ liệu trích xuất thiếu cấu trúc hoặc không đủ tín hiệu đáng tin cậy. Phần giải thích Match cũng chỉ gọi LLM khi cấu hình cho phép và kết quả có độ tin cậy thấp, yêu cầu JD chưa rõ hoặc bằng chứng kỹ năng chỉ khớp một phần. Nếu thiếu API key hoặc LLM lỗi, hệ thống tự dùng kết quả xác định cục bộ và vẫn hoàn thành báo cáo.
+
+API tiến trình `GET /api/v1/matches/{match_id}` trả `current_step` và `progress_percent`; các trạng thái chính là `PENDING`, `PARSING`, `EVALUATING`, `FINALIZING`, `COMPLETED` hoặc `FAILED`.
+
 ### RAG JD thị trường với pgvector
 
-Backend tự đồng bộ ~98 JD mẫu trong `data/jds` vào PostgreSQL/pgvector lúc khởi động. Nếu embedding lỗi hoặc quota Gemini API hết, API tự chuyển về tìm kiếm theo catalog để giao diện vẫn hoạt động bình thường (chỉ tính năng "AI lọc JD theo CV" bị ảnh hưởng, tìm việc theo từ khóa vẫn chạy).
+Backend tự đồng bộ ~98 JD mẫu trong `data/jds` vào PostgreSQL/pgvector lúc khởi động. Khi `VECTOR_EMBEDDING_PROVIDER=auto`, nếu Gemini embedding lỗi hoặc hết quota, backend tự đồng bộ lại bằng `hashing-v1` chạy nội bộ; tìm kiếm semantic và Match CV vẫn dùng được mà không phải chờ quota. Nếu cấu hình rõ `VECTOR_EMBEDDING_PROVIDER=gemini`, lỗi Gemini vẫn được báo để người vận hành biết cấu hình bắt buộc không đáp ứng.
 
 ```bash
 # Đồng bộ thủ công từ thư mục root (hoặc sau khi quota reset)
@@ -107,6 +126,23 @@ python scripts/index_market_jds.py
 curl -X POST http://localhost:8000/api/v1/jobs/rag/sync \
   -H "Authorization: Bearer <admin-token>"
 ```
+
+### LangSmith và kiểm tra sau khi sửa
+
+LangSmith tracing mặc định đang tắt để key mẫu không tạo lỗi `403 Forbidden`. Chỉ đặt `LANGCHAIN_TRACING_V2=true` và `LANGSMITH_TRACING=true` sau khi đã điền `LANGSMITH_API_KEY` hợp lệ.
+
+```bash
+# Backend (chạy trong backend/ sau khi cài requirements.txt)
+python -m ruff check src tests
+python -m pytest -q
+
+# Frontend (chạy trong frontend/; dừng dev server trước khi build để tránh dùng chung cache .next)
+npm run lint
+npm run typecheck
+npm run build
+```
+
+Kết quả kiểm tra gần nhất: backend `198 passed`; frontend lint, TypeScript và production build đều thành công. Runtime đã được smoke test qua proxy frontend: đăng nhập, tạo CV tạm, chọn JD, Match hoàn tất và CV kiểm tra đã được xóa.
 
 
 ## 🛠 Tech Stack

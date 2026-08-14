@@ -21,7 +21,7 @@ import EnterpriseView from '../components/enterprise/EnterpriseView';
 import AdminView from '../components/admin/AdminView';
 
 export default function Page() {
-  const [, setIsTemplateGalleryOpen] = useState(false);
+  const [isTemplateGalleryOpen, setIsTemplateGalleryOpen] = useState(false);
   const [selectedCVTemplate, setSelectedCVTemplate] = useState<CVTemplateName | null>(null);
 
   useEffect(() => {
@@ -83,7 +83,12 @@ export default function Page() {
 
       <main>
         <DashboardView />
-        <CVView selectedCVTemplate={selectedCVTemplate} setIsTemplateGalleryOpen={setIsTemplateGalleryOpen} selectCVTemplate={selectCVTemplate} />
+        <CVView
+          selectedCVTemplate={selectedCVTemplate}
+          isTemplateGalleryOpen={isTemplateGalleryOpen}
+          setIsTemplateGalleryOpen={setIsTemplateGalleryOpen}
+          selectCVTemplate={selectCVTemplate}
+        />
         <FindJobsView />
         <JobsView />
         <MatchView />

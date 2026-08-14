@@ -3,6 +3,7 @@ import os
 import uuid
 from io import BytesIO
 from time import perf_counter
+from typing import Literal
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from fastapi.responses import StreamingResponse
@@ -98,6 +99,7 @@ async def upload_cv(
     file: UploadFile = File(...),
     title: str = Form(default=""),
     use_llm: bool = Form(default=True),
+    parse_mode: Literal["configured", "auto"] = Form(default="configured"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> CVOut:
@@ -134,9 +136,11 @@ async def upload_cv(
             status_code=400,
         )
 
-    # Structured JSON Parsing via LLM/Fallback
+    # Match CV uses auto mode: parse locally first and escalate to the LLM only
+    # when the deterministic extraction is not structured enough.
+    parse_policy: bool | Literal["auto"] = "auto" if parse_mode == "auto" else use_llm
     try:
-        parsed_json = await parse_cv_to_structured_json(raw_text, use_llm=use_llm)
+        parsed_json = await parse_cv_to_structured_json(raw_text, use_llm=parse_policy)
     except ValueError as exc:
         raise pipeline_error_from_message(str(exc), "EXTRACTION_001", status_code=422) from exc
 
@@ -162,7 +166,11 @@ async def upload_cv(
             user_id=current_user.id,
             event_name="cv_parse",
             duration_ms=round((perf_counter() - started_at) * 1000),
-            metadata_json={"use_llm": use_llm, "file_type": file_ext},
+            metadata_json={
+                "use_llm": bool(parsed_json.get("agent_metadata", {}).get("llm_called")),
+                "llm_policy": parse_mode,
+                "file_type": file_ext,
+            },
         )
     )
     try:

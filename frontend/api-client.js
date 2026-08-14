@@ -162,6 +162,15 @@ export class ApiClient {
     });
   }
 
+  static async uploadCVForMatch(file, title = '') {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (title) formData.append('title', title);
+    formData.append('use_llm', 'false');
+    formData.append('parse_mode', 'auto');
+    return await this.request('/cvs/upload', { method: 'POST', body: formData });
+  }
+
   static async listCVs() {
     return await this.request('/cvs');
   }
