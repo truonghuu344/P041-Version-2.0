@@ -3,7 +3,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[3]
 FRONTEND_ROOT = ROOT / "frontend"
 APP_JS = (FRONTEND_ROOT / "app.js").read_text(encoding="utf-8")
-PAGE_JS = (FRONTEND_ROOT / "app" / "page.tsx").read_text(encoding="utf-8")
+PAGE_JS = "\n".join(f.read_text(encoding="utf-8") for f in FRONTEND_ROOT.rglob("*.tsx"))
 STYLE_CSS = (FRONTEND_ROOT / "app" / "styles" / "legacy.css").read_text(encoding="utf-8")
 
 
