@@ -301,83 +301,32 @@ git status
 
 ### 5. Quy trình commit và push cho từng member
 
-Mỗi member làm trên **branch riêng**, không commit trực tiếp vào `main` hoặc `develop`. Branch nên đặt theo tính năng, ví dụ: `feat/top-job-recommendations`, `feat/cv-variants-optimization`, `feat/voice-interview-question-bank`, `feat/match-evaluation-modal`.
+Mỗi member dùng branch riêng, không push trực tiếp `main`/`develop`.
 
-#### Bắt đầu một tính năng
-
-```powershell
-git switch develop
-git pull --ff-only origin develop
-git switch -c feat/ten-tinh-nang
-```
-
-Nếu branch đã tồn tại trên máy, dùng:
+**Trước khi commit và push, copy nguyên khối này tại root project:**
 
 ```powershell
-git switch feat/ten-tinh-nang
-git pull --rebase origin develop
-```
-
-#### Khi hoàn thành một phần chức năng
-
-**Bắt buộc chạy từ root project trước khi push. Dừng lại, không commit/push nếu bất kỳ lệnh nào báo lỗi:**
-
-```powershell
-# 1) Kiểm tra file thay đổi và lỗi whitespace
-git status
+# 1. Kiểm tra code
 git diff --check
-
-# 2) Backend: sai import/cấu trúc Python sẽ bị Ruff chặn
 ruff check backend/src backend/tests
-$env:APP_ENV="test"
-$env:GEMINI_API_KEY="test-key"
-$env:PYTHONPATH="backend"
+$env:APP_ENV="test"; $env:GEMINI_API_KEY="test-key"; $env:PYTHONPATH="backend"
 pytest backend/tests -v --tb=short
-
-# 3) Frontend: lỗi TypeScript hoặc build sẽ bị chặn
 cd frontend
 npm.cmd run typecheck
 npm.cmd run build
 cd ..
-```
 
-Kết quả đạt: `ruff` báo `All checks passed!`, `pytest` không có `FAILED`, `typecheck` và `build` exit thành công, `git diff --check` không có dòng `error`. Cảnh báo `LF will be replaced by CRLF` trên Windows không phải lỗi.
-
-Local check không tự chặn lệnh `git push`; member phải tuân thủ checklist trên. GitHub Actions chạy lại cùng kiểm tra khi tạo Pull Request, và branch protection phải đặt các job `lint-and-test` và `frontend-ci` là **Required** để chặn merge khi code sai cấu trúc hoặc test fail.
-
-Chỉ stage những file thuộc phần việc của mình; không dùng `git add .` nếu `git status` có file của member khác:
-
-```powershell
-git add backend/src/services/example.py backend/tests/test_example.py frontend/components/ExampleView.tsx
+# 2. Commit đúng file của mình
+git status
+git add <file-1> <file-2>
 git diff --cached --check
-git diff --cached
-git commit -m "feat: mo ta ngan gon tinh nang"
-```
+git commit -m "feat: mo-ta-tinh-nang"
 
-#### Push và tạo Pull Request
-
-```powershell
+# 3. Push branch của mình
 git push -u origin feat/ten-tinh-nang
 ```
 
-Sau đó tạo Pull Request trên GitHub:
-
-```text
-base: develop
-compare: feat/ten-tinh-nang
-```
-
-Chỉ merge khi GitHub CI xanh và ít nhất một member khác review. Sau khi `develop` ổn định, người được phân công tạo PR từ `develop` vào `main`.
-
-Nếu `develop` thay đổi trong lúc bạn đang làm, đồng bộ trước khi tiếp tục hoặc trước khi merge PR:
-
-```powershell
-git fetch origin
-git rebase origin/develop
-git push origin feat/ten-tinh-nang
-```
-
-Nếu rebase tạo conflict, giải quyết từng file, chạy lại test liên quan, sau đó dùng `git rebase --continue`. Không dùng `git push --force`; nếu branch cá nhân đã từng push và cần cập nhật sau rebase, trao đổi với reviewer trước khi dùng `git push --force-with-lease`.
+Chỉ push khi mọi lệnh trên pass. Cảnh báo `LF will be replaced by CRLF` không phải lỗi. Sau push, tạo PR `feat/ten-tinh-nang` → `develop`; chỉ merge khi GitHub CI xanh.
 
 ### Xử lý lỗi thường gặp khi chạy test
 
