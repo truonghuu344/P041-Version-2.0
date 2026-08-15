@@ -2,6 +2,8 @@
 import React from 'react';
 import { PencilLine, Plus, Search, Sparkles, Upload } from 'lucide-react';
 
+import CVVariantWizard from './CVVariantWizard';
+
 export default function CVView({ selectedCVTemplate, setIsTemplateGalleryOpen }: any) {
   return <section className="app-view buddy-landing" id="view-cv">
     <div className="career-portfolio-workspace" id="career-portfolio-workspace">
@@ -21,6 +23,7 @@ export default function CVView({ selectedCVTemplate, setIsTemplateGalleryOpen }:
           <label className="manual-cv-wide">Giới thiệu ngắn<textarea id="manual-cv-summary" placeholder="Mục tiêu nghề nghiệp và thế mạnh nổi bật" /></label><label className="manual-cv-wide">Kỹ năng<input id="manual-cv-skills" placeholder="Python, React, SQL" /></label><label>Học vấn<textarea id="manual-cv-education" placeholder="Mỗi nội dung một dòng" /></label><label>Kinh nghiệm<textarea id="manual-cv-experience" placeholder="Mỗi nội dung một dòng" /></label><label className="manual-cv-wide">Dự án<textarea id="manual-cv-projects" placeholder="Mỗi dự án một dòng" /></label><button type="submit" className="career-create-button manual-cv-submit">Lưu CV</button>
         </form>
       </div>
+      <CVVariantWizard />
     </div>
 
   </section>;
