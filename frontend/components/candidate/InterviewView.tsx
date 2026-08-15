@@ -2,7 +2,6 @@ import {
   BarChart3,
   BriefcaseBusiness,
   Check,
-  Clock3,
   Ear,
   FileText,
   Languages,
@@ -12,6 +11,7 @@ import {
   Send,
   Sparkles,
   Star,
+  Target,
   Volume2,
 } from 'lucide-react';
 
@@ -29,15 +29,13 @@ export default function InterviewView() {
             <section className="interview-setup-card" id="page-interview-setup">
               <div className="interview-card-heading">
                 <span className="interview-icon"><Play size={18} /></span>
-                <div><h3>Thiết lập phiên phỏng vấn</h3><p>Chọn CV, vị trí và thời lượng phù hợp.</p></div>
+                <div><h3>Thiết lập phiên phỏng vấn</h3><p>Chọn CV và vị trí ứng tuyển để bắt đầu.</p></div>
               </div>
 
               <div className="interview-form-grid">
                 <label className="interview-field interview-field-wide"><span><FileText size={15} /> CV của bạn</span><select id="page-interview-select-cv"><option value="">Chọn CV đã lưu</option></select></label>
                 <label className="interview-field interview-field-wide"><span><BriefcaseBusiness size={15} /> Vị trí ứng tuyển</span><select id="page-interview-select-jd"><option value="">Chọn JD đã lưu</option></select></label>
-                <label className="interview-field"><span>Kiểu câu hỏi</span><select id="interview-mode"><option value="MIXED">Hỗn hợp</option><option value="TECHNICAL">Chuyên môn</option><option value="BEHAVIORAL">Hành vi</option></select></label>
-                <label className="interview-field"><span><Languages size={15} /> Ngôn ngữ</span><select id="interview-language"><option value="FOLLOW_CANDIDATE">Theo ứng viên</option><option value="VI">Tiếng Việt</option><option value="EN">Tiếng Anh</option></select></label>
-                <label className="interview-field interview-field-wide"><span><Clock3 size={15} /> Thời lượng</span><select id="interview-duration"><option value="15">15 phút</option><option value="30" defaultValue="30">30 phút</option><option value="45">45 phút</option><option value="60">60 phút</option></select></label>
+                <label className="interview-field interview-field-wide"><span><Languages size={15} /> Ngôn ngữ phỏng vấn</span><select id="interview-language"><option value="vi">Tiếng Việt</option><option value="en">Tiếng Anh</option></select></label>
               </div>
 
               <div className="interview-setup-note"><Sparkles size={15} /><span>Voice được chuyển thành transcript. Bạn luôn có thể chỉnh sửa câu trả lời trước khi gửi.</span></div>
@@ -58,8 +56,7 @@ export default function InterviewView() {
           <section className="interview-live-card" id="page-interview-chat">
             <header className="interview-live-header">
               <div className="interview-live-progress"><strong id="page-interview-progress-text">Câu hỏi 1 / 5</strong><span className="interview-progress-track"><i id="page-interview-progress-bar" /></span></div>
-              <span className="interview-live-status"><Clock3 size={16} /> <span id="page-interview-timer">00:00 / 15:00</span></span>
-              <button className="interview-end-session" type="button" disabled title="Phiên được hoàn tất sau câu trả lời cuối cùng">Kết thúc</button>
+              <span className="interview-live-status"><span id="page-interview-timer">00:00 / 10:00</span></span>
             </header>
             <div id="page-interview-chat-history" className="interview-chat-history">
               <div className="interview-empty-chat"><MessageSquareText size={28} /><strong>Bắt đầu khi bạn sẵn sàng</strong><span>Câu hỏi đầu tiên sẽ xuất hiện tại đây.</span></div>
@@ -74,12 +71,37 @@ export default function InterviewView() {
             <form id="page-interview-answer-form" className="interview-answer-form">
               <input id="page-interview-answer-input" placeholder="Hoặc nhập câu trả lời theo cấu trúc STAR…" />
               <button type="submit" className="interview-send-button"><Send size={17} /><span>Kết thúc trả lời</span></button>
+              <button className="interview-end-session" type="button" disabled title="Kết thúc phiên phỏng vấn">Kết thúc</button>
             </form>
           </section>
         </div>
 
         <section className="interview-report-card" id="page-interview-report">
           <header><span className="interview-icon"><BarChart3 size={19} /></span><div><h3>Báo cáo phiên luyện tập</h3><p>Chỉ chấm các nội dung có trong câu trả lời của bạn.</p></div><strong id="page-report-total-score">—</strong></header>
+
+          <article className="interview-star-criteria">
+            <h4><Target size={16} /> Tiêu chí chấm điểm — Phương pháp STAR</h4>
+            <p>Mỗi câu trả lời được chấm theo 4 thành phần STAR (0–100 điểm mỗi phần). AI chỉ chấm những gì bạn thực sự nói — không bịa thêm, không giả định.</p>
+            <div className="interview-star-grid">
+              <div className="interview-star-item" data-star="S">
+                <strong>S — Situation</strong>
+                <span>Bối cảnh: Bạn đã mô tả tình huống, dự án, thời điểm chưa?</span>
+              </div>
+              <div className="interview-star-item" data-star="T">
+                <strong>T — Task</strong>
+                <span>Nhiệm vụ: Vai trò và trách nhiệm cụ thể của bạn là gì?</span>
+              </div>
+              <div className="interview-star-item" data-star="A">
+                <strong>A — Action</strong>
+                <span>Hành động: Bạn đã trực tiếp làm gì để giải quyết vấn đề?</span>
+              </div>
+              <div className="interview-star-item" data-star="R">
+                <strong>R — Result</strong>
+                <span>Kết quả: Đạt được gì? Có số liệu cụ thể không (%, số lượng)?</span>
+              </div>
+            </div>
+          </article>
+
           <div id="page-report-star-breakdown" className="interview-score-breakdown" />
           <div className="interview-report-columns"><article><h4><Check size={16} /> Điểm mạnh</h4><ul id="page-report-strengths-list" /></article><article><h4><Star size={16} /> Cần cải thiện</h4><ul id="page-report-improvements-list" /></article></div>
           <article className="interview-recommendations"><h4><Sparkles size={16} /> Gợi ý luyện tập tiếp</h4><ul id="page-report-recommendations-list" /></article>
