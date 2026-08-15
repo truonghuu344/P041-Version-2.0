@@ -6,11 +6,25 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
+# pyrefly: ignore [missing-import]
 from src.api.routes import router
+
+# pyrefly: ignore [missing-import]
+from src.api.v2.job_recommendations import router as v2_job_recommendations_router
+
+# pyrefly: ignore [missing-import]
 from src.config import get_settings
+
+# pyrefly: ignore [missing-import]
 from src.core.errors import PipelineError
+
+# pyrefly: ignore [missing-import]
 from src.db.database import engine, init_db
+
+# pyrefly: ignore [missing-import]
 from src.middleware.security import ApiProtectionMiddleware
+
+# pyrefly: ignore [missing-import]
 from src.services.job_rag import sync_market_jobs_safely
 
 
@@ -57,6 +71,7 @@ app.add_middleware(
 )
 
 app.include_router(router, prefix="/api/v1")
+app.include_router(v2_job_recommendations_router, prefix="/api/v2")
 
 
 @app.exception_handler(PipelineError)
