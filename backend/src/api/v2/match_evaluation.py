@@ -52,11 +52,11 @@ router = APIRouter(prefix="/v2/matches", tags=["Match Evaluation V2"])
 # ── Label mapping cho 5 tiêu chí chuẩn ───────────────────────────────────────
 
 _CRITERION_LABELS: dict[str, str] = {
-    "required_skills":         "Kỹ năng bắt buộc",
-    "relevant_experience":     "Kinh nghiệm liên quan",
-    "education":               "Học vấn",
-    "preferred_skills":        "Kỹ năng ưu tiên",
-    "domain_responsibilities": "Domain & Trách nhiệm",
+    "CRIT_REQUIRED_SKILL":         "Kỹ năng bắt buộc",
+    "CRIT_EXPERIENCE":             "Kinh nghiệm liên quan",
+    "CRIT_EDUCATION":              "Học vấn",
+    "CRIT_PREFERRED_SKILL":        "Kỹ năng ưu tiên",
+    "CRIT_DOMAIN":                 "Domain & Trách nhiệm",
 }
 
 _CONFIDENCE_THRESHOLDS = {"high": 0.80, "medium": 0.55, "low": 0.35}
@@ -207,6 +207,15 @@ async def get_match_gaps(
         )
     ).scalars().all()
 
+    _REQ_TYPE_TO_CRIT = {
+        "JD_REQUIRED_SKILL": "CRIT_REQUIRED_SKILL",
+        "JD_EXPERIENCE": "CRIT_EXPERIENCE",
+        "JD_RESPONSIBILITY": "CRIT_EXPERIENCE",
+        "JD_EDUCATION": "CRIT_EDUCATION",
+        "JD_PREFERRED_SKILL": "CRIT_PREFERRED_SKILL",
+        "JD_DOMAIN": "CRIT_DOMAIN",
+    }
+
     # Chuẩn bị input cho gap_priority_service
     reqs_for_service = [
         {
@@ -215,7 +224,7 @@ async def get_match_gaps(
             "mandatory": r.mandatory,
             "priority": r.priority,
             "status": r.status or "UNCERTAIN",
-            "criterion_id": (r.payload_json or {}).get("criterion_id") or r.requirement_type,
+            "criterion_id": (r.payload_json or {}).get("criterion_id") or _REQ_TYPE_TO_CRIT.get(r.requirement_type, r.requirement_type),
             "criterion_score": r.criterion_score,
             "payload_json": r.payload_json or {},
         }
@@ -323,11 +332,22 @@ async def get_criterion_requirements(
         )
     ).scalars().all()
 
+    _REQ_TYPE_TO_CRIT = {
+        "JD_REQUIRED_SKILL": "CRIT_REQUIRED_SKILL",
+        "JD_EXPERIENCE": "CRIT_EXPERIENCE",
+        "JD_RESPONSIBILITY": "CRIT_EXPERIENCE",
+        "JD_EDUCATION": "CRIT_EDUCATION",
+        "JD_PREFERRED_SKILL": "CRIT_PREFERRED_SKILL",
+        "JD_CERTIFICATION": "CRIT_PREFERRED_SKILL",
+        "JD_LANGUAGE": "CRIT_PREFERRED_SKILL",
+        "JD_DOMAIN": "CRIT_DOMAIN",
+    }
+
     # Lọc theo criterion_id (lưu trong payload_json hoặc requirement_type)
     filtered = [
         r for r in all_reqs
         if (r.payload_json or {}).get("criterion_id") == criterion_id
-        or r.requirement_type == criterion_id
+        or _REQ_TYPE_TO_CRIT.get(r.requirement_type, r.requirement_type) == criterion_id
     ]
 
     total = len(filtered)
