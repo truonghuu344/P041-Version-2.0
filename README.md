@@ -320,23 +320,30 @@ git pull --rebase origin develop
 
 #### Khi hoàn thành một phần chức năng
 
-Chạy kiểm tra trước, từ root project:
+**Bắt buộc chạy từ root project trước khi push. Dừng lại, không commit/push nếu bất kỳ lệnh nào báo lỗi:**
 
 ```powershell
+# 1) Kiểm tra file thay đổi và lỗi whitespace
 git status
 git diff --check
 
+# 2) Backend: sai import/cấu trúc Python sẽ bị Ruff chặn
 ruff check backend/src backend/tests
 $env:APP_ENV="test"
 $env:GEMINI_API_KEY="test-key"
 $env:PYTHONPATH="backend"
 pytest backend/tests -v --tb=short
 
+# 3) Frontend: lỗi TypeScript hoặc build sẽ bị chặn
 cd frontend
 npm.cmd run typecheck
 npm.cmd run build
 cd ..
 ```
+
+Kết quả đạt: `ruff` báo `All checks passed!`, `pytest` không có `FAILED`, `typecheck` và `build` exit thành công, `git diff --check` không có dòng `error`. Cảnh báo `LF will be replaced by CRLF` trên Windows không phải lỗi.
+
+Local check không tự chặn lệnh `git push`; member phải tuân thủ checklist trên. GitHub Actions chạy lại cùng kiểm tra khi tạo Pull Request, và branch protection phải đặt các job `lint-and-test` và `frontend-ci` là **Required** để chặn merge khi code sai cấu trúc hoặc test fail.
 
 Chỉ stage những file thuộc phần việc của mình; không dùng `git add .` nếu `git status` có file của member khác:
 
