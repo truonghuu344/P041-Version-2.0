@@ -3,7 +3,8 @@ from __future__ import annotations
 import asyncio
 import base64
 import logging
-from typing import Any, Callable, Coroutine
+from collections.abc import Callable, Coroutine
+from typing import Any
 
 from deepgram import DeepgramClient, LiveOptions, LiveTranscriptionEvents
 

@@ -328,7 +328,7 @@ class VoiceInterviewOrchestrator:
                 timeout=30,
             )
             return response.text or None
-        except asyncio.TimeoutError:
+        except TimeoutError:
             logger.warning("Gemini timed out after 30s")
             return None
         except Exception as exc:
@@ -374,7 +374,7 @@ class VoiceInterviewOrchestrator:
             "experience": "Bạn có thể kể về một dự án hoặc kinh nghiệm nổi bật nhất của mình không?",
             "position_knowledge": "Bạn biết những gì về vị trí này?",
             "company_knowledge": "Bạn hiểu gì về công ty chúng tôi?",
-            "closing": f"Cảm ơn bạn đã dành thời gian cho buổi phỏng vấn thử hôm nay. Chúc bạn may mắn!",
+            "closing": "Cảm ơn bạn đã dành thời gian cho buổi phỏng vấn thử hôm nay. Chúc bạn may mắn!",
         }
         fallbacks_en = {
             "greeting": f"Hello! I'm Career Buddy's interview assistant. Today we'll have a mock interview for the {self.jd_title} position. Are you ready?",

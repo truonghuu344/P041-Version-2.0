@@ -20,7 +20,6 @@ from src.db.models import (
     InterviewReport,
     InterviewSession,
     UsageEvent,
-    User,
 )
 from src.services.interview_service import (
     evaluate_answer_and_check_followup,
