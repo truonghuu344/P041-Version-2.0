@@ -16,8 +16,10 @@ os.environ["GEMINI_API_KEY"] = ""
 os.environ["GOOGLE_API_KEY"] = ""
 os.environ["MAX_REQUEST_BODY_MB"] = "22"
 
+from src.config import Settings
 from src.db.database import Base, get_db
 from src.main import app
+from src.services import job_rag
 
 # Tuyệt đối không dùng DATABASE_URL của development/production trong test.
 # SQLite in-memory cô lập hoàn toàn nên drop_all không thể xóa dữ liệu người dùng.
@@ -54,11 +56,30 @@ async def dispose_test_database_engine():
 
 
 @pytest_asyncio.fixture(scope="function", autouse=True)
-async def setup_database():
+async def setup_database(monkeypatch):
     """Tự động tạo bảng sạch trước mỗi test case và dọn dẹp sau khi test xong."""
     async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
+    # Job RAG creates sessions outside FastAPI's get_db dependency. Replace
+    # its singleton in every test so pytest remains offline and never opens
+    # the DATABASE_URL configured in a developer's .env file.
+    rag_service = job_rag.MarketJobRAGService(
+        settings=Settings(
+            vector_search_enabled=True,
+            vector_embedding_provider="hashing",
+            vector_dimensions=256,
+            vector_auto_sync=True,
+        ),
+        embedder=job_rag.HashingEmbeddingProvider(256),
+        session_factory=TestingSessionLocal,
+    )
+    cached_get_market_job_rag = job_rag.get_market_job_rag
+    cached_get_market_job_rag.cache_clear()
+    monkeypatch.setattr(job_rag, "get_market_job_rag", lambda: rag_service)
+
     yield
+    cached_get_market_job_rag.cache_clear()
     async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
 

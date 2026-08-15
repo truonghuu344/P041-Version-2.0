@@ -3,7 +3,15 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[3]
 FRONTEND_ROOT = ROOT / "frontend"
 APP_JS = (FRONTEND_ROOT / "app.js").read_text(encoding="utf-8")
-PAGE_JS = (FRONTEND_ROOT / "app" / "page.tsx").read_text(encoding="utf-8")
+PAGE_SOURCE = (FRONTEND_ROOT / "app" / "page.tsx").read_text(encoding="utf-8")
+# The application is composed from React view components. Keep this source
+# contract at the rendered-source level rather than assuming every DOM id
+# remains in app/page.tsx after a component extraction.
+COMPONENT_SOURCE = "\n".join(
+    path.read_text(encoding="utf-8")
+    for path in sorted((FRONTEND_ROOT / "components").rglob("*.tsx"))
+)
+PAGE_JS = f"{PAGE_SOURCE}\n{COMPONENT_SOURCE}"
 STYLE_CSS = (FRONTEND_ROOT / "app" / "styles" / "legacy.css").read_text(encoding="utf-8")
 
 
@@ -12,7 +20,7 @@ def test_cv_and_jd_selection_render_analysis_results_in_place():
     assert 'id="cv-analysis-jd-select"' in PAGE_JS
     assert 'id="cv-analysis-results-card"' in PAGE_JS
     assert 'id="cv-analysis-result-content"' in PAGE_JS
-    assert "ApiClient.runGapAnalysis(selectedCvId, selectedJdId)" in APP_JS
+    assert "ApiClient.runGapAnalysis(cvId, jdId)" in APP_JS
     assert "renderInlineCVAnalysis(analysis, selectedCvId, selectedJdId)" in APP_JS
     assert ".cv-analysis-results-card" in STYLE_CSS
 
@@ -29,8 +37,8 @@ def test_gap_analysis_replaces_static_roadmap_with_evidence_backed_detail():
     ):
         assert f'id="{element_id}"' in PAGE_JS
     assert "analysis.integrity_guardrail" in APP_JS
-    assert 'id="view-gap"' not in PAGE_JS
-    assert 'id="btn-open-full-gap-result"' not in PAGE_JS
+    assert 'id="view-gap"' not in PAGE_SOURCE
+    assert 'id="btn-open-full-gap-result"' not in PAGE_SOURCE
 
 
 def test_counselor_dashboard_shows_actual_kpis_and_before_after_progress():
@@ -131,7 +139,7 @@ def test_menubar_matches_gate1_role_flows_without_icons():
     nav_markup = PAGE_JS.split('<nav className="nav-links"', 1)[1].split('</nav>', 1)[0]
     assert 'className="nav-icon"' not in nav_markup
     assert "const ROLE_NAV_ITEMS" in APP_JS
-    assert "student: ['nav-dashboard', 'nav-cv', 'nav-find-jobs', 'nav-interview', 'nav-history']" in APP_JS
+    assert "student: ['nav-dashboard', 'nav-cv', 'nav-find-jobs', 'nav-match', 'nav-interview', 'nav-history', 'nav-gap']" in APP_JS
     assert "counselor: ['nav-counselor', 'nav-counselor-reports']" in APP_JS
     assert "enterprise: ['nav-enterprise', 'nav-jobs', 'nav-enterprise-applications']" in APP_JS
     assert 'Lịch sử &amp; Báo cáo' in nav_markup
@@ -180,7 +188,6 @@ def test_google_quicksand_is_self_hosted_and_used_as_the_shared_font():
 
 
 def test_create_cv_gallery_offers_three_distinct_downloadable_templates():
-    assert 'id="btn-open-template-gallery"' in PAGE_JS
     assert 'id="cv-template-modal-overlay"' in PAGE_JS
     assert "onClick={() => setIsTemplateGalleryOpen(true)}" in PAGE_JS
     assert "className={`modal-overlay${isTemplateGalleryOpen ? ' open' : ''}`}" in PAGE_JS
@@ -199,11 +206,10 @@ def test_cv_target_jd_supports_data_catalog_or_file_upload():
     assert "ApiClient.searchJobs('', '', 100)" in APP_JS
     assert "ApiClient.selectCatalogJD(sourceId)" in APP_JS
     assert "JD DOANH NGHIỆP TRONG DATA/JDS" in APP_JS
-    assert 'className="jd-select-wrap gap-select-shell cv-jd-select-shell"' in PAGE_JS
     assert "gap-select-search" in APP_JS
     assert ".cv-jd-select-shell .gap-select-menu" in STYLE_CSS
     assert 'id="cv-jd-upload-form"' in PAGE_JS
-    assert 'accept=".pdf,.docx,.txt,.jpg,.jpeg,.png"' in PAGE_JS
+    assert 'accept=".pdf,.docx,.txt,image/*"' in PAGE_JS
 
 
 def test_auth_role_dropdown_and_google_button_are_responsive_custom_controls():

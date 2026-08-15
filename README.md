@@ -183,3 +183,195 @@ bash scripts/_pyrun.sh scripts/log_manual.py --tool chatgpt --prompt "What you a
 ## 📄 License
 
 MIT — Sử dụng tự do cho mục đích giáo dục.
+
+## 🧑‍💻 Chuẩn hoá môi trường Development
+
+Tất cả thành viên dùng cùng major version:
+
+| Công cụ | Phiên bản |
+|---|---|
+| Node.js | `20.x` LTS |
+| npm | Đi kèm Node 20 |
+| Python | `3.12.x` |
+| Docker Desktop | Stable mới nhất |
+
+Không dùng Node 24. Nếu nâng version phải cập nhật đồng thời Local + Docker + CI.
+
+### 1. Cài Node 20
+
+Tải `nvm-setup.exe` tại [NVM for Windows](https://github.com/coreybutler/nvm-windows/releases/latest). Sau khi cài, đóng và mở lại VS Code/Terminal, rồi chạy:
+
+```powershell
+nvm install 20
+nvm use 20
+node -v
+npm.cmd -v
+```
+
+Yêu cầu: `node -v` trả về `v20.x.x`.
+
+Nếu PowerShell báo `node is not recognized`, thử:
+
+```powershell
+$env:Path += ";C:\nvm4w;C:\nvm4w\nodejs"
+node -v
+```
+
+> Đường dẫn trên chỉ áp dụng khi NVM của máy được cài tại `C:\nvm4w`. Nếu vẫn lỗi, chạy `nvm root` để kiểm tra thư mục NVM thực tế, sau đó đóng và mở lại VS Code/Terminal.
+
+Nếu `node` hoặc `npm.cmd` báo `is not recognized` trong một terminal mới (kể cả khi prompt đang hiển thị `(.venv)`), đây là lỗi `Path` của NVM, không phải lỗi Python virtual environment. Chạy lại theo đúng thứ tự:
+
+```powershell
+nvm use 20
+where.exe node
+where.exe npm
+node -v
+npm.cmd -v
+```
+
+Nếu `npm.cmd` vẫn không được nhận diện và NVM nằm ở `C:\nvm4w`, thêm Path tạm thời cho terminal hiện tại rồi kiểm tra lại:
+
+```powershell
+$env:Path += ";C:\nvm4w;C:\nvm4w\nodejs"
+node -v
+npm.cmd -v
+```
+
+Khi các lệnh đã trả version, chạy lại `npm.cmd run typecheck` và `npm.cmd run build`. Đóng hoàn toàn VS Code/PowerShell và mở lại để Windows nhận Path lâu dài.
+
+### 2. Cài Python 3.12
+
+Tại root project:
+
+```powershell
+python --version
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+
+python -m pip install --upgrade pip
+python -m pip install -r backend\requirements.txt
+```
+
+Yêu cầu: `Python 3.12.x`.
+
+### 3. Cài Frontend
+
+```powershell
+cd frontend
+
+npm.cmd ci
+npm.cmd run typecheck
+npm.cmd run build
+
+cd ..
+```
+
+Cả `typecheck` và `build` phải thành công.
+
+### 4. Trước khi tạo Pull Request
+
+Backend:
+
+```powershell
+ruff check backend/src backend/tests
+
+$env:APP_ENV="test"
+$env:GEMINI_API_KEY="test-key"
+$env:PYTHONPATH="backend"
+
+pytest backend/tests -v --tb=short
+```
+
+Frontend:
+
+```powershell
+cd frontend
+npm.cmd run typecheck
+npm.cmd run build
+cd ..
+```
+
+Nếu tất cả đều thành công:
+
+```powershell
+git status
+```
+
+→ Commit trên feature branch → tạo Pull Request → GitHub CI sẽ kiểm tra lại trên môi trường sạch.
+
+### 5. Quy trình commit và push cho từng member
+
+Mỗi member dùng branch riêng, không push trực tiếp `main`/`develop`.
+
+**Trước khi commit và push, copy nguyên khối này tại root project:**
+
+```powershell
+# 1. Kiểm tra code
+git diff --check
+ruff check backend/src backend/tests
+$env:APP_ENV="test"; $env:GEMINI_API_KEY="test-key"; $env:PYTHONPATH="backend"
+pytest backend/tests -v --tb=short
+cd frontend
+npm.cmd run typecheck
+npm.cmd run build
+cd ..
+
+# 2. Commit đúng file của mình
+git status
+git add <file-1> <file-2>
+git diff --cached --check
+git commit -m "feat: mo-ta-tinh-nang"
+
+# 3. Push branch của mình
+git push -u origin feat/ten-tinh-nang
+```
+
+Chỉ push khi mọi lệnh trên pass. Cảnh báo `LF will be replaced by CRLF` không phải lỗi. Sau push, tạo PR `feat/ten-tinh-nang` → `develop`; chỉ merge khi GitHub CI xanh.
+
+### Xử lý lỗi thường gặp khi chạy test
+
+#### `pgvector RAG unavailable` kèm `ConnectionRefusedError: [WinError 1225]`
+
+**Triệu chứng:** `pytest` log `pgvector RAG unavailable; using deterministic catalog fallback`, sau đó các test Job Search/RAG trả về `0` job hoặc `0/98` JD.
+
+**Nguyên nhân:** Job RAG từng tạo database session riêng, không đi qua FastAPI `get_db` override của pytest; vì vậy nó cố kết nối `DATABASE_URL` trong `.env` (ví dụ Neon/local PostgreSQL) thay vì SQLite in-memory của test.
+
+**Cách xử lý:** Pull phiên bản mới nhất. `backend/tests/conftest.py` đã thay singleton Job RAG bằng SQLite + hashing embedding trong từng test. Không đổi `DATABASE_URL` production và không cần chạy Neon/Docker chỉ để chạy pytest.
+
+```powershell
+git pull
+.\.venv\Scripts\Activate.ps1
+$env:APP_ENV="test"
+$env:GEMINI_API_KEY="test-key"
+$env:PYTHONPATH="backend"
+pytest backend/tests/test_job_rag.py backend/tests/test_api/test_job_search.py -v --tb=short
+```
+
+Nếu cảnh báo này xuất hiện khi **chạy ứng dụng** (không phải pytest), RAG đang fallback về tìm kiếm catalog nên ứng dụng vẫn có thể tìm việc. Kiểm tra database service trước:
+
+```powershell
+docker compose up -d db backend
+docker compose ps
+Invoke-WebRequest http://localhost:8000/ready
+```
+
+#### Catalog JD trả về `0` dù `data/jds/raw` có dữ liệu
+
+**Triệu chứng:** `test_enterprise_job_catalog_is_backed_by_raw_jd_files` báo `assert 0 == 98`, kéo theo Job Search/RAG trả danh sách rỗng.
+
+**Nguyên nhân:** Một số công cụ tạo thư mục `backend/data` rỗng. Phiên bản cũ ưu tiên mọi thư mục `backend/data`, nên bỏ qua catalog thật tại root project: `data/jds/raw` và `data/clean/jds_clean.json`.
+
+**Cách xử lý:** Pull phiên bản mới nhất. `job_catalog.py` chỉ dùng `backend/data` trong Docker khi thư mục đó có đủ file catalog; local sẽ tự dùng dữ liệu tại root project. Không di chuyển hoặc sao chép 98 JD thủ công.
+
+Kiểm tra dữ liệu local:
+
+```powershell
+(Get-ChildItem data\jds\raw -Filter "JD-*.html" -File).Count
+Test-Path data\clean\jds_clean.json
+```
+
+Kết quả cần là `98` và `True`. Sau đó chạy lại test Job Search/RAG.
+
+#### `test_ui_contracts.py` báo thiếu `id="..."` sau khi frontend chuyển sang React component
+
+Đây là test contract cũ đang đọc trực tiếp `frontend/app.js` hoặc một file page cũ, trong khi UI mới đã tách thành component React. Không chép lại markup cũ chỉ để làm test xanh. Cập nhật test để kiểm tra component/view hiện tại hoặc thay bằng UI/E2E test, rồi xác nhận luồng thật bằng `npm.cmd run typecheck` và `npm.cmd run build`.
