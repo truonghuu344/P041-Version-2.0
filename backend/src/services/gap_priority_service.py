@@ -62,7 +62,7 @@ def _resolve_action_type(status: str, mandatory: bool, criterion_id: str) -> Act
     if status in ("PARTIALLY_SUPPORTED",):
         return ActionType.EVIDENCE_WEAK
     if status in ("NOT_FOUND", "MISSING"):
-        if criterion_id in ("preferred_skills",):
+        if criterion_id in ("CRIT_PREFERRED_SKILL",):
             return ActionType.PREFERRED_MISSING
         return ActionType.SKILL_MISSING
     return ActionType.UNCERTAIN

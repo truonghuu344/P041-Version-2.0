@@ -150,7 +150,10 @@ def canonical_skill(value: str) -> str:
 
 
 def _sentences(text: str) -> list[str]:
-    parts = re.split(r"[\r\n]+|(?<=[.!?;])\s+", text or "")
+    # Nối các dòng bị ngắt giữa câu: Thay newline bằng khoảng trắng nếu
+    # dòng trước không kết thúc bằng dấu câu và dòng sau không bắt đầu bằng bullet/số.
+    healed = re.sub(r"(?<![.!?;:])[\r\n]+(?![ \t]*[•*\-–—\d.)])", " ", text or "")
+    parts = re.split(r"[\r\n]+|(?<=[.!?;])\s+", healed)
     return _unique(re.sub(r"^[\s•*\-–—\d.)]+", "", part).strip() for part in parts if part.strip())
 
 
@@ -506,7 +509,7 @@ def _build_atomic_requirements(parsed: dict[str, Any], raw_text: str) -> list[di
         name = str(item["name"])
         add(
             "JD_REQUIRED_SKILL",
-            str(item.get("evidence_quote") or name),
+            name,
             mandatory=True,
             priority="critical" if item.get("is_exclusion") else "high",
             normalized_value=name,
@@ -522,7 +525,7 @@ def _build_atomic_requirements(parsed: dict[str, Any], raw_text: str) -> list[di
             continue
         add(
             "JD_PREFERRED_SKILL",
-            str(item.get("evidence_quote") or name),
+            name,
             mandatory=False,
             priority="low",
             normalized_value=name,
