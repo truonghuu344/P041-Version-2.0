@@ -10,6 +10,7 @@ from src.api.v1.counselor import router as counselor_router
 from src.api.v1.cvs import router as cvs_router
 from src.api.v1.enterprise import router as enterprise_router
 from src.api.v1.interviews import router as interviews_router
+from src.api.v1.ws_interview import router as ws_interview_router
 from src.api.v1.jds import router as jds_router
 from src.api.v1.jobs import router as jobs_router
 from src.api.v1.matches import router as matches_router
@@ -40,6 +41,7 @@ router.include_router(counselor_router)
 router.include_router(enterprise_router)
 router.include_router(metrics_router)
 router.include_router(matches_router)
+router.include_router(ws_interview_router)
 
 
 @router.post("/chat", response_model=ChatResponse, tags=["Legacy Agent"])

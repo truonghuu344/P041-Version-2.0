@@ -1869,7 +1869,7 @@ function startAppLogic() {
           <h4>${escapeHtml(job.title || 'Vị trí chưa đặt tên')}</h4>
           <p style="margin-top: 4px; color: var(--text-secondary); font-weight: 600;">${escapeHtml(job.company || '')}</p>
           <div style="margin-top: 16px; font-size: 13px; color: var(--text-primary); line-height: 1.6;">
-            ${formatTextToHTML(job.description || 'Chưa có mô tả công việc')}
+            ${escapeHtml(job.description || 'Chưa có mô tả công việc').replace(/\n/g, '<br>')}
           </div>
         </div>
       `;
@@ -3514,27 +3514,7 @@ TÊN CÔNG TY:
       }
       enhanceGapSelect(pageSelectIntCv);
       enhanceGapSelect(pageSelectIntJd);
-      const sessions = await ApiClient.listInterviews();
-      const ongoing = sessions.find(session => session.status === 'ongoing');
-      let resumeButton = document.getElementById('page-resume-interview');
-      if (ongoing && !resumeButton && pageSetupSec) {
-        resumeButton = document.createElement('button');
-        resumeButton.id = 'page-resume-interview';
-        resumeButton.type = 'button';
-        resumeButton.className = 'btn-outline full-width';
-        resumeButton.textContent = `Tiếp tục phiên đang lưu (${ongoing.current_question_index + 1}/${ongoing.total_questions})`;
-        resumeButton?.addEventListener('click', async () => {
-          try {
-            const question = await ApiClient.resumeInterview(ongoing.id);
-            pageSessionId = ongoing.id;
-            pageSetupSec.style.display = 'flex'; pageChatSec.style.display = 'flex';
-            pageChatHistory.innerHTML = '';
-            appendPageMessage('interviewer', question.follow_up_question || question.question_text);
-            pageProgressText.textContent = `Câu hỏi ${question.question_index + 1} / ${ongoing.total_questions}`;
-          } catch (err) { showToast(err.message, 'error'); }
-        });
-        pageSetupSec.appendChild(resumeButton);
-      }
+      await ApiClient.listInterviews();
     } catch (err) {
       showToast(`Lỗi lấy dữ liệu CV/JD: ${err.message}`, 'error');
     }
@@ -3549,23 +3529,37 @@ TÊN CÔNG TY:
         return;
       }
 
+      pageBtnStartInt.disabled = true;
+      if (pageSetupSec) pageSetupSec.style.display = 'flex';
+      if (pageReportSec) pageReportSec.style.display = 'none';
+      if (pageChatSec) pageChatSec.style.display = 'flex';
+      if (pageChatHistory) pageChatHistory.innerHTML = '';
+
+      const loadingDiv = document.createElement('div');
+      loadingDiv.className = 'interview-message interview-message-ai';
+      loadingDiv.innerHTML = '<strong>Career Buddy</strong><p>Chuẩn bị vào phòng phỏng vấn...</p>';
+      if (pageChatHistory) pageChatHistory.appendChild(loadingDiv);
+
+      const slowTimer = setTimeout(() => {
+        const p = loadingDiv.querySelector('p');
+        if (p) p.textContent = 'Bạn đợi mình chút nha...';
+      }, 5000);
+
       try {
-        showToast('⏳ AI đang tạo bộ câu hỏi phỏng vấn thử...', 'info');
-        const selectedLanguage = document.getElementById('interview-language')?.value;
-        const language = selectedLanguage === 'EN' ? 'en' : selectedLanguage === 'VI' ? 'vi' : 'bilingual';
+        const language = document.getElementById('interview-language')?.value || 'vi';
         const sessionData = await ApiClient.startInterview(cvId, jdId, 5, { language, mode: 'voice' });
+        clearTimeout(slowTimer);
 
         pageSessionId = sessionData.session_id;
-        if (pageSetupSec) pageSetupSec.style.display = 'flex';
-        if (pageReportSec) pageReportSec.style.display = 'none';
-        if (pageChatSec) pageChatSec.style.display = 'flex';
-        if (pageChatHistory) pageChatHistory.innerHTML = '';
+        if (pageProgressText) pageProgressText.textContent = '';
 
-        appendPageMessage('interviewer', sessionData.question_text);
-        if (pageProgressText) pageProgressText.textContent = `Câu hỏi 1 / 5`;
-        showToast('🎙️ Phiên phỏng vấn thử đã bắt đầu!', 'success');
+        startVoiceSession(pageSessionId, language);
       } catch (err) {
-        showToast(`❌ Không thể bắt đầu phỏng vấn: ${err.message}`, 'error');
+        clearTimeout(slowTimer);
+        showToast(`Không thể bắt đầu phỏng vấn: ${err.message}`, 'error');
+        if (pageChatHistory) pageChatHistory.innerHTML = '';
+      } finally {
+        pageBtnStartInt.disabled = false;
       }
     });
   }
@@ -3575,7 +3569,12 @@ TÊN CÔNG TY:
     const isBot = sender === 'interviewer';
     const msgDiv = document.createElement('div');
     msgDiv.className = `interview-message ${isBot ? 'interview-message-ai' : 'interview-message-user'}`;
-    msgDiv.innerHTML = `<strong>${isBot ? 'Career Buddy đang hỏi' : 'Bạn'}</strong><p>${text}</p>`;
+    const label = document.createElement('strong');
+    label.textContent = isBot ? 'Career Buddy đang hỏi' : 'Bạn';
+    const p = document.createElement('p');
+    p.textContent = text;
+    msgDiv.appendChild(label);
+    msgDiv.appendChild(p);
     pageChatHistory.appendChild(msgDiv);
     pageChatHistory.scrollTop = pageChatHistory.scrollHeight;
   }
@@ -3598,54 +3597,270 @@ TÊN CÔNG TY:
   if (pageAnswerForm) {
     pageAnswerForm?.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const ansText = pageAnswerInput?.value.trim();
       if (!pageSessionId) return;
+
+      const ansText = voiceTranscriptParts.join(' ').trim() || pageAnswerInput?.value.trim();
       if (!ansText) {
         showToast('Hãy dùng mic hoặc nhập câu trả lời trước khi kết thúc.', 'warning');
         return;
       }
 
-      appendPageMessage('user', ansText);
+      stopVoiceRecording();
+      voiceConversationHistory.push({ sender: 'user', text: ansText });
       if (pageAnswerInput) pageAnswerInput.value = '';
 
-      try {
-        const res = await ApiClient.submitAnswer(pageSessionId, ansText);
-
-        if (res.follow_up_question) {
-          appendPageMessage('interviewer', `🔍 <em>Follow-up:</em> ${res.follow_up_question}`);
-        } else if (res.is_last_question) {
-          appendPageMessage('interviewer', res.question_text);
-          showToast('🎉 Hoàn thành phỏng vấn! Đang tải báo cáo STAR...', 'success');
-          setTimeout(() => loadPageSTARReport(pageSessionId), 1200);
-        } else {
-          appendPageMessage('interviewer', res.question_text);
-          if (pageProgressText) pageProgressText.textContent = `Câu hỏi ${res.question_index + 1} / 5`;
+      if (voiceWs && voiceWs.readyState === WebSocket.OPEN) {
+        voiceWs.send(JSON.stringify({ type: 'submit_answer', text: ansText }));
+        voiceTranscriptParts = [];
+      } else {
+        try {
+          const res = await ApiClient.submitAnswer(pageSessionId, ansText);
+          if (res.follow_up_question) {
+            appendPageMessage('interviewer', res.follow_up_question);
+          } else if (res.is_last_question) {
+            appendPageMessage('interviewer', res.question_text);
+            showToast('Hoàn thành phỏng vấn! Đang tải báo cáo STAR...', 'success');
+            setTimeout(() => loadPageSTARReport(pageSessionId), 1200);
+          } else {
+            appendPageMessage('interviewer', res.question_text);
+            if (pageProgressText) pageProgressText.textContent = `Câu hỏi ${res.question_index + 1} / 5`;
+          }
+        } catch (err) {
+          showToast(`Lỗi gửi câu trả lời: ${err.message}`, 'error');
         }
-      } catch (err) {
-        showToast(`❌ Lỗi gửi câu trả lời: ${err.message}`, 'error');
       }
     });
   }
 
-  document.getElementById('page-interview-voice')?.addEventListener('click', () => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      showToast('Trình duyệt này chưa hỗ trợ nhập giọng nói.', 'warning'); return;
+  /* ── Voice Interview WebSocket Client ─────────────────────── */
+  let voiceWs = null;
+  let voiceMediaStream = null;
+  let voiceMediaRecorder = null;
+  let voiceIsRecording = false;
+  let voiceTranscriptParts = [];
+  let voiceConversationHistory = [];
+  let voiceTimerInterval = null;
+  let voiceStartTime = null;
+  const MAX_INTERVIEW_MS = 10 * 60 * 1000;
+
+  function startVoiceSession(sessionId, language) {
+    const token = ApiClient.getToken();
+    const backendHost = (window.__CAREER_API_BASE_URL__ || '').match(/^https?:\/\/([^/]+)/)?.[1] || 'localhost:8000';
+    const wsProto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${wsProto}//${backendHost}/api/v1/ws/interview/${sessionId}?token=${encodeURIComponent(token)}`;
+
+    if (voiceWs) { voiceWs.close(); voiceWs = null; }
+    voiceWs = new WebSocket(wsUrl);
+    voiceTranscriptParts = [];
+    voiceConversationHistory = [];
+    startVoiceTimer();
+    const endBtn = document.querySelector('.interview-end-session');
+    if (endBtn) endBtn.disabled = false;
+
+    voiceWs.onmessage = (event) => {
+      let msg;
+      try { msg = JSON.parse(event.data); } catch { return; }
+      handleVoiceMessage(msg, language);
+    };
+    voiceWs.onerror = () => showToast('Lỗi kết nối voice interview.', 'error');
+    voiceWs.onclose = () => { stopVoiceTimer(); voiceWs = null; };
+  }
+
+  function handleVoiceMessage(msg, language) {
+    const sttIndicator = document.getElementById('page-interview-stt-indicator');
+    const sttPartialText = document.getElementById('stt-partial-text');
+
+    switch (msg.type) {
+      case 'status':
+        if (pageChatHistory) {
+          pageChatHistory.innerHTML = '';
+          const statusDiv = document.createElement('div');
+          statusDiv.className = 'interview-message interview-message-ai';
+          statusDiv.innerHTML = `<strong>Career Buddy</strong><p>${msg.message}</p>`;
+          pageChatHistory.appendChild(statusDiv);
+        }
+        break;
+
+      case 'ai_message': {
+        let aiText = msg.text || '';
+        if (aiText.trim().startsWith('{')) {
+          try { const j = JSON.parse(aiText); if (j && j.message) aiText = j.message; } catch (_e) { /* keep original */ }
+        }
+        voiceConversationHistory.push({ sender: 'interviewer', text: aiText });
+        if (pageChatHistory) {
+          pageChatHistory.innerHTML = '';
+          const aiDiv = document.createElement('div');
+          aiDiv.className = 'interview-message interview-message-ai';
+          const aiLabel = document.createElement('strong');
+          aiLabel.textContent = 'Career Buddy đang hỏi';
+          const aiP = document.createElement('p');
+          aiP.textContent = aiText;
+          aiDiv.appendChild(aiLabel);
+          aiDiv.appendChild(aiP);
+          pageChatHistory.appendChild(aiDiv);
+        }
+        if (msg.phase) {
+          const phaseLabels = { greeting: 'Lời chào', self_intro: 'Giới thiệu', experience: 'Kinh nghiệm', best_project: 'Dự án', technical: 'Kỹ năng', position_company: 'Vị trí & Công ty', jd_questions: 'Câu hỏi JD', closing: 'Kết thúc' };
+          if (pageProgressText) pageProgressText.textContent = phaseLabels[msg.phase] || msg.phase;
+        }
+        if (msg.audio) playAudioBase64(msg.audio);
+        break;
+      }
+
+      case 'transcript_partial':
+        if (sttIndicator) sttIndicator.style.display = 'flex';
+        if (sttPartialText) sttPartialText.textContent = msg.text;
+        break;
+
+      case 'transcript_final':
+        voiceTranscriptParts.push(msg.text);
+        if (sttPartialText) sttPartialText.textContent = voiceTranscriptParts.join(' ');
+        break;
+
+      case 'nudge':
+        showToast(msg.message, 'info');
+        break;
+
+      case 'auto_skip':
+        stopVoiceRecording();
+        if (voiceWs) voiceWs.send(JSON.stringify({ type: 'submit_answer', text: voiceTranscriptParts.join(' ') || '(không trả lời)' }));
+        voiceTranscriptParts = [];
+        break;
+
+      case 'ai_thinking':
+        if (pageChatHistory) {
+          pageChatHistory.innerHTML = '';
+          const thinkDiv = document.createElement('div');
+          thinkDiv.className = 'interview-message interview-message-ai';
+          thinkDiv.innerHTML = `<strong>Career Buddy</strong><p><em>Đang suy nghĩ...</em></p>`;
+          pageChatHistory.appendChild(thinkDiv);
+        }
+        break;
+
+      case 'session_complete':
+        stopVoiceRecording();
+        stopVoiceTimer();
+        if (pageChatHistory) {
+          pageChatHistory.innerHTML = '';
+          voiceConversationHistory.forEach(entry => {
+            const isBot = entry.sender === 'interviewer';
+            const div = document.createElement('div');
+            div.className = `interview-message ${isBot ? 'interview-message-ai' : 'interview-message-user'}`;
+            div.innerHTML = `<strong>${isBot ? 'Career Buddy' : 'Bạn'}</strong><p>${entry.text}</p>`;
+            pageChatHistory.appendChild(div);
+          });
+          pageChatHistory.scrollTop = pageChatHistory.scrollHeight;
+        }
+        { const eb = document.querySelector('.interview-end-session'); if (eb) eb.disabled = true; }
+        showToast('Hoàn thành phỏng vấn! Đang tải báo cáo STAR...', 'success');
+        setTimeout(() => loadPageSTARReport(pageSessionId), 1200);
+        break;
+
+      case 'error':
+        showToast(msg.message, 'error');
+        break;
     }
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'vi-VN'; recognition.interimResults = false;
+  }
+
+  function playAudioBase64(b64) {
+    try {
+      const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+      const blob = new Blob([bytes], { type: 'audio/mpeg' });
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      audio.onended = () => URL.revokeObjectURL(url);
+      audio.play().catch(() => {});
+    } catch { /* ignore playback errors */ }
+  }
+
+  async function startVoiceRecording() {
+    if (voiceIsRecording) return;
+    try {
+      voiceMediaStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, sampleRate: 16000 } });
+      voiceMediaRecorder = new MediaRecorder(voiceMediaStream, { mimeType: MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm' });
+      voiceIsRecording = true;
+      voiceTranscriptParts = [];
+
+      if (voiceWs) voiceWs.send(JSON.stringify({ type: 'start_recording' }));
+
+      const sttIndicator = document.getElementById('page-interview-stt-indicator');
+      const sttPartialText = document.getElementById('stt-partial-text');
+      if (sttIndicator) sttIndicator.style.display = 'flex';
+      if (sttPartialText) sttPartialText.textContent = 'Đang nghe...';
+
+      voiceMediaRecorder.ondataavailable = async (e) => {
+        if (e.data.size > 0 && voiceWs?.readyState === WebSocket.OPEN) {
+          const buf = await e.data.arrayBuffer();
+          const b64 = btoa(String.fromCharCode(...new Uint8Array(buf)));
+          voiceWs.send(JSON.stringify({ type: 'audio_chunk', data: b64 }));
+        }
+      };
+      voiceMediaRecorder.start(250);
+
+      const voiceButton = document.getElementById('page-interview-voice');
+      voiceButton?.classList.add('is-listening');
+    } catch (err) {
+      showToast('Không thể truy cập microphone. Hãy cấp quyền truy cập.', 'error');
+    }
+  }
+
+  function stopVoiceRecording() {
+    if (voiceMediaRecorder && voiceMediaRecorder.state !== 'inactive') {
+      voiceMediaRecorder.stop();
+    }
+    if (voiceMediaStream) {
+      voiceMediaStream.getTracks().forEach(t => t.stop());
+      voiceMediaStream = null;
+    }
+    voiceIsRecording = false;
+    voiceMediaRecorder = null;
+
+    if (voiceWs) voiceWs.send(JSON.stringify({ type: 'stop_recording' }));
     const voiceButton = document.getElementById('page-interview-voice');
-    voiceButton?.classList.add('is-listening');
-    recognition.onresult = event => { pageAnswerInput.value = event.results[0][0].transcript; };
-    recognition.onerror = () => showToast('Không nhận diện được giọng nói.', 'error');
-    recognition.onend = () => voiceButton?.classList.remove('is-listening');
-    recognition.start();
+    voiceButton?.classList.remove('is-listening');
+    const sttIndicator = document.getElementById('page-interview-stt-indicator');
+    if (sttIndicator) sttIndicator.style.display = 'none';
+  }
+
+  document.getElementById('page-interview-voice')?.addEventListener('click', () => {
+    if (voiceIsRecording) {
+      stopVoiceRecording();
+    } else {
+      startVoiceRecording();
+    }
   });
+
+  document.querySelector('.interview-end-session')?.addEventListener('click', () => {
+    if (voiceWs && voiceWs.readyState === WebSocket.OPEN) {
+      stopVoiceRecording();
+      voiceWs.send(JSON.stringify({ type: 'end_session' }));
+      const btn = document.querySelector('.interview-end-session');
+      if (btn) btn.disabled = true;
+    }
+  });
+
+  function startVoiceTimer() {
+    voiceStartTime = Date.now();
+    const timerEl = document.getElementById('page-interview-timer');
+    voiceTimerInterval = setInterval(() => {
+      const elapsed = Date.now() - voiceStartTime;
+      const mins = Math.floor(elapsed / 60000);
+      const secs = Math.floor((elapsed % 60000) / 1000);
+      if (timerEl) timerEl.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')} / 10:00`;
+      if (elapsed >= MAX_INTERVIEW_MS && voiceWs) {
+        voiceWs.send(JSON.stringify({ type: 'submit_answer', text: voiceTranscriptParts.join(' ') || '' }));
+        stopVoiceTimer();
+      }
+    }, 1000);
+  }
+
+  function stopVoiceTimer() {
+    if (voiceTimerInterval) { clearInterval(voiceTimerInterval); voiceTimerInterval = null; }
+  }
 
   async function loadPageSTARReport(sessionId) {
     try {
       const report = await ApiClient.getInterviewReport(sessionId);
-      if (pageChatSec) pageChatSec.style.display = 'none';
       if (pageReportSec) pageReportSec.style.display = 'block';
 
       const totalScoreEl = document.getElementById('page-report-total-score');
@@ -6185,6 +6400,7 @@ if (document.readyState === 'loading') {
   const jdSelectSec  = document.getElementById('p1-jd-select-section');
   const jdTitleField = document.getElementById('p1-jd-title-field');
   const cvJdDropzone = document.getElementById('cv-jd-dropzone');
+  const jobSearchResults = document.getElementById('job-search-results');
 
   // ── Helper: check if CV is selected ──
   function hasCVSelected() {

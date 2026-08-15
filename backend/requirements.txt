@@ -41,10 +41,12 @@ langchain-google-genai>=4.0.0
 langgraph>=0.2.0                # Xử lý luồng hội thoại phỏng vấn AI phức tạp
 google-genai>=1.0.0
 
-# Database (uncomment as needed)
-# sqlalchemy>=2.0.0
-# alembic>=1.14.0
-# psycopg2-binary>=2.9.0
+# ==========================================
+# 5. VOICE INTERVIEW (Pipeline 3)
+# ==========================================
+deepgram-sdk>=3.0.0,<4.0.0      # Deepgram Nova-3 STT (streaming WebSocket)
+openai>=1.0.0                   # GPT-4o-mini cho voice conversation
+gTTS>=2.5.0                      # Google Translate TTS (miễn phí, hỗ trợ tiếng Việt tốt)
 
 # Vector stores: pgvector embeddings and Qdrant market-JD retrieval
 pgvector>=0.2.0
