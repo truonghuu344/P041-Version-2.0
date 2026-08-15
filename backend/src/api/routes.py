@@ -14,6 +14,7 @@ from src.api.v1.jds import router as jds_router
 from src.api.v1.jobs import router as jobs_router
 from src.api.v1.matches import router as matches_router
 from src.api.v1.metrics import router as metrics_router
+from src.api.v2.match_evaluation import router as match_evaluation_v2_router
 from src.models.schemas import (
     ChatRequest,
     ChatResponse,
@@ -40,6 +41,7 @@ router.include_router(counselor_router)
 router.include_router(enterprise_router)
 router.include_router(metrics_router)
 router.include_router(matches_router)
+router.include_router(match_evaluation_v2_router, prefix="/api")
 
 
 @router.post("/chat", response_model=ChatResponse, tags=["Legacy Agent"])
