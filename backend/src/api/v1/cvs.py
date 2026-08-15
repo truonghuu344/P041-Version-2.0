@@ -3,6 +3,7 @@ import os
 import uuid
 from io import BytesIO
 from time import perf_counter
+from typing import Literal
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from fastapi.responses import StreamingResponse
@@ -15,9 +16,10 @@ from src.core.security import get_current_user
 from src.db.database import get_db
 from src.db.models import CV, CVAnalysis, CVOptimizationDecision, DocumentArtifact, UsageEvent, User
 from src.models.schemas import CVBulkDeleteRequest, CVBulkDeleteResponse, CVOut, ManualCVCreate
+from src.services.cv_blocks import apply_cv_block_patches
 from src.services.cv_parser import extract_text_from_document, parse_cv_to_structured_json
 from src.services.file_security import FileSecurityError, scan_uploaded_file
-from src.services.pdf_export import build_cv_pdf
+from src.services.pdf_export import apply_accepted_rewrites, build_cv_pdf
 
 router = APIRouter(prefix="/cvs", tags=["CV Management"])
 logger = logging.getLogger(__name__)
@@ -98,6 +100,7 @@ async def upload_cv(
     file: UploadFile = File(...),
     title: str = Form(default=""),
     use_llm: bool = Form(default=True),
+    parse_mode: Literal["configured", "auto"] = Form(default="configured"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> CVOut:
@@ -134,9 +137,11 @@ async def upload_cv(
             status_code=400,
         )
 
-    # Structured JSON Parsing via LLM/Fallback
+    # Match CV uses auto mode: parse locally first and escalate to the LLM only
+    # when the deterministic extraction is not structured enough.
+    parse_policy: bool | Literal["auto"] = "auto" if parse_mode == "auto" else use_llm
     try:
-        parsed_json = await parse_cv_to_structured_json(raw_text, use_llm=use_llm)
+        parsed_json = await parse_cv_to_structured_json(raw_text, use_llm=parse_policy)
     except ValueError as exc:
         raise pipeline_error_from_message(str(exc), "EXTRACTION_001", status_code=422) from exc
 
@@ -162,7 +167,11 @@ async def upload_cv(
             user_id=current_user.id,
             event_name="cv_parse",
             duration_ms=round((perf_counter() - started_at) * 1000),
-            metadata_json={"use_llm": use_llm, "file_type": file_ext},
+            metadata_json={
+                "use_llm": bool(parsed_json.get("agent_metadata", {}).get("llm_called")),
+                "llm_policy": parse_mode,
+                "file_type": file_ext,
+            },
         )
     )
     try:
@@ -275,6 +284,8 @@ async def export_cv_pdf(
         raise HTTPException(status_code=404, detail="Không tìm thấy CV để xuất PDF.")
 
     accepted_texts: list[str] = []
+    accepted_replacements: list[tuple[str, str]] = []
+    accepted_block_patches: list[dict[str, str]] = []
     if analysis_id:
         analysis_result = await db.execute(
             select(CVAnalysis).where(
@@ -283,7 +294,8 @@ async def export_cv_pdf(
                 CVAnalysis.user_id == current_user.id,
             )
         )
-        if not analysis_result.scalar_one_or_none():
+        analysis = analysis_result.scalar_one_or_none()
+        if not analysis:
             raise HTTPException(status_code=404, detail="Kết quả tối ưu không thuộc CV này.")
         decision_result = await db.execute(
             select(CVOptimizationDecision)
@@ -294,9 +306,39 @@ async def export_cv_pdf(
             )
             .order_by(CVOptimizationDecision.suggestion_index)
         )
-        accepted_texts = [item.final_text for item in decision_result.scalars().all() if item.final_text]
+        suggestions = list(analysis.optimized_suggestions_json or [])
+        for decision in decision_result.scalars().all():
+            if not decision.final_text:
+                continue
+            source = suggestions[decision.suggestion_index] if decision.suggestion_index < len(suggestions) else {}
+            original = str(source.get("original_text") or "").strip()
+            block_id = str(source.get("block_id") or "").strip()
+            section = str(source.get("section") or "").strip()
+            if block_id and original and section:
+                accepted_block_patches.append(
+                    {
+                        "block_id": block_id,
+                        "section": section,
+                        "original_text": original,
+                        "optimized_text": decision.final_text,
+                    }
+                )
+            elif original:
+                accepted_replacements.append((original, decision.final_text))
+            else:
+                accepted_texts.append(decision.final_text)
 
-    parsed = cv.parsed_json or {}
+    parsed = dict(cv.parsed_json or {})
+    if accepted_block_patches:
+        parsed, _, invalid_block_ids = apply_cv_block_patches(parsed, accepted_block_patches)
+        if invalid_block_ids:
+            logger.warning(
+                "Bỏ qua patch CV không hợp lệ khi export; không append nội dung: %s",
+                ", ".join(block_id or "<empty>" for block_id in invalid_block_ids),
+            )
+    if accepted_replacements:
+        parsed, unmatched_texts = apply_accepted_rewrites(parsed, accepted_replacements)
+        accepted_texts.extend(unmatched_texts)
     template_name = template or parsed.get("template_name") or "classic"
     if template_name not in {"classic", "modern", "compact"}:
         raise HTTPException(status_code=422, detail="Template CV không hợp lệ.")

@@ -21,6 +21,15 @@ from src.services.pipeline_context import PIPELINE_VERSION, get_or_create_cv_sna
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/matches", tags=["CV-JD Match Jobs"])
 
+MATCH_PROGRESS = {
+    "PENDING": 5,
+    "PARSING": 20,
+    "EVALUATING": 65,
+    "FINALIZING": 90,
+    "COMPLETED": 100,
+    "FAILED": 100,
+}
+
 
 class MatchCreateRequest(BaseModel):
     candidate_id: str | None = None
@@ -43,6 +52,7 @@ class MatchJobResponse(BaseModel):
     match_id: str
     status: str
     current_step: str
+    progress_percent: int
     analysis_id: str | None = None
     final_score: float | None = None
     rating: str | None = None
@@ -84,6 +94,9 @@ async def _process_match(
                 rubric=rubric_config,
             )
             result["match_id"] = match_id
+            match.status = "FINALIZING"
+            match.current_step = "FINALIZING"
+            await db.commit()
             analysis = CVAnalysis(
                 user_id=user_id,
                 cv_id=cv_id,
@@ -197,7 +210,12 @@ async def start_match(
         autoflush=False,
     )
     background_tasks.add_task(_process_match, match.id, current_user.id, cv.id, jd.id, session_factory)
-    return MatchJobResponse(match_id=match.id, status=match.status, current_step=match.current_step)
+    return MatchJobResponse(
+        match_id=match.id,
+        status=match.status,
+        current_step=match.current_step,
+        progress_percent=MATCH_PROGRESS.get(match.current_step, 0),
+    )
 
 
 async def _owned_match(match_id: str, db: AsyncSession, user_id: str) -> MatchRun:
@@ -223,6 +241,7 @@ async def get_match(
         match_id=match.id,
         status=match.status,
         current_step=match.current_step,
+        progress_percent=MATCH_PROGRESS.get(match.current_step, 0),
         analysis_id=match.analysis_id,
         final_score=match.final_score,
         rating=match.rating,
