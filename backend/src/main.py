@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
 from src.api.routes import router
+from src.api.v2.match_evaluation import router as match_evaluation_v2_router
 from src.config import get_settings
 from src.core.errors import PipelineError
 from src.db.database import engine, init_db
@@ -57,6 +58,7 @@ app.add_middleware(
 )
 
 app.include_router(router, prefix="/api/v1")
+app.include_router(match_evaluation_v2_router, prefix="/api")
 
 
 @app.exception_handler(PipelineError)
