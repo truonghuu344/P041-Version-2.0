@@ -20,6 +20,10 @@ const nextConfig = {
         destination: `${apiProxyTarget}/api/v1/:path*`,
       },
       {
+        source: '/api/v2/:path*',
+        destination: `${apiProxyTarget}/api/v2/:path*`,
+      },
+      {
         source: '/backend-health',
         destination: `${apiProxyTarget}/health`,
       },

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CV Assistant – Nâng cấp CV và phỏng vấn</title>
+  <title>Career Assistant – Nâng cấp CV và phỏng vấn</title>
   <meta name="description" content="Công cụ hỗ trợ cho CV, phỏng vấn thử, và tư vấn nghề nghiệp – được thiết kế cho sinh viên." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -128,7 +128,7 @@
     <div class="navbar-inner">
       <a href="#" class="brand" id="brand-logo">
         <span class="brand-icon">CV</span>
-        <span class="brand-name">CV Assistant</span>
+        <span class="brand-name">Career Assistant</span>
       </a>
       <nav class="nav-links" id="nav-links">
         <a href="#" class="nav-link active" id="nav-dashboard"><span class="nav-icon">🚀</span> <span class="nav-text" data-i18n="nav-dashboard">Dashboard</span></a>
@@ -687,17 +687,64 @@
     <section class="app-view" id="view-find-jobs">
       <div class="page-container job-search-page">
         <div class="page-header job-search-heading">
-          <div class="page-badge">AI JOB DISCOVERY // ENTERPRISE CATALOG</div>
-          <h1 class="page-title">🔎 Tìm Việc Phù Hợp</h1>
-          <p class="page-sub">Khám phá JD thật từ doanh nghiệp và để AI xếp hạng công việc theo CV của bạn.</p>
+          <div class="page-badge">AI JOB RECOMMENDATIONS // TOP 10</div>
+          <h1 class="page-title">Công việc phù hợp với CV</h1>
+          <p class="page-sub">Phân tích CV theo hệ tiêu chí rubric và đề xuất Top 10 vị trí phù hợp nhất dành cho bạn.</p>
         </div>
-        <section class="job-search-console" aria-labelledby="job-search-console-title">
-          <div class="job-search-console-copy"><span class="job-search-kicker">98+ JD DOANH NGHIỆP</span><h2 id="job-search-console-title">Tìm bằng từ khóa hoặc CV có sẵn</h2><p>AI chỉ dùng nội dung và kỹ năng có trong CV để xếp hạng, không tự thêm kinh nghiệm.</p></div>
-          <form id="job-search-form" class="job-search-form"><label class="job-search-field" for="job-search-input"><span>Tìm kiếm JD</span><span class="job-search-input-wrap"><span aria-hidden="true">⌕</span><input id="job-search-input" type="search" placeholder="Ví dụ: Python, Frontend, ShopBack, Hà Nội..." autocomplete="off" /></span></label><button type="submit" class="job-search-primary">Tìm kiếm</button></form>
-          <div class="job-cv-match-row"><label for="job-search-cv-select"><span>Tìm việc bằng CV</span><select id="job-search-cv-select" class="form-input"><option value="">Chọn CV có sẵn của bạn</option></select></label><button type="button" id="job-match-cv-btn" class="job-match-cv-btn" disabled><span aria-hidden="true">✦</span> AI lọc JD phù hợp</button><button type="button" id="job-search-reset-btn" class="job-search-reset">Xóa bộ lọc</button></div>
+        <section class="top-jobs-console-card" aria-labelledby="job-search-console-title">
+          <div class="top-jobs-control-grid">
+            <div class="control-group cv-select-group">
+              <label for="job-search-cv-select"><span>Chọn CV:</span></label>
+              <select id="job-search-cv-select" class="form-select top-jobs-select">
+                <option value="">Chọn CV đã lưu</option>
+              </select>
+            </div>
+            <div class="control-group filter-dropdowns-group">
+              <div class="filter-item">
+                <select id="job-filter-role" class="form-select filter-select">
+                  <option value="">Role ▼</option>
+                  <option value="Backend">Backend</option>
+                  <option value="Frontend">Frontend</option>
+                  <option value="Fullstack">Fullstack</option>
+                  <option value="DevOps">DevOps / Cloud</option>
+                  <option value="Data">Data / AI / ML</option>
+                  <option value="Mobile">Mobile Developer</option>
+                </select>
+              </div>
+              <div class="filter-item">
+                <select id="job-filter-location" class="form-select filter-select">
+                  <option value="">Địa điểm ▼</option>
+                  <option value="Hà Nội">Hà Nội</option>
+                  <option value="Hồ Chí Minh">Hồ Chí Minh</option>
+                  <option value="Đà Nẵng">Đà Nẵng</option>
+                </select>
+              </div>
+              <div class="filter-item">
+                <select id="job-filter-work-mode" class="form-select filter-select">
+                  <option value="">Remote ▼</option>
+                  <option value="remote">Remote Only</option>
+                  <option value="hybrid">Hybrid</option>
+                  <option value="onsite">Onsite</option>
+                </select>
+              </div>
+            </div>
+            <div class="control-group action-group">
+              <button type="button" id="job-match-cv-btn" class="btn-find-top-jobs" disabled>
+                <span aria-hidden="true">✦</span> Tìm công việc phù hợp
+              </button>
+            </div>
+          </div>
         </section>
-        <div class="job-results-toolbar"><div><span class="pulse-dot green"></span><strong id="job-results-summary">Đang tải danh sách việc làm...</strong></div><span id="job-results-mode" class="job-results-mode">Tất cả JD</span></div>
-        <div id="job-search-results" class="job-search-results" aria-live="polite"><div class="job-search-loading"><span></span><p>AI đang nạp dữ liệu JD doanh nghiệp...</p></div></div>
+        <div class="top-jobs-results-header">
+          <div class="results-title-wrap">
+            <span class="pulse-dot green"></span>
+            <h3 id="job-results-summary">Top 10 dành cho bạn</h3>
+          </div>
+          <span id="job-results-mode" class="results-mode-badge">AI Xếp Hạng</span>
+        </div>
+        <div id="job-search-results" class="top-jobs-single-column-list" aria-live="polite">
+          <div class="job-search-loading"><span></span><p>AI đang tải danh sách việc làm phù hợp...</p></div>
+        </div>
       </div>
     </section>
 

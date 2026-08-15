@@ -26,6 +26,7 @@ export default function Page() {
 
   useEffect(() => {
     // Import app.js dynamically on client side
+    // @ts-expect-error dynamically imported non-module script
     import('../app.js');
   }, []);
 
@@ -42,7 +43,7 @@ export default function Page() {
         <div className="navbar-inner">
           <a href="#" className="brand" id="brand-logo">
             <span className="brand-icon"><Image src="/images/buddy1.png" alt="CV Assistant" width={36} height={36} priority /></span>
-            <span className="brand-name">CV Assistant</span>
+            <span className="brand-name">Career Assistant</span>
           </a>
           <nav className="nav-links" id="nav-links">
             <a href="#" className="nav-link active" id="nav-dashboard"><span className="nav-text">Trang chủ</span></a>

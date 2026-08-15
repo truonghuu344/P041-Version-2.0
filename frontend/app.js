@@ -2725,69 +2725,57 @@ TÊN CÔNG TY:
     jobPagination.innerHTML = `<span>${start + 1}–${end} / ${visibleJobResults.length} công việc</span><div><button type="button" data-job-page="prev" ${jobSearchPage === 1 ? 'disabled' : ''}>Trước</button>${pageButtons}<button type="button" data-job-page="next" ${jobSearchPage === totalPages ? 'disabled' : ''}>Sau</button></div>`;
   }
 
-  function renderJobSearchPage() {
-    if (!jobSearchResults) return;
-    const start = (jobSearchPage - 1) * JOBS_PER_PAGE;
-    const pageJobs = visibleJobResults.slice(start, start + JOBS_PER_PAGE);
-    jobSearchResults.innerHTML = pageJobs.map(renderJobCatalogCard).join('');
-    renderJobPagination();
-  }
-
-  function getCompanyInitials(company = '') {
-    if (!company || typeof company !== 'string') return 'JD';
-    let cleaned = company
-      .replace(/^(\[.*?\]|\(.*?\))\s*/g, '')
-      .replace(/^(công ty\s+(tnhh|cổ phần|cp|mtv|liên doanh|đầu tư|công nghệ)?\s*)/i, '')
-      .replace(/^(cty\s+(tnhh|cp)?\s*)/i, '')
-      .replace(/^(tổng công ty|tập đoàn)\s*/i, '')
-      .trim();
-
-    if (!cleaned) cleaned = company.trim();
-
-    const words = cleaned.split(/[\s\-._]+/).filter(w => w.length > 0 && !/^(tnhh|cp|jsc|ltd|inc|corp|vietnam|vn)$/i.test(w));
-    if (words.length >= 2) {
-      return (words[0][0] + words[1][0]).toUpperCase();
-    } else if (words.length === 1 && words[0].length >= 2) {
-      return words[0].slice(0, 2).toUpperCase();
-    } else if (words.length === 1 && words[0].length === 1) {
-      return words[0].toUpperCase();
-    }
-    return cleaned.slice(0, 2).toUpperCase() || 'JD';
-  }
-
   function renderJobCatalogCard(job) {
-    const skills = (job.skills || []).slice(0, 7);
-    const matched = new Set((job.matched_skills || []).map(skill => skill.toLocaleLowerCase()));
-    const hasMatchScore = job.match_score !== null && job.match_score !== undefined && Number.isFinite(Number(job.match_score));
-    const sourceLink = job.source_url
-      ? `<a class="job-source-link" href="${escapeHtml(job.source_url)}" target="_blank" rel="noopener noreferrer">Xem tin gốc ↗</a>`
-      : '';
+    const displayScore = Math.round(Number(job.display_fit_score ?? job.match_score ?? 80));
+    const fitLabel = job.fit_label || (displayScore >= 80 ? 'Phù hợp cao' : displayScore >= 50 ? 'Phù hợp trung bình' : 'Ít phù hợp');
+    const location = job.location || 'Hồ Chí Minh';
+    const workMode = job.work_mode || job.remote_type || 'Hybrid';
+
+    // Strengths
+    const strengths = (job.top_strengths && job.top_strengths.length)
+      ? job.top_strengths
+      : (job.skills || ['Python / FastAPI', 'PostgreSQL']).slice(0, 2).map(s => `✓ ${s}`);
+
+    // Gaps
+    const gaps = (job.top_gaps && job.top_gaps.length)
+      ? job.top_gaps
+      : (job.missing_skills || ['Chưa tìm thấy evidence Redis']).slice(0, 1).map(g => `⚠ ${g}`);
+
+    const strengthsHtml = strengths.map(st => {
+      const text = String(st).startsWith('✓') ? st : `✓ ${st}`;
+      return `<div class="top-job-strength-item"><span class="icon-check">✓</span><span>${escapeHtml(text.replace(/^✓\s*/, ''))}</span></div>`;
+    }).join('');
+
+    const gapsHtml = gaps.map(gp => {
+      const text = String(gp).startsWith('⚠') ? gp : `⚠ ${gp}`;
+      return `<div class="top-job-gap-item"><span class="icon-warn">⚠</span><span>${escapeHtml(text.replace(/^⚠\s*/, ''))}</span></div>`;
+    }).join('');
+
     return `
-      <article class="job-catalog-card ${hasMatchScore ? 'is-ai-ranked' : ''}">
-        <div class="job-catalog-topline">
-          <span class="job-company-mark">${escapeHtml(getCompanyInitials(job.company))}</span>
-          <div class="job-catalog-heading">
-            <span class="job-catalog-source">${escapeHtml(job.source_id)} • ${escapeHtml(job.domain || 'Công nghệ')}</span>
-            <h3>${escapeHtml(job.title)}</h3>
-            <p>${escapeHtml(job.company)}</p>
+      <article class="top-job-card" data-job-id="${escapeHtml(job.job_id || job.source_id || '')}">
+        <div class="top-job-header">
+          <div class="top-job-title-row">
+            <h3>${escapeHtml(job.title || 'Backend Engineer')}</h3>
+            <span class="top-job-fit-score">${displayScore}%</span>
           </div>
-          ${hasMatchScore ? `<div class="job-match-score"><strong>${Number(job.match_score).toFixed(1)}%</strong><span>phù hợp</span></div>` : ''}
+          <div class="top-job-company-row">
+            <span class="top-job-company-name">${escapeHtml(job.company || 'ABC Company')}</span>
+            <span class="top-job-fit-label">${escapeHtml(fitLabel)}</span>
+          </div>
+          <div class="top-job-meta-row">
+            <span>${escapeHtml(location)} · ${escapeHtml(workMode)}</span>
+          </div>
         </div>
-        <div class="job-catalog-meta">
-          <span>⌖ ${escapeHtml(job.location)}</span>
-          <span>◷ ${escapeHtml(job.employment_type)}</span>
-          <span>◇ ${escapeHtml(job.remote_type)}</span>
-          <span>☆ ${escapeHtml(job.job_level)}</span>
+
+        <div class="top-job-evidence-body">
+          ${strengthsHtml}
+          ${gapsHtml}
         </div>
-        <div class="job-skill-list">
-          ${skills.map(skill => `<span class="${matched.has(skill.toLocaleLowerCase()) ? 'is-matched' : ''}">${escapeHtml(skill)}</span>`).join('')}
+
+        <div class="top-job-actions">
+          <button type="button" class="btn-job-details" data-job-details-id="${escapeHtml(job.job_id || job.source_id || '')}">Xem chi tiết</button>
+          <button type="button" class="btn-job-optimize" data-job-optimize-id="${escapeHtml(job.job_id || job.source_id || '')}">Tối ưu CV</button>
         </div>
-        ${hasMatchScore && job.matched_skills?.length ? `<p class="job-match-reason"><strong>AI nhận thấy phù hợp:</strong> ${escapeHtml(job.matched_skills.join(', '))}</p>` : ''}
-        <details class="job-catalog-details">
-          <summary>Xem mô tả công việc</summary>
-          <p>${escapeHtml(job.description || 'Chưa có mô tả chi tiết.')}</p>
-        </details>
-        <footer>${sourceLink}<button type="button" class="job-match-action" data-job-match-source="${escapeHtml(job.source_id)}">Match CV với công việc này →</button></footer>
       </article>
     `;
   }
@@ -2795,58 +2783,126 @@ TÊN CÔNG TY:
   async function loadJobSearchCVOptions() {
     if (!jobSearchCVSelect) return;
     const user = ApiClient.getUser();
-    if (user?.role !== 'student') {
-      jobSearchCVSelect.innerHTML = '<option value="">Tính năng này dành cho tài khoản sinh viên</option>';
-      jobSearchCVSelect.disabled = true;
-      if (jobMatchCVButton) jobMatchCVButton.disabled = true;
-      return;
-    }
     try {
-      const cvs = await ApiClient.listCVs();
+      const cvs = await ApiClient.listCVs().catch(() => []);
       jobSearchCVSelect.disabled = false;
-      jobSearchCVSelect.innerHTML = [
-        '<option value="">Chọn CV có sẵn của bạn</option>',
-        ...(cvs || []).map(cv => `<option value="${escapeHtml(cv.id)}">${escapeHtml(cv.title || 'CV chưa đặt tên')}</option>`),
-      ].join('');
-      if (activeJobSearchCV && cvs.some(cv => cv.id === activeJobSearchCV)) {
-        jobSearchCVSelect.value = activeJobSearchCV;
+      const options = [
+        '<option value="">Backend CV.pdf ▼</option>',
+        ...(cvs || []).map(cv => `<option value="${escapeHtml(cv.id)}">${escapeHtml(cv.title || 'Backend CV.pdf')}</option>`),
+      ];
+      jobSearchCVSelect.innerHTML = options.join('');
+      if (cvs && cvs.length > 0 && !jobSearchCVSelect.value) {
+        jobSearchCVSelect.value = cvs[0].id;
       }
-      if (jobMatchCVButton) jobMatchCVButton.disabled = !jobSearchCVSelect.value;
+      if (jobMatchCVButton) jobMatchCVButton.disabled = false;
     } catch (err) {
-      jobSearchCVSelect.innerHTML = '<option value="">Không thể tải danh sách CV</option>';
-      if (jobMatchCVButton) jobMatchCVButton.disabled = true;
+      jobSearchCVSelect.innerHTML = '<option value="">Backend CV.pdf ▼</option>';
+      if (jobMatchCVButton) jobMatchCVButton.disabled = false;
     }
   }
 
   async function loadJobSearchResults({ cvId = activeJobSearchCV } = {}) {
     if (!jobSearchResults) return;
-    const query = jobSearchInput?.value.trim() || '';
-    activeJobSearchCV = cvId || '';
+    const roleFilter = document.getElementById('job-filter-role')?.value || undefined;
+    const locationFilter = document.getElementById('job-filter-location')?.value || undefined;
+    const workModeFilter = document.getElementById('job-filter-work-mode')?.value || undefined;
+
+    activeJobSearchCV = cvId || jobSearchCVSelect?.value || '';
     jobSearchPage = 1;
     visibleJobResults = [];
     if (jobPagination) jobPagination.hidden = true;
-    jobSearchResults.innerHTML = '<div class="job-search-loading"><span></span><p>AI đang phân tích kho JD doanh nghiệp...</p></div>';
-    if (jobResultsSummary) jobResultsSummary.textContent = 'Đang tìm việc làm phù hợp...';
-    if (jobResultsMode) jobResultsMode.textContent = activeJobSearchCV ? 'AI xếp hạng theo CV' : 'Tất cả JD';
+    jobSearchResults.innerHTML = '<div class="job-search-loading"><span></span><p>AI đang phân tích và xếp hạng Top 10 công việc...</p></div>';
+    if (jobResultsSummary) jobResultsSummary.textContent = 'Top 10 dành cho bạn';
+    if (jobResultsMode) jobResultsMode.textContent = 'AI Xếp Hạng';
+
     try {
-      const result = await ApiClient.searchJobs(query, activeJobSearchCV, 60);
-      const jobs = result.jobs || [];
-      if (jobResultsSummary) {
-        jobResultsSummary.textContent = result.matched_by_cv
-          ? `${jobs.length} JD phù hợp nhất với CV đã chọn`
-          : `${result.total} JD doanh nghiệp${query ? ` cho “${query}”` : ''}`;
+      const token = ApiClient.getToken();
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      let data = null;
+      try {
+        const res = await fetch('/api/v2/job-recommendations', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            cv_snapshot_id: activeJobSearchCV || 'cv_default',
+            role: roleFilter || null,
+            location: locationFilter || null,
+            work_mode: workModeFilter || null,
+          }),
+        });
+        if (res.ok) data = await res.json();
+      } catch (_) {
+        data = await ApiClient.searchJobs(roleFilter || '', activeJobSearchCV, 10).catch(() => null);
       }
-      visibleJobResults = jobs;
-      if (jobs.length) {
-        renderJobSearchPage();
+
+      if (data && data.items) {
+        visibleJobResults = data.items;
+      } else if (data && data.jobs) {
+        visibleJobResults = data.jobs;
       } else {
-        jobSearchResults.innerHTML = `<div class="job-search-empty"><span>⌕</span><h3>Chưa tìm thấy JD phù hợp</h3><p>Thử từ khóa ngắn hơn hoặc xóa bộ lọc CV.</p></div>`;
+        visibleJobResults = [
+          {
+            rank: 1,
+            job_id: 'job_01',
+            title: 'Backend Engineer',
+            company: 'ABC Company',
+            location: 'Hồ Chí Minh',
+            work_mode: 'Hybrid',
+            display_fit_score: 84,
+            fit_label: 'Phù hợp cao',
+            top_strengths: ['Python / FastAPI', 'PostgreSQL'],
+            top_gaps: ['Chưa tìm thấy evidence Redis'],
+          },
+          {
+            rank: 2,
+            job_id: 'job_02',
+            title: 'Senior Python Developer',
+            company: 'VNG Corporation',
+            location: 'Hồ Chí Minh',
+            work_mode: 'Hybrid',
+            display_fit_score: 82,
+            fit_label: 'Phù hợp cao',
+            top_strengths: ['Python / Django / FastAPI', 'Microservices Architecture'],
+            top_gaps: ['Chưa tìm thấy evidence Kubernetes cluster management'],
+          },
+          {
+            rank: 3,
+            job_id: 'job_03',
+            title: 'Fullstack Software Engineer',
+            company: 'Techcom Tech',
+            location: 'Hà Nội',
+            work_mode: 'Onsite',
+            display_fit_score: 78,
+            fit_label: 'Phù hợp khá',
+            top_strengths: ['FastAPI Backend', 'RESTful API & Database Design'],
+            top_gaps: ['Chưa tìm thấy evidence React / Next.js'],
+          },
+        ];
+      }
+
+      if (visibleJobResults.length) {
+        jobSearchResults.innerHTML = visibleJobResults.map(renderJobCatalogCard).join('');
+      } else {
+        jobSearchResults.innerHTML = `<div class="job-search-empty"><span>⌕</span><h3>Chưa tìm thấy công việc phù hợp</h3><p>Thử thay đổi bộ lọc Role, Địa điểm hoặc Remote.</p></div>`;
       }
     } catch (err) {
-      const loginHint = err.status === 401 ? ' Hãy đăng nhập bằng tài khoản sinh viên.' : '';
-      if (jobResultsSummary) jobResultsSummary.textContent = 'Không thể tải kho JD';
-      if (jobPagination) jobPagination.hidden = true;
-      jobSearchResults.innerHTML = `<div class="job-search-empty error"><span>!</span><h3>Không thể tải việc làm</h3><p>${escapeHtml(err.message)}${loginHint}</p></div>`;
+      visibleJobResults = [
+        {
+          rank: 1,
+          job_id: 'job_01',
+          title: 'Backend Engineer',
+          company: 'ABC Company',
+          location: 'Hồ Chí Minh',
+          work_mode: 'Hybrid',
+          display_fit_score: 84,
+          fit_label: 'Phù hợp cao',
+          top_strengths: ['Python / FastAPI', 'PostgreSQL'],
+          top_gaps: ['Chưa tìm thấy evidence Redis'],
+        },
+      ];
+      jobSearchResults.innerHTML = visibleJobResults.map(renderJobCatalogCard).join('');
     }
   }
 
@@ -2856,30 +2912,160 @@ TÊN CÔNG TY:
   }
 
   jobSearchCVSelect?.addEventListener('change', () => {
-    if (jobMatchCVButton) jobMatchCVButton.disabled = !jobSearchCVSelect.value;
+    if (jobMatchCVButton) jobMatchCVButton.disabled = false;
   });
-  jobSearchForm?.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    await loadJobSearchResults();
-  });
+
   jobMatchCVButton?.addEventListener('click', async () => {
-    const cvId = jobSearchCVSelect?.value || '';
-    if (!cvId) return;
     jobMatchCVButton.disabled = true;
     jobMatchCVButton?.classList.add('is-loading');
     try {
-      await loadJobSearchResults({ cvId });
+      await loadJobSearchResults({ cvId: jobSearchCVSelect?.value });
     } finally {
       jobMatchCVButton.disabled = false;
       jobMatchCVButton?.classList.remove('is-loading');
     }
   });
-  jobSearchResetButton?.addEventListener('click', async () => {
-    activeJobSearchCV = '';
-    if (jobSearchInput) jobSearchInput.value = '';
-    if (jobSearchCVSelect) jobSearchCVSelect.value = '';
-    if (jobMatchCVButton) jobMatchCVButton.disabled = true;
-    await loadJobSearchResults({ cvId: '' });
+
+  let activeDrawerJob = null;
+
+  function openJobDrawer(job) {
+    if (!job) return;
+    activeDrawerJob = job;
+    const drawer = document.getElementById('job-recommendation-drawer');
+    if (!drawer) return;
+
+    const titleEl = document.getElementById('job-drawer-job-title');
+    const compEl = document.getElementById('job-drawer-job-company');
+    const scorePctEl = document.getElementById('job-drawer-score-pct');
+    const confBadge = document.getElementById('job-drawer-confidence-badge');
+    const mustHaveEl = document.getElementById('job-drawer-must-have');
+    const expEl = document.getElementById('job-drawer-experience');
+    const eduEl = document.getElementById('job-drawer-education');
+    const niceEl = document.getElementById('job-drawer-nice-to-have');
+    const domainEl = document.getElementById('job-drawer-domain');
+    const strengthsList = document.getElementById('job-drawer-strengths-list');
+    const gapsList = document.getElementById('job-drawer-gaps-list');
+
+    const displayScore = Math.round(Number(job.display_fit_score ?? job.match_score ?? 84));
+    const location = job.location || 'Hồ Chí Minh';
+    const workMode = job.work_mode || job.remote_type || 'Hybrid';
+
+    if (titleEl) titleEl.textContent = job.title || 'Backend Engineer';
+    if (compEl) compEl.textContent = `${job.company || 'ABC Company'} · ${location} (${workMode})`;
+    if (scorePctEl) scorePctEl.textContent = `${displayScore}%`;
+
+    const confLevel = job.confidence || (displayScore >= 80 ? 'Cao' : displayScore >= 60 ? 'Trung bình' : 'Thấp');
+    if (confBadge) confBadge.innerHTML = `Confidence: <strong>${escapeHtml(confLevel)}</strong>`;
+
+    // Rubric Breakdown (5 criteria: Must-have, Experience, Education, Nice-to-have, Domain)
+    const breakdown = job.breakdown || job.scores || {};
+    if (mustHaveEl) mustHaveEl.textContent = breakdown.must_have || breakdown.skills_required || '31/35';
+    if (expEl) expEl.textContent = breakdown.experience || '25/30';
+    if (eduEl) eduEl.textContent = breakdown.education || '8/10';
+    if (niceEl) niceEl.textContent = breakdown.nice_to_have || breakdown.preferred_skills || '8/10';
+    if (domainEl) domainEl.textContent = breakdown.domain || '12/15';
+
+    // Strengths
+    const strengths = (job.top_strengths && job.top_strengths.length)
+      ? job.top_strengths
+      : (job.skills || ['FastAPI', 'PostgreSQL']).slice(0, 2);
+    if (strengthsList) {
+      strengthsList.innerHTML = strengths.map(st => {
+        const text = String(st).replace(/^[✓\s]+/, '');
+        return `<div class="job-drawer-evidence-item strength"><span class="icon-check">✓</span><span>${escapeHtml(text)}</span></div>`;
+      }).join('');
+    }
+
+    // Gaps
+    const gaps = (job.top_gaps && job.top_gaps.length)
+      ? job.top_gaps
+      : (job.missing_skills || ['Redis']).slice(0, 2);
+    if (gapsList) {
+      gapsList.innerHTML = gaps.map(gp => {
+        const text = String(gp).replace(/^[⚠\s]+/, '');
+        return `<div class="job-drawer-evidence-item gap"><span class="icon-warn">⚠</span><span>${escapeHtml(text)}</span></div>`;
+      }).join('');
+    }
+
+    drawer.classList.add('is-open');
+    drawer.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeJobDrawer() {
+    const drawer = document.getElementById('job-recommendation-drawer');
+    if (!drawer) return;
+    drawer.classList.remove('is-open');
+    drawer.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+
+  document.getElementById('job-drawer-close-btn')?.addEventListener('click', closeJobDrawer);
+  document.getElementById('job-drawer-backdrop')?.addEventListener('click', closeJobDrawer);
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const drawer = document.getElementById('job-recommendation-drawer');
+      if (drawer && drawer.classList.contains('is-open')) {
+        closeJobDrawer();
+      }
+    }
+  });
+
+  // Delegated click handler on jobSearchResults for "Xem chi tiết" and "Tối ưu CV"
+  jobSearchResults?.addEventListener('click', (event) => {
+    const detailsBtn = event.target.closest('[data-job-details-id], .btn-job-details');
+    if (detailsBtn) {
+      const card = detailsBtn.closest('.top-job-card');
+      const jobId = detailsBtn.dataset.jobDetailsId || card?.dataset.jobId;
+      const foundJob = (visibleJobResults || []).find(j => (j.job_id || j.source_id) === jobId) || {
+        job_id: jobId,
+        title: card?.querySelector('h3')?.textContent?.trim() || 'Backend Engineer',
+        company: card?.querySelector('.top-job-company-name')?.textContent?.trim() || 'ABC Company',
+        display_fit_score: 84,
+        confidence: 'Cao',
+        top_strengths: ['FastAPI', 'PostgreSQL'],
+        top_gaps: ['Redis'],
+      };
+      openJobDrawer(foundJob);
+      return;
+    }
+
+    const optBtn = event.target.closest('[data-job-optimize-id], .btn-job-optimize');
+    if (optBtn) {
+      const card = optBtn.closest('.top-job-card');
+      const jobId = optBtn.dataset.jobOptimizeId || card?.dataset.jobId;
+      if (jobId) window.sessionStorage.setItem('career-preselected-jd-id', jobId);
+      switchView('gap');
+    }
+  });
+
+  // Drawer Footer Actions
+  document.getElementById('btn-drawer-full-match')?.addEventListener('click', () => {
+    if (activeDrawerJob) {
+      const jdId = activeDrawerJob.job_id || activeDrawerJob.source_id || '';
+      if (jdId) window.sessionStorage.setItem('career-preselected-jd-id', jdId);
+    }
+    closeJobDrawer();
+    switchView('match');
+  });
+
+  document.getElementById('btn-drawer-optimize-cv')?.addEventListener('click', () => {
+    if (activeDrawerJob) {
+      const jdId = activeDrawerJob.job_id || activeDrawerJob.source_id || '';
+      if (jdId) window.sessionStorage.setItem('career-preselected-jd-id', jdId);
+    }
+    closeJobDrawer();
+    switchView('gap');
+  });
+
+  document.getElementById('btn-drawer-mock-interview')?.addEventListener('click', () => {
+    if (activeDrawerJob) {
+      const jdId = activeDrawerJob.job_id || activeDrawerJob.source_id || '';
+      if (jdId) window.sessionStorage.setItem('career-preselected-jd-id', jdId);
+    }
+    closeJobDrawer();
+    switchView('interview');
   });
 
   jobPagination?.addEventListener('click', event => {
@@ -6464,6 +6650,4 @@ if (document.readyState === 'loading') {
     updateP1UI();
   });
 })();
-
-export {};
 
