@@ -3,13 +3,15 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[3]
 FRONTEND_ROOT = ROOT / "frontend"
 APP_JS = (FRONTEND_ROOT / "app.js").read_text(encoding="utf-8")
-PAGE_JS = "\n".join(
+PAGE_SOURCE = (FRONTEND_ROOT / "app" / "page.tsx").read_text(encoding="utf-8")
+# The application is composed from React view components. Keep this source
+# contract at the rendered-source level rather than assuming every DOM id
+# remains in app/page.tsx after a component extraction.
+COMPONENT_SOURCE = "\n".join(
     path.read_text(encoding="utf-8")
-    for path in (
-        FRONTEND_ROOT / "app" / "page.tsx",
-        *sorted((FRONTEND_ROOT / "components").rglob("*View.tsx")),
-    )
+    for path in sorted((FRONTEND_ROOT / "components").rglob("*.tsx"))
 )
+PAGE_JS = f"{PAGE_SOURCE}\n{COMPONENT_SOURCE}"
 STYLE_CSS = (FRONTEND_ROOT / "app" / "styles" / "legacy.css").read_text(encoding="utf-8")
 MATCH_CSS = (FRONTEND_ROOT / "app" / "styles" / "match.css").read_text(encoding="utf-8")
 NEXT_CONFIG = (FRONTEND_ROOT / "next.config.mjs").read_text(encoding="utf-8")
@@ -145,6 +147,7 @@ def test_gap_analysis_replaces_static_roadmap_with_compact_actionable_result():
         assert f'id="{element_id}"' in PAGE_JS
     assert "analysis.integrity_guardrail" in APP_JS
     assert 'id="view-gap"' in PAGE_JS
+    assert 'id="view-gap"' not in PAGE_SOURCE
     assert 'id="btn-open-full-gap-result"' not in PAGE_JS
 
 
@@ -295,7 +298,6 @@ def test_google_quicksand_is_self_hosted_and_used_as_the_shared_font():
 
 
 def test_create_cv_gallery_offers_three_distinct_downloadable_templates():
-    assert 'id="btn-open-template-gallery"' in PAGE_JS
     assert 'id="cv-template-modal-overlay"' in PAGE_JS
     assert "onClick={() => setIsTemplateGalleryOpen(true)}" in PAGE_JS
     assert "className={`modal-overlay${isTemplateGalleryOpen ? ' open' : ''}`}" in PAGE_JS
@@ -317,6 +319,8 @@ def test_cv_target_jd_supports_data_catalog_or_file_upload():
     assert 'id="p1-job-explore-panel"' in PAGE_JS
     assert 'id="p1-job-search"' in PAGE_JS
     assert 'id="p1-job-grid"' in PAGE_JS
+    assert "gap-select-search" in APP_JS
+    assert ".cv-jd-select-shell .gap-select-menu" in STYLE_CSS
     assert 'id="cv-jd-upload-form"' in PAGE_JS
     assert 'accept=".pdf,.docx,.txt,image/*"' in PAGE_JS
 

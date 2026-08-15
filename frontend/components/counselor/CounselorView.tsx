@@ -13,6 +13,7 @@ export default function CounselorView(props: any) {
             <div className="page-header"><div className="page-badge">HUMAN-IN-THE-LOOP</div><h1 className="page-title">🎓 Dashboard Cố Vấn</h1><p className="page-sub">Chỉ hiển thị sinh viên đã chủ động cấp quyền.</p></div>
             <section id="counselor-kpi-overview" className="counselor-kpi-overview" aria-label="Chỉ số sử dụng và chất lượng"></section>
             <div className="role-dashboard-grid">
+              <section id="counselor-kpi-overview" className="counselor-progress-summary" aria-label="Tổng quan tiến độ"><p className="gap-empty">Chọn sinh viên để xem tiến độ trước và sau phỏng vấn.</p></section>
               <section className="role-panel"><h3>Sinh viên được phân công</h3><div id="counselor-student-list" className="hitl-list"></div></section>
               <section className="role-panel role-menu-target" id="counselor-student-detail"><h3>Báo cáo tiến độ sinh viên</h3><p className="gap-empty">Chọn một sinh viên để xem CV, Gap Analysis và lịch sử STAR.</p></section>
             </div>

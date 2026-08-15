@@ -115,6 +115,18 @@ export default function Page() {
         <UpgradeView />
       </main>
 
+      <div id="cv-template-modal-overlay" className={`modal-overlay${isTemplateGalleryOpen ? ' open' : ''}`} role="dialog" aria-modal="true" aria-labelledby="cv-template-gallery-title" hidden={!isTemplateGalleryOpen}>
+        <div className="modal-card cv-template-gallery-card">
+          <button type="button" className="modal-close" aria-label="Đóng" onClick={() => setIsTemplateGalleryOpen(false)}>×</button>
+          <div className="modal-header"><h2 id="cv-template-gallery-title" className="modal-title">Chọn mẫu CV</h2><p className="modal-sub">Chọn bố cục trước, sau đó chỉ điền thông tin có thật của bạn.</p></div>
+          <div className="template-gallery-grid">
+            <article className="template-preview template-preview-modern"><h3>Modern</h3><p>Gọn gàng cho vị trí công nghệ.</p><button type="button" onClick={() => selectCVTemplate('modern')}>Dùng mẫu này</button><a className="template-download-btn" href="/api/v1/cvs/templates/modern">Tải PDF mẫu</a></article>
+            <article className="template-preview template-preview-classic"><h3>Classic ATS</h3><p>Dễ đọc với hệ thống ATS.</p><button type="button" onClick={() => selectCVTemplate('classic')}>Dùng mẫu này</button><a className="template-download-btn" href="/api/v1/cvs/templates/classic">Tải PDF mẫu</a></article>
+            <article className="template-preview template-preview-creative"><h3>Compact</h3><p>Tối giản cho portfolio công nghệ.</p><button type="button" onClick={() => selectCVTemplate('compact')}>Dùng mẫu này</button><a className="template-download-btn" href="/api/v1/cvs/templates/compact">Tải PDF mẫu</a></article>
+          </div>
+        </div>
+      </div>
+
       <div className="modal-overlay" id="modal-overlay" role="dialog">
         <div className="modal-card auth-modal-card" id="modal-card" aria-modal="true" aria-labelledby="auth-title">
           <button className="modal-close" id="modal-close" aria-label="Đóng">&times;</button>
@@ -534,7 +546,7 @@ export default function Page() {
           <img
             id="ai-companion-source"
             className="ai-companion-source is-fallback"
-            src="/images/chatbot.png"
+            src="/assistant/idle-rotations-8dir.gif"
             alt="Nova - trợ lý nghề nghiệp AI"
             width={64}
             height={64}

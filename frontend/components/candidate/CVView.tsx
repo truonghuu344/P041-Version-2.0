@@ -2,7 +2,7 @@
 import React from 'react';
 import { PencilLine, Plus, Search, Sparkles, Upload } from 'lucide-react';
 
-export default function CVView({ selectedCVTemplate, isTemplateGalleryOpen, setIsTemplateGalleryOpen, selectCVTemplate }: any) {
+export default function CVView({ selectedCVTemplate, setIsTemplateGalleryOpen }: any) {
   return <section className="app-view buddy-landing" id="view-cv">
     <div className="career-portfolio-workspace" id="career-portfolio-workspace">
       <header className="career-table-header">
@@ -23,38 +23,5 @@ export default function CVView({ selectedCVTemplate, isTemplateGalleryOpen, setI
       </div>
     </div>
 
-    <div
-      id="cv-template-modal-overlay"
-      className={`modal-overlay${isTemplateGalleryOpen ? ' open' : ''}`}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="cv-template-modal-title"
-      onClick={(event) => event.target === event.currentTarget && setIsTemplateGalleryOpen(false)}
-    >
-      <div className="modal-card" style={{ maxWidth: '940px' }}>
-        <button type="button" className="modal-close" aria-label="Đóng" onClick={() => setIsTemplateGalleryOpen(false)}>&times;</button>
-        <div className="modal-header">
-          <h2 className="modal-title" id="cv-template-modal-title">Chọn mẫu CV</h2>
-          <p className="modal-sub">Chọn một bố cục để nhập nội dung hoặc tải bản mẫu PDF.</p>
-        </div>
-        <div className="template-gallery-grid">
-          <article className="template-card template-card-modern">
-            <div className="template-preview template-preview-modern"><div className="preview-sidebar"><i></i><i></i><i></i><i></i></div><div className="preview-main"><b></b><i></i><i></i><span></span><i></i><i></i></div></div>
-            <div className="template-card-content"><h3 className="template-title">Modern</h3><p className="template-desc">Bố cục hiện đại, nhấn mạnh kỹ năng.</p></div>
-            <div className="template-card-actions"><a className="template-download-btn" href="/api/v1/cvs/templates/modern/download">Tải mẫu</a><button type="button" className="template-use-btn" onClick={() => selectCVTemplate('modern')}>Dùng mẫu</button></div>
-          </article>
-          <article className="template-card template-card-classic">
-            <div className="template-preview template-preview-classic"><b></b><em></em><span></span><i></i><i></i><i></i><span></span><i></i><i></i></div>
-            <div className="template-card-content"><h3 className="template-title">Classic</h3><p className="template-desc">Bố cục truyền thống, dễ đọc.</p></div>
-            <div className="template-card-actions"><a className="template-download-btn" href="/api/v1/cvs/templates/classic/download">Tải mẫu</a><button type="button" className="template-use-btn" onClick={() => selectCVTemplate('classic')}>Dùng mẫu</button></div>
-          </article>
-          <article className="template-card template-card-creative">
-            <div className="template-preview template-preview-creative"><div className="preview-banner"><b></b><i></i></div><div className="preview-tags"><i></i><i></i><i></i></div><div className="preview-timeline"><span></span><i></i><span></span><i></i><span></span><i></i></div></div>
-            <div className="template-card-content"><h3 className="template-title">Creative Tech</h3><p className="template-desc">Bố cục timeline gọn cho hồ sơ công nghệ.</p></div>
-            <div className="template-card-actions"><a className="template-download-btn" href="/api/v1/cvs/templates/compact/download">Tải mẫu</a><button type="button" className="template-use-btn" onClick={() => selectCVTemplate('compact')}>Dùng mẫu</button></div>
-          </article>
-        </div>
-      </div>
-    </div>
   </section>;
 }
