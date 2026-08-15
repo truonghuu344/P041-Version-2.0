@@ -81,3 +81,6 @@ out/
 
 # Note
 note.txt
+
+# Local demo guide (personal, do not commit)
+setup_demo.md
