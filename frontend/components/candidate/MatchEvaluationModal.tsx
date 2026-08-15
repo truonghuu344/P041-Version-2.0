@@ -49,7 +49,7 @@ const CONFIDENCE_CONFIG: Record<string, { label: string; cls: string }> = {
   very_low: { label: 'Cần kiểm tra lại', cls: 'eval-badge--neutral' },
 };
 
-function useFocusTrap(ref: React.RefObject<HTMLElement>, active: boolean) {
+function useFocusTrap(ref: React.RefObject<HTMLElement | null>, active: boolean) {
   useEffect(() => {
     if (!active || !ref.current) return;
     const el = ref.current;
@@ -340,9 +340,9 @@ export default function MatchEvaluationModal({
               onKeyDown={(e) => handleTabKeyDown(e, idx)}
             >
               {tab.label}
-              {tab.id === 'gaps' && gaps && gaps.mandatory_failed_count > 0 && (
-                <span className="eval-tab-badge" aria-label={`${gaps.mandatory_failed_count} bắt buộc`}>
-                  {gaps.mandatory_failed_count}
+              {tab.id === 'gaps' && gaps && gaps.total > 0 && (
+                <span className="eval-tab-badge" aria-label={`${gaps.total} điểm cần cải thiện`}>
+                  {gaps.total}
                 </span>
               )}
             </button>
@@ -499,7 +499,7 @@ export default function MatchEvaluationModal({
                     >
                       <span className="eval-criterion-section__label">{crit.label}</span>
                       <span className="eval-criterion-section__score">
-                        {Math.round(crit.raw_score)}/{Math.round(crit.weight * 100)}
+                        {Math.round(crit.weighted_score)}/{Math.round(crit.weight)} điểm
                       </span>
                       <ChevronDown
                         size={16}

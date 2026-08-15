@@ -47,7 +47,9 @@ export default function GapActionItem({ gap, rank, onOptimize, onInterview }: Ga
         )}
       </div>
 
-      <p className="eval-gap-item__text">{gap.requirement_text}</p>
+      <p className="eval-gap-item__text">
+        {gap.requirement_text.charAt(0).toUpperCase() + gap.requirement_text.slice(1)}
+      </p>
       <p className="eval-gap-item__action">{gap.action_text}</p>
 
       {gap.evidence_count > 0 && (

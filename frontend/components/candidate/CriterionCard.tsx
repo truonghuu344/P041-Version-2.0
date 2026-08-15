@@ -17,8 +17,8 @@ const STATUS_CONFIG: Record<string, { label: string; icon: React.ReactNode; cls:
 
 export default function CriterionCard({ criterion, onClick }: CriterionCardProps) {
   const cfg = STATUS_CONFIG[criterion.status] ?? STATUS_CONFIG.UNCERTAIN;
-  const weightPct = Math.round(criterion.weight * 100);
-  const scorePct  = Math.round(criterion.raw_score);
+  const weightPct = Math.round(criterion.weight);
+  const scorePct  = Math.round(criterion.weighted_score);
   const covPct    = criterion.requirements_total > 0
     ? (criterion.requirements_met / criterion.requirements_total) * 100
     : 0;
@@ -35,7 +35,7 @@ export default function CriterionCard({ criterion, onClick }: CriterionCardProps
       <header className="eval-criterion-card__header">
         <div>
           <strong className="eval-criterion-card__name">{criterion.label}</strong>
-          <span className="eval-criterion-card__weight">{weightPct}%</span>
+          <span className="eval-criterion-card__weight"> {weightPct}%</span>
         </div>
         <span className={`eval-badge ${cfg.cls}`}>
           {cfg.icon}<span>{cfg.label}</span>
@@ -55,7 +55,7 @@ export default function CriterionCard({ criterion, onClick }: CriterionCardProps
 
       <div className="eval-criterion-card__score">
         <span className="eval-criterion-card__score-val">{scorePct}</span>
-        <span className="eval-criterion-card__score-max">/{weightPct}</span>
+        <span className="eval-criterion-card__score-max">/{weightPct} điểm</span>
       </div>
 
       {criterion.top_gap_text && (

@@ -1074,6 +1074,15 @@ function startAppLogic() {
     }, 3200);
   }
 
+  function applyDomField(id, prop, value, missingIds = []) {
+    const el = document.getElementById(id);
+    if (el) {
+      el[prop] = value;
+    } else {
+      missingIds.push(id);
+    }
+  }
+
   /* ============================================================
      🚀 ROUTER & SINGLE PAGE VIEW SWITCHER
   ============================================================ */
@@ -1657,6 +1666,13 @@ function startAppLogic() {
       ].join('');
       if ([...cvAnalysisJdSelect.options].some(option => option.value === previousValue)) {
         cvAnalysisJdSelect.value = previousValue;
+      } else if (preferredJdId) {
+        // Race condition: JD vừa tạo chưa có trong listJDs() response → thêm option tạm để giữ value
+        const tempOption = document.createElement('option');
+        tempOption.value = preferredJdId;
+        tempOption.textContent = 'JD vừa tải lên';
+        cvAnalysisJdSelect.appendChild(tempOption);
+        cvAnalysisJdSelect.value = preferredJdId;
       }
       const preselectedJDId = window.sessionStorage.getItem('career-preselected-jd-id');
       if (preselectedJDId && [...cvAnalysisJdSelect.options].some(option => option.value === preselectedJDId)) {
@@ -1666,7 +1682,7 @@ function startAppLogic() {
       enhanceGapSelect(cvAnalysisJdSelect);
       updateCVJDSelectionHint();
       renderTargetJobDiscovery();
-      updateP1UI();
+      if (typeof window.updateP1UI === 'function') window.updateP1UI();
     } catch (err) {
       cvAnalysisJdSelect.innerHTML = '<option value="">Không thể tải danh sách JD</option>';
       cvAnalysisJdSelect.disabled = true;
@@ -1855,6 +1871,13 @@ function startAppLogic() {
   });
   // --- Job Preview Modal Logic ---
   let currentPreviewJobId = null;
+  function formatTextToHTML(text) {
+    if (!text) return '';
+    return escapeHtml(text)
+      .replace(/\r?\n/g, '<br>')
+      .replace(/•/g, '&bull;')
+      .replace(/- /g, '&ndash; ');
+  }
   function openJobPreviewModal(sourceId) {
     if (!sourceId) return;
     const job = targetJobCatalog.find(j => String(j.source_id) === String(sourceId));
@@ -1873,25 +1896,73 @@ function startAppLogic() {
           </div>
         </div>
       `;
-      modal.style.display = 'flex';
+      
+      const selectBtn = document.getElementById('job-modal-select-btn');
+      if (selectBtn) {
+        const card = document.querySelector(`.p1-job-card[data-target-job="${sourceId}"]`);
+        const isSelected = card ? card.classList.contains('is-selected') : false;
+        if (isSelected) {
+          selectBtn.textContent = 'Hủy chọn Job này';
+          selectBtn.style.background = '#ff4e6a';
+          selectBtn.style.borderColor = '#ff4e6a';
+        } else {
+          selectBtn.textContent = 'Chọn Job này';
+          selectBtn.style.background = '';
+          selectBtn.style.borderColor = '';
+        }
+      }
+      
+      document.querySelectorAll('#job-preview-modal').forEach(m => {
+        m.style.display = 'flex';
+      });
     }
   }
 
-  document.getElementById('job-modal-close-btn')?.addEventListener('click', () => {
-    const modal = document.getElementById('job-preview-modal');
-    if (modal) modal.style.display = 'none';
-  });
-  document.getElementById('job-modal-cancel-btn')?.addEventListener('click', () => {
-    const modal = document.getElementById('job-preview-modal');
-    if (modal) modal.style.display = 'none';
-  });
-  document.getElementById('job-modal-select-btn')?.addEventListener('click', () => {
-    if (currentPreviewJobId) {
-       chooseTargetCatalogJob(currentPreviewJobId);
-       const modal = document.getElementById('job-preview-modal');
-       if (modal) modal.style.display = 'none';
-    }
-  });
+  const jobModalCloseBtn = document.getElementById('job-modal-close-btn');
+  if (jobModalCloseBtn) {
+    jobModalCloseBtn.onclick = () => {
+      document.querySelectorAll('#job-preview-modal').forEach(m => {
+        m.style.display = 'none';
+      });
+    };
+  }
+
+  const jobModalCancelBtn = document.getElementById('job-modal-cancel-btn');
+  if (jobModalCancelBtn) {
+    jobModalCancelBtn.onclick = () => {
+      document.querySelectorAll('#job-preview-modal').forEach(m => {
+        m.style.display = 'none';
+      });
+    };
+  }
+
+  const jobModalSelectBtn = document.getElementById('job-modal-select-btn');
+  if (jobModalSelectBtn) {
+    jobModalSelectBtn.onclick = () => {
+      try {
+        if (currentPreviewJobId) {
+          const card = document.querySelector(`.p1-job-card[data-target-job="${currentPreviewJobId}"]`);
+          const isSelected = card ? card.classList.contains('is-selected') : false;
+          if (isSelected) {
+            if (cvAnalysisJdSelect) {
+              cvAnalysisJdSelect.value = '';
+              cvAnalysisJdSelect.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            document.querySelectorAll('[data-target-job]').forEach(c => c.classList.remove('is-selected'));
+            updateP1UI();
+            showToast('Đã hủy chọn công việc.', 'info');
+          } else {
+            chooseTargetCatalogJob(currentPreviewJobId);
+          }
+          document.querySelectorAll('#job-preview-modal').forEach(m => {
+            m.style.display = 'none';
+          });
+        }
+      } catch (err) {
+        console.error("Lỗi khi xử lý nút select Job:", err);
+      }
+    };
+  }
 
   document.getElementById('p1-job-grid')?.addEventListener('click', event => {
     const sourceId = event.target.closest('[data-target-job]')?.dataset.targetJob;
@@ -2081,39 +2152,62 @@ function startAppLogic() {
 
     if (cvAnalysisEmptyState) cvAnalysisEmptyState.hidden = true;
     cvAnalysisResultContent.hidden = false;
+    if (cvAnalysisResultsCard) cvAnalysisResultsCard.hidden = false;
     cvAnalysisResultsCard?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   cvAnalysisCvSelect?.addEventListener('change', updateCVSelectionHint);
   cvAnalysisJdSelect?.addEventListener('change', handleCVJDSelectionChange);
-  bindJDFileName(cvJdFileInput, cvJdFileName);
+  // Handle JD File Selection Name Bind dynamically
+  document.addEventListener('change', event => {
+    const input = event.target.closest('#cv-jd-file-input');
+    if (!input) return;
+    const label = document.getElementById('cv-jd-file-name');
+    if (label) {
+      label.textContent = input.files?.[0]?.name || 'PDF, DOCX, TXT hoặc ảnh';
+    }
+  });
 
-  cvJdUploadForm?.addEventListener('submit', async event => {
+  // Handle JD Upload Form Submit dynamically
+  document.addEventListener('submit', async event => {
+    const form = event.target.closest('#cv-jd-upload-form');
+    if (!form) return;
+
     event.preventDefault();
     if (!ApiClient.isAuthenticated()) {
       showToast('Vui lòng đăng nhập để tải JD.', 'warning');
       openAuthModal();
       return;
     }
-    const file = cvJdFileInput?.files?.[0];
+    const fileInput = document.getElementById('cv-jd-file-input');
+    const file = fileInput?.files?.[0];
     if (!file) {
       showToast('Vui lòng chọn file JD dạng PDF, DOCX, TXT hoặc ảnh.', 'warning');
       return;
     }
-    const button = cvJdUploadForm.querySelector('button[type="submit"]');
+    const button = form.querySelector('button[type="submit"]');
     try {
-      button.disabled = true;
-      button.textContent = 'Đang tải và trích xuất JD...';
+      if (button) {
+        button.disabled = true;
+        button.textContent = 'Đang tải và trích xuất JD...';
+      }
       const jd = await ApiClient.uploadJD(file, document.getElementById('cv-jd-title-input')?.value.trim() || '');
-      cvJdUploadForm.reset();
-      if (cvJdFileName) cvJdFileName.textContent = 'PDF, DOCX, TXT hoặc ảnh · tối đa 20 MB';
+      form.reset();
+      const fileNameLabel = document.getElementById('cv-jd-file-name');
+      if (fileNameLabel) fileNameLabel.textContent = 'PDF, DOCX, TXT hoặc ảnh · tối đa 20 MB';
       await loadCVJDOptions(jd.id);
       showToast('✅ JD đã được tải lên và chọn làm mục tiêu.', 'success');
+      if (typeof window.updateP1UI === 'function') {
+        setTimeout(window.updateP1UI, 500);
+        setTimeout(window.updateP1UI, 2000);
+      }
     } catch (err) {
       showToast(`❌ Lỗi tải JD: ${err.message}`, 'error');
     } finally {
-      button.disabled = false;
-      button.textContent = 'Tải lên & chọn JD này';
+      if (button) {
+        button.disabled = false;
+        button.textContent = 'Tải lên & chọn JD này';
+      }
     }
   });
 
@@ -2169,6 +2263,8 @@ function startAppLogic() {
         setAgentProgress('match');
         finishAnalysisJourney();
         renderInlineCVAnalysis(analysis, selectedCvId, selectedJdId);
+        window.latestMatchId = match.match_id;
+        localStorage.setItem('latest_match_id', match.match_id);
         refreshDashboardOverview();
         setAgentProgress('save');
         const llmSucceeded = Boolean(uploadedCV?.parsed_json?.agent_metadata?.llm_succeeded);
@@ -6306,6 +6402,7 @@ if (document.readyState === 'loading') {
       ctaHint.textContent = 'Xem mức độ phù hợp, điểm mạnh và kỹ năng cần bổ sung';
     }
   }
+  window.updateP1UI = updateP1UI;
 
   // ── Auth-aware login gate ──
   function updateLoginGates() {
@@ -6342,34 +6439,54 @@ if (document.readyState === 'loading') {
   });
 
   // ── JD file input: show title field ──
-  jdFileInput()?.addEventListener('change', () => {
-    if (jdTitleField) {
-      const fi = jdFileInput();
-      jdTitleField.style.display = fi && fi.files && fi.files[0] ? 'flex' : 'none';
+  document.addEventListener('change', event => {
+    const input = event.target.closest('#cv-jd-file-input');
+    if (!input) return;
+    const titleField = document.getElementById('p1-jd-title-field');
+    if (titleField) {
+      titleField.style.display = input.files && input.files[0] ? 'flex' : 'none';
     }
   });
 
-  // ── JD dropzone click-to-select ──
-  if (cvJdDropzone) {
-    cvJdDropzone.addEventListener('click', () => jdFileInput()?.click());
-    cvJdDropzone.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      cvJdDropzone.classList.add('dragover');
-    });
-    cvJdDropzone.addEventListener('dragleave', () => cvJdDropzone.classList.remove('dragover'));
-    cvJdDropzone.addEventListener('drop', (e) => {
-      e.preventDefault();
-      cvJdDropzone.classList.remove('dragover');
-      const fi = jdFileInput();
-      if (fi && e.dataTransfer.files && e.dataTransfer.files[0]) {
-        fi.files = e.dataTransfer.files;
-        fi.dispatchEvent(new Event('change'));
+  // ── JD dropzone events ──
+  document.addEventListener('click', event => {
+    const dropzone = event.target.closest('#cv-jd-dropzone');
+    if (dropzone) {
+      document.getElementById('cv-jd-file-input')?.click();
+    }
+  });
+  document.addEventListener('dragover', event => {
+    const dropzone = event.target.closest('#cv-jd-dropzone');
+    if (dropzone) {
+      event.preventDefault();
+      dropzone.classList.add('dragover');
+    }
+  });
+  document.addEventListener('dragleave', event => {
+    const dropzone = event.target.closest('#cv-jd-dropzone');
+    if (dropzone) {
+      dropzone.classList.remove('dragover');
+    }
+  });
+  document.addEventListener('drop', event => {
+    const dropzone = event.target.closest('#cv-jd-dropzone');
+    if (dropzone) {
+      event.preventDefault();
+      dropzone.classList.remove('dragover');
+      const input = document.getElementById('cv-jd-file-input');
+      if (input && event.dataTransfer.files && event.dataTransfer.files[0]) {
+        input.files = event.dataTransfer.files;
+        input.dispatchEvent(new Event('change', { bubbles: true }));
       }
-    });
-    cvJdDropzone.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); jdFileInput()?.click(); }
-    });
-  }
+    }
+  });
+  document.addEventListener('keydown', event => {
+    const dropzone = event.target.closest('#cv-jd-dropzone');
+    if (dropzone && (event.key === 'Enter' || event.key === ' ')) {
+      event.preventDefault();
+      document.getElementById('cv-jd-file-input')?.click();
+    }
+  });
 
   // ── Wire CTA button to the hidden submit ──
   analyzeBtn?.addEventListener('click', () => {
