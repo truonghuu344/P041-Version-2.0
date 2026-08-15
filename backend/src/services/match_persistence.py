@@ -7,6 +7,7 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.config import get_settings
 from src.db.models import (
     CV,
     CandidateArtifact,
@@ -32,7 +33,6 @@ from src.db.models import (
 )
 from src.services.cv_jd_pipeline import DEFAULT_RUBRIC
 from src.services.pipeline_context import PIPELINE_VERSION, get_or_create_cv_snapshot, get_or_create_jd_snapshot
-from src.config import get_settings
 
 
 def _evaluated_requirements(result: dict[str, Any]) -> list[dict[str, Any]]:

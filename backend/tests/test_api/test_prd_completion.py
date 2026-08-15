@@ -87,7 +87,7 @@ async def test_manual_cv_decisions_and_pdf_export(client):
             "skills": ["Python", "FastAPI"],
             "education": [{"school": "University"}],
             "experience": [],
-            "projects": [{"name": "Career Assistant"}],
+            "projects": [{"name": "Career Assistant", "description": "Built API with FastAPI"}],
         },
     )
     assert created.status_code == 201, created.text
@@ -108,7 +108,11 @@ async def test_manual_cv_decisions_and_pdf_export(client):
             jd_id=jd.id,
             match_score=75,
             optimized_suggestions_json=[
-                {"original_text": "Built API", "suggested_improvement": "Built FastAPI service", "reason": "Rõ công nghệ"}
+                {
+                    "original_text": "Built API with FastAPI",
+                    "suggested_improvement": "Developed API with FastAPI",
+                    "reason": "Rõ công nghệ",
+                }
             ],
         )
         session.add(analysis)
@@ -118,7 +122,7 @@ async def test_manual_cv_decisions_and_pdf_export(client):
     accepted = await client.put(
         f"/api/v1/analysis/{analysis_id}/suggestions",
         headers=headers,
-        json={"suggestion_index": 0, "accepted": True, "final_text": "Built FastAPI service"},
+        json={"suggestion_index": 0, "accepted": True, "final_text": "Developed API with FastAPI"},
     )
     assert accepted.status_code == 200, accepted.text
     exported = await client.get(

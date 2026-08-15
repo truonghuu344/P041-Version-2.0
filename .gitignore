@@ -35,7 +35,7 @@ Thumbs.db
 *.sqlite3
 postgres_data/
 data/raw/
-data/uploads/
+data/generated/
 
 # Chroma DB (using PostgreSQL instead)
 chroma_db/
@@ -44,6 +44,7 @@ qdrant_storage/
 # Logs
 logs/
 *.log
+.ai-log/codex-state.json
 
 # Test coverage & Temp
 htmlcov/
@@ -80,3 +81,6 @@ out/
 
 # Note
 note.txt
+
+# Local demo guide (personal, do not commit)
+setup_demo.md

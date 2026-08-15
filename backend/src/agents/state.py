@@ -37,6 +37,8 @@ class GapAnalysisState(TypedDict, total=False):
     rubric: dict[str, Any]
     evidence: dict[str, Any]
     draft_result: dict[str, Any]
+    explanation_provider: str
+    llm_decision_reason: str
     gap_analysis_result: dict[str, Any]
     error: str
 

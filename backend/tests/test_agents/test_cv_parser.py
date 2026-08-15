@@ -53,6 +53,30 @@ async def test_cv_parser_does_not_require_external_ai(monkeypatch):
     assert "Python" in result["skills"]
 
 
+@pytest.mark.asyncio
+async def test_match_auto_parse_skips_llm_when_local_evidence_is_sufficient():
+    result = await parse_cv_to_structured_json(CV_TEXT, use_llm="auto")
+
+    assert result["agent_metadata"]["llm_policy"] == "auto"
+    assert result["agent_metadata"]["llm_requested"] is False
+    assert result["agent_metadata"]["llm_called"] is False
+
+
+@pytest.mark.asyncio
+async def test_match_auto_parse_requests_llm_only_for_unstructured_long_cv():
+    unstructured = "\n".join(
+        ["Professional background with responsibilities and delivered work outcomes."] * 18
+    )
+
+    result = await parse_cv_to_structured_json(unstructured, use_llm="auto")
+
+    assert result["agent_metadata"]["llm_policy"] == "auto"
+    assert result["agent_metadata"]["llm_requested"] is True
+    # Test configuration has no API key, so the safe local fallback remains usable.
+    assert result["agent_metadata"]["llm_called"] is False
+    assert result["parser_mode"] == "local_fallback"
+
+
 def test_sanitize_extracted_text_removes_postgres_invalid_null_bytes():
     dirty = "Backend: Django\x00Python\x00\nFrontend: HTML"
 

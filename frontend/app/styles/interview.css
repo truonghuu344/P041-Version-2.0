@@ -29,7 +29,7 @@
 .interview-card-heading h3, .interview-live-header h3, .interview-report-card h3 { margin: 0; color: var(--text-primary); font-size: 17px; letter-spacing: -.02em; }
 .interview-card-heading p, .interview-live-header p, .interview-report-card header p { margin: 4px 0 0; color: var(--text-secondary); font-size: 12px; line-height: 1.4; }
 
-.interview-form-grid { display: grid; grid-template-columns: 1.35fr .9fr; gap: 13px 16px; margin-top: 22px; }
+.interview-form-grid { display: grid; grid-template-columns: 1fr; gap: 13px 16px; margin-top: 22px; }
 .interview-field { display: grid; gap: 7px; min-width: 0; color: var(--text-primary); font-size: 12px; font-weight: 750; }
 .interview-field-wide { grid-column: 1 / -1; }
 .interview-field span { display: inline-flex; align-items: center; gap: 6px; }
@@ -89,6 +89,19 @@
 .interview-answer-form input { position: absolute; width: 1px; height: 1px; min-height: 1px; padding: 0; border: 0; opacity: 0; pointer-events: none; }
 .interview-send-button { min-width: 386px; min-height: 48px; padding: 0 16px; border-color: #2378da; background: #fff; color: #2378da; }
 .interview-send-button:hover { background: #edf5ff; color: #1561bd; }
+
+.interview-star-criteria { margin: 18px 0; padding: 18px; border: 1px solid #d5eade; border-radius: 12px; background: #f2faf6; }
+.interview-star-criteria > h4 { display: flex; align-items: center; gap: 7px; margin: 0 0 6px; color: var(--text-primary); font-size: 14px; font-weight: 750; }
+.interview-star-criteria > h4 svg { color: var(--primary); }
+.interview-star-criteria > p { margin: 0 0 14px; color: var(--text-secondary); font-size: 12px; line-height: 1.5; }
+.interview-star-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.interview-star-item { display: grid; gap: 2px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px; background: #fff; }
+.interview-star-item strong { color: var(--text-primary); font-size: 13px; }
+.interview-star-item span { color: var(--text-secondary); font-size: 11.5px; line-height: 1.45; }
+.interview-star-item[data-star="S"] { border-left: 3px solid #2a78d6; }
+.interview-star-item[data-star="T"] { border-left: 3px solid #534ab7; }
+.interview-star-item[data-star="A"] { border-left: 3px solid #d85a30; }
+.interview-star-item[data-star="R"] { border-left: 3px solid #1d9e75; }
 
 .interview-report-card { display: none; margin-top: 18px; padding: 24px; }
 .interview-report-card > header { align-items: center; }

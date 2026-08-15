@@ -144,22 +144,63 @@ def cv_evidence_sentences(cv_text: str) -> list[str]:
     return [re.sub(r"\s+", " ", part).strip(" -•\t") for part in parts if len(part.strip()) >= 20]
 
 
+def mentioned_skills(text: str, skills: Sequence[str]) -> list[str]:
+    """Return JD skills explicitly mentioned as standalone terms in CV evidence."""
+    return [
+        skill
+        for skill in skills
+        if skill and re.search(rf"(?<!\w){re.escape(skill)}(?!\w)", text or "", flags=re.IGNORECASE)
+    ]
+
+
+def is_cv_contact_or_location_line(text: str) -> bool:
+    """Reject personal contact/profile/location lines as CV rewrite candidates."""
+    value = re.sub(r"\s+", " ", text or "").strip()
+    lowered = value.casefold()
+    if re.search(r"[\w.+-]+@[\w.-]+\.[a-z]{2,}", value, flags=re.IGNORECASE):
+        return True
+    if re.search(r"(?:facebook|linkedin|instagram)\.com/", lowered):
+        return True
+    if re.fullmatch(r"(?:https?://|www\.)\S+", value, flags=re.IGNORECASE):
+        return True
+    if re.fullmatch(r"(?:\+?\d[\d\s().-]{7,}\d)", value):
+        return True
+    return bool(
+        re.search(
+            r"^(?:địa chỉ|address|location)\s*[:：]"
+            r"|\b(?:xã|phường|quận|huyện|tỉnh|tp\.?|thành phố)\b",
+            lowered,
+            flags=re.IGNORECASE,
+        )
+    )
+
+
 def deterministic_cv_suggestions(cv_text: str, matched_skills: Sequence[str]) -> list[dict[str, Any]]:
-    """Gợi ý chỉ diễn đạt lại bằng bằng chứng đã có; không tự thêm thành tích hay kỹ năng."""
-    sentences = cv_evidence_sentences(cv_text)
+    """Rewrite only professional CV evidence that directly supports the selected JD."""
+    ranked_sentences: list[tuple[int, int, str, list[str]]] = []
+    for index, sentence in enumerate(cv_evidence_sentences(cv_text)):
+        if is_cv_contact_or_location_line(sentence):
+            continue
+        evidence_skills = mentioned_skills(sentence, matched_skills)
+        if not evidence_skills:
+            continue
+        ranked_sentences.append((-len(evidence_skills), index, sentence, evidence_skills))
+    ranked_sentences.sort(key=lambda item: (item[0], item[1]))
+
     suggestions: list[dict[str, Any]] = []
     action_verbs = ("Phát triển", "Triển khai", "Xây dựng", "Tối ưu", "Phân tích")
-    for sentence in sentences[:3]:
-        evidence_skills = [skill for skill in matched_skills if skill.casefold() in sentence.casefold()]
+    for _, _, sentence, evidence_skills in ranked_sentences[:3]:
         verb = next((item for item in action_verbs if item.casefold() in sentence.casefold()), "Thực hiện")
-        skill_suffix = f" bằng {', '.join(evidence_skills)}" if evidence_skills else ""
-        suggestion = f"{verb} {sentence[0].lower() + sentence[1:]}{skill_suffix}".strip()
+        suggestion = f"{verb} {sentence[0].lower() + sentence[1:]}".strip()
         suggestions.append(
             {
                 "original_text": sentence,
                 "suggested_improvement": suggestion,
                 "action_verb": verb,
-                "reason": "Diễn đạt lại bằng động từ hành động; chỉ sử dụng nội dung đã có trong CV.",
+                "reason": (
+                    f"Liên quan trực tiếp tới yêu cầu JD về {', '.join(evidence_skills)}; "
+                    "chỉ diễn đạt lại bằng chứng đã có trong CV."
+                ),
             }
         )
     return suggestions

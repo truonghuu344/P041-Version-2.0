@@ -3,33 +3,151 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[3]
 FRONTEND_ROOT = ROOT / "frontend"
 APP_JS = (FRONTEND_ROOT / "app.js").read_text(encoding="utf-8")
-PAGE_JS = "\n".join(f.read_text(encoding="utf-8") for f in FRONTEND_ROOT.rglob("*.tsx"))
+PAGE_SOURCE = (FRONTEND_ROOT / "app" / "page.tsx").read_text(encoding="utf-8")
+# The application is composed from React view components. Keep this source
+# contract at the rendered-source level rather than assuming every DOM id
+# remains in app/page.tsx after a component extraction.
+COMPONENT_SOURCE = "\n".join(
+    path.read_text(encoding="utf-8")
+    for path in sorted((FRONTEND_ROOT / "components").rglob("*.tsx"))
+)
+PAGE_JS = f"{PAGE_SOURCE}\n{COMPONENT_SOURCE}"
 STYLE_CSS = (FRONTEND_ROOT / "app" / "styles" / "legacy.css").read_text(encoding="utf-8")
+MATCH_CSS = (FRONTEND_ROOT / "app" / "styles" / "match.css").read_text(encoding="utf-8")
+NEXT_CONFIG = (FRONTEND_ROOT / "next.config.mjs").read_text(encoding="utf-8")
 
 
-def test_cv_and_jd_selection_render_analysis_results_in_place():
+def test_next_dev_cache_is_isolated_from_production_build_output():
+    assert "process.env.NODE_ENV === 'development'" in NEXT_CONFIG
+    assert "distDir: isDevelopment ? 'node_modules/.cache/next-dev' : '.next'" in NEXT_CONFIG
+
+
+def test_cv_and_jd_selection_open_analysis_results_in_gap_modal():
     assert 'id="cv-analysis-cv-select"' in PAGE_JS
     assert 'id="cv-analysis-jd-select"' in PAGE_JS
     assert 'id="cv-analysis-results-card"' in PAGE_JS
     assert 'id="cv-analysis-result-content"' in PAGE_JS
-    assert "ApiClient.runGapAnalysis(selectedCvId, selectedJdId)" in APP_JS
+    assert "ApiClient.startMatch(selectedCvId, selectedJdId)" in APP_JS
+    assert "waitForMatchResult(match.match_id)" in APP_JS
     assert "renderInlineCVAnalysis(analysis, selectedCvId, selectedJdId)" in APP_JS
     assert ".cv-analysis-results-card" in STYLE_CSS
+    assert 'id="gap-result-modal"' in PAGE_JS
+    assert 'role="dialog"' in PAGE_JS
+    assert "openGapResultModal();" in APP_JS
+    assert "cvAnalysisResultsCard?.scrollIntoView" not in APP_JS
+    assert ".gap-result-modal[hidden]" in MATCH_CSS
+    assert "body.gap-result-modal-open #view-match.app-view.active" in MATCH_CSS
+    assert "transform: none !important" in MATCH_CSS
+    assert "place-items: center" in MATCH_CSS
+    assert "max-height: calc(100dvh - 108px)" in MATCH_CSS
+    assert 'id="p1-analysis-journey"' not in PAGE_JS
+    assert "matchButton.textContent = `Đang phân tích ${progress}%`" in APP_JS
 
 
-def test_gap_analysis_replaces_static_roadmap_with_evidence_backed_detail():
+def test_gap_modal_shows_compact_user_facing_result_and_ai_action():
+    for element_id in (
+        "cv-result-match-score",
+        "cv-result-matching-skills",
+        "cv-result-missing-skills",
+        "cv-result-partial-skills",
+        "cv-result-priority-actions",
+        "cv-result-suggestions-preview",
+        "cv-ai-optimization-status",
+        "cv-optimization-detail-summary",
+        "btn-optimize-cv-ai",
+    ):
+        assert f'id="{element_id}"' in PAGE_JS
+    for verbose_element_id in (
+        "cv-result-requirement-evidence",
+        "cv-result-score-breakdown",
+        "cv-result-criteria",
+        "cv-result-learning-actions",
+        "cv-result-certifications",
+        "cv-result-projects",
+    ):
+        assert f'id="{verbose_element_id}"' not in PAGE_JS
+    assert "priorityActions.slice(0, 3)" in APP_JS
+    assert "suggestions.slice(0, 3)" in APP_JS
+    assert "items.slice(0, 6)" in APP_JS
+    assert "function getJDRelevantOptimizationSuggestions(analysis)" in APP_JS
+    assert "standaloneContactPattern.test(original)" in APP_JS
+    assert 'id="cv-optimization-mode"' in PAGE_JS
+    assert "static async optimizeResume(analysisId, optimizationMode = 'balanced', language = 'vi')" in APP_JS
+    assert "return await this.request(`/analysis/${analysisId}/optimize`" in APP_JS
+    assert "ApiClient.optimizeResume(analysis.id" in APP_JS
+    assert "function renderResumeOptimizationReview(result, analysis)" in APP_JS
+    assert "CV cần cải thiện những gì?" in APP_JS
+    assert "Kế hoạch cải thiện theo từng phần" in APP_JS
+    assert "Kỹ năng JD còn thiếu" in APP_JS
+    assert "Vì sao cần sửa?" in APP_JS
+    assert "Bằng chứng trong CV:" in APP_JS
+    assert "Liên quan trực tiếp tới yêu cầu JD:" in APP_JS
+    assert "function downloadOptimizedCVBlob(blob, cvLabel = 'CV')" in APP_JS
+    assert "await Promise.all(changes.map((item, index)" in APP_JS
+    assert "ApiClient.downloadCV(cvId, analysis.id)" in APP_JS
+    assert "downloadOptimizedCVBlob(blob, cvLabel)" in APP_JS
+    assert 'class="cv-optimization-reject"' not in APP_JS
+    assert 'class="cv-optimization-accept"' not in APP_JS
+    assert "Từ chối</button>" not in APP_JS
+    assert "Chấp nhận</button>" not in APP_JS
+    assert "Tối ưu & tải lại" in APP_JS
+    assert "CV gốc vẫn được giữ nguyên" in APP_JS
+
+
+def test_job_selection_modal_is_centered_against_the_viewport():
+    assert 'id="job-preview-modal"' in PAGE_JS
+    assert 'className="cv-modal-overlay job-preview-modal"' in PAGE_JS
+    assert 'role="dialog"' in PAGE_JS
+    assert "document.body.classList.add('job-preview-modal-open')" in APP_JS
+    assert "document.body.classList.remove('job-preview-modal-open')" in APP_JS
+    assert "body.job-preview-modal-open #view-match.app-view.active" in MATCH_CSS
+    assert "#view-match .job-preview-modal" in MATCH_CSS
+    assert "max-height: min(500px, calc(100dvh - 285px))" in MATCH_CSS
+    assert "function buildJobPreviewSections(job)" in APP_JS
+    assert 'class="job-preview-hero"' in APP_JS
+    assert 'class="job-preview-meta"' in APP_JS
+    assert 'class="job-preview-skills"' in APP_JS
+    assert 'class="job-preview-section"' in APP_JS
+    assert "sections.find(section => section.title === current.title)" in APP_JS
+    assert "current.title === 'Giới thiệu công ty' && looksLikeLooseKeyword" in APP_JS
+
+
+def test_saved_cv_cards_select_the_cv_for_match_directly():
+    assert 'role="button" tabindex="0" aria-pressed=' in APP_JS
+    assert "selectSavedCV(card.getAttribute('data-cv-id'))" in APP_JS
+    assert "cvAnalysisCvSelect.value = String(cvId)" in APP_JS
+    assert "cvPageFileInput.value = ''" in APP_JS
+    assert "cvAnalysisCvSelect.dispatchEvent(new Event('change', { bubbles: true }))" in APP_JS
+
+
+def test_match_ui_controller_does_not_reference_start_app_local_variables():
+    controller = APP_JS.split("(function initP1UI()", 1)[1]
+    assert "jobSearchResults?." not in controller
+    assert "showToast(" not in controller
+    assert "openAuthModal" not in controller
+    assert "switchView(" not in controller
+    assert "document.addEventListener('career:match-ui-update', updateP1UI)" in controller
+    assert "document.dispatchEvent(new Event('career:match-ui-update'))" in APP_JS
+
+
+def test_frontend_defines_shared_dom_rendering_helpers():
+    assert "function formatTextToHTML(value = '')" in APP_JS
+    assert "function applyDomField(id, property, value, missingIds = [])" in APP_JS
+
+
+def test_gap_analysis_replaces_static_roadmap_with_compact_actionable_result():
     assert 'trajectory-roadmap-card' not in PAGE_JS
     for element_id in (
-        'cv-result-score-breakdown',
-        'cv-result-soft-skills',
-        'cv-result-section-recommendations',
-        'cv-result-certifications',
-        'cv-result-projects',
+        'cv-result-match-score',
+        'cv-result-matching-skills',
+        'cv-result-missing-skills',
+        'cv-result-priority-actions',
         'cv-result-suggestions-preview',
     ):
         assert f'id="{element_id}"' in PAGE_JS
     assert "analysis.integrity_guardrail" in APP_JS
-    assert 'id="view-gap"' not in PAGE_JS
+    assert 'id="view-gap"' in PAGE_JS
+    assert 'id="view-gap"' not in PAGE_SOURCE
     assert 'id="btn-open-full-gap-result"' not in PAGE_JS
 
 
@@ -72,11 +190,11 @@ def test_inline_analysis_and_interview_dropdown_contract_are_present():
     assert "grid-template-columns: minmax(170px, 0.42fr) minmax(0, 1.58fr);" in STYLE_CSS
 
 
-def test_assistant_gif_asset_exists_and_is_not_empty():
-    asset = FRONTEND_ROOT / "public" / "assistant" / "idle-rotations-8dir.gif"
+def test_assistant_source_asset_exists_and_is_not_empty():
+    asset = FRONTEND_ROOT / "public" / "images" / "chatbot.png"
     assert asset.exists()
     assert asset.stat().st_size > 0
-    assert 'src="/assistant/idle-rotations-8dir.gif"' in PAGE_JS
+    assert 'src="/images/chatbot.png"' in PAGE_JS
     assert '<img\n            id="ai-companion-source"' in PAGE_JS
     assert ".ai-companion-source {" in STYLE_CSS
     assert "opacity: 0;" in STYLE_CSS
@@ -131,7 +249,7 @@ def test_menubar_matches_gate1_role_flows_without_icons():
     nav_markup = PAGE_JS.split('<nav className="nav-links"', 1)[1].split('</nav>', 1)[0]
     assert 'className="nav-icon"' not in nav_markup
     assert "const ROLE_NAV_ITEMS" in APP_JS
-    assert "student: ['nav-dashboard', 'nav-cv', 'nav-find-jobs', 'nav-interview', 'nav-history']" in APP_JS
+    assert "student: ['nav-dashboard', 'nav-cv', 'nav-find-jobs', 'nav-match', 'nav-interview', 'nav-history', 'nav-gap']" in APP_JS
     assert "counselor: ['nav-counselor', 'nav-counselor-reports']" in APP_JS
     assert "enterprise: ['nav-enterprise', 'nav-jobs', 'nav-enterprise-applications']" in APP_JS
     assert 'Lịch sử &amp; Báo cáo' in nav_markup
@@ -180,7 +298,6 @@ def test_google_quicksand_is_self_hosted_and_used_as_the_shared_font():
 
 
 def test_create_cv_gallery_offers_three_distinct_downloadable_templates():
-    assert 'id="btn-open-template-gallery"' in PAGE_JS
     assert 'id="cv-template-modal-overlay"' in PAGE_JS
     assert "onClick={() => setIsTemplateGalleryOpen(true)}" in PAGE_JS
     assert "className={`modal-overlay${isTemplateGalleryOpen ? ' open' : ''}`}" in PAGE_JS
@@ -199,11 +316,13 @@ def test_cv_target_jd_supports_data_catalog_or_file_upload():
     assert "ApiClient.searchJobs('', '', 100)" in APP_JS
     assert "ApiClient.selectCatalogJD(sourceId)" in APP_JS
     assert "JD DOANH NGHIỆP TRONG DATA/JDS" in APP_JS
-    assert 'className="jd-select-wrap gap-select-shell cv-jd-select-shell"' in PAGE_JS
+    assert 'id="p1-job-explore-panel"' in PAGE_JS
+    assert 'id="p1-job-search"' in PAGE_JS
+    assert 'id="p1-job-grid"' in PAGE_JS
     assert "gap-select-search" in APP_JS
     assert ".cv-jd-select-shell .gap-select-menu" in STYLE_CSS
     assert 'id="cv-jd-upload-form"' in PAGE_JS
-    assert 'accept=".pdf,.docx,.txt,.jpg,.jpeg,.png"' in PAGE_JS
+    assert 'accept=".pdf,.docx,.txt,image/*"' in PAGE_JS
 
 
 def test_auth_role_dropdown_and_google_button_are_responsive_custom_controls():
@@ -243,3 +362,15 @@ def test_logout_clears_forms_text_fields_and_session_ui():
     assert "document.querySelectorAll('input, textarea')" in APP_JS
     assert "window.dispatchEvent(new Event('career:session-cleared'))" in APP_JS
     assert "performLogout();" in APP_JS
+
+
+def test_resume_optimizer_uses_long_running_proxy_and_reports_zero_safe_patches():
+    optimize_route = (
+        FRONTEND_ROOT / "app" / "api" / "v1" / "analysis" / "[analysisId]" / "optimize" / "route.ts"
+    ).read_text(encoding="utf-8")
+    assert "export const maxDuration = 180" in optimize_route
+    assert "cache: 'no-store'" in optimize_route
+    assert "await request.arrayBuffer()" in optimize_route
+    assert "Vì sao các nội dung không được áp dụng?" in APP_JS
+    assert "AI đã kiểm tra nhưng chưa có thay đổi nào đủ bằng chứng để áp dụng" in APP_JS
+    assert "throw new Error('Không có nội dung nào đủ bằng chứng" not in APP_JS

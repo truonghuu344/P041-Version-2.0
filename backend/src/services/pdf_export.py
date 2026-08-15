@@ -1,3 +1,5 @@
+import re
+from copy import deepcopy
 from html import escape
 from io import BytesIO
 from pathlib import Path
@@ -124,6 +126,35 @@ def _timeline_table(items: list[Any], body_style: ParagraphStyle, accent: colors
         )
     )
     return table
+
+
+def apply_accepted_rewrites(
+    parsed: dict[str, Any], replacements: list[tuple[str, str]]
+) -> tuple[dict[str, Any], list[str]]:
+    """Apply approved before/after pairs to an export copy; the stored CV remains immutable."""
+    exported = deepcopy(parsed)
+    applied = [False] * len(replacements)
+
+    def rewrite(value: Any) -> Any:
+        if isinstance(value, dict):
+            return {key: rewrite(item) for key, item in value.items()}
+        if isinstance(value, list):
+            return [rewrite(item) for item in value]
+        if not isinstance(value, str):
+            return value
+        result = value
+        for index, (original, optimized) in enumerate(replacements):
+            if not original or not optimized:
+                continue
+            updated, count = re.subn(re.escape(original), lambda _: optimized, result, flags=re.IGNORECASE)
+            if count:
+                result = updated
+                applied[index] = True
+        return result
+
+    exported = rewrite(exported)
+    unmatched = [optimized for index, (_, optimized) in enumerate(replacements) if not applied[index]]
+    return exported, unmatched
 
 
 def build_cv_pdf(
