@@ -182,15 +182,25 @@ class ApiClient {
     });
   }
 
+  static async optimizeResume(analysisId, optimizationMode = 'balanced', language = 'vi') {
+    return await this.request(`/analysis/${analysisId}/optimize`, {
+      method: 'POST',
+      body: JSON.stringify({ optimization_mode: optimizationMode, language }),
+    });
+  }
+
   static async listOptimizationDecisions(analysisId) {
     return await this.request(`/analysis/${analysisId}/suggestions`);
   }
 
-  static async downloadCV(cvId, analysisId, template = 'classic') {
-    const query = new URLSearchParams({ template });
+  static async downloadCV(cvId, analysisId, template = null) {
+    const query = new URLSearchParams();
+    if (template) query.set('template', template);
     if (analysisId) query.set('analysis_id', analysisId);
+    const token = this.getToken();
     const response = await fetch(`${API_BASE_URL}/cvs/${cvId}/export?${query}`, {
       credentials: 'include',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
     if (!response.ok) {
       const data = await response.json().catch(() => ({}));
@@ -1399,6 +1409,7 @@ function startAppLogic() {
   const gapResultModalClose = document.getElementById('gap-result-modal-close');
   const btnOptimizeCvAI = document.getElementById('btn-optimize-cv-ai');
   const cvAiOptimizationStatus = document.getElementById('cv-ai-optimization-status');
+  const cvOptimizationMode = document.getElementById('cv-optimization-mode');
 
   const inspectorDeck = document.getElementById('cv-detail-inspector');
   const btnCloseInspector = document.getElementById('btn-close-cv-detail');
@@ -2076,8 +2087,8 @@ function startAppLogic() {
       `).join('')
       : '<p class="cv-result-empty">Không có câu viết lại đủ bằng chứng.</p>');
     if (btnOptimizeCvAI) {
-      btnOptimizeCvAI.disabled = suggestions.length === 0;
-      btnOptimizeCvAI.innerHTML = '<span aria-hidden="true">✦</span> Tối ưu bằng AI';
+      btnOptimizeCvAI.disabled = !analysis.id || (analysis.integrity_guardrail || 'passed') !== 'passed';
+      btnOptimizeCvAI.innerHTML = '<span aria-hidden="true">✦</span> Tối ưu & tải CV';
     }
     if (cvAiOptimizationStatus) {
       cvAiOptimizationStatus.hidden = true;
@@ -2389,15 +2400,127 @@ function startAppLogic() {
     document.getElementById('page-gap-suggestions-list').innerHTML = (result.suggestions || []).slice(0, 3).map(item => `<p>${escapeHtml(item.suggested_improvement || item)}</p>`).join('') || '<p>Chưa có gợi ý diễn đạt đủ bằng chứng.</p>';
   }
 
+  function renderResumeOptimizationReview(result, analysis) {
+    const changes = Array.isArray(result?.changes) ? result.changes : [];
+    const preview = document.getElementById('cv-result-suggestions-preview');
+    const detailSummary = document.getElementById('cv-optimization-detail-summary');
+    if (!preview) return;
+
+    const sectionLabels = {
+      summary: 'Tóm tắt nghề nghiệp',
+      skills: 'Kỹ năng',
+      experience: 'Kinh nghiệm',
+      projects: 'Dự án',
+      education: 'Học vấn',
+      certifications: 'Chứng chỉ',
+    };
+    const plan = result?.optimization_plan && typeof result.optimization_plan === 'object'
+      ? result.optimization_plan
+      : {};
+    const planItems = Object.entries(plan).flatMap(([section, items]) => (
+      (Array.isArray(items) ? items : []).map(item => ({ section, text: item }))
+    ));
+    const missingRecommendations = Array.isArray(result?.missing_skills_recommendations)
+      ? result.missing_skills_recommendations
+      : [];
+    const warnings = Array.isArray(result?.warnings) ? result.warnings : [];
+    const removedClaims = Array.isArray(result?.fact_check?.removed_claims)
+      ? result.fact_check.removed_claims
+      : [];
+    const factClaims = Array.isArray(result?.fact_check?.claims) ? result.fact_check.claims : [];
+
+    if (detailSummary) {
+      detailSummary.hidden = false;
+      detailSummary.innerHTML = `
+        <div class="cv-optimization-report-head">
+          <div>
+            <span>BÁO CÁO CẢI THIỆN CV</span>
+            <h5>CV cần cải thiện những gì?</h5>
+            <p>AI chỉ áp dụng các thay đổi có thể đối chiếu với nội dung CV gốc.</p>
+          </div>
+          <div class="cv-optimization-report-stats">
+            <strong>${changes.length}</strong><span>thay đổi hợp lệ</span>
+            <strong>${removedClaims.length}</strong><span>claim đã loại</span>
+          </div>
+        </div>
+        <div class="cv-optimization-report-grid">
+          <section>
+            <h6>Kế hoạch cải thiện theo từng phần</h6>
+            ${planItems.length ? `<ul>${planItems.map(item => `
+              <li><strong>${escapeHtml(sectionLabels[item.section] || item.section)}:</strong> ${escapeHtml(item.text)}</li>
+            `).join('')}</ul>` : '<p>Không có đề xuất cấu trúc bổ sung.</p>'}
+          </section>
+          <section>
+            <h6>Kỹ năng JD còn thiếu</h6>
+            ${missingRecommendations.length ? missingRecommendations.map(item => `
+              <article class="cv-missing-skill-detail">
+                <strong>${escapeHtml(item.skill)}</strong>
+                <p>${escapeHtml(item.reason)}</p>
+                <small>Hành động đề xuất: ${escapeHtml(item.recommended_action)}</small>
+              </article>
+            `).join('') : '<p>Không phát hiện kỹ năng bắt buộc nào cần bổ sung.</p>'}
+          </section>
+        </div>
+        <div class="cv-fact-check-detail">
+          <strong>✓ Fact-check:</strong> ${factClaims.length} nội dung đã được kiểm chứng bằng CV gốc.
+          ${removedClaims.length ? ` Đã loại ${removedClaims.length} nội dung không đủ bằng chứng.` : ' Không phát hiện claim bịa đặt.'}
+        </div>
+        ${removedClaims.length ? `<details class="cv-optimization-warnings"><summary>Vì sao các nội dung không được áp dụng? (${removedClaims.length})</summary><ul>${removedClaims.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul></details>` : ''}
+        ${warnings.length ? `<details class="cv-optimization-warnings"><summary>Cảnh báo và giới hạn (${warnings.length})</summary><ul>${warnings.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul></details>` : ''}
+      `;
+    }
+
+    preview.innerHTML = changes.length ? changes.map((item, index) => `
+      <article class="cv-result-rewrite cv-optimization-review" data-index="${index}">
+        <span>${index + 1}</span>
+        <div>
+          <div class="cv-optimization-change-head">
+            <strong>${escapeHtml(sectionLabels[item.section] || item.section || 'Nội dung CV')}</strong>
+            <span>Đã qua fact-check</span>
+          </div>
+          <div class="cv-before-after-grid">
+            <section>
+              <b>TRƯỚC — Nội dung CV gốc</b>
+              <p>${escapeHtml(item.original)}</p>
+            </section>
+            <section>
+              <label for="cv-optimized-text-${index}">SAU — Nội dung được tối ưu</label>
+              <textarea id="cv-optimized-text-${index}" class="cv-optimized-text">${escapeHtml(item.optimized)}</textarea>
+            </section>
+          </div>
+          <div class="cv-optimization-reason"><strong>Vì sao cần sửa?</strong><p>${escapeHtml(item.reason)}</p></div>
+          <div class="cv-optimization-evidence"><strong>Bằng chứng trong CV:</strong> ${escapeHtml((item.evidence || []).join(' · '))}</div>
+          <div class="cv-optimization-alignment-title">Liên quan trực tiếp tới yêu cầu JD:</div>
+          <div class="cv-optimization-alignment">${(item.jd_alignment || []).map(skill => `<span>${escapeHtml(skill)}</span>`).join('')}</div>
+        </div>
+      </article>
+    `).join('') : '<p class="cv-result-empty">Không có câu nào vượt qua kiểm tra bằng chứng để viết lại.</p>';
+
+    window.requestAnimationFrame(() => detailSummary?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }));
+  }
+
+  function downloadOptimizedCVBlob(blob, cvLabel = 'CV') {
+    if (!(blob instanceof Blob) || blob.size === 0) {
+      throw new Error('File CV tối ưu trả về không hợp lệ.');
+    }
+    const safeLabel = String(cvLabel || 'CV')
+      .replace(/\.[^.]+$/, '')
+      .replace(/[\\/:*?"<>|]+/g, '-')
+      .trim() || 'CV';
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `${safeLabel}-toi-uu.pdf`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
   btnOptimizeCvAI?.addEventListener('click', async () => {
     const analysis = latestCVAnalysisContext?.analysis;
-    const suggestions = getJDRelevantOptimizationSuggestions(analysis);
     if (!analysis?.id) {
-      showToast('Không tìm thấy mã kết quả phân tích để lưu bản tối ưu.', 'error');
-      return;
-    }
-    if (!suggestions.length) {
-      showToast('Không có gợi ý tối ưu nào đủ bằng chứng để áp dụng.', 'warning');
+      showToast('Không tìm thấy mã kết quả phân tích để tạo bản tối ưu.', 'error');
       return;
     }
     if ((analysis.integrity_guardrail || 'passed') !== 'passed') {
@@ -2406,31 +2529,61 @@ function startAppLogic() {
     }
 
     btnOptimizeCvAI.disabled = true;
-    btnOptimizeCvAI.innerHTML = '<span aria-hidden="true">✦</span> AI đang tối ưu...';
+    btnOptimizeCvAI.innerHTML = '<span aria-hidden="true">✦</span> AI đang tối ưu & tạo PDF...';
     if (cvAiOptimizationStatus) {
       cvAiOptimizationStatus.hidden = false;
-      cvAiOptimizationStatus.textContent = 'Đang áp dụng các gợi ý có bằng chứng vào bản CV tối ưu...';
+      cvAiOptimizationStatus.textContent = 'AI đang tạo đề xuất, lập evidence map và kiểm tra từng claim...';
     }
     try {
-      const decisions = await Promise.allSettled(suggestions.map((item, index) => (
-        ApiClient.decideSuggestion(analysis.id, item.sourceIndex ?? index, true, item.suggested_improvement || null)
-      )));
-      const acceptedCount = decisions.filter(item => item.status === 'fulfilled').length;
-      if (acceptedCount !== suggestions.length) {
-        throw new Error(`Chỉ lưu được ${acceptedCount}/${suggestions.length} gợi ý.`);
+      const result = await ApiClient.optimizeResume(analysis.id, cvOptimizationMode?.value || 'balanced', 'vi');
+      const changes = Array.isArray(result.changes) ? result.changes : [];
+      analysis.suggestions = (result.changes || []).map(item => ({
+        original_text: item.original,
+        suggested_improvement: item.optimized,
+        reason: item.reason,
+        jd_alignment: item.jd_alignment,
+        evidence: item.evidence,
+      }));
+      renderResumeOptimizationReview(result, analysis);
+      if (!changes.length) {
+        const removedCount = Array.isArray(result.fact_check?.removed_claims) ? result.fact_check.removed_claims.length : 0;
+        btnOptimizeCvAI.disabled = false;
+        btnOptimizeCvAI.innerHTML = '<span aria-hidden="true">↻</span> Thử tối ưu lại';
+        if (cvAiOptimizationStatus) {
+          cvAiOptimizationStatus.textContent = `AI đã kiểm tra nhưng chưa có thay đổi nào đủ bằng chứng để áp dụng${removedCount ? `; ${removedCount} nội dung không an toàn đã bị loại` : ''}. CV gốc được giữ nguyên.`;
+        }
+        showToast('Không có thay đổi đủ bằng chứng; xem báo cáo chi tiết bên trên.', 'warning');
+        return;
       }
-      document.querySelectorAll('#cv-result-suggestions-preview .cv-result-rewrite').forEach(card => {
-        card.classList.add('is-accepted');
-      });
-      analysis.optimizationApplied = true;
-      btnOptimizeCvAI.innerHTML = '<span aria-hidden="true">✓</span> Đã tối ưu bằng AI';
       if (cvAiOptimizationStatus) {
-        cvAiOptimizationStatus.textContent = `Đã áp dụng ${acceptedCount} gợi ý vào bản CV tối ưu. CV gốc vẫn được giữ nguyên.`;
+        cvAiOptimizationStatus.textContent = `Đang áp dụng ${changes.length} thay đổi đã qua fact-check vào bản sao CV...`;
       }
-      showToast('Đã lưu bản tối ưu bằng AI. CV gốc không bị thay đổi.', 'success');
+      await Promise.all(changes.map((item, index) => (
+        ApiClient.decideSuggestion(analysis.id, index, true, item.optimized)
+      )));
+
+      if (cvAiOptimizationStatus) {
+        cvAiOptimizationStatus.textContent = 'Đang dựng và tải xuống bản PDF đã tối ưu...';
+      }
+      const cvId = latestCVAnalysisContext?.cvId;
+      if (!cvId) throw new Error('Không tìm thấy CV gốc để xuất bản tối ưu.');
+      const blob = await ApiClient.downloadCV(cvId, analysis.id);
+      const cvLabel = [...(cvAnalysisCvSelect?.options || [])]
+        .find(option => option.value === String(cvId))?.textContent || 'CV';
+      downloadOptimizedCVBlob(blob, cvLabel);
+
+      const changeCount = changes.length;
+      const removedCount = Array.isArray(result.fact_check?.removed_claims) ? result.fact_check.removed_claims.length : 0;
+      analysis.optimizationApplied = true;
+      btnOptimizeCvAI.disabled = false;
+      btnOptimizeCvAI.innerHTML = '<span aria-hidden="true">↻</span> Tối ưu & tải lại';
+      if (cvAiOptimizationStatus) {
+        cvAiOptimizationStatus.textContent = `Đã áp dụng ${changeCount} thay đổi có bằng chứng${removedCount ? ` và loại ${removedCount} claim không hợp lệ` : ''}; bản CV tối ưu đã được tải xuống. CV gốc vẫn được giữ nguyên.`;
+      }
+      showToast('Đã tối ưu và tải xuống bản CV mới. CV gốc không bị thay đổi.', 'success');
     } catch (err) {
       btnOptimizeCvAI.disabled = false;
-      btnOptimizeCvAI.innerHTML = '<span aria-hidden="true">✦</span> Thử tối ưu lại bằng AI';
+      btnOptimizeCvAI.innerHTML = '<span aria-hidden="true">✦</span> Thử tối ưu & tải lại';
       if (cvAiOptimizationStatus) {
         cvAiOptimizationStatus.textContent = `Chưa thể hoàn tất tối ưu: ${err.message}`;
       }
@@ -3495,29 +3648,23 @@ TÊN CÔNG TY:
         if (!suggestionList) {
           throw new Error('Không tìm thấy vùng hiển thị gợi ý Gap Analysis. Vui lòng tải lại trang.');
         }
-        suggestionList.innerHTML = (res.suggestions || []).map((s, index) => `
-          <div class="suggestion-decision-card" data-index="${index}">
-            <p style="font-size:11px;color:var(--text-muted);margin:0 0 2px 0;"><strong>Gốc:</strong> ${escapeHtml(s.original_text)}</p>
-            <label>Tối ưu (có thể chỉnh trước khi duyệt)</label>
-            <textarea class="form-input suggestion-final-text">${escapeHtml(s.suggested_improvement)}</textarea>
-            <p style="font-size:10px;color:var(--text-dim);margin:0;"><em>${escapeHtml(s.reason)}</em></p>
-            <div class="suggestion-actions"><button type="button" class="btn-outline suggestion-reject">Từ chối</button><button type="button" class="btn-primary suggestion-accept">Chấp nhận</button><span class="suggestion-status">Chưa quyết định</span></div>
-          </div>
+        const gapSuggestions = Array.isArray(res.suggestions) ? res.suggestions : [];
+        suggestionList.innerHTML = gapSuggestions.map(s => `
+          <article class="gap-plan-item compact-item">
+            <p><strong>CV gốc:</strong> ${escapeHtml(s.original_text)}</p>
+            <p><strong>Nội dung tối ưu:</strong> ${escapeHtml(s.suggested_improvement)}</p>
+            <small><strong>Lý do:</strong> ${escapeHtml(s.reason)}</small>
+          </article>
         `).join('') || `<p style="font-size:11px;color:var(--text-muted);">CV của bạn đã tối ưu rất tốt!</p>`;
-        suggestionList.querySelectorAll('.suggestion-decision-card').forEach(card => {
-          const save = async accepted => {
-            const index = Number(card.dataset.index);
-            const finalText = card.querySelector('.suggestion-final-text').value.trim();
-            try {
-              await ApiClient.decideSuggestion(res.id, index, accepted, accepted ? finalText : null);
-              card.dataset.decision = accepted ? 'accepted' : 'rejected';
-              card.querySelector('.suggestion-status').textContent = accepted ? '✓ Đã chấp nhận' : '✕ Đã từ chối';
-              showToast(accepted ? 'Đã lưu nội dung được duyệt.' : 'Đã loại gợi ý.', 'success');
-            } catch (err) { showToast(`Không lưu được quyết định: ${err.message}`, 'error'); }
-          };
-          card.querySelector('.suggestion-accept')?.addEventListener('click', () => save(true));
-          card.querySelector('.suggestion-reject')?.addEventListener('click', () => save(false));
-        });
+        if (res.id && gapSuggestions.length) {
+          const autoApplyResults = await Promise.allSettled(gapSuggestions.map((item, index) => (
+            ApiClient.decideSuggestion(res.id, index, true, item.suggested_improvement || null)
+          )));
+          const failedCount = autoApplyResults.filter(item => item.status === 'rejected').length;
+          if (failedCount) {
+            showToast(`Có ${failedCount} nội dung chưa thể tự áp dụng do không vượt qua fact-check.`, 'warning');
+          }
+        }
         const exportBar = document.getElementById('page-cv-export-bar');
         if (exportBar) exportBar.hidden = false;
 

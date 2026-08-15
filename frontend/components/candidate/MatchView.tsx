@@ -302,13 +302,27 @@ export default function MatchView() {
                   <div id="cv-result-priority-actions" className="cv-result-action-list" />
                 </section>
                 <section className="gap-result-suggestions cv-result-rewrite-panel">
-                  <h4>AI đề xuất sửa CV</h4>
+                  <div className="cv-result-optimize-heading">
+                    <div>
+                      <h4>AI đề xuất sửa CV</h4>
+                      <small>Chỉ dùng nội dung có bằng chứng trong CV gốc.</small>
+                    </div>
+                    <label>
+                      Mức tối ưu
+                      <select id="cv-optimization-mode" defaultValue="balanced">
+                        <option value="conservative">Thận trọng</option>
+                        <option value="balanced">Cân bằng</option>
+                        <option value="aggressive">Mạnh</option>
+                      </select>
+                    </label>
+                  </div>
+                  <div id="cv-optimization-detail-summary" className="cv-optimization-detail-summary" hidden />
                   <div id="cv-result-suggestions-preview" className="cv-result-action-list" />
                 </section>
                 <div id="cv-ai-optimization-status" className="cv-ai-optimization-status" aria-live="polite" hidden />
                 <div className="match-result-actions">
                   <button id="btn-optimize-cv-ai" className="gap-result-optimize-button" type="button">
-                    <Sparkles size={16} /> Tối ưu bằng AI
+                    <Sparkles size={16} /> Tối ưu &amp; tải CV
                   </button>
                   <button id="btn-compare-multi-position" type="button">
                     Match với Job khác

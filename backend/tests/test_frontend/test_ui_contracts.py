@@ -51,6 +51,7 @@ def test_gap_modal_shows_compact_user_facing_result_and_ai_action():
         "cv-result-priority-actions",
         "cv-result-suggestions-preview",
         "cv-ai-optimization-status",
+        "cv-optimization-detail-summary",
         "btn-optimize-cv-ai",
     ):
         assert f'id="{element_id}"' in PAGE_JS
@@ -68,8 +69,26 @@ def test_gap_modal_shows_compact_user_facing_result_and_ai_action():
     assert "items.slice(0, 6)" in APP_JS
     assert "function getJDRelevantOptimizationSuggestions(analysis)" in APP_JS
     assert "standaloneContactPattern.test(original)" in APP_JS
-    assert "item.sourceIndex ?? index" in APP_JS
-    assert "ApiClient.decideSuggestion(analysis.id, item.sourceIndex ?? index, true" in APP_JS
+    assert 'id="cv-optimization-mode"' in PAGE_JS
+    assert "static async optimizeResume(analysisId, optimizationMode = 'balanced', language = 'vi')" in APP_JS
+    assert "return await this.request(`/analysis/${analysisId}/optimize`" in APP_JS
+    assert "ApiClient.optimizeResume(analysis.id" in APP_JS
+    assert "function renderResumeOptimizationReview(result, analysis)" in APP_JS
+    assert "CV cần cải thiện những gì?" in APP_JS
+    assert "Kế hoạch cải thiện theo từng phần" in APP_JS
+    assert "Kỹ năng JD còn thiếu" in APP_JS
+    assert "Vì sao cần sửa?" in APP_JS
+    assert "Bằng chứng trong CV:" in APP_JS
+    assert "Liên quan trực tiếp tới yêu cầu JD:" in APP_JS
+    assert "function downloadOptimizedCVBlob(blob, cvLabel = 'CV')" in APP_JS
+    assert "await Promise.all(changes.map((item, index)" in APP_JS
+    assert "ApiClient.downloadCV(cvId, analysis.id)" in APP_JS
+    assert "downloadOptimizedCVBlob(blob, cvLabel)" in APP_JS
+    assert 'class="cv-optimization-reject"' not in APP_JS
+    assert 'class="cv-optimization-accept"' not in APP_JS
+    assert "Từ chối</button>" not in APP_JS
+    assert "Chấp nhận</button>" not in APP_JS
+    assert "Tối ưu & tải lại" in APP_JS
     assert "CV gốc vẫn được giữ nguyên" in APP_JS
 
 
@@ -339,3 +358,15 @@ def test_logout_clears_forms_text_fields_and_session_ui():
     assert "document.querySelectorAll('input, textarea')" in APP_JS
     assert "window.dispatchEvent(new Event('career:session-cleared'))" in APP_JS
     assert "performLogout();" in APP_JS
+
+
+def test_resume_optimizer_uses_long_running_proxy_and_reports_zero_safe_patches():
+    optimize_route = (
+        FRONTEND_ROOT / "app" / "api" / "v1" / "analysis" / "[analysisId]" / "optimize" / "route.ts"
+    ).read_text(encoding="utf-8")
+    assert "export const maxDuration = 180" in optimize_route
+    assert "cache: 'no-store'" in optimize_route
+    assert "await request.arrayBuffer()" in optimize_route
+    assert "Vì sao các nội dung không được áp dụng?" in APP_JS
+    assert "AI đã kiểm tra nhưng chưa có thay đổi nào đủ bằng chứng để áp dụng" in APP_JS
+    assert "throw new Error('Không có nội dung nào đủ bằng chứng" not in APP_JS

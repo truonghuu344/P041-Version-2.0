@@ -186,11 +186,21 @@ export class ApiClient {
     });
   }
 
-  static async downloadCV(cvId, analysisId, template = 'classic') {
-    const query = new URLSearchParams({ template });
+  static async optimizeResume(analysisId, optimizationMode = 'balanced', language = 'vi') {
+    return await this.request(`/analysis/${analysisId}/optimize`, {
+      method: 'POST',
+      body: JSON.stringify({ optimization_mode: optimizationMode, language }),
+    });
+  }
+
+  static async downloadCV(cvId, analysisId, template = null) {
+    const query = new URLSearchParams();
+    if (template) query.set('template', template);
     if (analysisId) query.set('analysis_id', analysisId);
+    const token = this.getToken();
     const response = await fetch(`${API_BASE_URL}/cvs/${cvId}/export?${query}`, {
       credentials: 'include',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
     if (!response.ok) {
       const data = await response.json().catch(() => ({}));

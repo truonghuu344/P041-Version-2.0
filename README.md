@@ -102,29 +102,124 @@ ESLint của frontend bật kiểm tra `no-undef` cho các file JavaScript để
 
 ### Chức năng Match CV
 
-Match CV yêu cầu người dùng đăng nhập và chọn đủ một CV cùng một JD trước khi phân tích:
+Match CV đo mức độ phù hợp giữa một CV và một Job Description (JD). Mọi kết luận đều phải có bằng chứng trong CV; hệ thống không tự thêm kỹ năng, kinh nghiệm, bằng cấp hoặc thành tích.
 
-1. **Chọn CV:** dùng CV đã có trong Kho CV hoặc tải file PDF/DOCX mới. CV tải tại màn Match được lưu vào đúng Kho CV của tài khoản đang đăng nhập. Trong danh sách CV bên dưới, nhấn trực tiếp vào thẻ CV (hoặc dùng `Enter`/`Space`) để chọn; thẻ được tô trạng thái đã chọn và nút phân tích sẽ dùng đúng CV đó.
-2. **Chọn JD:** chọn công việc trong danh sách có sẵn hoặc tải JD riêng dạng PDF, DOCX, TXT hay ảnh. Khi mở một công việc có sẵn, hộp `Chi tiết công việc` luôn được cố định giữa viewport bên dưới navbar; nội dung dài cuộn trong hộp để nút `Chọn Job này` luôn truy cập được. JD được trình bày theo từng phần gồm tiêu đề/công ty, thông tin nhanh, kỹ năng chính, mô tả, trách nhiệm, yêu cầu và quyền lợi; nhãn trùng lặp cùng dữ liệu thô không cần thiết được loại bỏ.
-3. **Phân tích:** nút `Phân tích Match` chỉ hoạt động khi cả CV và JD đã sẵn sàng. Tiến độ thực của backend hiển thị trực tiếp trên nút (`Đang phân tích …%`); trang không chèn thêm khối loading hoặc kết quả ở phía dưới.
-4. **Xem kết quả:** khi phân tích hoàn tất, popup GAP tự mở ở giữa màn hình thay vì chèn kết quả xuống cuối trang. Popup chỉ giữ thông tin cần để người dùng ra quyết định: Match Score, kết luận ngắn, tối đa 6 kỹ năng ở mỗi nhóm phù hợp/thiếu/chưa rõ, 3 việc ưu tiên và tối đa 3 gợi ý sửa CV. Ma trận bằng chứng, công thức chấm điểm và các nội dung kỹ thuật dài không hiển thị trong popup. Có thể đóng bằng nút `×`, nhấn ngoài popup hoặc phím `Esc`.
-5. **Tối ưu bằng AI:** nút `Tối ưu bằng AI` trong popup chỉ áp dụng gợi ý viết lại cho bullet kinh nghiệm/dự án có kỹ năng đã được xác nhận là liên quan trực tiếp tới JD đang chọn. Email, số điện thoại, URL mạng xã hội và địa chỉ không bao giờ được dùng làm nội dung tối ưu. Các gợi ý phải vượt guardrail, được lưu để dùng khi xuất CV và không ghi đè CV gốc; nếu không có bằng chứng nghề nghiệp phù hợp thì hệ thống không tạo gợi ý.
+#### Cách sử dụng
 
-#### Các cải thiện đã hoàn thành
+1. Đăng nhập và mở màn hình **Match CV**.
+2. Chọn CV trong Kho CV hoặc tải file PDF/DOCX mới.
+3. Chọn công việc trong danh mục hoặc tải JD dạng PDF/DOCX/TXT/ảnh.
+4. Nhấn **Phân tích Match** và theo dõi tiến độ trên nút.
+5. Xem Match Score, kỹ năng phù hợp/còn thiếu, bằng chứng và việc cần ưu tiên trong popup kết quả.
 
-- **Xác thực và dữ liệu người dùng:** bắt buộc đăng nhập trước khi dùng Match CV; CV tải tại màn Match được lưu vào Kho CV của đúng tài khoản.
-- **Chọn CV/JD ổn định:** thẻ CV đã lưu hỗ trợ nhấn chuột, `Enter` và `Space`; trạng thái được chọn thể hiện rõ và ID được chuyển đúng vào request phân tích. JD có thể chọn từ danh mục hoặc tải file riêng.
-- **Xem JD dễ đọc:** modal chi tiết công việc được cố định giữa viewport, khóa cuộn nền và giữ nút chọn ở cuối. Nội dung được tách thành tiêu đề/công ty, thông tin nhanh, kỹ năng, mô tả, trách nhiệm, yêu cầu và quyền lợi; các tiêu đề Việt/Anh cùng nghĩa được gộp, mục lặp cùng các từ khóa rời sai vị trí được loại bỏ.
-- **Phân tích nhanh và tiết kiệm LLM:** ưu tiên parser cùng thuật toán cục bộ; chỉ gọi LLM khi dữ liệu thiếu cấu trúc, độ tin cậy thấp hoặc cần làm rõ bằng chứng. Khi LLM/embedding bên ngoài lỗi, hệ thống có cơ chế fallback để vẫn tạo báo cáo.
-- **Tiến độ gọn:** phần trăm xử lý thật từ backend hiển thị ngay trên nút phân tích; không còn khối loading hoặc kết quả dài được chèn xuống cuối trang.
-- **Kết quả tập trung:** popup GAP tự mở giữa màn hình và chỉ hiển thị dữ liệu người dùng cần: điểm Match, kết luận, nhóm kỹ năng, ba ưu tiên và ba gợi ý sửa CV.
-- **Tối ưu có kiểm soát theo JD:** chỉ viết lại bằng chứng nghề nghiệp liên quan tới JD đang chọn; chặn thông tin liên hệ/địa chỉ, chặn kỹ năng chưa có, chỉ áp dụng gợi ý vượt guardrail và luôn giữ nguyên CV gốc.
-- **Ổn định frontend:** tách cache development khỏi production, sửa các lỗi `ReferenceError`, kiểm tra biến chưa khai báo bằng ESLint và dùng production build để tránh mất asset/manifest trong môi trường OneDrive.
-- **Kiểm thử:** bổ sung contract test cho chọn CV, popup GAP, tối ưu AI và modal JD; đồng thời xác minh lint, typecheck, production build, asset frontend và kết nối backend sau mỗi thay đổi.
+Nút phân tích chỉ hoạt động khi đã chọn đủ CV và JD. CV mới được lưu vào Kho CV của đúng tài khoản.
 
-Luồng Match ưu tiên tốc độ: CV được parse cục bộ trước; LLM chỉ được yêu cầu khi tài liệu đủ dài nhưng dữ liệu trích xuất thiếu cấu trúc hoặc không đủ tín hiệu đáng tin cậy. Phần giải thích Match cũng chỉ gọi LLM khi cấu hình cho phép và kết quả có độ tin cậy thấp, yêu cầu JD chưa rõ hoặc bằng chứng kỹ năng chỉ khớp một phần. Nếu thiếu API key hoặc LLM lỗi, hệ thống tự dùng kết quả xác định cục bộ và vẫn hoàn thành báo cáo.
+#### Workflow và cách hoạt động
 
-API tiến trình `GET /api/v1/matches/{match_id}` trả `current_step` và `progress_percent`; các trạng thái chính là `PENDING`, `PARSING`, `EVALUATING`, `FINALIZING`, `COMPLETED` hoặc `FAILED`.
+```text
+CV + JD
+  → Parse và chuẩn hóa
+  → Chia CV theo section
+  → Tách yêu cầu JD
+  → Tìm evidence
+  → Đánh giá từng yêu cầu
+  → Tính Match Score
+  → Lưu và hiển thị báo cáo
+```
+
+| Bước | Xử lý | Đầu ra |
+|---|---|---|
+| 1. Parse | Parser cục bộ đọc CV/JD; Gemini chỉ hỗ trợ khi dữ liệu thiếu cấu trúc hoặc độ tin cậy thấp. | CV và JD có cấu trúc. |
+| 2. Chunking | CV được chia thành Summary, Skills, Experience, Projects, Education và Certifications. Thông tin liên hệ không dùng làm evidence năng lực. | Các CV chunk có section và trang nguồn. |
+| 3. Requirement extraction | JD được tách thành kỹ năng bắt buộc/ưu tiên, kinh nghiệm, trách nhiệm, học vấn và domain. | Danh sách requirement cần kiểm tra. |
+| 4. Retrieval | BM25 tìm từ khóa; semantic embedding tìm nội dung cùng nghĩa; RRF hợp nhất hai thứ hạng. | Tối đa 3 evidence tốt nhất cho mỗi requirement. |
+| 5. Evaluation | Evidence được phân loại theo mức khớp và kiểm tra đúng section. | Supported, partial, missing hoặc uncertain. |
+| 6. Scoring | Rubric tính điểm từng tiêu chí rồi cộng điểm có trọng số. | Match Score từ 0 đến 100. |
+| 7. Persistence | Backend lưu score, evidence, processing trace và báo cáo. | Kết quả có thể xem lại và truy nguồn. |
+
+Frontend tạo tác vụ nền bằng `POST /api/v1/matches`, sau đó đọc tiến độ từ `GET /api/v1/matches/{match_id}` và lấy báo cáo tại `GET /api/v1/matches/{match_id}/report`.
+
+#### Các luồng hoạt động
+
+| Luồng | Khi nào chạy | Các bước chính |
+|---|---|---|
+| CV đã lưu + JD danh mục | Người dùng chọn dữ liệu đã có | Kiểm tra quyền sở hữu → tạo snapshot CV/JD → tạo match job → phân tích nền → lưu báo cáo. |
+| Tải CV mới | Người dùng chọn PDF/DOCX | Quét file bằng ClamAV → trích xuất text → CV Parsing & ATS Agent chuẩn hóa → lưu Kho CV → chạy match job. |
+| JD tùy chỉnh | Người dùng tải file hoặc nhập JD riêng | Trích xuất và chuẩn hóa JD → lưu JD của người dùng → chạy cùng pipeline Match CV. |
+| AI khả dụng | Dữ liệu khó parse hoặc kết quả cần giải thích thêm | Gemini hỗ trợ structured parse/giải thích; Match Score vẫn do rubric cố định tính. |
+| AI hoặc embedding lỗi | Thiếu API key, hết quota hoặc provider lỗi | Parser cục bộ, deterministic explanation và local hashing embedding tiếp tục xử lý. |
+
+Match job chạy theo trạng thái `PENDING → PARSING → EVALUATING → FINALIZING → COMPLETED`. Nếu một bước không thể hoàn tất, trạng thái chuyển thành `FAILED` kèm mã lỗi; frontend hiển thị tiến độ tương ứng `5% → 20% → 65% → 90% → 100%`.
+
+#### Agent tham gia
+
+| Agent | Vai trò | Luồng nội bộ |
+|---|---|---|
+| **CV Parsing & ATS Agent** | Xử lý CV mới hoặc CV cần parse lại; tạo dữ liệu CV có cấu trúc và đánh giá chất lượng ATS. | Validate CV → local evidence parse → Gemini structured parse khi cần → evidence guardrail → ATS quality → finalize. |
+| **CV Gap Analysis Agent** | Agent chính của Match CV; đối chiếu CV–JD, tạo Gap Analysis và bảo vệ tính trung thực của kết quả. | Validate input → extract evidence → draft analysis/action plan → integrity guardrail → trả báo cáo. |
+
+`Background Match Runner` chỉ điều phối trạng thái, snapshot và lưu dữ liệu; BM25, embedding, RRF, evidence evaluator và rubric là service/tool của hai agent, không phải agent độc lập. Gemini là model được agent gọi khi cần và không trực tiếp quyết định Match Score.
+
+#### Cách tính và giải thích kết quả
+
+Rubric mặc định:
+
+| Tiêu chí | Trọng số |
+|---|---:|
+| Kỹ năng/yêu cầu bắt buộc | 35% |
+| Kinh nghiệm và trách nhiệm | 30% |
+| Domain phù hợp | 15% |
+| Học vấn | 10% |
+| Kỹ năng/yêu cầu ưu tiên | 10% |
+
+Nếu JD không có dữ liệu cho một tiêu chí, trọng số được phân bổ lại giữa các tiêu chí còn hoạt động để tổng luôn bằng 100%.
+
+```text
+Điểm tiêu chí = Trung bình điểm các requirement thuộc tiêu chí
+Điểm có trọng số = Điểm tiêu chí × Trọng số
+Match Score = Tổng điểm có trọng số
+```
+
+| Mức khớp | Điểm requirement | Giải thích |
+|---|---:|---|
+| Exact/Normalized Match | 100% | Khớp trực tiếp hoặc khớp sau chuẩn hóa alias, ví dụ ReactJS → React. |
+| Semantic Match | 80% | Evidence tương đồng rõ về ý nghĩa. |
+| Partial Match | 50% | Có evidence liên quan nhưng chưa đáp ứng đầy đủ. |
+| Not Found | 0% | Không tìm thấy bằng chứng đáng tin cậy. |
+
+Điểm có thể thấp dù CV chứa nhiều từ khóa vì:
+
+- Evidence phải nằm trong section phù hợp với loại requirement.
+- Một kỹ năng chỉ xuất hiện trong danh sách không chứng minh đầy đủ kinh nghiệm sử dụng.
+- Yêu cầu bắt buộc có trọng số cao hơn yêu cầu ưu tiên.
+- Khớp semantic hoặc khớp một phần không nhận toàn bộ điểm.
+- Nội dung thiếu, mơ hồ hoặc parse không chắc chắn được đánh dấu `UNCERTAIN` thay vì suy đoán.
+
+`confidence_score` phản ánh chất lượng parse và mức đầy đủ của evidence; đây không phải Match Score. Thiếu yêu cầu bắt buộc tạo cảnh báo `mandatory_requirement_failed`, nhưng phiên bản hiện tại không tự đưa điểm về 0 và không thay nhà tuyển dụng quyết định tuyển/loại.
+
+| Match Score | Rating |
+|---:|---|
+| 0–49.9 | POOR |
+| 50–69.9 | AVERAGE |
+| 70–84.9 | GOOD |
+| 85–100 | EXCELLENT |
+
+#### Công nghệ dùng riêng cho Match CV
+
+| Mục đích | Công nghệ |
+|---|---|
+| API và xử lý nền | FastAPI, Uvicorn, Python async |
+| Parse CV/JD | Parser cục bộ, Gemini khi cần |
+| Tìm kiếm từ khóa | BM25 |
+| Tìm kiếm ngữ nghĩa | Gemini Embedding `gemini-embedding-2` |
+| Fallback embedding | Local hashing embedding 768 chiều |
+| Hợp nhất kết quả | Reciprocal Rank Fusion (RRF) |
+| So sánh vector | Cosine similarity |
+| Lưu báo cáo | PostgreSQL, SQLAlchemy |
+| Tìm JD trong danh mục | PostgreSQL + pgvector |
+| Kiểm tra file upload | ClamAV |
+
+Khi Gemini Embedding không khả dụng và provider là `auto`, hệ thống tự chuyển sang local hashing embedding để Match CV vẫn hoàn thành.
 
 ### RAG JD thị trường với pgvector
 
