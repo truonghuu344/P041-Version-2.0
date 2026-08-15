@@ -108,7 +108,7 @@ async def draft_gap_analysis(state: GapAnalysisState) -> dict[str, Any]:
         "suggestions": deterministic_cv_suggestions(state["cv_raw_text"], evidence["hard_skills_matching"]),
     }
     settings = get_settings()
-    if not settings.match_explanation_llm_enabled or not settings.google_genai_api_key:
+    if not getattr(settings, "match_explanation_llm_enabled", False) or not settings.google_genai_api_key:
         return {"draft_result": fallback}
 
     system_prompt = """Bạn là CV Gap Analysis & Career Action Plan Agent.
@@ -370,7 +370,8 @@ async def enforce_gap_integrity(state: GapAnalysisState) -> dict[str, Any]:
         "integrity_guardrail": "passed",
         "explanation_provider": (
             "gemini_guarded"
-            if get_settings().match_explanation_llm_enabled and get_settings().google_genai_api_key
+            if getattr(get_settings(), "match_explanation_llm_enabled", False)
+            and get_settings().google_genai_api_key
             else "deterministic"
         ),
     }

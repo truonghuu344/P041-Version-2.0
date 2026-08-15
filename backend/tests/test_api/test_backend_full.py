@@ -317,7 +317,7 @@ async def test_two_ai_agent_workflows_match_frontend_contract(client, monkeypatc
     gap = gap_response.json()
     assert set(gap["hard_skills_matching"]) == {"Python", "FastAPI", "REST API"}
     assert set(gap["hard_skills_missing"]) == {"PostgreSQL", "Docker"}
-    assert gap["pipeline_version"] == "1.0"
+    assert gap["pipeline_version"] == "2.0"
     assert gap["requirement_evidence"]
     assert gap["final_score"] == gap["match_score"]
     assert gap["criteria"]
