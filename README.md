@@ -63,10 +63,11 @@ docker compose logs -f backend
 ```bash
 cd frontend && npm install
 Copy-Item .env.local.example .env.local # PowerShell (chạy một lần)
-npm run dev
+npm run build
+npm run start
 ```
 
-Trên macOS/Linux, thay lệnh copy bằng `cp .env.local.example .env.local`. Frontend có tại `http://localhost:3000`.
+Trên macOS/Linux, thay lệnh copy bằng `cp .env.local.example .env.local`. Frontend có tại `http://localhost:3000`. Cách `build` + `start` được khuyến nghị khi chạy demo, đặc biệt nếu dự án nằm trong OneDrive. Chỉ dùng `npm run dev` khi đang sửa giao diện và cần hot reload.
 
 ### Bước 4 — Mở app
 
@@ -95,9 +96,13 @@ npm run build && npm run start         # Build và chạy Next.js production loc
 
 Khi sửa mã backend hoặc dependency, dùng `docker compose up --build -d`. Khi chỉ sửa frontend, Next.js dev server tự reload; không cần Docker build.
 
+Frontend dùng cache dev tại `frontend/node_modules/.cache/next-dev`, tách biệt với output production `frontend/.next`. Tuy vậy, OneDrive có thể vẫn xóa file cache hot reload theo thời gian. Khi giao diện chỉ còn HTML thô hoặc asset trả 404, hãy dừng dev server rồi chạy `npm run build` và `npm run start`; production server dùng bundle bất biến và ổn định hơn cho kiểm thử/demo.
+
+ESLint của frontend bật kiểm tra `no-undef` cho các file JavaScript để chặn ngay khi build những lỗi runtime như `ReferenceError: <biến> is not defined`.
+
 ### RAG JD thị trường với pgvector
 
-Backend tự đồng bộ ~98 JD mẫu trong `data/jds` vào PostgreSQL/pgvector lúc khởi động. Nếu embedding lỗi hoặc quota Gemini API hết, API tự chuyển về tìm kiếm theo catalog để giao diện vẫn hoạt động bình thường (chỉ tính năng "AI lọc JD theo CV" bị ảnh hưởng, tìm việc theo từ khóa vẫn chạy).
+Backend tự đồng bộ ~98 JD mẫu trong `data/jds` vào PostgreSQL/pgvector lúc khởi động. Khi `VECTOR_EMBEDDING_PROVIDER=auto`, nếu Gemini embedding lỗi hoặc hết quota, backend tự đồng bộ lại bằng `hashing-v1` chạy nội bộ; tìm kiếm semantic và Match CV vẫn dùng được mà không phải chờ quota. Nếu cấu hình rõ `VECTOR_EMBEDDING_PROVIDER=gemini`, lỗi Gemini vẫn được báo để người vận hành biết cấu hình bắt buộc không đáp ứng.
 
 ```bash
 # Đồng bộ thủ công từ thư mục root (hoặc sau khi quota reset)
@@ -107,6 +112,23 @@ python scripts/index_market_jds.py
 curl -X POST http://localhost:8000/api/v1/jobs/rag/sync \
   -H "Authorization: Bearer <admin-token>"
 ```
+
+### LangSmith và kiểm tra sau khi sửa
+
+LangSmith tracing mặc định đang tắt để key mẫu không tạo lỗi `403 Forbidden`. Chỉ đặt `LANGCHAIN_TRACING_V2=true` và `LANGSMITH_TRACING=true` sau khi đã điền `LANGSMITH_API_KEY` hợp lệ.
+
+```bash
+# Backend (chạy trong backend/ sau khi cài requirements.txt)
+python -m ruff check src tests
+python -m pytest -q
+
+# Frontend (chạy trong frontend/; dừng dev server trước khi build để tránh dùng chung cache .next)
+npm run lint
+npm run typecheck
+npm run build
+```
+
+Kết quả kiểm tra gần nhất: backend `198 passed`; frontend lint, TypeScript và production build đều thành công. Runtime đã được smoke test qua proxy frontend: đăng nhập, tạo CV tạm, chọn JD, Match hoàn tất và CV kiểm tra đã được xóa.
 
 
 ## 🛠 Tech Stack

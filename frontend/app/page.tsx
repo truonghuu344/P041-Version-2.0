@@ -21,14 +21,20 @@ import EnterpriseView from '../components/enterprise/EnterpriseView';
 import AdminView from '../components/admin/AdminView';
 
 export default function Page() {
+  const [isMounted, setIsMounted] = useState(false);
   const [isTemplateGalleryOpen, setIsTemplateGalleryOpen] = useState(false);
   const [selectedCVTemplate, setSelectedCVTemplate] = useState<CVTemplateName | null>(null);
 
   useEffect(() => {
-    // Import app.js dynamically on client side
-    // @ts-expect-error dynamically imported non-module script
-    import('../app.js');
+    setIsMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (!isMounted) return;
+    // The legacy controller needs the complete client-rendered DOM before it binds events.
+    // @ts-expect-error dynamically imported non-module script
+    void import('../app.js');
+  }, [isMounted]);
 
   const selectCVTemplate = (templateName: CVTemplateName) => {
     setSelectedCVTemplate(templateName);
@@ -36,6 +42,13 @@ export default function Page() {
     const manualForm = document.getElementById('manual-cv-form');
     window.requestAnimationFrame(() => manualForm?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
   };
+
+  // This application is DOM-driven and browser extensions can add attributes such as
+  // `fdprocessedid` to form controls before React hydrates them. Hydrate a stable,
+  // non-interactive shell first, then render the interactive application on the client.
+  if (!isMounted) {
+    return <div id="app-bootstrap" aria-hidden="true" suppressHydrationWarning />;
+  }
 
   return (
     <>
@@ -84,7 +97,12 @@ export default function Page() {
 
       <main>
         <DashboardView />
-        <CVView selectedCVTemplate={selectedCVTemplate} setIsTemplateGalleryOpen={setIsTemplateGalleryOpen} selectCVTemplate={selectCVTemplate} />
+        <CVView
+          selectedCVTemplate={selectedCVTemplate}
+          isTemplateGalleryOpen={isTemplateGalleryOpen}
+          setIsTemplateGalleryOpen={setIsTemplateGalleryOpen}
+          selectCVTemplate={selectCVTemplate}
+        />
         <FindJobsView />
         <JobsView />
         <MatchView />

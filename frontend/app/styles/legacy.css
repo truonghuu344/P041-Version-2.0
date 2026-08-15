@@ -6720,15 +6720,7 @@ html.light .section-subtitle,
 .manual-cv-form { display: grid; gap: 12px; }
 .manual-cv-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .manual-cv-form textarea { min-height: 76px; resize: vertical; }
-.suggestion-decision-card {
-  display: grid; gap: 8px; padding: 13px; border: 1px solid rgba(176,132,252,.3);
-  border-left: 3px solid #b084fc; border-radius: 10px; background: rgba(255,255,255,.035);
-}
-.suggestion-decision-card[data-decision="accepted"] { border-color: rgba(0,230,118,.55); }
-.suggestion-decision-card[data-decision="rejected"] { opacity: .65; border-color: rgba(255,78,106,.45); }
-.suggestion-final-text { min-height: 72px; resize: vertical; }
-.suggestion-actions, .cv-export-bar, .jd-apply-row { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
-.suggestion-status { font-size: 11px; color: var(--text-dim); }
+.cv-export-bar, .jd-apply-row { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
 .cv-export-bar { margin-top: 14px; padding: 12px; border-radius: 10px; background: rgba(37,99,235,.1); }
 .cv-export-bar .form-input { width: auto; min-width: 160px; }
 .csat-form { display: grid; grid-template-columns: auto minmax(150px, 1fr) 2fr auto; align-items: center; gap: 9px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); }

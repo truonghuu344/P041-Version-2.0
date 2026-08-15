@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import re
 from io import BytesIO
-from typing import Any
+from typing import Any, Literal
 
 import docx
 from google import genai
@@ -362,14 +362,58 @@ def parse_cv_locally(raw_text: str) -> dict[str, Any]:
     }
 
 
-async def parse_cv_to_structured_json(raw_text: str, *, use_llm: bool | None = None) -> dict[str, Any]:
+def _match_parse_needs_llm(raw_text: str, local_result: dict[str, Any]) -> tuple[bool, list[str]]:
+    """Decide whether a Match CV upload needs an LLM-assisted parse.
+
+    Matching always has the raw document text available, so the LLM is only
+    useful when the local parser cannot recover enough structured evidence.
+    Very short documents are not escalated because an LLM cannot safely add
+    facts that are absent from the source.
+    """
+    reasons: list[str] = []
+    if len(raw_text) < 200:
+        return False, ["source_too_short_for_safe_llm_enrichment"]
+
+    hard_skills = local_result.get("hard_skills") or local_result.get("skills") or []
+    core_records = sum(
+        len(local_result.get(section) or [])
+        for section in ("experience", "projects", "education")
+    )
+    if len(hard_skills) < 2:
+        reasons.append("few_locally_recognized_skills")
+    if core_records == 0:
+        reasons.append("no_structured_experience_project_or_education")
+
+    # One weak signal alone is not enough to pay the latency/cost of an LLM.
+    # Long documents with no section structure are the exception because the
+    # local parser likely lost meaningful evidence during extraction.
+    needs_llm = len(reasons) >= 2 or (len(raw_text) >= 800 and core_records == 0)
+    return needs_llm, reasons or ["local_parse_sufficient"]
+
+
+async def parse_cv_to_structured_json(
+    raw_text: str,
+    *,
+    use_llm: bool | Literal["auto"] | None = None,
+) -> dict[str, Any]:
     """Điểm vào duy nhất của CV Parsing Agent (LangGraph + LLM + guardrail)."""
     from src.agents.cv_parser_agent import cv_parser_agent
 
-    if use_llm is None:
-        use_llm = get_settings().cv_parser_mode == "gemini"
     clean_text = sanitize_extracted_text(raw_text)
-    parsed = await cv_parser_agent.run(clean_text, use_llm=use_llm)
+    llm_policy = "configured"
+    decision_reasons: list[str] = []
+    if use_llm == "auto":
+        llm_policy = "auto"
+        local_result = parse_cv_locally(clean_text)
+        resolved_use_llm, decision_reasons = _match_parse_needs_llm(clean_text, local_result)
+    else:
+        resolved_use_llm = get_settings().cv_parser_mode == "gemini" if use_llm is None else use_llm
+        decision_reasons = ["explicit_llm_setting" if use_llm is not None else "project_configuration"]
+
+    parsed = await cv_parser_agent.run(clean_text, use_llm=resolved_use_llm)
+    metadata = parsed.setdefault("agent_metadata", {})
+    metadata["llm_policy"] = llm_policy
+    metadata["llm_decision_reasons"] = decision_reasons
     from src.services.cv_jd_pipeline import normalize_structured_cv
 
     parsed["normalized_v1"] = normalize_structured_cv(clean_text, parsed)
