@@ -1,0 +1,72 @@
+[
+  {
+    "pair_id": "pair_001",
+    "cv_summary": "Backend Python developer 3 years, Django, FastAPI, PostgreSQL, Redis, no Docker",
+    "jd_summary": "Backend Engineer: Python 3+yrs (required), Docker (required), FastAPI (preferred), PostgreSQL (preferred)",
+    "expert_labels": {
+      "required_skills": "PARTIALLY_MET",
+      "relevant_experience": "FULLY_MET",
+      "education": "FULLY_MET",
+      "preferred_skills": "PARTIALLY_MET",
+      "domain_responsibilities": "FULLY_MET"
+    },
+    "mandatory_gaps_expected": ["Docker"],
+    "notes": "Missing Docker (mandatory) -> should be partially met"
+  },
+  {
+    "pair_id": "pair_002",
+    "cv_summary": "Fresh graduate, Python basics, no work experience, CS degree",
+    "jd_summary": "Senior Data Engineer: Python 5+yrs (required), Spark (required), Airflow (required), AWS (preferred), 5+ years experience (mandatory)",
+    "expert_labels": {
+      "required_skills": "NOT_MET",
+      "relevant_experience": "NOT_MET",
+      "education": "FULLY_MET",
+      "preferred_skills": "NOT_MET",
+      "domain_responsibilities": "NOT_MET"
+    },
+    "mandatory_gaps_expected": ["5+ years experience", "Spark", "Airflow"],
+    "notes": "Clear mismatch - senior role vs fresh grad"
+  },
+  {
+    "pair_id": "pair_003",
+    "cv_summary": "Full-stack dev 5 years React TypeScript Node.js PostgreSQL Docker K8s, led team of 4",
+    "jd_summary": "Senior Full-stack: React (required), TypeScript (required), Node.js (required), Docker (required), leadership (preferred)",
+    "expert_labels": {
+      "required_skills": "FULLY_MET",
+      "relevant_experience": "FULLY_MET",
+      "education": "UNCERTAIN",
+      "preferred_skills": "FULLY_MET",
+      "domain_responsibilities": "FULLY_MET"
+    },
+    "mandatory_gaps_expected": [],
+    "notes": "Strong match - education uncertain because not mentioned in CV summary"
+  },
+  {
+    "pair_id": "pair_004",
+    "cv_summary": "Data Analyst 2 years Excel Power BI SQL basic Python, no ML experience",
+    "jd_summary": "ML Engineer: Python (required), TensorFlow/PyTorch (required), SQL (required), statistics (required), 3+ years ML experience (mandatory)",
+    "expert_labels": {
+      "required_skills": "PARTIALLY_MET",
+      "relevant_experience": "NOT_MET",
+      "education": "UNCERTAIN",
+      "preferred_skills": "NOT_MET",
+      "domain_responsibilities": "NOT_MET"
+    },
+    "mandatory_gaps_expected": ["ML experience", "TensorFlow/PyTorch"],
+    "notes": "Partial skills match, no ML experience"
+  },
+  {
+    "pair_id": "pair_005",
+    "cv_summary": "DevOps engineer 4 years CI/CD Jenkins Docker K8s AWS Terraform monitoring ELK",
+    "jd_summary": "DevOps/SRE: Docker (required), K8s (required), AWS (required), CI/CD (required), Terraform (preferred), monitoring (preferred)",
+    "expert_labels": {
+      "required_skills": "FULLY_MET",
+      "relevant_experience": "FULLY_MET",
+      "education": "UNCERTAIN",
+      "preferred_skills": "FULLY_MET",
+      "domain_responsibilities": "FULLY_MET"
+    },
+    "mandatory_gaps_expected": [],
+    "notes": "Strong DevOps match"
+  }
+]

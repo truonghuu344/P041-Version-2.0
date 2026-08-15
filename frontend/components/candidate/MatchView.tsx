@@ -12,8 +12,32 @@ import {
   Sparkles,
   Upload,
 } from 'lucide-react';
+import MatchEvaluationModal from './MatchEvaluationModal';
 
 export default function MatchView() {
+  const [isEvalOpen, setIsEvalOpen] = React.useState(false);
+  const [matchId, setMatchId] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    const handleOpenEval = () => {
+      const id = (window as any).latestMatchId || localStorage.getItem('latest_match_id');
+      if (id) {
+        setMatchId(id);
+        setIsEvalOpen(true);
+      } else {
+        alert('Chưa có dữ liệu so khớp gần nhất để hiển thị đánh giá chi tiết.');
+      }
+    };
+
+    // Chúng ta lắng nghe sự kiện click trên nút bấm thuần HTML trong DOM
+    const btn = document.getElementById('btn-open-eval-modal');
+    btn?.addEventListener('click', handleOpenEval);
+
+    return () => {
+      btn?.removeEventListener('click', handleOpenEval);
+    };
+  }, []);
+
   return (
     <section className="app-view buddy-landing" id="view-match">
       <div className="match-workspace">
@@ -382,6 +406,24 @@ export default function MatchView() {
             </div>
           </div>
         </div>
+
+        <MatchEvaluationModal
+          matchId={isEvalOpen ? matchId : null}
+          onClose={() => {
+            setIsEvalOpen(false);
+            setMatchId(null);
+          }}
+          onNavigateOptimize={() => {
+            setIsEvalOpen(false);
+            setMatchId(null);
+            window.switchView?.('cv');
+          }}
+          onNavigateInterview={() => {
+            setIsEvalOpen(false);
+            setMatchId(null);
+            window.switchView?.('interview');
+          }}
+        />
       </div>
     </section>
   );

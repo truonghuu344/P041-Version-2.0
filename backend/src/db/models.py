@@ -357,6 +357,9 @@ class MatchEvidenceArtifact(Base):
     bm25_score: Mapped[float | None] = mapped_column(Float, nullable=True)
     fusion_score: Mapped[float] = mapped_column(Float, nullable=False)
     ranks_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+    # TM4 feat/match-evaluation-modal: vị trí câu bằng chứng trong CV raw text
+    span_start: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    span_end: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
 
 class CriterionEvaluationArtifact(Base):
