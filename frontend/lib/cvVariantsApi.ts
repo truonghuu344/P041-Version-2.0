@@ -62,12 +62,23 @@ export interface CVVariant {
   status: VariantStatus;
   content: VariantContent;
   template: { id: string; name: 'classic' | 'modern' | 'compact'; version: number };
-  ai_metadata: { provider?: string; model?: string; fallback_used?: boolean; prompt_version?: string; latency_ms?: number };
+  ai_metadata: {
+    provider?: string;
+    model?: string;
+    fallback_used?: boolean;
+    prompt_version?: string;
+    latency_ms?: number;
+  };
   validator_result: VariantValidation | null;
   rendered_checksum: string | null;
   revision_no: number;
   trace_id: string;
-  revisions: Array<{ revision_no: number; editor_type: string; change_summary?: string; created_at: string }>;
+  revisions: Array<{
+    revision_no: number;
+    editor_type: string;
+    change_summary?: string;
+    created_at: string;
+  }>;
 }
 
 interface ApiErrorBody {
@@ -85,9 +96,12 @@ async function requestJson<T>(url: string, init: RequestInit = {}): Promise<T> {
   const response = await fetch(url, {
     ...init,
     credentials: 'include',
-    headers: authHeaders({ 'Content-Type': 'application/json', ...(init.headers as Record<string, string> || {}) }),
+    headers: authHeaders({
+      'Content-Type': 'application/json',
+      ...((init.headers as Record<string, string>) || {}),
+    }),
   });
-  const body = await response.json().catch(() => ({} as ApiErrorBody)) as ApiErrorBody & T;
+  const body = (await response.json().catch(() => ({}) as ApiErrorBody)) as ApiErrorBody & T;
   if (!response.ok) {
     const detail = typeof body.detail === 'string' ? body.detail : body.detail?.message;
     throw new Error(body.message || detail || `Lỗi HTTP ${response.status}`);
@@ -120,22 +134,40 @@ export const cvVariantsApi = {
     return requestJson(`/api/v2/cv-variants/${encodeURIComponent(id)}`);
   },
 
-  autosave(id: string, content: VariantContent, confirmedClaims: string[] = []): Promise<CVVariant> {
+  autosave(
+    id: string,
+    content: VariantContent,
+    confirmedClaims: string[] = [],
+  ): Promise<CVVariant> {
     return requestJson(`/api/v2/cv-variants/${encodeURIComponent(id)}`, {
       method: 'PATCH',
-      body: JSON.stringify({ content, confirmed_claims: confirmedClaims, change_summary: 'Autosave từ CV wizard' }),
+      body: JSON.stringify({
+        content,
+        confirmed_claims: confirmedClaims,
+        change_summary: 'Autosave từ CV wizard',
+      }),
     });
   },
 
-  decide(id: string, suggestionId: string, decision: 'accept' | 'reject' | 'edit', finalText?: string): Promise<CVVariant> {
-    return requestJson(`/api/v2/cv-variants/${encodeURIComponent(id)}/suggestions/${encodeURIComponent(suggestionId)}`, {
-      method: 'PUT',
-      body: JSON.stringify({ decision, final_text: finalText || null }),
-    });
+  decide(
+    id: string,
+    suggestionId: string,
+    decision: 'accept' | 'reject' | 'edit',
+    finalText?: string,
+  ): Promise<CVVariant> {
+    return requestJson(
+      `/api/v2/cv-variants/${encodeURIComponent(id)}/suggestions/${encodeURIComponent(suggestionId)}`,
+      {
+        method: 'PUT',
+        body: JSON.stringify({ decision, final_text: finalText || null }),
+      },
+    );
   },
 
   validate(id: string): Promise<VariantValidation> {
-    return requestJson(`/api/v2/cv-variants/${encodeURIComponent(id)}/validate`, { method: 'POST' });
+    return requestJson(`/api/v2/cv-variants/${encodeURIComponent(id)}/validate`, {
+      method: 'POST',
+    });
   },
 
   publish(id: string): Promise<{ checksum: string; download_url: string; status: 'PUBLISHED' }> {
@@ -143,13 +175,20 @@ export const cvVariantsApi = {
   },
 
   async pdf(id: string, preview = false): Promise<Blob> {
-    const response = await fetch(`/api/v2/cv-variants/${encodeURIComponent(id)}/export${preview ? '?preview=true' : ''}`, {
-      credentials: 'include',
-      headers: authHeaders(),
-    });
+    const response = await fetch(
+      `/api/v2/cv-variants/${encodeURIComponent(id)}/export${preview ? '?preview=true' : ''}`,
+      {
+        credentials: 'include',
+        headers: authHeaders(),
+      },
+    );
     if (!response.ok) {
-      const body = await response.json().catch(() => ({} as ApiErrorBody)) as ApiErrorBody;
-      throw new Error(body.message || (typeof body.detail === 'string' ? body.detail : body.detail?.message) || 'Không thể mở PDF.');
+      const body = (await response.json().catch(() => ({}) as ApiErrorBody)) as ApiErrorBody;
+      throw new Error(
+        body.message ||
+          (typeof body.detail === 'string' ? body.detail : body.detail?.message) ||
+          'Không thể mở PDF.',
+      );
     }
     return response.blob();
   },
