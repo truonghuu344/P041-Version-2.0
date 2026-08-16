@@ -217,11 +217,18 @@ class TopJobRecommendationService:
             k=self.settings.job_recommend_bm25_k,
         )
 
-        semantic_retriever = SemanticRetriever(settings=self.settings)
-        vector_results = await semantic_retriever.retrieve(
-            cv_retrieval_text,
-            k=self.settings.job_recommend_vector_k,
-        )
+        try:
+            semantic_retriever = SemanticRetriever(settings=self.settings)
+            vector_results = await semantic_retriever.retrieve(
+                cv_retrieval_text,
+                k=self.settings.job_recommend_vector_k,
+            )
+        except Exception as exc:
+            logger.warning(
+                "Semantic retrieval failed during candidate retrieval; falling back to BM25 only: %s",
+                exc,
+            )
+            vector_results = []
 
         fused_candidates = weighted_rrf(
             bm25_results,
