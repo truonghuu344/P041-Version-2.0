@@ -2,7 +2,6 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import NotificationBell from '../NotificationBell';
 import NotificationPopover from '../NotificationPopover';
-import { ApiClient } from '../../../api-client.js';
 
 jest.mock('../../../api-client.js', () => ({
   ApiClient: {

@@ -17,7 +17,6 @@ export default function NotificationsView() {
   const [activeTab, setActiveTab] = useState<'all' | 'unread'>('all');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // Load user role
   useEffect(() => {
@@ -32,7 +31,6 @@ export default function NotificationsView() {
   // Fetch notifications
   const loadNotifications = useCallback(async () => {
     if (!ApiClient.isAuthenticated()) return;
-    setIsLoading(true);
     try {
       const data = await ApiClient.listNotifications({ category: 'all' });
       if (Array.isArray(data)) {
@@ -40,8 +38,6 @@ export default function NotificationsView() {
       }
     } catch (err) {
       console.error('Failed to load notifications:', err);
-    } finally {
-      setIsLoading(false);
     }
   }, []);
 
@@ -68,24 +64,24 @@ export default function NotificationsView() {
     }
 
     // Deep link navigation
-    if (typeof window !== 'undefined' && (window as any).switchView) {
+    if (typeof window !== 'undefined' && window.switchView) {
       if (item.job_id && (item.category === 'job' || item.type === 'JOB_MATCHED')) {
-        (window as any).switchView('jobs');
+        window.switchView('jobs');
       } else if (item.application_id) {
         if (userRole === 'enterprise') {
-          (window as any).switchView('enterprise');
+          window.switchView('enterprise');
           window.dispatchEvent(new CustomEvent('navigate-enterprise', { detail: 'candidates' }));
         } else {
-          (window as any).switchView('jobs');
+          window.switchView('jobs');
         }
       } else if (item.category === 'advisor') {
         if (userRole === 'counselor') {
-          (window as any).switchView('counselor');
+          window.switchView('counselor');
         } else {
-          (window as any).switchView('cv');
+          window.switchView('cv');
         }
       } else if (item.category === 'interview') {
-        (window as any).switchView('interview');
+        window.switchView('interview');
       }
     }
   };

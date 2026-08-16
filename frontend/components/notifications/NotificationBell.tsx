@@ -5,9 +5,21 @@ import { ApiClient } from '../../api-client.js';
 import { Bell } from './notificationIcons';
 import NotificationPopover, { NotificationItem } from './NotificationPopover';
 
+export type NotificationNavigationDetail =
+  | { jobId: string }
+  | { tab: 'candidates' | 'applications'; applicationId: string }
+  | { studentId?: string | null }
+  | { focusFeedback: boolean };
+
+declare global {
+  interface Window {
+    switchView?: (view: string) => void;
+  }
+}
+
 export interface NotificationBellProps {
   userRole?: string;
-  onNavigate?: (view: string, detail?: any) => void;
+  onNavigate?: (view: string, detail?: NotificationNavigationDetail) => void;
 }
 
 export default function NotificationBell({
@@ -18,7 +30,6 @@ export default function NotificationBell({
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [activeCategory, setActiveCategory] = useState('all');
-  const [isLoading, setIsLoading] = useState(false);
 
   // Fetch unread count for badge
   const fetchUnreadCount = useCallback(async () => {
@@ -36,7 +47,6 @@ export default function NotificationBell({
   // Fetch full notifications list
   const fetchNotifications = useCallback(async () => {
     if (!ApiClient.isAuthenticated()) return;
-    setIsLoading(true);
     try {
       const list = await ApiClient.listNotifications();
       if (Array.isArray(list)) {
@@ -46,8 +56,6 @@ export default function NotificationBell({
       }
     } catch {
       // Fallback
-    } finally {
-      setIsLoading(false);
     }
   }, []);
 
@@ -131,26 +139,26 @@ export default function NotificationBell({
         // Full notifications view fallback
         onNavigate('notifications');
       }
-    } else if (typeof window !== 'undefined' && (window as any).switchView) {
+    } else if (typeof window !== 'undefined' && window.switchView) {
       if (item.job_id && (item.category === 'job' || item.type === 'JOB_MATCHED')) {
-        (window as any).switchView('jobs');
+        window.switchView('jobs');
       } else if (item.application_id) {
         if (userRole === 'enterprise') {
-          (window as any).switchView('enterprise');
+          window.switchView('enterprise');
           window.dispatchEvent(new CustomEvent('navigate-enterprise', { detail: 'candidates' }));
         } else {
-          (window as any).switchView('jobs');
+          window.switchView('jobs');
         }
       } else if (item.category === 'advisor') {
         if (userRole === 'counselor') {
-          (window as any).switchView('counselor');
+          window.switchView('counselor');
         } else {
-          (window as any).switchView('cv');
+          window.switchView('cv');
         }
       } else if (item.category === 'interview') {
-        (window as any).switchView('interview');
+        window.switchView('interview');
       } else {
-        (window as any).switchView('notifications');
+        window.switchView('notifications');
       }
     }
   };
@@ -159,8 +167,8 @@ export default function NotificationBell({
     setIsOpen(false);
     if (onNavigate) {
       onNavigate('notifications');
-    } else if (typeof window !== 'undefined' && (window as any).switchView) {
-      (window as any).switchView('notifications');
+    } else if (typeof window !== 'undefined' && window.switchView) {
+      window.switchView('notifications');
     }
   };
 

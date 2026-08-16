@@ -35,7 +35,7 @@ export interface NotificationItem {
     interview_time?: string;
     next_stage?: string;
     decision?: string;
-    [key: string]: any;
+    [key: string]: unknown;
   } | null;
   created_at: string;
 }
