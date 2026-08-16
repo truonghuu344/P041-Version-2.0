@@ -1,0 +1,1 @@
+Yêu cầu Python, FastAPI, PostgreSQL, Docker và 3 năm kinh nghiệm.

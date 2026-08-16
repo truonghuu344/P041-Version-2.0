@@ -140,13 +140,13 @@ export default function Page() {
             <a href="#" className="nav-link role-only-link" id="nav-counselor-reports" hidden>
               <span className="nav-text">Báo cáo</span>
             </a>
-            <a href="#" className="nav-link role-only-link" id="nav-enterprise" hidden>
+            <a href="#" className="nav-link role-only-link" id="nav-enterprise" aria-label="Dashboard Tuyển Dụng" hidden>
               <span className="nav-text">Dashboard Tuyá»ƒn Dá»¥ng</span>
             </a>
             <a href="#" className="nav-link role-only-link" id="nav-enterprise-jobs" hidden>
               <span className="nav-text">Tin tuyển dụng</span>
             </a>
-            <a href="#" className="nav-link role-only-link" id="nav-enterprise-candidates" aria-label="Há»“ sÆ¡ á»©ng tuyá»ƒn" hidden>
+            <a href="#" className="nav-link role-only-link" id="nav-enterprise-candidates" aria-label="Hồ sơ ứng tuyển" hidden>
               <span className="nav-text">Ứng viên</span>
             </a>
             <a href="#" className="nav-link role-only-link" id="nav-enterprise-reports" hidden>
