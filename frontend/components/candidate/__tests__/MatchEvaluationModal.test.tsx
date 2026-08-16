@@ -28,7 +28,7 @@ const mockEvaluation = {
     {
       criterion_id: 'relevant_experience',
       label: 'Kinh nghiệm liên quan',
-      weight: 0.30,
+      weight: 0.3,
       raw_score: 28,
       weighted_score: 8.4,
       status: 'FULLY_MET',
@@ -40,7 +40,7 @@ const mockEvaluation = {
     {
       criterion_id: 'education',
       label: 'Học vấn',
-      weight: 0.10,
+      weight: 0.1,
       raw_score: 10,
       weighted_score: 1.0,
       status: 'FULLY_MET',
@@ -51,7 +51,7 @@ const mockEvaluation = {
     {
       criterion_id: 'preferred_skills',
       label: 'Kỹ năng ưu tiên',
-      weight: 0.10,
+      weight: 0.1,
       raw_score: 5,
       weighted_score: 0.5,
       status: 'NOT_MET',
