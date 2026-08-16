@@ -36,6 +36,7 @@ Thumbs.db
 postgres_data/
 data/raw/
 data/generated/
+data/uploads/
 backend/data/generated/
 backend/data/uploads/
 
