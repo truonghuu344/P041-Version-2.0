@@ -448,6 +448,28 @@ export function initAdminPortal(switchView) {
   let resetCountdownInterval = null;
   let googleIdentityInitialized = false;
 
+  document.addEventListener('click', (e) => {
+    const btn = e.target && e.target.closest ? e.target.closest('.btn-toggle-password') : null;
+    if (!btn) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const wrap = btn.closest('.password-input-wrap') || btn.parentElement;
+    if (!wrap) return;
+    const input = wrap.querySelector('input');
+    if (!input) return;
+    const isNowVisible = input.type === 'password';
+    input.type = isNowVisible ? 'text' : 'password';
+    wrap.classList.toggle('is-visible', isNowVisible);
+    const showIcon = btn.querySelector('.eye-icon-show');
+    const hideIcon = btn.querySelector('.eye-icon-hide');
+    if (showIcon && hideIcon) {
+      showIcon.style.display = isNowVisible ? 'none' : 'block';
+      hideIcon.style.display = isNowVisible ? 'block' : 'none';
+    }
+    btn.setAttribute('aria-label', isNowVisible ? 'Ẩn mật khẩu' : 'Hiện mật khẩu');
+    input.focus();
+  });
+
   function openAuthModal() {
     if (authOverlay) authOverlay.classList.add('open');
     renderGoogleSignInButton();

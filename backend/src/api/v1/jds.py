@@ -1,3 +1,4 @@
+import uuid
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
@@ -14,6 +15,7 @@ from src.services.cv_jd_matching import parse_job_description
 from src.services.cv_parser import extract_text_from_document, sanitize_extracted_text
 from src.services.file_security import FileSecurityError, scan_uploaded_file
 from src.services.job_catalog import load_enterprise_job_catalog
+from src.services.object_storage import ObjectStorageError, delete_async, put_bytes_async
 
 router = APIRouter(prefix="/jds", tags=["Job Description Management"])
 
@@ -131,6 +133,7 @@ async def _save_private_jd(
     company: str,
     location: str,
     requirements_text: str,
+    file_path: str | None = None,
 ) -> JobDescription:
     normalized = parse_job_description(
         title=title,
@@ -142,6 +145,7 @@ async def _save_private_jd(
         company=company or "Cá nhân / Công ty ngoài",
         location=location or "Chưa xác định",
         requirements_text=requirements_text,
+        file_path=file_path,
         normalized_json=normalized,
         is_system=False,
         created_by_user_id=current_user.id,
@@ -324,14 +328,29 @@ async def upload_jd(
             detail="Tên vị trí phải có ít nhất 2 ký tự.",
         )
 
-    return await _save_private_jd(
-        db=db,
-        current_user=current_user,
-        title=resolved_title,
-        company=company.strip(),
-        location=location.strip(),
-        requirements_text=requirements_text,
-    )
+    stored_file_path: str | None = None
+    stored_filename = f"{uuid.uuid4().hex}{suffix}"
+    try:
+        stored_file_path = await put_bytes_async(
+            content=content,
+            key=f"jds/{current_user.id}/{stored_filename}",
+            content_type=file.content_type or "application/octet-stream",
+            local_path=Path("data/uploads/jds") / stored_filename,
+        )
+        return await _save_private_jd(
+            db=db,
+            current_user=current_user,
+            title=resolved_title,
+            company=company.strip(),
+            location=location.strip(),
+            requirements_text=requirements_text,
+            file_path=stored_file_path,
+        )
+    except ObjectStorageError as exc:
+        raise PipelineError("STORAGE_001", "Không thể lưu file JD. Vui lòng thử lại sau.", status_code=503) from exc
+    except Exception:
+        await delete_async(stored_file_path, local_root=Path("data/uploads"))
+        raise
 
 
 @router.patch("/{jd_id}/publish", response_model=JDOut)

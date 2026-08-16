@@ -112,10 +112,10 @@ async def extract_text_from_scanned_pdf(file_bytes: bytes) -> str:
         pages: list[str] = []
         rendered_pages: list[bytes] = []
         try:
-            import fitz
+            import pymupdf
 
-            rendered = fitz.open(stream=file_bytes, filetype="pdf")
-            matrix = fitz.Matrix(2.0, 2.0)
+            rendered = pymupdf.open(stream=file_bytes, filetype="pdf")
+            matrix = pymupdf.Matrix(2.0, 2.0)
             rendered_pages = [page.get_pixmap(matrix=matrix, alpha=False).tobytes("png") for page in rendered]
             rendered.close()
         except Exception as exc:

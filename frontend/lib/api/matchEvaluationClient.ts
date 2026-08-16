@@ -7,6 +7,14 @@
 
 const BASE = '/api/v2/matches';
 
+function safeApiError(status: number): string {
+  if (status === 401) return 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.';
+  if (status === 403) return 'Bạn không có quyền xem dữ liệu này.';
+  if (status === 404) return 'Dữ liệu không còn tồn tại hoặc không khả dụng.';
+  if (status === 422) return 'Dữ liệu chưa hợp lệ. Vui lòng kiểm tra lại thông tin.';
+  return 'Không thể tải dữ liệu lúc này. Vui lòng thử lại sau.';
+}
+
 function headers(token: string) {
   return { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
 }
@@ -14,6 +22,7 @@ function headers(token: string) {
 async function apiFetch<T>(url: string, token: string): Promise<T> {
   const res = await fetch(url, { headers: headers(token) });
   if (!res.ok) {
+    throw new Error(safeApiError(res.status));
     const body = await res.json().catch(() => ({}));
     throw new Error(body.message || body.detail || `Lỗi ${res.status}`);
   }

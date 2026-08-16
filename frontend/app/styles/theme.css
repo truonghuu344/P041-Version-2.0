@@ -1,24 +1,24 @@
-/* Product UI refresh: a calm, trust-first career workspace. */
+/* Product UI refresh: a calm, trust-first career workspace with pure white background. */
 :root {
-  --background: #f6f8f7;
-  --sidebar: #fff;
-  --card: #fff;
-  --card-hover: #f0f6f2;
-  --border: #dbe5df;
-  --text-primary: #17322b;
-  --text-secondary: #5d716a;
-  --primary: #147a5a;
-  --primary-hover: #0f674a;
-  --primary-soft: #e7f4ed;
-  --accent: #147a5a;
-  --success: #147a5a;
-  --input-bg: #fbfcfb;
-  --input-border: #c8d8d0;
-  --input-text: #17322b;
-  --navbar-bg: rgba(255, 255, 255, 0.92);
-  --navbar-border: #dbe5df;
-  --shadow: 0 16px 36px rgba(19, 50, 43, 0.08);
-  --card-shadow: 0 8px 22px rgba(19, 50, 43, 0.06);
+  --background: #ffffff;
+  --sidebar: #ffffff;
+  --card: #ffffff;
+  --card-hover: #f8fafc;
+  --border: #e2e8f0;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --primary: #059669;
+  --primary-hover: #047857;
+  --primary-soft: #ecfdf5;
+  --accent: #059669;
+  --success: #059669;
+  --input-bg: #f8fafc;
+  --input-border: #cbd5e1;
+  --input-text: #0f172a;
+  --navbar-bg: #ffffff;
+  --navbar-border: #e2e8f0;
+  --shadow: 0 16px 36px rgba(15, 23, 42, 0.06);
+  --card-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
@@ -26,7 +26,7 @@
 }
 html,
 body {
-  background: var(--background);
+  background: #ffffff !important;
   color: var(--text-primary);
 }
 body {
@@ -43,25 +43,36 @@ body {
   position: sticky !important;
   top: 0;
   z-index: 1000 !important;
-  height: 72px;
-  border-bottom: 1px solid var(--navbar-border) !important;
-  background: var(--navbar-bg) !important;
-  box-shadow: none !important;
+  height: 68px !important;
+  border-bottom: 1px solid var(--navbar-border, #e2e8f0) !important;
+  background: var(--navbar-bg, #ffffff) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02) !important;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
 }
 .navbar-inner {
-  max-width: 1320px !important;
-  height: 72px !important;
-  padding: 0 28px !important;
+  max-width: 1360px !important;
+  width: 100% !important;
+  height: 68px !important;
+  margin: 0 auto !important;
+  padding: 0 24px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  position: relative !important;
+  gap: 16px !important;
 }
 .brand {
+  display: flex !important;
+  align-items: center !important;
   gap: 10px !important;
   color: var(--text-primary) !important;
+  text-decoration: none !important;
+  flex-shrink: 0 !important;
 }
 .brand-icon {
-  width: 38px !important;
-  height: 38px !important;
+  width: 36px !important;
+  height: 36px !important;
   border: 1px solid var(--border);
   border-radius: 10px !important;
   background: var(--primary-soft) !important;
@@ -72,13 +83,26 @@ body {
   letter-spacing: -0.03em;
 }
 .nav-links {
-  gap: 5px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  position: static !important;
+  transform: none !important;
+  margin: 0 auto !important;
+  flex-wrap: nowrap !important;
+  overflow: visible !important;
+  flex: 0 1 auto !important;
 }
 .nav-link {
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 6px 11px !important;
   border-radius: 8px !important;
   color: var(--text-secondary) !important;
   font-size: 13px !important;
-  font-weight: 750 !important;
+  font-weight: 600 !important;
+  white-space: nowrap !important;
+  text-decoration: none !important;
 }
 .nav-link::after {
   display: none !important;
@@ -89,7 +113,11 @@ body {
   background: var(--primary-soft) !important;
 }
 .header-utilities {
-  gap: 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-shrink: 0 !important;
+  margin-left: 0 !important;
 }
 .btn-login {
   border-radius: 8px !important;
@@ -422,6 +450,10 @@ body {
   color: var(--text-primary) !important;
   margin-top: 0 !important;
   padding-top: 0 !important;
+}
+#view-cv.buddy-landing,
+#view-history.buddy-landing {
+  background: var(--background, #f6f8f7) !important;
 }
 .buddy-hero-shell {
   max-width: 1320px !important;

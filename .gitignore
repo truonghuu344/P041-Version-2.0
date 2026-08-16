@@ -36,6 +36,9 @@ Thumbs.db
 postgres_data/
 data/raw/
 data/generated/
+data/uploads/
+backend/data/generated/
+backend/data/uploads/
 
 # Chroma DB (using PostgreSQL instead)
 chroma_db/

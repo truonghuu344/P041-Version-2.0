@@ -34,6 +34,14 @@ export async function POST(request: NextRequest, context: RouteContext): Promise
       },
     );
 
+    if (!upstream.ok) {
+      // Never forward backend error bodies to the browser.
+      return Response.json(
+        { detail: 'Không thể hoàn tất tối ưu CV lúc này. Vui lòng thử lại sau.' },
+        { status: upstream.status },
+      );
+    }
+
     const responseHeaders = new Headers();
     const contentType = upstream.headers.get('content-type');
     if (contentType) responseHeaders.set('content-type', contentType);
@@ -42,7 +50,7 @@ export async function POST(request: NextRequest, context: RouteContext): Promise
       status: upstream.status,
       headers: responseHeaders,
     });
-  } catch (error) {
+  } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Không xác định';
     return Response.json(
       { detail: `Không thể kết nối dịch vụ tối ưu CV: ${message}` },

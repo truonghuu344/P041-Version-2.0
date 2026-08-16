@@ -81,10 +81,14 @@ export interface CVVariant {
   }>;
 }
 
-interface ApiErrorBody {
-  code?: string;
-  message?: string;
-  detail?: string | { message?: string };
+function safeApiError(status: number): string {
+  if (status === 401) return 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.';
+  if (status === 403) return 'Bạn không có quyền thực hiện thao tác này.';
+  if (status === 404) return 'Dữ liệu không còn tồn tại hoặc không khả dụng.';
+  if (status === 409) return 'Thao tác này chưa thể thực hiện ở trạng thái hiện tại.';
+  if (status === 422) return 'Dữ liệu chưa hợp lệ. Vui lòng kiểm tra lại thông tin.';
+  if (status === 429) return 'Hệ thống đang bận. Vui lòng thử lại sau ít phút.';
+  return 'Đã xảy ra sự cố. Vui lòng thử lại sau.';
 }
 
 function authHeaders(extra: Record<string, string> = {}): Record<string, string> {
@@ -101,10 +105,9 @@ async function requestJson<T>(url: string, init: RequestInit = {}): Promise<T> {
       ...((init.headers as Record<string, string>) || {}),
     }),
   });
-  const body = (await response.json().catch(() => ({}) as ApiErrorBody)) as ApiErrorBody & T;
+  const body = (await response.json().catch(() => ({}))) as Record<string, unknown>;
   if (!response.ok) {
-    const detail = typeof body.detail === 'string' ? body.detail : body.detail?.message;
-    throw new Error(body.message || detail || `Lỗi HTTP ${response.status}`);
+    throw new Error(safeApiError(response.status));
   }
   return body as T;
 }
@@ -183,12 +186,7 @@ export const cvVariantsApi = {
       },
     );
     if (!response.ok) {
-      const body = (await response.json().catch(() => ({}) as ApiErrorBody)) as ApiErrorBody;
-      throw new Error(
-        body.message ||
-          (typeof body.detail === 'string' ? body.detail : body.detail?.message) ||
-          'Không thể mở PDF.',
-      );
+      throw new Error(safeApiError(response.status));
     }
     return response.blob();
   },

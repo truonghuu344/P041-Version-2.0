@@ -137,6 +137,7 @@
         <a href="#" class="nav-link" id="nav-jobs"><span class="nav-icon">🗺️</span> <span class="nav-text" data-i18n="nav-jobs">Thư viện Jobs</span></a>
         <a href="#" class="nav-link" id="nav-interview"><span class="nav-icon">🎙️</span> <span class="nav-text" data-i18n="nav-interview">Phỏng vấn STAR</span></a>
         <a href="#" class="nav-link" id="nav-gap"><span class="nav-icon">🎯</span> <span class="nav-text" data-i18n="nav-gap">Gap Analysis</span></a>
+        <a href="#" class="nav-link" id="nav-history"><span class="nav-icon">📜</span> <span class="nav-text" data-i18n="nav-history">Lịch sử &amp; Báo cáo</span></a>
         <a href="#" class="nav-link admin-only-link" id="nav-admin" style="display:none;"><span class="nav-icon">👑</span> <span class="nav-text" data-i18n="nav-admin">Quản trị Admin</span></a>
       </nav>
 
@@ -686,11 +687,11 @@
     ============================================================ -->
     <section class="app-view" id="view-find-jobs">
       <div class="page-container job-search-page">
-        <div class="page-header job-search-heading">
-          <div class="page-badge">Gợi ý việc làm theo hồ sơ · Top 10</div>
-          <h1 class="page-title">Công việc phù hợp với CV</h1>
-          <p class="page-sub">Chọn CV để tìm và xếp hạng những công việc phù hợp nhất dành cho bạn.</p>
-        </div>
+        <header class="jobs-page-header">
+          <span class="jobs-eyebrow"><span class="icon-briefcase">💼</span> GỢI Ý VIỆC LÀM</span>
+          <h2>Công việc phù hợp với hồ sơ</h2>
+          <p>Phân tích hồ sơ theo tiêu chí năng lực và đề xuất các vị trí việc làm phù hợp nhất dành cho bạn.</p>
+        </header>
 
         <section class="top-jobs-console-card" aria-labelledby="job-search-console-title">
           <div class="top-jobs-control-grid">
@@ -698,10 +699,10 @@
             <div class="control-group cv-select-group">
               <label for="job-search-cv-select">
                 <span class="control-label-title">Chọn CV đối chiếu</span>
-                <span class="control-label-hint">Áp dụng cho mọi CV trong Kho (CV gốc, Đã Match, Đã tối ưu)</span>
+                <span class="control-label-hint">Hệ thống phân tích dựa trên CV bạn chọn để tìm vị trí thích hợp</span>
               </label>
 
-              <!-- Custom Interactive CV Selector with Status Badges -->
+              <!-- Custom Interactive CV Selector with Logical Categorization -->
               <div class="top-jobs-cv-dropdown" id="top-jobs-cv-dropdown">
                 <button type="button" class="top-jobs-cv-trigger" id="top-jobs-cv-trigger" aria-haspopup="listbox" aria-expanded="false">
                   <div class="cv-trigger-content">
@@ -719,14 +720,69 @@
                   <option value="">Chọn CV đã lưu...</option>
                 </select>
 
-                <!-- Custom Dropdown Menu -->
+                <!-- Hidden file input for in-place CV upload -->
+                <input
+                  type="file"
+                  id="find-jobs-cv-upload-input"
+                  accept=".pdf,.docx"
+                  class="visually-hidden-select"
+                  hidden
+                  aria-hidden="true"
+                />
+
+                <!-- Custom Categorized Dropdown Menu -->
                 <div class="top-jobs-cv-menu" id="top-jobs-cv-menu" role="listbox" hidden>
                   <div class="top-jobs-cv-menu-header">
-                    <span>Kho CV của bạn</span>
-                    <small>Chọn CV bất kỳ để tìm việc phù hợp</small>
+                    <div class="menu-header-text">
+                      <span class="menu-header-title">Danh sách CV của bạn</span>
+                      <small class="menu-header-subtitle">Chọn hồ sơ để hệ thống đối chiếu với yêu cầu công việc</small>
+                    </div>
                   </div>
+
+                  <!-- Quick Search inside Dropdown -->
+                  <div class="top-jobs-cv-search-wrap">
+                    <div class="top-jobs-cv-search-box">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="cv-search-icon"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                      <input
+                        type="text"
+                        id="top-jobs-cv-search-input"
+                        class="top-jobs-cv-search-input"
+                        placeholder="Tìm kiếm CV theo tên..."
+                        autocomplete="off"
+                      />
+                    </div>
+                  </div>
+
+                  <!-- Category Filter Tabs -->
+                  <div class="top-jobs-cv-tabs-wrap">
+                    <div class="top-jobs-cv-tabs" id="top-jobs-cv-tabs" role="tablist" aria-label="Phân loại CV">
+                      <button type="button" class="cv-tab-btn is-active" data-cv-tab="all" role="tab" aria-selected="true">
+                        Tất cả <span class="cv-tab-count" id="cv-tab-count-all">0</span>
+                      </button>
+                      <button type="button" class="cv-tab-btn" data-cv-tab="raw" role="tab" aria-selected="false">
+                        Bản gốc <span class="cv-tab-count" id="cv-tab-count-raw">0</span>
+                      </button>
+                      <button type="button" class="cv-tab-btn" data-cv-tab="optimized" role="tab" aria-selected="false">
+                        Đã tối ưu <span class="cv-tab-count" id="cv-tab-count-optimized">0</span>
+                      </button>
+                      <button type="button" class="cv-tab-btn" data-cv-tab="matched" role="tab" aria-selected="false">
+                        Đã đối chiếu <span class="cv-tab-count" id="cv-tab-count-matched">0</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Dynamic Categorized CV List -->
                   <div class="top-jobs-cv-list" id="top-jobs-cv-list">
                     <!-- Dynamic CV options populated by JS -->
+                  </div>
+
+                  <!-- Menu Quick Action Footer -->
+                  <div class="top-jobs-cv-menu-footer">
+                    <span class="cv-menu-footer-hint">Hỗ trợ định dạng PDF, DOCX</span>
+                    <button type="button" class="btn-menu-add-cv" id="btn-menu-add-cv">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                      Tải lên CV mới
+                    </button>
                   </div>
                 </div>
               </div>
@@ -1329,146 +1385,402 @@
     </section>
 
     <!-- ============================================================
-         6. VIEW: MISSION ARCHIVE (Kho Lưu Trữ Nhiệm Vụ Vũ Trụ)
+         6. VIEW: MISSION ARCHIVE (Lịch Sử & Báo Cáo)
     ============================================================ -->
-    <section class="app-view" id="view-history">
-      <div class="page-container">
-        <div class="page-header">
-          <div class="page-badge badge-purple">DECK EPSILON // MISSION ARCHIVE VAULT</div>
-          <h1 class="page-title">📜 Kho Lưu Trữ Lịch Sử Nhiệm Vụ (Mission Archive)</h1>
-          <p class="page-sub">Xem lại tất cả các bản phân tích CV, phiên phỏng vấn thử STAR & báo cáo Gap Match đã thực hiện</p>
-        </div>
+    <section class="app-view buddy-landing" id="view-history">
+      <main class="history-workspace">
+        <!-- 1. Header -->
+        <header class="history-heading">
+          <div>
+            <h2 class="history-title">Lịch sử &amp; Báo cáo</h2>
+            <p class="history-subtitle">
+              Theo dõi kết quả CV, mức độ phù hợp công việc và quá trình luyện phỏng vấn.
+            </p>
+          </div>
+        </header>
 
-        <div class="archive-workspace">
-          <!-- Filter Controls -->
-          <div class="archive-filters">
-            <button class="archive-filter-btn active" data-filter="all">Tất cả nhiệm vụ</button>
-            <button class="archive-filter-btn" data-filter="cv">📄 Phân tích CV</button>
-            <button class="archive-filter-btn" data-filter="interview">🎙️ Phỏng vấn STAR</button>
-            <button class="archive-filter-btn" data-filter="gap">🎯 Gap Analysis</button>
+        <!-- 2. KPI Summary (4 Compact Cards) -->
+        <section class="history-kpi-row" aria-label="Tổng quan số liệu">
+          <article class="history-kpi-card is-match">
+            <span class="history-kpi-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-check" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="m9 15 2 2 4-4"/></svg>
+            </span>
+            <div className="history-kpi-data">
+              <strong id="archive-match-count" class="history-kpi-value">0</strong>
+              <span class="history-kpi-label">Lần so khớp CV</span>
+            </div>
+          </article>
+
+          <article class="history-kpi-card is-optimized">
+            <span class="history-kpi-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles" aria-hidden="true"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>
+            </span>
+            <div class="history-kpi-data">
+              <strong id="archive-optimized-count" class="history-kpi-value">0</strong>
+              <span class="history-kpi-label">CV đã tối ưu</span>
+            </div>
+          </article>
+
+          <article class="history-kpi-card is-interview">
+            <span class="history-kpi-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-mic" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+            </span>
+            <div class="history-kpi-data">
+              <strong id="archive-interview-count" class="history-kpi-value">0</strong>
+              <span class="history-kpi-label">Phiên phỏng vấn</span>
+            </div>
+          </article>
+
+          <article class="history-kpi-card is-best-match">
+            <span class="history-kpi-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trending-up" aria-hidden="true"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+            </span>
+            <div class="history-kpi-data">
+              <strong id="archive-best-match" class="history-kpi-value">0%</strong>
+              <span class="history-kpi-label">Match cao nhất</span>
+            </div>
+          </article>
+        </section>
+
+        <!-- 3. Analytics (2/3 Progress Line Chart + 1/3 Activity Donut Chart) -->
+        <section class="history-analytics-section" id="history-analytics-section" aria-label="Phân tích tiến độ">
+          <div class="analytics-card progress-card">
+            <div class="analytics-card-header">
+              <div class="analytics-card-title-wrap">
+                <h3 class="analytics-card-title">Tiến bộ theo thời gian</h3>
+                <span class="analytics-card-caption">Theo dõi điểm số qua các lần đánh giá gần nhất</span>
+              </div>
+              <div class="analytics-metric-switch" role="tablist" aria-label="Chọn loại chỉ số">
+                <button type="button" class="metric-switch-btn active" data-metric="match">Match CV</button>
+                <button type="button" class="metric-switch-btn" data-metric="interview">Phỏng vấn</button>
+              </div>
+            </div>
+            <div class="analytics-chart-wrap" id="history-progress-chart-container">
+              <div class="chart-placeholder-loading"><span>Đang tạo biểu đồ tiến độ...</span></div>
+            </div>
           </div>
 
-          <!-- Archive Timeline Vault Grid -->
-          <div id="archive-timeline-container" class="archive-grid">
-            <div class="archive-card" data-type="cv">
-              <div class="archive-card-header">
-                <span class="archive-tag tag-cv">📄 CV SCANNER</span>
-                <span class="archive-time">Hôm nay, 09:30</span>
-              </div>
-              <h3 class="archive-card-title">CV Software Engineer 2026</h3>
-              <p class="archive-card-sub">Trích xuất 14 Hard Skills • Đạt chuẩn ATS Anti-Hallucination</p>
-              <div class="archive-card-footer">
-                <span class="badge badge-ok">SUCCESS // PARSED</span>
-                <button class="archive-btn-view" onclick="switchView('cv')">Xem Chi Tiết ➔</button>
+          <div class="analytics-card distribution-card">
+            <div class="analytics-card-header">
+              <div class="analytics-card-title-wrap">
+                <h3 class="analytics-card-title">Hoạt động của bạn</h3>
+                <span class="analytics-card-caption">Tỷ lệ các loại nhiệm vụ</span>
               </div>
             </div>
+            <div class="donut-chart-wrap" id="history-donut-chart-container">
+              <div class="chart-placeholder-loading"><span>Đang tải phân bổ...</span></div>
+            </div>
+          </div>
+        </section>
 
-            <div class="archive-card" data-type="interview">
-              <div class="archive-card-header">
-                <span class="archive-tag tag-interview">🎙️ STAR INTERVIEW</span>
-                <span class="archive-time">Hôm qua, 15:45</span>
-              </div>
-              <h3 class="archive-card-title">Phiên Phỏng Vấn AI Engineer</h3>
-              <p class="archive-card-sub">Chấm điểm Rubric STAR: 85/100 • 5/5 Câu hỏi hoàn thành</p>
-              <div class="archive-card-footer">
-                <span class="badge badge-ok">PASSED // 85 PTS</span>
-                <button class="archive-btn-view" onclick="switchView('interview')">Xem Báo Cáo ➔</button>
-              </div>
+        <!-- 4. Activity History Main Section -->
+        <section class="history-main-card" aria-label="Lịch sử hoạt động">
+          <div class="history-section-header">
+            <h3 class="history-section-title">Lịch sử hoạt động</h3>
+            <span id="archive-result-count" class="history-total-count" aria-live="polite">0 kết quả</span>
+          </div>
+
+          <!-- Clean Toolbar -->
+          <div class="history-toolbar">
+            <div class="history-search-wrap">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="history-search-icon" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              <input type="search" id="history-search-input" class="history-search-input" placeholder="Tìm CV, công việc hoặc công ty..." aria-label="Tìm kiếm lịch sử" />
             </div>
 
-            <div class="archive-card" data-type="gap">
-              <div class="archive-card-header">
-                <span class="archive-tag tag-gap">🎯 GAP MATCH</span>
-                <span class="archive-time">05/08/2026</span>
+            <div class="history-filter-controls">
+              <div class="filter-select-wrap">
+                <select id="filter-activity-type" class="history-filter-select" aria-label="Lọc theo loại hoạt động">
+                  <option value="all">Loại hoạt động: Tất cả</option>
+                  <option value="match">Match CV &amp; JD</option>
+                  <option value="optimized">CV đã tối ưu</option>
+                  <option value="interview">Phỏng vấn</option>
+                </select>
               </div>
-              <h3 class="archive-card-title">So Khớp: CV vs Senior Fullstack JD</h3>
-              <p class="archive-card-sub">Tỷ lệ phù hợp: 92% • Thiếu 2 kỹ năng nâng cao (Docker, K8s)</p>
-              <div class="archive-card-footer">
-                <span class="badge badge-ok">MATCH RATE: 92%</span>
-                <button class="archive-btn-view" onclick="switchView('gap')">Xem Lộ Trình ➔</button>
+
+              <div class="filter-select-wrap">
+                <select id="filter-time-range" class="history-filter-select" aria-label="Lọc theo khoảng thời gian">
+                  <option value="all">Thời gian: Tất cả</option>
+                  <option value="7days">7 ngày qua</option>
+                  <option value="30days">30 ngày qua</option>
+                  <option value="3months">3 tháng qua</option>
+                </select>
+              </div>
+
+              <div class="filter-select-wrap">
+                <select id="filter-status" class="history-filter-select" aria-label="Lọc theo trạng thái">
+                  <option value="all">Trạng thái: Tất cả</option>
+                  <option value="completed">Hoàn thành</option>
+                  <option value="inprogress">Đang thực hiện</option>
+                  <option value="failed">Lỗi</option>
+                </select>
+              </div>
+
+              <div class="filter-select-wrap">
+                <select id="history-sort-by" class="history-filter-select sort-select" aria-label="Sắp xếp danh sách">
+                  <option value="newest">Mới nhất</option>
+                  <option value="oldest">Cũ nhất</option>
+                  <option value="match_high">Match cao nhất</option>
+                  <option value="match_low">Match thấp nhất</option>
+                </select>
               </div>
             </div>
           </div>
-        </div>
-      </div>
+
+          <!-- Active Filter Chips Bar -->
+          <div id="history-active-chips" class="history-active-chips" hidden aria-live="polite"></div>
+
+          <!-- 5. Data Table (Desktop) & Compact List (Mobile) -->
+          <div class="history-table-container">
+            <table class="history-data-table" id="history-data-table" aria-label="Danh sách lịch sử hoạt động">
+              <thead>
+                <tr>
+                  <th scope="col" class="col-type">Hoạt động</th>
+                  <th scope="col" class="col-cv">CV</th>
+                  <th scope="col" class="col-job">Công việc / JD</th>
+                  <th scope="col" class="col-result sortable-col" id="col-sort-result" data-sort="score"><span>Kết quả</span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="sort-icon" aria-hidden="true"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg></th>
+                  <th scope="col" class="col-status">Trạng thái</th>
+                  <th scope="col" class="col-date sortable-col" id="col-sort-date" data-sort="date"><span>Ngày</span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="sort-icon" aria-hidden="true"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg></th>
+                  <th scope="col" class="col-action text-right">Hành động</th>
+                </tr>
+              </thead>
+              <tbody id="history-table-body"></tbody>
+            </table>
+
+            <div id="history-mobile-list" class="history-mobile-list" aria-live="polite"></div>
+            <div id="history-empty-state" class="history-empty-state" hidden></div>
+          </div>
+
+          <!-- Pagination -->
+          <footer class="history-pagination-bar" id="history-pagination-bar">
+            <div class="pagination-info" id="pagination-info">Hiển thị 1–20 / 0 kết quả</div>
+            <nav class="pagination-nav" id="pagination-nav" aria-label="Phân trang">
+              <button type="button" class="pagination-btn prev-btn" id="pagination-prev-btn" aria-label="Trang trước" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
+              <div class="pagination-pages" id="pagination-pages"></div>
+              <button type="button" class="pagination-btn next-btn" id="pagination-next-btn" aria-label="Trang sau" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
+            </nav>
+            <div class="pagination-page-size">
+              <select id="pagination-size-select" class="page-size-select" aria-label="Số bản ghi mỗi trang">
+                <option value="10">10 / trang</option>
+                <option value="20">20 / trang</option>
+                <option value="50">50 / trang</option>
+                <option value="100">100 / trang</option>
+              </select>
+            </div>
+          </footer>
+        </section>
+
+        <!-- Right-Side Detail Drawer -->
+        <div id="history-drawer-overlay" class="history-drawer-overlay" aria-hidden="true"></div>
+        <aside id="history-detail-drawer" class="history-detail-drawer" aria-label="Bảng chi tiết hoạt động" aria-hidden="true" tabindex="-1">
+          <div class="drawer-header">
+            <div class="drawer-header-info">
+              <span id="drawer-activity-badge" class="drawer-type-badge">Match CV</span>
+              <h3 id="drawer-item-title" class="drawer-title">Chi tiết hoạt động</h3>
+            </div>
+            <button type="button" id="btn-close-history-drawer" class="drawer-close-btn" aria-label="Đóng chi tiết"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+          </div>
+          <div class="drawer-body" id="drawer-body-content"></div>
+          <div class="drawer-footer" id="drawer-footer-actions"></div>
+        </aside>
+      </main>
     </section>
 
     <!-- ============================================================
-         7. VIEW: CREW TERMINAL (Khoang Thuyền Viên & Hồ Sơ AI)
+         7. VIEW: PROFILE (Hồ Sơ Cá Nhân & Quản Lý Tài Khoản)
+    ============================================================ -->
+    <!-- ============================================================
+         7. VIEW: PROFILE (Hồ Sơ Cá Nhân & Dữ Liệu Nền AI)
     ============================================================ -->
     <section class="app-view" id="view-profile">
-      <div class="page-container">
-        <div class="page-header">
-          <div class="page-badge badge-cyan">DECK ZETA // CREW QUARTERS & IDENTITY TERMINAL</div>
-          <h1 class="page-title">🧑‍🚀 Bảng Điều Khiển Thuyền Viên (Crew Quarters)</h1>
-          <p class="page-sub">Quản lý hồ sơ cá nhân, cấu hình Trợ Lý AI Agent và theo dõi thông số nhiệm vụ</p>
-        </div>
-
-        <div class="profile-workspace">
-          <!-- Left: Holographic Crew Badge -->
-          <div class="crew-badge-card">
-            <div class="crew-avatar-wrap">
-              <div class="crew-avatar-glow"></div>
-              <svg width="64" height="64" viewBox="0 0 32 32" fill="none">
-                <rect width="32" height="32" rx="10" fill="#1a1a4a"/>
-                <circle cx="16" cy="12" r="6" fill="#00e5ff"/>
-                <path d="M6 26c0-4 4-7 10-7s10 3 10 7" fill="#7c4dff"/>
-              </svg>
-            </div>
-            <h2 class="crew-name" id="crew-profile-name">Phi Công Vũ Trụ</h2>
-            <p class="crew-role-badge" id="crew-profile-role">CREW MEMBER // STUDENT</p>
-            
-            <div class="crew-stats-grid">
-              <div class="crew-stat-box">
-                <span class="stat-num">12</span>
-                <span class="stat-lbl">Nhiệm Vụ</span>
+      <div class="profile-workspace-container">
+        <!-- ===== 1. PROFILE HEADER CARD ===== -->
+        <header class="profile-header-card">
+          <div class="profile-header-main">
+            <div class="profile-avatar" id="profile-avatar-large">SV</div>
+            <div class="profile-header-info">
+              <div class="profile-name-row">
+                <h1 class="profile-display-name" id="profile-display-name">Ứng viên Sinh viên</h1>
+                <div class="profile-status-wrapper">
+                  <select class="profile-status-select status-searching" id="profile-status-select" aria-label="Trạng thái tìm việc">
+                    <option value="searching">Đang tìm việc</option>
+                    <option value="internship_ready">Sẵn sàng thực tập</option>
+                    <option value="not_looking">Chưa có nhu cầu</option>
+                  </select>
+                </div>
               </div>
-              <div class="crew-stat-box">
-                <span class="stat-num">88%</span>
-                <span class="stat-lbl">Match Avg</span>
-              </div>
-              <div class="crew-stat-box">
-                <span class="stat-num">A+</span>
-                <span class="stat-lbl">STAR Grade</span>
+              <p class="profile-headline" id="profile-display-headline">Software Engineer Student</p>
+              <div class="profile-meta-row">
+                <span class="profile-meta-item"><span id="profile-display-school">Đại học Công nghệ Thông tin - ĐHQG-HCM</span></span>
+                <span class="profile-meta-item"><span id="profile-display-location">TP. Hồ Chí Minh</span></span>
+                <span class="profile-meta-item"><span id="profile-display-email">user@example.com</span></span>
               </div>
             </div>
           </div>
+          <div class="profile-header-actions">
+            <button type="button" class="profile-btn-outline" id="btn-edit-profile-header">
+              Chỉnh sửa hồ sơ
+            </button>
+          </div>
+        </header>
 
-          <!-- Right: Terminal Settings -->
-          <div class="profile-settings-card">
-            <h3 class="card-section-title">⚙️ Cấu Hình AI Persona & Hệ Thống Tàu</h3>
-            
-            <div class="form-group margin-bottom">
-              <label class="form-label">Chọn Phong Cách Trợ Lý AI (AI Persona):</label>
-              <div class="persona-selector">
-                <button class="persona-btn active" data-persona="mentor">
-                  <span class="persona-icon">🎓</span>
-                  <span class="persona-title">Friendly Mentor</span>
-                  <span class="persona-desc">Tư vấn nhẹ nhàng, hướng dẫn từng bước</span>
-                </button>
-                <button class="persona-btn" data-persona="recruiter">
-                  <span class="persona-icon">🤖</span>
-                  <span class="persona-title">Strict Recruiter</span>
-                  <span class="persona-desc">Đánh giá khắt khe chuẩn ATS quốc tế</span>
-                </button>
-                <button class="persona-btn" data-persona="techlead">
-                  <span class="persona-icon">⚡</span>
-                  <span class="persona-title">Technical Lead</span>
-                  <span class="persona-desc">Hỏi sâu kiến trúc, code quality & problem solving</span>
-                </button>
+        <!-- ===== 2. TWO-COLUMN WORKSPACE: LEFT 30% | RIGHT 70% ===== -->
+        <div class="profile-layout-grid">
+          <!-- LEFT COLUMN: Sidebar (~30%) -->
+          <aside class="profile-sidebar-column">
+            <!-- Profile Completion Card -->
+            <div class="profile-completion-card">
+              <div class="completion-header">
+                <div class="completion-title-wrap">
+                  <h2 class="completion-title">Mức độ hoàn thiện</h2>
+                </div>
+                <span class="completion-badge" id="profile-completion-badge">75%</span>
+              </div>
+              <div class="completion-progress-track">
+                <div class="completion-progress-fill" id="profile-completion-fill" style="width: 75%;"></div>
+              </div>
+              <p class="completion-tip" id="profile-completion-tip">
+                Bổ sung kỹ năng và định hướng nghề nghiệp để AI đưa ra gợi ý chính xác hơn.
+              </p>
+              <div class="completion-missing-list" id="profile-missing-list">
+                <!-- Injected dynamically -->
               </div>
             </div>
 
-            <div class="form-group margin-bottom">
-              <label class="form-label">Vị trí mục tiêu của thuyền viên:</label>
-              <input type="text" class="form-input" id="profile-target-role" value="Fullstack AI Developer 2026" placeholder="Ví dụ: AI Engineer" />
+            <!-- AI Grounding Notice -->
+            <div class="profile-grounding-notice">
+              <div class="grounding-notice-header">
+                <h3 class="notice-title">Dữ liệu nền cho AI</h3>
+              </div>
+              <p class="notice-text">
+                Profile là <strong>nguồn dữ liệu nền của bạn</strong>, không phải CV. AI tuyệt đối <strong>không tự thêm</strong> kỹ năng hay kinh nghiệm không tồn tại trong hồ sơ của bạn.
+              </p>
+              <div class="grounding-flow-pill">
+                <span>Profile (Nền)</span> → <span>CV (Bằng chứng)</span> → <span>JD (Yêu cầu)</span>
+              </div>
             </div>
 
-            <div class="form-row">
-              <button class="btn-primary flex-1" id="btn-save-profile">Lưu Cấu Hình Thuyền Viên</button>
-              <button class="btn-outline" id="btn-logout-crew" onclick="ApiClient.logout(); window.location.reload();">Đăng Xuất</button>
+            <!-- Quick Navigation Shortcuts -->
+            <div class="profile-sidebar-shortcuts">
+              <span class="shortcuts-label">Lối tắt tác vụ AI</span>
+              <div class="shortcuts-list">
+                <button type="button" class="sidebar-shortcut-btn" onclick="switchView('cv')">
+                  <span>Tối ưu hóa CV với AI</span>
+                </button>
+                <button type="button" class="sidebar-shortcut-btn" onclick="switchView('match')">
+                  <span>So khớp CV với JD</span>
+                </button>
+                <button type="button" class="sidebar-shortcut-btn" onclick="switchView('interview')">
+                  <span>Luyện phỏng vấn Voice</span>
+                </button>
+              </div>
             </div>
-          </div>
+          </aside>
+
+          <!-- RIGHT COLUMN: Main Content (~70%) -->
+          <main class="profile-main-column">
+            <!-- Card 1: Personal Info -->
+            <section class="profile-card">
+              <div class="profile-card-header">
+                <div>
+                  <h2 class="profile-card-title">Thông Tin Cá Nhân</h2>
+                  <p class="profile-card-subtitle">Thông tin định danh và phương thức liên hệ cơ bản</p>
+                </div>
+              </div>
+              <form id="profile-info-form" onsubmit="event.preventDefault()">
+                <div class="profile-form-grid">
+                  <div class="profile-form-group">
+                    <label class="profile-form-label" for="profile-full-name">Họ và tên <span class="req-star">*</span></label>
+                    <input type="text" id="profile-full-name" class="profile-form-input" placeholder="Ví dụ: Nguyễn Văn A" />
+                  </div>
+                  <div class="profile-form-group">
+                    <label class="profile-form-label" for="profile-email-readonly">Email tài khoản <span class="readonly-tag">Readonly</span></label>
+                    <input type="email" id="profile-email-readonly" class="profile-form-input readonly" disabled readonly />
+                  </div>
+                  <div class="profile-form-group">
+                    <label class="profile-form-label" for="profile-phone">Số điện thoại</label>
+                    <input type="tel" id="profile-phone" class="profile-form-input" placeholder="0912 345 678" />
+                  </div>
+                  <div class="profile-form-group">
+                    <label class="profile-form-label" for="profile-location">Tỉnh / Thành phố</label>
+                    <input type="text" id="profile-location" class="profile-form-input" placeholder="Ví dụ: TP. Hồ Chí Minh" />
+                  </div>
+                </div>
+                <div class="profile-form-actions">
+                  <button type="button" class="profile-btn-primary" id="btn-save-profile">
+                    Lưu Thông Tin Cá Nhân
+                  </button>
+                </div>
+              </form>
+            </section>
+
+            <!-- Card 2: Career Orientation & Goals -->
+            <section class="profile-card">
+              <div class="profile-card-header">
+                <div>
+                  <h2 class="profile-card-title">Định Hướng Nghề Nghiệp</h2>
+                  <p class="profile-card-subtitle">Mục tiêu quan trọng để AI hiểu và hỗ trợ chuẩn xác</p>
+                </div>
+              </div>
+              <div class="profile-form-grid">
+                <div class="profile-form-group full-width">
+                  <label class="profile-form-label" for="profile-target-role">Vị trí mong muốn <span class="req-star">*</span></label>
+                  <input type="text" id="profile-target-role" class="profile-form-input" placeholder="Ví dụ: Backend Developer, AI Engineer..." />
+                  <span class="profile-form-hint">AI Agent sẽ dùng vị trí này để tối ưu hóa gợi ý việc làm và câu hỏi phỏng vấn</span>
+                </div>
+              </div>
+            </section>
+
+            <!-- Card 3: Security & Password -->
+            <section class="profile-card">
+              <div class="profile-card-header">
+                <div>
+                  <h2 class="profile-card-title">Bảo Mật &amp; Đổi Mật Khẩu</h2>
+                  <p class="profile-card-subtitle">Bảo vệ an toàn cho tài khoản và dữ liệu CV của bạn</p>
+                </div>
+              </div>
+              <form id="profile-password-form">
+                <div class="profile-form-grid">
+                  <div class="profile-form-group">
+                    <label class="profile-form-label" for="profile-current-password">Mật khẩu hiện tại</label>
+                    <input type="password" id="profile-current-password" class="profile-form-input" placeholder="••••••••" autocomplete="current-password" />
+                  </div>
+                  <div class="profile-form-group">
+                    <label class="profile-form-label" for="profile-new-password">Mật khẩu mới</label>
+                    <input type="password" id="profile-new-password" class="profile-form-input" placeholder="Tối thiểu 6 ký tự" autocomplete="new-password" />
+                  </div>
+                  <div class="profile-form-group">
+                    <label class="profile-form-label" for="profile-confirm-password">Xác nhận mật khẩu mới</label>
+                    <input type="password" id="profile-confirm-password" class="profile-form-input" placeholder="Nhập lại mật khẩu mới" autocomplete="new-password" />
+                  </div>
+                </div>
+                <div class="profile-form-actions">
+                  <button type="submit" class="profile-btn-secondary" id="btn-change-password">
+                    Đổi Mật Khẩu
+                  </button>
+                </div>
+              </form>
+            </section>
+
+            <!-- Card 4: Counselor Access Consent -->
+            <section class="profile-card" id="student-counselor-consent-panel">
+              <div class="profile-card-header">
+                <div>
+                  <h2 class="profile-card-title">Cố Vấn Đồng Hành</h2>
+                  <p class="profile-card-subtitle">Cho phép Cố vấn chuyên môn xem CV &amp; tiến độ phỏng vấn để nhận góp ý</p>
+                </div>
+              </div>
+              <div id="student-counselor-consent-list" class="profile-counselor-list">
+                <p class="profile-form-hint">Bạn chưa cấp quyền cho cố vấn nào.</p>
+              </div>
+              <form id="student-counselor-consent-form" class="profile-form-group">
+                <label class="profile-form-label" for="student-counselor-email">Cấp quyền cho Cố vấn mới</label>
+                <div class="counselor-add-row">
+                  <input type="email" id="student-counselor-email" class="profile-form-input" placeholder="email.covan@truong.edu.vn" required />
+                  <button type="submit" class="profile-btn-primary whitespace-nowrap">Cấp Quyền</button>
+                </div>
+              </form>
+            </section>
+          </main>
         </div>
       </div>
     </section>

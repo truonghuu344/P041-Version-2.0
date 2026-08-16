@@ -60,6 +60,7 @@ function statusLabel(status: CVVariant['status']): string {
 }
 
 export default function CVVariantWizard() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [mode, setMode] = useState<VariantMode>('HAS_CV');
   const [cvs, setCvs] = useState<CVSummary[]>([]);
   const [jds, setJds] = useState<JDSummary[]>([]);
@@ -82,6 +83,7 @@ export default function CVVariantWizard() {
   const autosaveGeneration = useRef(0);
 
   const load = useCallback(async () => {
+    if (!isAuthenticated) return;
     setBusy('load');
     setError('');
     try {
@@ -101,11 +103,33 @@ export default function CVVariantWizard() {
     } finally {
       setBusy('');
     }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    const markSessionReady = () => setIsAuthenticated(true);
+    const clearSession = () => {
+      setIsAuthenticated(false);
+      setCvs([]);
+      setJds([]);
+      setVariants([]);
+      setActive(null);
+      setError('');
+    };
+
+    // app.js verifies both bearer-token and HttpOnly-cookie sessions before
+    // emitting this event. Waiting avoids sending protected requests with a
+    // stale token left in localStorage.
+    window.addEventListener('career:session-ready', markSessionReady);
+    window.addEventListener('career:session-cleared', clearSession);
+    return () => {
+      window.removeEventListener('career:session-ready', markSessionReady);
+      window.removeEventListener('career:session-cleared', clearSession);
+    };
   }, []);
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    if (isAuthenticated) void load();
+  }, [isAuthenticated, load]);
 
   useEffect(() => {
     if (!active || !dirty || active.status === 'PUBLISHED') return;
@@ -305,7 +329,11 @@ export default function CVVariantWizard() {
           <h3 id="cv-variant-title">Tạo và tối ưu CV theo JD</h3>
           <span>CV gốc luôn bất biến. Chỉ bản vượt đủ 7 validator mới được publish.</span>
         </div>
-        <button type="button" onClick={() => void load()} disabled={Boolean(busy)}>
+        <button
+          type="button"
+          onClick={() => void load()}
+          disabled={!isAuthenticated || Boolean(busy)}
+        >
           <History size={16} /> Làm mới
         </button>
       </header>
@@ -740,7 +768,7 @@ export default function CVVariantWizard() {
       )}
 
       <section className="cv-variant-history">
-        <h4>CV Variant của bạn</h4>
+        <h4>Career Variant của bạn</h4>
         {variants.length ? (
           variants.map((variant) => (
             <button type="button" key={variant.id} onClick={() => void openVariant(variant.id)}>

@@ -8,7 +8,18 @@
 
 // Gọi cùng origin; Next.js sẽ proxy sang FastAPI. Cách này tránh lỗi CORS khi
 // người dùng mở UI bằng localhost, 127.0.0.1 hoặc một hostname triển khai khác.
-const API_BASE_URL = window.__CAREER_API_BASE_URL__ || '/api/v1';
+const API_BASE_URL =
+  typeof window === 'undefined' ? '/api/v1' : window.__CAREER_API_BASE_URL__ || '/api/v1';
+
+function getSafeApiMessage(status, endpoint = '') {
+  if (status === 401) return 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.';
+  if (status === 403) return 'Bạn không có quyền thực hiện thao tác này.';
+  if (status === 404) return 'Dữ liệu bạn yêu cầu không còn tồn tại hoặc không khả dụng.';
+  if (status === 409) return 'Thao tác này chưa thể thực hiện ở trạng thái hiện tại.';
+  if (status === 422) return endpoint.includes('/auth/') ? 'Thông tin nhập chưa hợp lệ. Vui lòng kiểm tra và thử lại.' : 'Dữ liệu chưa hợp lệ. Vui lòng kiểm tra lại thông tin.';
+  if (status === 429) return 'Hệ thống đang nhận nhiều yêu cầu. Vui lòng thử lại sau ít phút.';
+  return 'Đã xảy ra sự cố. Vui lòng thử lại sau.';
+}
 
 export class ApiClient {
   static getToken() {
@@ -44,10 +55,6 @@ export class ApiClient {
   }
 
   static async request(endpoint, options = {}) {
-    // --- MOCK INTERCEPTOR --- 
-    if (endpoint === '/auth/me') return { id: 'u-1', name: 'Local Admin', role: 'admin' };
-    if (endpoint === '/assistant/status') return { status: 'online', configured: true, model: 'Gemini Mock' };
-    // ------------------------
     const headers = options.headers || {};
     const token = this.getToken();
 
@@ -67,8 +74,33 @@ export class ApiClient {
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        const errorMsg = data.detail || data.message || `Lỗi HTTP ${response.status}`;
-        const requestError = new Error(errorMsg);
+        let errorMsg = `Lỗi HTTP ${response.status}`;
+        if (data) {
+          if (typeof data.detail === 'string' && data.detail.trim()) {
+            errorMsg = data.detail;
+          } else if (Array.isArray(data.detail) && data.detail.length > 0) {
+            errorMsg = data.detail.map(item => {
+              if (typeof item === 'string') return item;
+              if (item && item.msg) {
+                const loc = Array.isArray(item.loc) ? item.loc.filter(l => l !== 'body').join('.') : '';
+                if (loc === 'email' && (item.msg.includes('email') || item.msg.includes('valid'))) {
+                  return 'Email không đúng định dạng hợp lệ';
+                }
+                if (loc === 'password' && item.msg.includes('at least')) {
+                  return 'Mật khẩu phải có tối thiểu 6 ký tự';
+                }
+                if (loc === 'full_name' && item.msg.includes('at least')) {
+                  return 'Họ và tên phải có tối thiểu 2 ký tự';
+                }
+                return loc ? `${loc}: ${item.msg}` : item.msg;
+              }
+              return JSON.stringify(item);
+            }).join('; ');
+          } else if (typeof data.message === 'string' && data.message.trim()) {
+            errorMsg = data.message;
+          }
+        }
+        const requestError = new Error(getSafeApiMessage(response.status, endpoint));
         requestError.status = response.status;
         requestError.payload = data;
         throw requestError;
@@ -204,7 +236,7 @@ export class ApiClient {
     });
     if (!response.ok) {
       const data = await response.json().catch(() => ({}));
-      throw new Error(data.detail || 'Không thể xuất PDF.');
+      throw new Error(getSafeApiMessage(response.status, '/cvs/export'));
     }
     return response.blob();
   }
@@ -455,5 +487,50 @@ export class ApiClient {
   static async getAILogStats() {
     return await this.requestAssistant('/admin/ai-logs/stats');
   }
+
+  // --- Multi-Role Notification APIs ---
+  static async listNotifications(params = {}) {
+    const query = new URLSearchParams();
+    if (params.category && params.category !== 'all') query.set('category', params.category);
+    if (params.unread_only) query.set('unread_only', 'true');
+    if (params.limit) query.set('limit', String(params.limit));
+    if (params.offset) query.set('offset', String(params.offset));
+    const qs = query.toString() ? `?${query.toString()}` : '';
+    return await this.request(`/notifications${qs}`);
+  }
+
+  static async getNotificationUnreadCount() {
+    return await this.request('/notifications/unread-count');
+  }
+
+  static async markNotificationRead(notificationId) {
+    return await this.request(`/notifications/${notificationId}/read`, {
+      method: 'PATCH',
+    });
+  }
+
+  static async markAllNotificationsRead() {
+    return await this.request('/notifications/mark-all-read', {
+      method: 'POST',
+    });
+  }
+
+  static async deleteNotification(notificationId) {
+    return await this.request(`/notifications/${notificationId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  static async getNotificationPreferences() {
+    return await this.request('/notifications/preferences');
+  }
+
+  static async updateNotificationPreferences(payload) {
+    return await this.request('/notifications/preferences', {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    });
+  }
 }
+
 

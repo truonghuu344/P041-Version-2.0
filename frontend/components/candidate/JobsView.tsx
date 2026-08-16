@@ -414,6 +414,29 @@ export default function JobsView(props: any) {
               </form>
             </div>
           </div>
+          <section id="student-application-updates" className="application-updates-panel" hidden>
+            <div className="application-updates-heading">
+              <div>
+                <span className="application-updates-kicker">CẬP NHẬT MỚI</span>
+                <h3>Tiến trình ứng tuyển</h3>
+                <p>Nhà tuyển dụng đã phản hồi về hồ sơ của bạn.</p>
+              </div>
+              <span className="application-updates-bell" aria-hidden="true">🔔</span>
+            </div>
+            <div id="student-application-updates-list" className="application-updates-list" />
+          </section>
+          <section
+            id="student-applications-panel"
+            className="buddy-template-card"
+            style={{ marginTop: '28px', padding: '28px', background: '#fff', borderRadius: '24px' }}
+            hidden
+          >
+            <h3 style={{ marginTop: 0 }}>Đơn ứng tuyển của bạn</h3>
+            <p style={{ color: '#607184' }}>
+              Khi nhà tuyển dụng kết thúc quy trình, bạn có thể đánh giá bằng sao và gửi phản hồi.
+            </p>
+            <div id="student-applications-list" />
+          </section>
         </div>
       </section>
     </>

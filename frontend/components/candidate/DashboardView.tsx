@@ -20,38 +20,6 @@ interface StatItem {
   description: string;
 }
 
-interface HeroSlide {
-  id: string;
-  src: string;
-  alt: string;
-  tag: string;
-  caption: string;
-}
-
-const HERO_SLIDES: HeroSlide[] = [
-  {
-    id: 'slide-cv-glass',
-    src: '/images/hero-cv-glass.jpg',
-    alt: 'Tối ưu CV Chuẩn ATS & Mô hình STAR',
-    tag: 'Tối ưu CV',
-    caption: 'Chuyển hóa hồ sơ chuẩn STAR & ATS chuyên nghiệp',
-  },
-  {
-    id: 'slide-voice-studio',
-    src: '/images/hero-voice-studio.jpg',
-    alt: 'Luyện phỏng vấn Voice AI 1-1 thời gian thực',
-    tag: 'Voice AI 1-1',
-    caption: 'Phỏng vấn thoại thực chiến cùng AI Coach thông minh',
-  },
-  {
-    id: 'slide-career-path',
-    src: '/images/hero-career-path.jpg',
-    alt: 'Lộ trình nghề nghiệp & So khớp JD bứt phá mục tiêu',
-    tag: 'Lộ trình sự nghiệp',
-    caption: 'Định vị lộ trình kỹ năng & Chinh phục việc làm mơ ước',
-  },
-];
-
 const STATS_DATA: StatItem[] = [
   {
     id: 'stat-cv',
@@ -85,7 +53,6 @@ const STATS_DATA: StatItem[] = [
 ];
 
 export default function DashboardView() {
-  const [currentSlide, setCurrentSlide] = useState(0);
   const [hasScrolledStats, setHasScrolledStats] = useState(false);
   const [counterValues, setCounterValues] = useState<Record<string, number>>({
     'stat-cv': 0,
@@ -96,15 +63,6 @@ export default function DashboardView() {
 
   const statsRef = useRef<HTMLDivElement>(null);
   const rootRef = useRef<HTMLElement>(null);
-
-  // ── Auto Continuous Infinite Loop Hero Slideshow (Cinematic 4.5s breathing cycle) ──
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide(prev => (prev + 1) % HERO_SLIDES.length);
-    }, 4500);
-
-    return () => clearInterval(timer);
-  }, []);
 
   // ── Scroll Reveal Intersection Observer ──
   useEffect(() => {
@@ -237,7 +195,7 @@ export default function DashboardView() {
             </div>
           </div>
 
-          {/* ── Dynamic Infinite Auto-Transitioning Hero Showcase ── */}
+          {/* ── Fixed Hero Image Showcase ── */}
           <div
             className="home-hero-visual"
             data-reveal="fade-left"
@@ -245,29 +203,16 @@ export default function DashboardView() {
           >
             <div className="home-visual-aura" aria-hidden="true" />
             <div className="home-buddy-stage">
-              <div className="hero-slider-deck">
-                {HERO_SLIDES.map((slide, idx) => {
-                  const isActive = idx === currentSlide;
-                  return (
-                    <div
-                      key={slide.id}
-                      className={`hero-slide-card ${isActive ? 'is-active' : ''}`}
-                      aria-hidden={!isActive}
-                    >
-                      <Image
-                        src={slide.src}
-                        alt={slide.alt}
-                        width={2048}
-                        height={1536}
-                        quality={100}
-                        unoptimized
-                        className="home-buddy-image"
-                        priority
-                      />
-                    </div>
-                  );
-                })}
-              </div>
+              <Image
+                src="/images/image1.png"
+                alt="Career Assistant Hero"
+                width={1536}
+                height={1024}
+                quality={100}
+                unoptimized
+                className="home-buddy-image"
+                priority
+              />
             </div>
           </div>
         </div>

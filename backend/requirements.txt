@@ -7,6 +7,7 @@ pydantic>=2.10.0
 pydantic-settings>=2.7.0
 python-dotenv>=1.0.0
 python-multipart>=0.0.12        # Bắt buộc để nhận File upload (CV PDF/Word)
+boto3>=1.35.0                   # Cloudflare R2 (S3-compatible object storage)
 email-validator>=2.2.0         # Validate EmailStr trong Pydantic
 google-auth>=2.35.0            # Google OAuth token verification
 reportlab>=4.0.0               # Tạo file PDF CV export
