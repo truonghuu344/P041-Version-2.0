@@ -16,9 +16,6 @@ Nguyên tắc:
 
 from __future__ import annotations
 
-import math
-from typing import Any
-
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -40,14 +37,14 @@ from src.models.v2_schemas import (
     EvidenceListData,
     GapAction,
     GapListData,
-    MatchEvaluationData,
     MandatoryGate,
+    MatchEvaluationData,
     RequirementDetail,
     RequirementListData,
 )
 from src.services.gap_priority_service import compute_gap_priority
 
-router = APIRouter(prefix="/v2/matches", tags=["Match Evaluation V2"])
+router = APIRouter(prefix="/matches", tags=["Match Evaluation V2"])
 
 # ── Label mapping cho 5 tiêu chí chuẩn ───────────────────────────────────────
 
@@ -191,7 +188,7 @@ async def get_match_gaps(
     current_user: User = Depends(get_current_user),
 ) -> GapListData:
     """Trả về danh sách gap đã sắp xếp ưu tiên từ gap_priority_service."""
-    match = await _get_match_or_404(match_id, current_user.id, db)
+    await _get_match_or_404(match_id, current_user.id, db)
 
     req_rows = (
         await db.execute(
@@ -207,7 +204,7 @@ async def get_match_gaps(
         )
     ).scalars().all()
 
-    _REQ_TYPE_TO_CRIT = {
+    req_type_to_crit = {
         "JD_REQUIRED_SKILL": "CRIT_REQUIRED_SKILL",
         "JD_EXPERIENCE": "CRIT_EXPERIENCE",
         "JD_RESPONSIBILITY": "CRIT_EXPERIENCE",
@@ -224,7 +221,7 @@ async def get_match_gaps(
             "mandatory": r.mandatory,
             "priority": r.priority,
             "status": r.status or "UNCERTAIN",
-            "criterion_id": (r.payload_json or {}).get("criterion_id") or _REQ_TYPE_TO_CRIT.get(r.requirement_type, r.requirement_type),
+            "criterion_id": (r.payload_json or {}).get("criterion_id") or req_type_to_crit.get(r.requirement_type, r.requirement_type),
             "criterion_score": r.criterion_score,
             "payload_json": r.payload_json or {},
         }
@@ -277,7 +274,7 @@ async def get_match_criteria(
     current_user: User = Depends(get_current_user),
 ) -> CriteriaListData:
     """Trả về danh sách tất cả criteria (dùng để load requirements lazy)."""
-    match = await _get_match_or_404(match_id, current_user.id, db)
+    await _get_match_or_404(match_id, current_user.id, db)
 
     crit_rows = (
         await db.execute(
@@ -332,7 +329,7 @@ async def get_criterion_requirements(
         )
     ).scalars().all()
 
-    _REQ_TYPE_TO_CRIT = {
+    req_type_to_crit = {
         "JD_REQUIRED_SKILL": "CRIT_REQUIRED_SKILL",
         "JD_EXPERIENCE": "CRIT_EXPERIENCE",
         "JD_RESPONSIBILITY": "CRIT_EXPERIENCE",
@@ -347,7 +344,7 @@ async def get_criterion_requirements(
     filtered = [
         r for r in all_reqs
         if (r.payload_json or {}).get("criterion_id") == criterion_id
-        or _REQ_TYPE_TO_CRIT.get(r.requirement_type, r.requirement_type) == criterion_id
+        or req_type_to_crit.get(r.requirement_type, r.requirement_type) == criterion_id
     ]
 
     total = len(filtered)

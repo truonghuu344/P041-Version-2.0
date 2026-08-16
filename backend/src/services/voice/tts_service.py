@@ -5,7 +5,10 @@ import base64
 import logging
 from io import BytesIO
 
-from gtts import gTTS
+try:
+    from gtts import gTTS
+except ImportError:
+    gTTS = None  # noqa: N816
 
 logger = logging.getLogger(__name__)
 
@@ -13,6 +16,9 @@ LANG_MAP: dict[str, str] = {"vi": "vi", "en": "en"}
 
 
 def _synthesize_sync(text: str, language: str) -> bytes:
+    if gTTS is None:
+        logger.warning("gTTS is not installed; returning empty audio bytes")
+        return b""
     lang = LANG_MAP.get(language, "vi")
     tts = gTTS(text=text, lang=lang)
     buf = BytesIO()

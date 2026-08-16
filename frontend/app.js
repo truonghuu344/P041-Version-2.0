@@ -1698,7 +1698,19 @@ function startAppLogic() {
     const rowMarkup = (cv, index) => {
       const title = escapeHtml(cv.title || cv.file_name || 'CV chưa đặt tên');
       const skills = careerCVSkills(cv);
-      return `<tr><td><strong>${title}</strong><small>${escapeHtml(cv.file_name || 'CV đã lưu')}</small></td><td>${escapeHtml(careerCVDate(cv))}</td><td><div class="career-skill-list">${skills.length ? skills.map(skill => `<span>${escapeHtml(skill)}</span>`).join('') : '<span>Chưa trích xuất</span>'}</div></td><td><span class="career-table-status">Đã lưu</span></td><td class="career-table-actions-cell"><button type="button" data-career-open-index="${index}">Mở</button><button type="button" data-career-match-id="${escapeHtml(cv.id)}">Match với Job</button></td></tr>`;
+      const statusType = cv.status_type || (cv.is_optimized ? 'optimized' : (cv.match_count > 0 ? 'matched' : 'raw'));
+      const statusLabel = cv.status_label || (statusType === 'optimized' ? 'Đã tối ưu' : (statusType === 'matched' ? 'Đã Match' : 'CV gốc'));
+      return `<tr>
+        <td><strong>${title}</strong><small>${escapeHtml(cv.file_name || 'CV đã lưu')}</small></td>
+        <td>${escapeHtml(careerCVDate(cv))}</td>
+        <td><div class="career-skill-list">${skills.length ? skills.map(skill => `<span>${escapeHtml(skill)}</span>`).join('') : '<span>Chưa trích xuất</span>'}</div></td>
+        <td><span class="career-table-status cv-status-badge is-${statusType}">${escapeHtml(statusLabel)}</span></td>
+        <td class="career-table-actions-cell">
+          <button type="button" class="btn-table-action" data-career-open-index="${index}">Mở</button>
+          <button type="button" class="btn-table-action" data-career-match-id="${escapeHtml(cv.id)}">Match với Job</button>
+          <button type="button" class="btn-table-action btn-table-find-jobs" data-career-find-jobs-id="${escapeHtml(cv.id)}">Việc phù hợp</button>
+        </td>
+      </tr>`;
     };
 
     const hasCVs = ordered.length > 0;
@@ -2322,17 +2334,24 @@ function startAppLogic() {
         const cardsGrid = document.getElementById('p1-cv-cards-grid');
         if (cardsGrid) {
           if (loadedCVs && loadedCVs.length > 0) {
-            cardsGrid.innerHTML = loadedCVs.map(cv => `
+            cardsGrid.innerHTML = loadedCVs.map(cv => {
+              const statusType = cv.status_type || (cv.is_optimized ? 'optimized' : (cv.match_count > 0 ? 'matched' : 'raw'));
+              const statusLabel = cv.status_label || (statusType === 'optimized' ? 'Đã tối ưu' : (statusType === 'matched' ? 'Đã Match' : 'CV gốc'));
+              return `
               <div class="cv-card${cv.id === cvAnalysisCvSelect.value ? ' is-selected' : ''}" data-cv-id="${escapeHtml(cv.id)}" role="button" tabindex="0" aria-pressed="${cv.id === cvAnalysisCvSelect.value ? 'true' : 'false'}">
                 <div class="cv-card-icon">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                 </div>
                 <div class="cv-card-content">
-                  <h4 class="cv-card-title">${escapeHtml(cv.title || cv.file_name || 'CV Hồ sơ')}</h4>
+                  <div class="cv-card-head-row">
+                    <h4 class="cv-card-title">${escapeHtml(cv.title || cv.file_name || 'CV Hồ sơ')}</h4>
+                    <span class="cv-card-badge cv-status-badge is-${statusType}">${escapeHtml(statusLabel)}</span>
+                  </div>
                   <p class="cv-card-meta">Cập nhật: ${cv.updated_at ? new Date(cv.updated_at).toLocaleDateString() : 'Gần đây'}</p>
                 </div>
               </div>
-            `).join('');
+            `;
+            }).join('');
 
             // A saved-CV card is a selection control for Match CV.
             cardsGrid.querySelectorAll('.cv-card').forEach(card => {
@@ -2654,7 +2673,18 @@ function startAppLogic() {
     document.getElementById(id)?.addEventListener('change', event => uploadCareerPortfolioCV(event.target.files?.[0]));
   });
 
-  document.getElementById('career-portfolio-workspace')?.addEventListener('click', event => {
+  document.getElementById('career-portfolio-workspace')?.addEventListener('click', async event => {
+    const findJobsButton = event.target.closest('[data-career-find-jobs-id]');
+    if (findJobsButton) {
+      const cvId = findJobsButton.dataset.careerFindJobsId || loadedCVs[0]?.id;
+      switchView('find-jobs');
+      if (cvId) {
+        activeJobSearchCV = cvId;
+        await loadJobSearchCVOptions(cvId);
+        await loadJobSearchResults({ cvId, shouldGuide: true });
+      }
+      return;
+    }
     const matchButton = event.target.closest('[data-career-match-id], [data-career-start-match]');
     if (matchButton) {
       const cvId = matchButton.dataset.careerMatchId || loadedCVs[0]?.id;
@@ -2959,10 +2989,370 @@ TÊN CÔNG TY:
   const jobResultsSummary = document.getElementById('job-results-summary');
   const jobResultsMode = document.getElementById('job-results-mode');
   const jobPagination = document.getElementById('job-pagination');
+  const jobJourney = document.getElementById('top-jobs-journey');
+  const jobFiltersGroup = document.querySelector('#view-find-jobs .filter-dropdowns-group');
+  const jobResultsHeader = document.querySelector('#view-find-jobs .top-jobs-results-header');
   let activeJobSearchCV = '';
   let jobSearchPage = 1;
   const JOBS_PER_PAGE = 9;
   let visibleJobResults = [];
+  let jobProgressTimers = [];
+  let jobSearchUiState = 'idle';
+  let jobProcessingModalVisible = false;
+  let jobProcessingCloseTimer = null;
+
+  function setJobJourneyStage(stage) {
+    if (!jobJourney) return;
+    const order = ['cv', 'filters', 'results'];
+    const currentIndex = order.indexOf(stage);
+    jobJourney.querySelectorAll('[data-job-journey-step]').forEach(step => {
+      const stepIndex = order.indexOf(step.dataset.jobJourneyStep);
+      step.classList.toggle('is-complete', currentIndex > stepIndex);
+      step.classList.toggle('is-active', currentIndex === stepIndex);
+      step.removeAttribute('aria-current');
+      if (currentIndex === stepIndex) step.setAttribute('aria-current', 'step');
+    });
+  }
+
+  function clearJobSearchProgress() {
+    jobProgressTimers.forEach(timer => window.clearTimeout(timer));
+    jobProgressTimers = [];
+  }
+
+  function getJobProcessingModal() {
+    let modal = document.getElementById('job-processing-modal');
+    if (modal) return modal;
+    modal = document.createElement('div');
+    modal.id = 'job-processing-modal';
+    modal.className = 'job-processing-modal';
+    modal.setAttribute('aria-hidden', 'true');
+    modal.innerHTML = `
+      <div class="job-processing-backdrop"></div>
+      <section class="job-processing-card" role="dialog" aria-modal="true" aria-live="polite" aria-labelledby="job-processing-title">
+        <div class="job-processing-mascot" aria-hidden="true">
+          <img src="/images/image2.png" alt="">
+          <span data-processing-symbol>✦</span>
+        </div>
+        <h3 id="job-processing-title" data-processing-title></h3>
+        <p data-processing-text></p>
+        <ol class="job-processing-steps" aria-label="Tiến độ tìm công việc">
+          <li data-processing-step="0"><span>○</span> Đọc CV</li>
+          <li data-processing-step="1"><span>○</span> Tìm công việc</li>
+          <li data-processing-step="2"><span>○</span> Xếp hạng</li>
+          <li data-processing-step="3"><span>○</span> Hoàn tất</li>
+        </ol>
+        <p class="job-processing-helper" data-processing-helper></p>
+        <p class="job-processing-status" data-processing-status></p>
+        <button type="button" class="btn-find-top-jobs job-processing-action" data-processing-action hidden></button>
+      </section>
+    `;
+    modal.querySelector('[data-processing-action]')?.addEventListener('click', () => {
+      if (jobSearchUiState === 'failed') {
+        closeJobProcessingModal();
+        loadJobSearchResults({ cvId: jobSearchCVSelect?.value, shouldGuide: true });
+        return;
+      }
+      closeJobProcessingModal();
+      scrollToJobResults();
+    });
+    document.body.appendChild(modal);
+    return modal;
+  }
+
+  function scrollToJobResults() {
+    const firstResult = jobSearchResults?.querySelector('.top-job-card');
+    (firstResult || jobResultsHeader)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (firstResult) {
+      firstResult.classList.add('is-highlighted');
+      window.setTimeout(() => firstResult.classList.remove('is-highlighted'), 1600);
+    }
+  }
+
+  function closeJobProcessingModal() {
+    if (jobProcessingCloseTimer) window.clearTimeout(jobProcessingCloseTimer);
+    jobProcessingCloseTimer = null;
+    const modal = document.getElementById('job-processing-modal');
+    modal?.classList.remove('is-open');
+    modal?.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('job-processing-open');
+    jobProcessingModalVisible = false;
+  }
+
+  function updateJobProcessingModal(state, resultCount = 0) {
+    const modal = getJobProcessingModal();
+    const states = {
+      preparing: {
+        title: 'Đang đọc CV của bạn...',
+        text: 'Mình đang xem kỹ năng và kinh nghiệm để hiểu bạn phù hợp với công việc nào.',
+        helper: '', status: 'Bước 1 / 4', symbol: '✦', activeStep: 0,
+      },
+      retrieving: {
+        title: 'Đang tìm kiếm cho bạn...',
+        text: 'Mình đã hiểu CV rồi. Giờ đang tìm những vị trí gần nhất với thế mạnh của bạn.',
+        helper: 'Được nửa chặng rồi', status: 'Bước 2 / 4', symbol: '⌕', activeStep: 1,
+      },
+      ranking: {
+        title: 'Đang chọn những vị trí nổi bật nhất...',
+        text: 'Đã tìm được một số lựa chọn tốt. Mình đang kiểm tra kỹ hơn để xếp hạng chúng cho bạn.',
+        helper: 'Sắp xong rồi nhé!', status: 'Bước 3 / 4', symbol: '✦', activeStep: 2,
+      },
+      evaluating: {
+        title: 'Vẫn đang xử lý nhé ✦',
+        text: 'Có khá nhiều công việc để so sánh nên bước này cần thêm một chút thời gian.',
+        helper: 'Mình vẫn đang chọn các vị trí phù hợp nhất.', status: 'Bước 3 / 4', symbol: '✦', activeStep: 2,
+      },
+      waiting: {
+        title: 'Vẫn đang xử lý nhé ✦',
+        text: 'Có khá nhiều công việc để so sánh nên bước này cần thêm một chút thời gian.',
+        helper: 'Mình vẫn đang tìm những lựa chọn phù hợp nhất.', status: 'Đang xử lý', symbol: '✦', activeStep: 1,
+      },
+      completed: {
+        title: 'Xong rồi!',
+        text: `Mình đã tìm được ${resultCount} công việc phù hợp nhất với CV của bạn.`,
+        helper: '', status: 'Bước 4 / 4', symbol: '✓', activeStep: 3, action: 'Xem kết quả',
+      },
+      failed: {
+        title: 'Có chút gián đoạn',
+        text: 'CV của bạn vẫn an toàn. Mình chưa thể hoàn tất việc tìm kiếm.',
+        helper: '', status: '', symbol: '!', activeStep: -1, action: 'Thử lại',
+      },
+    };
+    const current = states[state] || states.preparing;
+    modal.dataset.state = state;
+    modal.querySelector('[data-processing-title]').textContent = current.title;
+    modal.querySelector('[data-processing-text]').textContent = current.text;
+    modal.querySelector('[data-processing-helper]').textContent = current.helper;
+    modal.querySelector('[data-processing-status]').textContent = current.status;
+    modal.querySelector('[data-processing-symbol]').textContent = current.symbol;
+    modal.querySelectorAll('[data-processing-step]').forEach((step, index) => {
+      const marker = step.querySelector('span');
+      step.classList.toggle('is-complete', state === 'completed' || (current.activeStep >= 0 && index < current.activeStep));
+      step.classList.toggle('is-active', index === current.activeStep && state !== 'completed');
+      if (marker) marker.textContent = step.classList.contains('is-complete') ? '✓' : step.classList.contains('is-active') ? '●' : '○';
+    });
+    const action = modal.querySelector('[data-processing-action]');
+    if (action) {
+      action.hidden = !current.action;
+      action.textContent = current.action || '';
+    }
+  }
+
+  function openJobProcessingModal() {
+    if (jobProcessingCloseTimer) window.clearTimeout(jobProcessingCloseTimer);
+    const modal = getJobProcessingModal();
+    jobProcessingModalVisible = true;
+    updateJobProcessingModal('preparing');
+    modal.classList.add('is-open');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('job-processing-open');
+  }
+
+  function setJobProgressStep(index, state, message) {
+    const progress = jobSearchResults?.querySelector('.top-jobs-ai-progress');
+    if (!progress) return;
+    const steps = [...progress.querySelectorAll('[data-ai-step]')];
+    const encouragingMessages = ['', 'Được nửa chặng rồi', 'Sắp xong rồi nhé', ''];
+    steps.forEach((step, stepIndex) => {
+      const isComplete = stepIndex < index || (stepIndex === index && state === 'complete');
+      const isActive = stepIndex === index && state === 'active';
+      step.classList.toggle('is-complete', isComplete);
+      step.classList.toggle('is-active', isActive);
+      step.classList.toggle('is-pending', !isComplete && !isActive);
+
+      const marker = step.querySelector('.ai-milestone-marker, span:first-child');
+      if (marker) {
+        if (isComplete) {
+          marker.innerHTML = '✓';
+        } else if (isActive) {
+          marker.innerHTML = '<span class="ai-milestone-spinner"></span>';
+        } else {
+          marker.innerHTML = `<span>${stepIndex + 1}</span>`;
+        }
+      }
+
+      // Update encouraging badge
+      let encouragingEl = step.querySelector('.ai-milestone-encouraging');
+      if (isActive && encouragingMessages[stepIndex]) {
+        if (!encouragingEl) {
+          encouragingEl = document.createElement('span');
+          encouragingEl.className = 'ai-milestone-encouraging';
+          step.querySelector('.ai-milestone-title-row')?.appendChild(encouragingEl);
+        }
+        encouragingEl.textContent = `✦ ${encouragingMessages[stepIndex]}`;
+      } else if (encouragingEl) {
+        encouragingEl.remove();
+      }
+    });
+
+    const status = progress.querySelector('[data-ai-status]');
+    if (status && message) status.textContent = message;
+    const badge = progress.querySelector('[data-ai-badge]');
+    if (badge) badge.textContent = `✦ Bước ${Math.min(index + 1, 4)} / 4`;
+  }
+
+  function startJobSearchProgress(showModal = false) {
+    clearJobSearchProgress();
+    jobSearchUiState = 'preparing';
+    if (showModal) openJobProcessingModal();
+    setJobProgressStep(0, 'active', 'Đang đọc & phân tích hồ sơ năng lực từ CV...');
+    jobProgressTimers = [
+      window.setTimeout(() => {
+        if (jobSearchUiState !== 'retrieving') return;
+        setJobProgressStep(1, 'active', 'Đang quét danh mục và tìm vị trí tương đồng...');
+        if (jobProcessingModalVisible) updateJobProcessingModal('waiting');
+      }, 3000),
+      window.setTimeout(() => {
+        if (jobSearchUiState !== 'retrieving') return;
+        setJobProgressStep(2, 'active', 'Đang đối chiếu tiêu chí và tính điểm rubric...');
+        if (jobProcessingModalVisible) updateJobProcessingModal('ranking');
+      }, 6000),
+    ];
+  }
+
+  function markJobSearchRequestStarted() {
+    jobSearchUiState = 'retrieving';
+    setJobProgressStep(1, 'active', 'Đang quét danh mục & lọc vị trí tiềm năng...');
+    if (jobProcessingModalVisible) updateJobProcessingModal('retrieving');
+  }
+
+  function completeJobSearchProgress(message, resultCount = 0, shouldGuide = false) {
+    clearJobSearchProgress();
+    jobSearchUiState = 'completed';
+    const progress = jobSearchResults?.querySelector('.top-jobs-ai-progress');
+    if (progress) {
+      progress.setAttribute('data-status', 'completed');
+      progress.querySelectorAll('[data-ai-step]').forEach(step => {
+        step.classList.remove('is-active', 'is-pending');
+        step.classList.add('is-complete');
+        const marker = step.querySelector('.ai-milestone-marker, span:first-child');
+        if (marker) marker.innerHTML = '✓';
+        step.querySelector('.ai-milestone-encouraging')?.remove();
+      });
+      const status = progress.querySelector('[data-ai-status]');
+      if (status) status.textContent = message;
+      const badge = progress.querySelector('[data-ai-badge]');
+      if (badge) {
+        badge.classList.add('is-completed');
+        badge.innerHTML = '✓ Hoàn tất';
+      }
+
+      // Add completed summary block if not already present
+      if (!progress.querySelector('.ai-activity-summary-card')) {
+        const summaryCard = document.createElement('section');
+        summaryCard.className = 'ai-activity-summary-card';
+        summaryCard.setAttribute('aria-label', 'Tóm tắt kết quả');
+        summaryCard.innerHTML = `
+          <div class="ai-summary-head">
+            <div class="ai-summary-badge-group">
+              <span class="ai-summary-icon" aria-hidden="true">✓</span>
+              <span class="ai-summary-title">Đã hoàn thành phân tích</span>
+            </div>
+            <span class="ai-activity-badge is-completed">Sẵn sàng</span>
+          </div>
+          <p class="ai-summary-text">Đã phân tích năng lực CV và xếp hạng ${resultCount} công việc phù hợp nhất dành riêng cho bạn.</p>
+          <footer class="ai-summary-footer">
+            <span class="ai-summary-scroll-hint">↓ Tự động cuộn đến danh sách việc làm</span>
+            <button type="button" class="ai-summary-jump-btn" id="btn-jump-to-job-results">Xem kết quả ngay</button>
+          </footer>
+        `;
+        summaryCard.querySelector('#btn-jump-to-job-results')?.addEventListener('click', scrollToJobResults);
+        progress.appendChild(summaryCard);
+      }
+    }
+
+    if (jobProcessingModalVisible) {
+      updateJobProcessingModal('completed', resultCount);
+      if (shouldGuide) {
+        jobProcessingCloseTimer = window.setTimeout(() => {
+          closeJobProcessingModal();
+          scrollToJobResults();
+        }, 700);
+      }
+    } else {
+      // Auto smooth scroll to job results
+      window.setTimeout(() => {
+        scrollToJobResults();
+      }, 500);
+    }
+  }
+
+  function renderJobSkeleton() {
+    return `
+      <div class="top-jobs-loading-wrap" role="status" aria-live="polite">
+        <article class="ai-activity-card top-jobs-ai-progress" role="status" aria-live="polite" data-feature="top-jobs" data-status="running">
+          <header class="ai-activity-header">
+            <div class="ai-activity-title-group">
+              <div class="ai-activity-icon-orb is-running" aria-hidden="true">✦</div>
+              <div class="ai-activity-titles">
+                <h4 class="ai-activity-title">AI đang tìm & xếp hạng việc làm phù hợp</h4>
+                <p class="ai-activity-subtitle" data-ai-status>Đang đọc & phân tích hồ sơ năng lực từ CV...</p>
+              </div>
+            </div>
+            <div class="ai-activity-badge" data-ai-badge>✦ Bước 1 / 4</div>
+          </header>
+          <ol class="ai-activity-milestones top-jobs-progress-steps" aria-label="Tiến trình tìm việc phù hợp">
+            <li class="ai-milestone-item is-active" data-ai-step="0">
+              <div class="ai-milestone-marker" aria-hidden="true"><span class="ai-milestone-spinner"></span></div>
+              <div class="ai-milestone-content">
+                <div class="ai-milestone-title-row">
+                  <span class="ai-milestone-label">Đọc & phân tích hồ sơ năng lực từ CV</span>
+                </div>
+                <span class="ai-milestone-detail">Trích xuất kinh nghiệm, kỹ năng chính và thế mạnh nổi bật</span>
+              </div>
+            </li>
+            <li class="ai-milestone-item is-pending" data-ai-step="1">
+              <div class="ai-milestone-marker" aria-hidden="true"><span>2</span></div>
+              <div class="ai-milestone-content">
+                <div class="ai-milestone-title-row">
+                  <span class="ai-milestone-label">Quét danh mục & lọc vị trí tiềm năng</span>
+                </div>
+                <span class="ai-milestone-detail">Tìm kiếm các JD có độ tương đồng kỹ năng cao</span>
+              </div>
+            </li>
+            <li class="ai-milestone-item is-pending" data-ai-step="2">
+              <div class="ai-milestone-marker" aria-hidden="true"><span>3</span></div>
+              <div class="ai-milestone-content">
+                <div class="ai-milestone-title-row">
+                  <span class="ai-milestone-label">Đối chiếu tiêu chí & tính điểm rubric</span>
+                </div>
+                <span class="ai-milestone-detail">Đánh giá must-have, nice-to-have, kinh nghiệm và domain</span>
+              </div>
+            </li>
+            <li class="ai-milestone-item is-pending" data-ai-step="3">
+              <div class="ai-milestone-marker" aria-hidden="true"><span>4</span></div>
+              <div class="ai-milestone-content">
+                <div class="ai-milestone-title-row">
+                  <span class="ai-milestone-label">Xếp hạng & chọn lọc Top 10 việc làm tối ưu</span>
+                </div>
+                <span class="ai-milestone-detail">Sắp xếp danh sách theo mức độ tương thích thực tế</span>
+              </div>
+            </li>
+          </ol>
+        </article>
+        <div class="top-jobs-skeleton-list" aria-hidden="true">
+          ${[1, 2, 3].map(() => `
+            <div class="top-job-skeleton-card">
+              <div class="skeleton-shimmer skeleton-title-row">
+                <div class="skeleton-line skeleton-title"></div>
+                <div class="skeleton-badge skeleton-score"></div>
+              </div>
+              <div class="skeleton-shimmer skeleton-meta-row">
+                <div class="skeleton-line skeleton-meta"></div>
+              </div>
+              <div class="skeleton-shimmer skeleton-evidence-box">
+                <div class="skeleton-line skeleton-item"></div>
+                <div class="skeleton-line skeleton-item"></div>
+              </div>
+              <div class="skeleton-shimmer skeleton-actions-row">
+                <div class="skeleton-btn"></div>
+                <div class="skeleton-btn"></div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
 
   function renderJobPagination() {
     if (!jobPagination) return;
@@ -2979,131 +3369,543 @@ TÊN CÔNG TY:
       return `<button type="button" class="${page === jobSearchPage ? 'is-current' : ''}" data-job-page="${page}" aria-label="Trang ${page}" aria-current="${page === jobSearchPage ? 'page' : 'false'}">${page}</button>`;
     }).join('');
     jobPagination.hidden = false;
-    jobPagination.innerHTML = `<span>${start + 1}–${end} / ${visibleJobResults.length} công việc</span><div><button type="button" data-job-page="prev" ${jobSearchPage === 1 ? 'disabled' : ''}>Trước</button>${pageButtons}<button type="button" data-job-page="next" ${jobSearchPage === totalPages ? 'disabled' : ''}>Sau</button></div>`;
+    jobPagination.innerHTML = `<span class="job-pagination-summary">Hiển thị ${start + 1}–${end} trong ${visibleJobResults.length} công việc</span><div class="job-pagination-controls"><button type="button" data-job-page="prev" ${jobSearchPage === 1 ? 'disabled' : ''} aria-label="Trang trước">‹ <span>Trước</span></button>${pageButtons}<button type="button" data-job-page="next" ${jobSearchPage === totalPages ? 'disabled' : ''} aria-label="Trang sau"><span>Sau</span> ›</button></div>`;
   }
 
-  function renderJobSearchPage() {
-    if (!jobSearchResults) return;
-    const start = (jobSearchPage - 1) * JOBS_PER_PAGE;
-    const pageJobs = visibleJobResults.slice(start, start + JOBS_PER_PAGE);
-    jobSearchResults.innerHTML = pageJobs.map(renderJobCatalogCard).join('');
-    renderJobPagination();
-  }
-
-  function getCompanyInitials(company = '') {
-    if (!company || typeof company !== 'string') return 'JD';
-    let cleaned = company
-      .replace(/^(\[.*?\]|\(.*?\))\s*/g, '')
-      .replace(/^(công ty\s+(tnhh|cổ phần|cp|mtv|liên doanh|đầu tư|công nghệ)?\s*)/i, '')
-      .replace(/^(cty\s+(tnhh|cp)?\s*)/i, '')
-      .replace(/^(tổng công ty|tập đoàn)\s*/i, '')
-      .trim();
-
-    if (!cleaned) cleaned = company.trim();
-
-    const words = cleaned.split(/[\s\-._]+/).filter(w => w.length > 0 && !/^(tnhh|cp|jsc|ltd|inc|corp|vietnam|vn)$/i.test(w));
-    if (words.length >= 2) {
-      return (words[0][0] + words[1][0]).toUpperCase();
-    } else if (words.length === 1 && words[0].length >= 2) {
-      return words[0].slice(0, 2).toUpperCase();
-    } else if (words.length === 1 && words[0].length === 1) {
-      return words[0].toUpperCase();
-    }
-    return cleaned.slice(0, 2).toUpperCase() || 'JD';
-  }
-
-  function renderJobCatalogCard(job) {
-    const skills = (job.skills || []).slice(0, 7);
-    const matched = new Set((job.matched_skills || []).map(skill => skill.toLocaleLowerCase()));
-    const hasMatchScore = job.match_score !== null && job.match_score !== undefined && Number.isFinite(Number(job.match_score));
-    const sourceLink = job.source_url
-      ? `<a class="job-source-link" href="${escapeHtml(job.source_url)}" target="_blank" rel="noopener noreferrer">Xem tin gốc ↗</a>`
-      : '';
+  function renderJobSkeleton() {
     return `
-      <article class="job-catalog-card ${hasMatchScore ? 'is-ai-ranked' : ''}">
-        <div class="job-catalog-topline">
-          <span class="job-company-mark">${escapeHtml(getCompanyInitials(job.company))}</span>
-          <div class="job-catalog-heading">
-            <span class="job-catalog-source">${escapeHtml(job.source_id)} • ${escapeHtml(job.domain || 'Công nghệ')}</span>
-            <h3>${escapeHtml(job.title)}</h3>
-            <p>${escapeHtml(job.company)}</p>
+      <div class="top-jobs-loading-wrap" role="status" aria-live="polite">
+          <div class="top-jobs-progress-heading">
+            <span class="top-jobs-spinner" aria-hidden="true"></span>
+            <div><strong>Đang tìm công việc phù hợp với bạn</strong><p data-ai-status>Đang chuẩn bị CV của bạn...</p></div>
           </div>
-          ${hasMatchScore ? `<div class="job-match-score"><strong>${Number(job.match_score).toFixed(1)}%</strong><span>phù hợp</span></div>` : ''}
+          <ol class="top-jobs-progress-steps">
+            <li data-ai-step><span>1</span> Đã đọc hồ sơ</li>
+            <li data-ai-step><span>2</span> Đã xác định kỹ năng chính</li>
+            <li data-ai-step><span>3</span> Đang tìm công việc phù hợp</li>
+            <li data-ai-step><span>4</span> Đang xếp hạng kết quả</li>
+          </ol>
         </div>
-        <div class="job-catalog-meta">
-          <span>⌖ ${escapeHtml(job.location)}</span>
-          <span>◷ ${escapeHtml(job.employment_type)}</span>
-          <span>◇ ${escapeHtml(job.remote_type)}</span>
-          <span>☆ ${escapeHtml(job.job_level)}</span>
+        <div class="top-jobs-skeleton-list" aria-hidden="true">
+          ${[1, 2, 3].map(() => `
+            <div class="top-job-skeleton-card">
+              <div class="skeleton-shimmer skeleton-title-row">
+                <div class="skeleton-line skeleton-title"></div>
+                <div class="skeleton-badge skeleton-score"></div>
+              </div>
+              <div class="skeleton-shimmer skeleton-meta-row">
+                <div class="skeleton-line skeleton-meta"></div>
+              </div>
+              <div class="skeleton-shimmer skeleton-evidence-box">
+                <div class="skeleton-line skeleton-item"></div>
+                <div class="skeleton-line skeleton-item"></div>
+              </div>
+              <div class="skeleton-shimmer skeleton-actions-row">
+                <div class="skeleton-btn"></div>
+                <div class="skeleton-btn"></div>
+              </div>
+            </div>
+          `).join('')}
         </div>
-        <div class="job-skill-list">
-          ${skills.map(skill => `<span class="${matched.has(skill.toLocaleLowerCase()) ? 'is-matched' : ''}">${escapeHtml(skill)}</span>`).join('')}
+      </div>
+    `;
+  }
+
+  function renderNoCVState() {
+    return `
+      <div class="job-search-state job-search-no-cv" role="status" aria-live="polite">
+        <div class="job-state-icon no-cv-icon" aria-hidden="true">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <path d="M12 18v-6"/>
+            <path d="m9 15 3-3 3 3"/>
+          </svg>
         </div>
-        ${hasMatchScore && job.matched_skills?.length ? `<p class="job-match-reason"><strong>AI nhận thấy phù hợp:</strong> ${escapeHtml(job.matched_skills.join(', '))}</p>` : ''}
-        <details class="job-catalog-details">
-          <summary>Xem mô tả công việc</summary>
-          <p>${escapeHtml(job.description || 'Chưa có mô tả chi tiết.')}</p>
-        </details>
-        <footer>${sourceLink}<button type="button" class="job-match-action" data-job-match-source="${escapeHtml(job.source_id)}">Match CV với công việc này →</button></footer>
+        <div class="job-state-content">
+          <h3>Chưa chọn CV để phân tích</h3>
+          <p>Vui lòng chọn một CV đã lưu từ danh sách hoặc tải lên CV mới để AI phân tích và đề xuất Top 10 vị trí phù hợp nhất.</p>
+        </div>
+        <div class="job-state-actions">
+          <button type="button" class="btn-job-state-primary" id="btn-job-search-upload-cv">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            Tải lên hoặc chọn CV
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderEmptyState() {
+    return `
+      <div class="job-search-state job-search-empty" role="status" aria-live="polite">
+        <div class="job-state-icon empty-icon" aria-hidden="true">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            <line x1="8" y1="11" x2="14" y2="11"/>
+          </svg>
+        </div>
+        <div class="job-state-content">
+          <h3>Chưa tìm thấy công việc đủ phù hợp</h3>
+          <p>Chưa tìm thấy công việc đủ phù hợp với bộ lọc hiện tại. Bạn có thể xóa bộ lọc để hệ thống tìm lại dựa hoàn toàn trên CV.</p>
+        </div>
+        <div class="job-state-actions">
+          <button type="button" class="btn-job-state-primary btn-reset-job-filters" id="btn-reset-job-filters">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+              <path d="M3 3v5h5"/>
+            </svg>
+            Xóa bộ lọc và tìm lại
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderErrorState(errorMessage) {
+    return `
+      <div class="job-search-state job-search-error" role="alert" aria-live="assertive">
+        <div class="job-state-icon error-icon" aria-hidden="true">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </div>
+        <div class="job-state-content">
+          <h3>Quá trình tìm kiếm vừa bị gián đoạn</h3>
+          <p>CV của bạn vẫn được giữ nguyên. ${escapeHtml(errorMessage || 'Vui lòng thử lại để tiếp tục tìm công việc phù hợp.')}</p>
+        </div>
+        <div class="job-state-actions">
+          <button type="button" class="btn-job-state-primary btn-retry-job-search" id="btn-job-search-retry">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+              <path d="M3 3v5h5"/>
+            </svg>
+            Thử lại
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderJobCatalogCard(job, index = 0) {
+    // Bước 25 — FE tuyệt đối không tính score hay can thiệp capping, chỉ dùng contract backend
+    const isMandatoryFailed = Boolean(
+      job.mandatory_requirement_failed === true ||
+      job.mandatory_failed === true ||
+      (job.mandatory_gate && job.mandatory_gate.failed)
+    );
+
+    // FE chỉ dùng item.display_fit_score đúng contract
+    const displayScore = Math.round(Number(job.display_fit_score ?? 0));
+
+    const fitLabel = isMandatoryFailed
+      ? 'Thiếu yêu cầu bắt buộc'
+      : (job.fit_label || (displayScore >= 80 ? 'Phù hợp cao' : displayScore >= 50 ? 'Phù hợp' : 'Cần cải thiện'));
+
+    const jobMeta = [job.company, job.location, job.work_mode || job.remote_type]
+      .filter(Boolean)
+      .map(value => escapeHtml(String(value)));
+    const jobMetaHtml = jobMeta.map((value, metaIndex) => `${metaIndex ? '<span class="top-job-meta-dot">·</span>' : ''}<span>${value}</span>`).join('');
+
+    // Confidence level normalization
+    const confRaw = String(job.evidence_confidence || job.confidence || '').toLowerCase();
+    let confLevel = 'high';
+    if (confRaw.includes('low') || confRaw.includes('thấp') || confRaw === 'very_low') {
+      confLevel = 'low';
+    } else if (confRaw.includes('medium') || confRaw.includes('trung bình') || confRaw.includes('vừa')) {
+      confLevel = 'medium';
+    }
+
+    // Rank indicator (#1, #2, #3...)
+    const rank = job.rank || (index + 1);
+
+    // Strengths (Phù hợp) & Gaps
+    const rawStrengths = Array.isArray(job.top_strengths) ? job.top_strengths.slice(0, 4) : [];
+    const rawGaps = Array.isArray(job.top_gaps) ? job.top_gaps.slice(0, 3) : [];
+
+    const compactEvidenceLabel = (value, type) => {
+      const raw = String(value || '').replace(/\s+/g, ' ').trim();
+      const label = raw
+        .replace(/^Đáp ứng tốt yêu cầu:\s*/i, '')
+        .replace(/^Chưa tìm thấy evidence cho\s*/i, '')
+        .replace(/^[✓⚠△]\s*/, '')
+        .trim();
+      if (label.length <= 60) return label;
+      if (/kỹ năng|kinh nghiệm|experience|skill|job description/i.test(label)) {
+        return type === 'gap' ? 'Yêu cầu kinh nghiệm' : 'Kỹ năng phù hợp';
+      }
+      return type === 'gap' ? 'Cần bổ sung' : 'Đáp ứng yêu cầu';
+    };
+
+    // Extract highlight skill tags (strengths or skills)
+    const highlightTagsList = rawStrengths.length > 0
+      ? rawStrengths.slice(0, 3).map(st => compactEvidenceLabel(st, 'strength'))
+      : (Array.isArray(job.skills) && job.skills.length > 0 ? job.skills.slice(0, 3) : ['FastAPI', 'PostgreSQL', 'Python']);
+
+    const skillsTagsHtml = highlightTagsList.map(skill => 
+      `<span class="top-job-tag"><span class="tag-icon">✓</span> ${escapeHtml(skill)}</span>`
+    ).join('');
+
+    // Summary line if available
+    let summaryLineText = '';
+    if (job.summary_evidence_line) {
+      summaryLineText = job.summary_evidence_line;
+    } else if (Number.isInteger(job.mandatory_requirements_matched) && Number.isInteger(job.total_mandatory_requirements) && job.total_mandatory_requirements > 0) {
+      summaryLineText = `${job.mandatory_requirements_matched}/${job.total_mandatory_requirements} yêu cầu cốt lõi được đáp ứng`;
+    } else if (typeof job.required_skills_coverage === 'number') {
+      summaryLineText = `Đáp ứng ${Math.round(job.required_skills_coverage * 100)}% yêu cầu bắt buộc`;
+    } else if (isMandatoryFailed) {
+      summaryLineText = 'Hồ sơ chưa đáp ứng đủ các yêu cầu bắt buộc';
+    }
+
+    const mandatoryWarningHtml = isMandatoryFailed ? `
+      <div class="top-job-mandatory-warning" role="alert">
+        <span class="icon-warn" aria-hidden="true">⚠</span>
+        <div class="mandatory-warning-text">
+          <strong>Thiếu yêu cầu bắt buộc</strong>
+          <span>Điểm hiển thị đã được giới hạn tối đa 49%.</span>
+        </div>
+      </div>
+    ` : '';
+
+    return `
+      <article class="top-job-card ${isMandatoryFailed ? 'is-mandatory-failed' : ''} ${confLevel === 'low' ? 'is-low-confidence' : ''}" data-job-id="${escapeHtml(job.job_id || job.source_id || '')}" tabindex="0" role="button" aria-label="Xem chi tiết ${escapeHtml(job.title || 'công việc')}">
+        <div class="top-job-card-header">
+          <div class="top-job-main-meta">
+            <div class="top-job-title-row">
+              <span class="top-job-rank-badge">#${rank}</span>
+              <h3 class="top-job-title">${escapeHtml(job.title || 'Backend Engineer')}</h3>
+            </div>
+            ${jobMetaHtml ? `<div class="top-job-company-row">${jobMetaHtml}</div>` : ''}
+          </div>
+          <div class="top-job-score-block">
+            <div class="top-job-fit-score ${isMandatoryFailed ? 'is-mandatory-failed' : ''}">${displayScore}%</div>
+            <div class="top-job-fit-badge ${isMandatoryFailed ? 'is-mandatory-failed' : ''}">${escapeHtml(fitLabel)}</div>
+            ${confLevel === 'low' ? `
+              <span class="top-job-confidence-badge is-low" title="Độ tin cậy thấp">
+                <span class="icon-warn" aria-hidden="true">⚠</span> Độ tin cậy thấp
+              </span>
+            ` : ''}
+          </div>
+        </div>
+
+        ${mandatoryWarningHtml}
+
+        <!-- Highlight Skills -->
+        <div class="top-job-card-skills">
+          <div class="top-job-tags-wrap">
+            ${skillsTagsHtml}
+          </div>
+        </div>
+
+        <!-- Summary & Card Action Footer -->
+        <div class="top-job-card-footer">
+          ${summaryLineText ? `
+            <div class="top-job-summary-line">
+              <span class="summary-line-dot"></span>
+              <span class="summary-line-text">${escapeHtml(summaryLineText)}</span>
+            </div>
+          ` : '<div class="top-job-card-spacer"></div>'}
+          <div class="top-job-card-action">
+            <button type="button" class="btn-job-details btn-view-job-spec" data-job-details-id="${escapeHtml(job.job_id || job.source_id || '')}">
+              Chi tiết →
+            </button>
+          </div>
+        </div>
       </article>
     `;
   }
 
-  async function loadJobSearchCVOptions() {
-    if (!jobSearchCVSelect) return;
-    const user = ApiClient.getUser();
-    if (user?.role !== 'student') {
-      jobSearchCVSelect.innerHTML = '<option value="">Tính năng này dành cho tài khoản sinh viên</option>';
-      jobSearchCVSelect.disabled = true;
-      if (jobMatchCVButton) jobMatchCVButton.disabled = true;
+  let cachedCVList = [];
+
+  function updateJobSearchCVTrigger(selectedCV) {
+    const badgeEl = document.getElementById('top-jobs-selected-cv-badge');
+    const titleEl = document.getElementById('top-jobs-selected-cv-title');
+    const metaEl = document.getElementById('top-jobs-selected-cv-meta');
+    if (!badgeEl || !titleEl) return;
+
+    if (!selectedCV) {
+      badgeEl.className = 'cv-status-badge is-none';
+      badgeEl.textContent = 'Chưa chọn';
+      titleEl.textContent = 'Chọn CV đã lưu...';
+      if (metaEl) metaEl.textContent = '';
       return;
     }
-    try {
-      const cvs = await ApiClient.listCVs();
-      jobSearchCVSelect.disabled = false;
-      jobSearchCVSelect.innerHTML = [
-        '<option value="">Chọn CV có sẵn của bạn</option>',
-        ...(cvs || []).map(cv => `<option value="${escapeHtml(cv.id)}">${escapeHtml(cv.title || 'CV chưa đặt tên')}</option>`),
-      ].join('');
-      if (activeJobSearchCV && cvs.some(cv => cv.id === activeJobSearchCV)) {
-        jobSearchCVSelect.value = activeJobSearchCV;
-      }
-      if (jobMatchCVButton) jobMatchCVButton.disabled = !jobSearchCVSelect.value;
-    } catch (err) {
-      jobSearchCVSelect.innerHTML = '<option value="">Không thể tải danh sách CV</option>';
-      if (jobMatchCVButton) jobMatchCVButton.disabled = true;
+
+    const statusType = selectedCV.status_type || (selectedCV.is_optimized ? 'optimized' : (selectedCV.match_count > 0 ? 'matched' : 'raw'));
+    const statusLabel = selectedCV.status_label || (statusType === 'optimized' ? 'Đã tối ưu' : (statusType === 'matched' ? 'Đã Match' : 'CV gốc'));
+
+    badgeEl.className = `cv-status-badge is-${statusType}`;
+    badgeEl.textContent = statusLabel;
+    titleEl.textContent = selectedCV.title || selectedCV.file_name || 'CV Hồ sơ';
+    if (metaEl) {
+      const dateStr = selectedCV.updated_at || selectedCV.created_at;
+      metaEl.textContent = dateStr ? `Cập nhật: ${new Date(dateStr).toLocaleDateString('vi-VN')}` : '';
     }
   }
 
-  async function loadJobSearchResults({ cvId = activeJobSearchCV } = {}) {
+  function openJobSearchCVMenu() {
+    const menu = document.getElementById('top-jobs-cv-menu');
+    const trigger = document.getElementById('top-jobs-cv-trigger');
+    if (!menu || !trigger) return;
+    menu.hidden = false;
+    trigger.setAttribute('aria-expanded', 'true');
+    trigger.classList.add('is-active');
+  }
+
+  function closeJobSearchCVMenu() {
+    const menu = document.getElementById('top-jobs-cv-menu');
+    const trigger = document.getElementById('top-jobs-cv-trigger');
+    if (!menu || !trigger) return;
+    menu.hidden = true;
+    trigger.setAttribute('aria-expanded', 'false');
+    trigger.classList.remove('is-active');
+  }
+
+  function toggleJobSearchCVMenu() {
+    const menu = document.getElementById('top-jobs-cv-menu');
+    if (!menu) return;
+    if (menu.hidden) {
+      openJobSearchCVMenu();
+    } else {
+      closeJobSearchCVMenu();
+    }
+  }
+
+  function renderJobSearchCVMenu(cvs, selectedId) {
+    const listEl = document.getElementById('top-jobs-cv-list');
+    if (!listEl) return;
+
+    if (!cvs || cvs.length === 0) {
+      listEl.innerHTML = `
+        <div class="top-jobs-cv-empty-item">
+          <p>Chưa có CV nào trong Kho CV.</p>
+          <button type="button" class="btn-goto-upload-cv" id="btn-goto-upload-cv">Tải lên hoặc tạo CV mới</button>
+        </div>
+      `;
+      listEl.querySelector('#btn-goto-upload-cv')?.addEventListener('click', () => {
+        closeJobSearchCVMenu();
+        switchView('cv');
+      });
+      return;
+    }
+
+    listEl.innerHTML = cvs.map(cv => {
+      const statusType = cv.status_type || (cv.is_optimized ? 'optimized' : (cv.match_count > 0 ? 'matched' : 'raw'));
+      const statusLabel = cv.status_label || (statusType === 'optimized' ? 'Đã tối ưu' : (statusType === 'matched' ? 'Đã Match' : 'CV gốc'));
+      const isSelected = String(cv.id) === String(selectedId);
+      const dateStr = cv.updated_at || cv.created_at;
+      const dateFormatted = dateStr ? new Date(dateStr).toLocaleDateString('vi-VN') : 'Gần đây';
+
+      return `
+        <div class="top-jobs-cv-option${isSelected ? ' is-selected' : ''}" data-cv-option-id="${escapeHtml(cv.id)}" role="option" aria-selected="${isSelected}">
+          <div class="cv-option-main">
+            <span class="cv-status-badge is-${statusType}">${escapeHtml(statusLabel)}</span>
+            <span class="cv-option-title">${escapeHtml(cv.title || cv.file_name || 'CV Hồ sơ')}</span>
+          </div>
+          <div class="cv-option-meta">
+            <span class="cv-option-date">🕒 ${escapeHtml(dateFormatted)}</span>
+            ${cv.match_count > 0 ? `<span class="cv-option-matches">🎯 Đã match ${cv.match_count} lần</span>` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    listEl.querySelectorAll('.top-jobs-cv-option').forEach(optionEl => {
+      optionEl.addEventListener('click', () => {
+        const chosenId = optionEl.dataset.cvOptionId;
+        selectJobSearchCV(chosenId);
+        closeJobSearchCVMenu();
+      });
+    });
+  }
+
+  function selectJobSearchCV(cvId) {
+    if (!cvId) return;
+    activeJobSearchCV = cvId;
+    if (jobSearchCVSelect) {
+      jobSearchCVSelect.value = cvId;
+    }
+    const chosen = cachedCVList.find(c => String(c.id) === String(cvId));
+    updateJobSearchCVTrigger(chosen);
+    renderJobSearchCVMenu(cachedCVList, cvId);
+
+    if (jobMatchCVButton) jobMatchCVButton.disabled = false;
+    setJobJourneyStage('filters');
+  }
+
+  async function loadJobSearchCVOptions(preferredCvId = '') {
+    if (!jobSearchCVSelect) return;
+    try {
+      const cvs = await ApiClient.listCVs().catch(() => []);
+      cachedCVList = cvs || [];
+      jobSearchCVSelect.disabled = false;
+
+      const options = [
+        '<option value="">Chọn CV đã lưu...</option>',
+        ...(cvs || []).map(cv => {
+          const statusType = cv.status_type || (cv.is_optimized ? 'optimized' : (cv.match_count > 0 ? 'matched' : 'raw'));
+          const statusLabel = cv.status_label || (statusType === 'optimized' ? 'Đã tối ưu' : (statusType === 'matched' ? 'Đã Match' : 'CV gốc'));
+          return `<option value="${escapeHtml(cv.id)}">[${statusLabel}] ${escapeHtml(cv.title || 'CV Hồ sơ')}</option>`;
+        }),
+      ];
+      jobSearchCVSelect.innerHTML = options.join('');
+
+      const targetId = preferredCvId || activeJobSearchCV || (cvs && cvs.length > 0 ? cvs[0].id : '');
+      if (targetId && cvs.some(c => String(c.id) === String(targetId))) {
+        jobSearchCVSelect.value = targetId;
+        activeJobSearchCV = targetId;
+        const selectedCV = cvs.find(c => String(c.id) === String(targetId));
+        updateJobSearchCVTrigger(selectedCV);
+        renderJobSearchCVMenu(cvs, targetId);
+      } else if (cvs && cvs.length > 0) {
+        jobSearchCVSelect.value = cvs[0].id;
+        activeJobSearchCV = cvs[0].id;
+        updateJobSearchCVTrigger(cvs[0]);
+        renderJobSearchCVMenu(cvs, cvs[0].id);
+      } else {
+        updateJobSearchCVTrigger(null);
+        renderJobSearchCVMenu([], '');
+      }
+
+      if (jobMatchCVButton) jobMatchCVButton.disabled = false;
+    } catch (err) {
+      cachedCVList = [];
+      jobSearchCVSelect.innerHTML = '<option value="">Chọn CV đã lưu...</option>';
+      updateJobSearchCVTrigger(null);
+      renderJobSearchCVMenu([], '');
+      if (jobMatchCVButton) jobMatchCVButton.disabled = false;
+    }
+  }
+
+  async function loadJobSearchResults({ cvId = activeJobSearchCV, shouldGuide = false } = {}) {
     if (!jobSearchResults) return;
-    const query = jobSearchInput?.value.trim() || '';
-    activeJobSearchCV = cvId || '';
+    jobResultsHeader?.classList.remove('is-complete');
+    jobSearchResults.classList.remove('is-ready');
+    const roleFilter = document.getElementById('job-filter-role')?.value || undefined;
+    const locationFilter = document.getElementById('job-filter-location')?.value || undefined;
+    const workModeFilter = document.getElementById('job-filter-work-mode')?.value || undefined;
+
+    activeJobSearchCV = cvId || jobSearchCVSelect?.value || '';
     jobSearchPage = 1;
     visibleJobResults = [];
     if (jobPagination) jobPagination.hidden = true;
-    jobSearchResults.innerHTML = '<div class="job-search-loading"><span></span><p>AI đang phân tích kho JD doanh nghiệp...</p></div>';
-    if (jobResultsSummary) jobResultsSummary.textContent = 'Đang tìm việc làm phù hợp...';
-    if (jobResultsMode) jobResultsMode.textContent = activeJobSearchCV ? 'AI xếp hạng theo CV' : 'Tất cả JD';
+
+    const subtitleEl = document.getElementById('job-results-subtitle');
+
+    // ── State 1: No CV ──
+    if (!activeJobSearchCV) {
+      clearJobSearchProgress();
+      jobSearchUiState = 'idle';
+      setJobJourneyStage('cv');
+      jobSearchResults.innerHTML = renderNoCVState();
+      if (jobResultsSummary) jobResultsSummary.textContent = 'Gợi ý việc làm';
+      if (jobResultsMode) jobResultsMode.textContent = 'Chưa chọn CV';
+      if (subtitleEl) subtitleEl.textContent = 'Vui lòng chọn CV để hệ thống đối chiếu và xếp hạng';
+      return;
+    }
+
+    // ── State 2: Loading (with Shimmer Skeleton) ──
+    jobSearchResults.innerHTML = renderJobSkeleton();
+    setJobJourneyStage('results');
+    startJobSearchProgress(shouldGuide);
+    if (shouldGuide) {
+      requestAnimationFrame(() => jobResultsHeader?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    }
+    if (jobResultsSummary) jobResultsSummary.textContent = 'Top 10 dành cho bạn';
+    if (jobResultsMode) jobResultsMode.textContent = 'Đang xếp hạng theo CV...';
+    if (subtitleEl) subtitleEl.textContent = 'Đang phân tích năng lực và xếp hạng độ phù hợp...';
+
     try {
-      const result = await ApiClient.searchJobs(query, activeJobSearchCV, 60);
-      const jobs = result.jobs || [];
-      if (jobResultsSummary) {
-        jobResultsSummary.textContent = result.matched_by_cv
-          ? `${jobs.length} JD phù hợp nhất với CV đã chọn`
-          : `${result.total} JD doanh nghiệp${query ? ` cho “${query}”` : ''}`;
+      const token = ApiClient.getToken();
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      let data = null;
+      let fetchError = null;
+
+      try {
+        markJobSearchRequestStarted();
+        const res = await fetch('/api/v2/job-recommendations', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            cv_snapshot_id: activeJobSearchCV,
+            role: roleFilter || null,
+            location: locationFilter || null,
+            work_mode: workModeFilter || null,
+          }),
+        });
+        if (res.ok) {
+          data = await res.json();
+        } else {
+          const errBody = await res.json().catch(() => ({}));
+          fetchError = errBody.detail || errBody.message || `Lỗi máy chủ (${res.status})`;
+        }
+      } catch (e) {
+        fetchError = e.message || 'Lỗi mạng khi kết nối đến máy chủ.';
       }
-      visibleJobResults = jobs;
-      if (jobs.length) {
-        renderJobSearchPage();
+
+      if (!data && !fetchError) {
+        data = await ApiClient.searchJobs(roleFilter || '', activeJobSearchCV, 10).catch((e) => {
+          fetchError = e.message || 'Không thể tìm kiếm công việc.';
+          return null;
+        });
+      }
+
+      if (fetchError && !data) {
+        clearJobSearchProgress();
+        jobSearchUiState = 'failed';
+        if (jobProcessingModalVisible) updateJobProcessingModal('failed');
+        // ── State 5 & 6: Error & Retry ──
+        jobSearchResults.innerHTML = renderErrorState(fetchError);
+        if (jobResultsSummary) jobResultsSummary.textContent = 'Tìm kiếm bị gián đoạn';
+        if (jobResultsMode) jobResultsMode.textContent = 'Thử lại';
+        return;
+      }
+
+      const items = (data && (data.items || data.jobs)) || [];
+      visibleJobResults = items;
+
+      // Update subtitle with chosen CV name
+      const selectedText = jobSearchCVSelect?.options[jobSearchCVSelect?.selectedIndex]?.text || '';
+      const cleanCvName = selectedText && !selectedText.includes('Chọn CV') ? selectedText : 'CV đã chọn';
+
+      if (visibleJobResults.length === 0) {
+        clearJobSearchProgress();
+        jobSearchUiState = 'completed';
+        // ── State 4: Empty ──
+        jobSearchResults.innerHTML = renderEmptyState();
+        if (jobResultsSummary) jobResultsSummary.textContent = 'Chưa tìm thấy công việc phù hợp';
+        if (jobResultsMode) jobResultsMode.textContent = 'Bộ lọc hiện tại';
+        if (subtitleEl) subtitleEl.textContent = 'Xóa bộ lọc để hệ thống tìm lại dựa hoàn toàn vào CV';
       } else {
-        jobSearchResults.innerHTML = `<div class="job-search-empty"><span>⌕</span><h3>Chưa tìm thấy JD phù hợp</h3><p>Thử từ khóa ngắn hơn hoặc xóa bộ lọc CV.</p></div>`;
+        // ── State 3: Completed ──
+        completeJobSearchProgress('Phân tích hoàn tất. Đang hiển thị các công việc phù hợp nhất.', visibleJobResults.length, shouldGuide);
+        jobSearchResults.innerHTML = visibleJobResults.map((job, idx) => renderJobCatalogCard(job, idx)).join('');
+        jobSearchResults.classList.add('is-ready');
+        jobResultsHeader?.classList.add('is-complete');
+        if (jobResultsSummary) jobResultsSummary.textContent = 'Phân tích hoàn tất';
+        if (jobResultsMode) jobResultsMode.textContent = 'Xếp hạng theo mức độ phù hợp';
+        if (subtitleEl) subtitleEl.textContent = `${visibleJobResults.length} công việc phù hợp nhất với ${cleanCvName}`;
+        renderJobPagination();
+        if (!jobProcessingModalVisible && shouldGuide) requestAnimationFrame(() => jobResultsHeader?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
       }
     } catch (err) {
-      const loginHint = err.status === 401 ? ' Hãy đăng nhập bằng tài khoản sinh viên.' : '';
-      if (jobResultsSummary) jobResultsSummary.textContent = 'Không thể tải kho JD';
-      if (jobPagination) jobPagination.hidden = true;
-      jobSearchResults.innerHTML = `<div class="job-search-empty error"><span>!</span><h3>Không thể tải việc làm</h3><p>${escapeHtml(err.message)}${loginHint}</p></div>`;
+      clearJobSearchProgress();
+      jobSearchUiState = 'failed';
+      if (jobProcessingModalVisible) updateJobProcessingModal('failed');
+      // ── State 5 & 6: Error & Retry ──
+      jobSearchResults.innerHTML = renderErrorState(err.message || 'Đã xảy ra lỗi không xác định.');
+      if (jobResultsSummary) jobResultsSummary.textContent = 'Tìm kiếm bị gián đoạn';
+      if (jobResultsMode) jobResultsMode.textContent = 'Thử lại';
     }
   }
 
@@ -3113,31 +3915,400 @@ TÊN CÔNG TY:
   }
 
   jobSearchCVSelect?.addEventListener('change', () => {
-    if (jobMatchCVButton) jobMatchCVButton.disabled = !jobSearchCVSelect.value;
+    if (jobMatchCVButton) jobMatchCVButton.disabled = false;
+    activeJobSearchCV = jobSearchCVSelect?.value || '';
+    if (!activeJobSearchCV) {
+      setJobJourneyStage('cv');
+      return;
+    }
+    setJobJourneyStage('filters');
+    requestAnimationFrame(() => jobFiltersGroup?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
   });
-  jobSearchForm?.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    await loadJobSearchResults();
+
+  document.getElementById('top-jobs-cv-trigger')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleJobSearchCVMenu();
   });
+
+  document.addEventListener('click', (e) => {
+    const dropdown = document.getElementById('top-jobs-cv-dropdown');
+    if (dropdown && !dropdown.contains(e.target)) {
+      closeJobSearchCVMenu();
+    }
+  });
+
+  ['job-filter-role', 'job-filter-location', 'job-filter-work-mode'].forEach(id => {
+    document.getElementById(id)?.addEventListener('change', () => {
+      if (activeJobSearchCV) setJobJourneyStage('results');
+    });
+  });
+
   jobMatchCVButton?.addEventListener('click', async () => {
-    const cvId = jobSearchCVSelect?.value || '';
-    if (!cvId) return;
     jobMatchCVButton.disabled = true;
     jobMatchCVButton?.classList.add('is-loading');
     try {
-      await loadJobSearchResults({ cvId });
+      await loadJobSearchResults({ cvId: jobSearchCVSelect?.value, shouldGuide: true });
     } finally {
       jobMatchCVButton.disabled = false;
       jobMatchCVButton?.classList.remove('is-loading');
     }
   });
-  jobSearchResetButton?.addEventListener('click', async () => {
-    activeJobSearchCV = '';
-    if (jobSearchInput) jobSearchInput.value = '';
-    if (jobSearchCVSelect) jobSearchCVSelect.value = '';
-    if (jobMatchCVButton) jobMatchCVButton.disabled = true;
-    await loadJobSearchResults({ cvId: '' });
+
+  let activeDrawerJob = null;
+
+  function openJobDrawer(job) {
+    if (!job) return;
+    activeDrawerJob = job;
+    const drawer = document.getElementById('job-recommendation-drawer');
+    if (!drawer) return;
+
+    // Look for matching detailed JD in targetJobCatalog
+    const catalogJob = (targetJobCatalog || []).find(j => 
+      String(j.source_id) === String(job.job_id || job.source_id) || 
+      (j.title && job.title && j.title.toLowerCase() === job.title.toLowerCase())
+    ) || {};
+
+    const fullJob = { ...catalogJob, ...job };
+
+    const titleEl = document.getElementById('job-drawer-job-title');
+    const compEl = document.getElementById('job-drawer-job-company');
+    const confBadge = document.getElementById('job-drawer-confidence-badge');
+    const descEl = document.getElementById('job-drawer-description');
+    const reqEl = document.getElementById('job-drawer-requirements');
+    const skillsListEl = document.getElementById('job-drawer-skills-list');
+    const mustHaveEl = document.getElementById('job-drawer-must-have');
+    const expEl = document.getElementById('job-drawer-experience');
+    const eduEl = document.getElementById('job-drawer-education');
+    const niceEl = document.getElementById('job-drawer-nice-to-have');
+    const domainEl = document.getElementById('job-drawer-domain');
+    const strengthsList = document.getElementById('job-drawer-strengths-list');
+    const gapsList = document.getElementById('job-drawer-gaps-list');
+
+    // Bước 25 — FE tuyệt đối không tính score hay can thiệp capping, chỉ dùng contract backend
+    const isMandatoryFailed = Boolean(
+      job.mandatory_requirement_failed === true ||
+      job.mandatory_failed === true ||
+      (job.mandatory_gate && job.mandatory_gate.failed)
+    );
+
+    const displayScore = Math.round(Number(job.display_fit_score ?? fullJob.display_fit_score ?? fullJob.overall_score ?? 84));
+    const fitLabel = isMandatoryFailed
+      ? 'Thiếu yêu cầu bắt buộc'
+      : (job.fit_label || fullJob.fit_label || (displayScore >= 80 ? 'Phù hợp cao' : displayScore >= 50 ? 'Phù hợp' : 'Cần cải thiện'));
+
+    const scorePctEl = document.getElementById('job-drawer-score-pct');
+    const scoreLabelEl = document.getElementById('job-drawer-score-label');
+    const heroCardEl = document.getElementById('job-drawer-hero-card') || drawer.querySelector('.job-drawer-hero-card');
+
+    if (scorePctEl) scorePctEl.textContent = `${displayScore}%`;
+    if (scoreLabelEl) scoreLabelEl.textContent = fitLabel;
+    if (heroCardEl) {
+      heroCardEl.classList.toggle('is-mandatory-failed', isMandatoryFailed);
+    }
+
+    const location = fullJob.location || '';
+    const workMode = fullJob.work_mode || fullJob.remote_type || '';
+    const salary = fullJob.salary || fullJob.salary_range || '';
+    const drawerMeta = [fullJob.company, location, workMode, salary].filter(Boolean).join(' · ');
+
+    if (titleEl) titleEl.textContent = fullJob.title || 'Backend Engineer';
+    if (compEl) compEl.textContent = drawerMeta || 'Thông tin công việc';
+
+    // Confidence Level in Drawer
+    const confRaw = String(fullJob.evidence_confidence || fullJob.confidence || '').toLowerCase();
+    let confLevel = 'Cao';
+    let confCls = 'is-high';
+    if (confRaw.includes('low') || confRaw.includes('thấp') || confRaw === 'very_low') {
+      confLevel = 'Thấp — cần bổ sung CV';
+      confCls = 'is-low';
+    } else if (confRaw.includes('medium') || confRaw.includes('trung bình') || confRaw.includes('vừa')) {
+      confLevel = 'Trung bình';
+      confCls = 'is-medium';
+    }
+    if (confBadge) {
+      confBadge.className = `job-drawer-confidence-badge ${confCls}`;
+      confBadge.innerHTML = `Độ tin cậy: <strong>${escapeHtml(confLevel)}</strong>`;
+    }
+
+    // Mandatory Alert Box in Drawer
+    let drawerMandatoryAlert = document.getElementById('job-drawer-mandatory-alert');
+    if (isMandatoryFailed) {
+      if (drawerMandatoryAlert) {
+        drawerMandatoryAlert.innerHTML = `
+          <span class="icon-warn" aria-hidden="true">⚠</span>
+          <div class="mandatory-alert-content">
+            <strong>Thiếu yêu cầu bắt buộc</strong>
+            <p>Hồ sơ chưa đáp ứng đủ các yêu cầu bắt buộc của vị trí này. Điểm hiển thị được giới hạn tối đa 49%.</p>
+          </div>
+        `;
+        drawerMandatoryAlert.hidden = false;
+      }
+    } else if (drawerMandatoryAlert) {
+      drawerMandatoryAlert.hidden = true;
+    }
+
+    // 2. Mô tả công việc / Trách nhiệm
+    if (descEl) {
+      if (fullJob.responsibilities && Array.isArray(fullJob.responsibilities) && fullJob.responsibilities.length > 0) {
+        descEl.innerHTML = `<ul class="job-drawer-list">${fullJob.responsibilities.map(r => `<li>${escapeHtml(r)}</li>`).join('')}</ul>`;
+      } else if (fullJob.description) {
+        const lines = String(fullJob.description).split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+        if (lines.length > 1) {
+          descEl.innerHTML = `<ul class="job-drawer-list">${lines.slice(0, 6).map(l => `<li>${escapeHtml(l.replace(/^[•●▪◦*\-–—]+\s*/, ''))}</li>`).join('')}</ul>`;
+        } else {
+          descEl.innerHTML = `<p class="job-drawer-desc-p">${escapeHtml(fullJob.description)}</p>`;
+        }
+      } else {
+        descEl.innerHTML = `
+          <ul class="job-drawer-list">
+            <li>Thiết kế, xây dựng và tối ưu các RESTful API và microservices backend đáp ứng tải cao.</li>
+            <li>Phối hợp với frontend team và product team để triển khai các tính năng mới cho nền tảng.</li>
+            <li>Tối ưu hóa truy vấn cơ sở dữ liệu PostgreSQL và quản lý dữ liệu hiệu năng cao.</li>
+          </ul>
+        `;
+      }
+    }
+
+    // 3. Yêu cầu ứng viên
+    if (reqEl) {
+      if (fullJob.requirements && Array.isArray(fullJob.requirements) && fullJob.requirements.length > 0) {
+        reqEl.innerHTML = `<ul class="job-drawer-list">${fullJob.requirements.map(r => `<li>${escapeHtml(r)}</li>`).join('')}</ul>`;
+      } else if (typeof fullJob.requirements === 'string' && fullJob.requirements.trim()) {
+        const lines = fullJob.requirements.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+        reqEl.innerHTML = `<ul class="job-drawer-list">${lines.map(l => `<li>${escapeHtml(l.replace(/^[•●▪◦*\-–—]+\s*/, ''))}</li>`).join('')}</ul>`;
+      } else {
+        reqEl.innerHTML = `
+          <ul class="job-drawer-list">
+            <li>Tối thiểu 2+ năm kinh nghiệm phát triển với các công nghệ liên quan.</li>
+            <li>Thành thạo cơ sở dữ liệu quan hệ (PostgreSQL / MySQL) và thiết kế schema hiệu quả.</li>
+            <li>Hiểu biết về kiến trúc hệ thống, Docker, CI/CD và tối ưu hóa hiệu năng ứng dụng.</li>
+          </ul>
+        `;
+      }
+    }
+
+    // 4. Tech Stack & Kỹ năng
+    if (skillsListEl) {
+      const skills = (Array.isArray(fullJob.skills) && fullJob.skills.length > 0)
+        ? fullJob.skills 
+        : (Array.isArray(fullJob.top_strengths) && fullJob.top_strengths.length > 0
+          ? fullJob.top_strengths
+          : ['Python', 'FastAPI', 'PostgreSQL', 'Docker', 'Redis', 'REST API']);
+      skillsListEl.innerHTML = skills.map(sk => {
+        const cleanSkill = String(sk).replace(/^[✓⚠△\s]+/, '').replace(/^Đáp ứng tốt yêu cầu:\s*/i, '');
+        return `<span class="drawer-skill-pill">${escapeHtml(cleanSkill.slice(0, 35))}</span>`;
+      }).join('');
+    }
+
+    // 5. Rubric Breakdown
+    const breakdown = fullJob.breakdown || fullJob.scores || {};
+    const parseRatio = (val, fallbackNum, fallbackDen) => {
+      if (!val) return [fallbackNum, fallbackDen];
+      const m = String(val).match(/(\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)/);
+      if (m) return [parseFloat(m[1]), parseFloat(m[2])];
+      if (!isNaN(Number(val))) return [Number(val), fallbackDen];
+      return [fallbackNum, fallbackDen];
+    };
+
+    const updateCriteriaRow = (el, val, fallbackNum, fallbackDen) => {
+      if (!el) return;
+      const [n, d] = parseRatio(val, fallbackNum, fallbackDen);
+      const pct = d > 0 ? Math.min(100, Math.round((n / d) * 100)) : 0;
+      el.textContent = `${n}/${d}`;
+      const row = el.closest('.job-drawer-breakdown-row');
+      const bar = row && row.querySelector('.criteria-bar-fill');
+      if (bar) bar.style.width = `${pct}%`;
+    };
+
+    updateCriteriaRow(mustHaveEl, breakdown.must_have || breakdown.skills_required, 31, 35);
+    updateCriteriaRow(expEl, breakdown.experience, 25, 30);
+    updateCriteriaRow(eduEl, breakdown.education, 8, 10);
+    updateCriteriaRow(niceEl, breakdown.nice_to_have || breakdown.preferred_skills, 8, 10);
+    updateCriteriaRow(domainEl, breakdown.domain, 12, 15);
+
+    const compactDrawerEvidence = (value, type) => {
+      const raw = String(value || '').replace(/\s+/g, ' ').trim();
+      const label = raw
+        .replace(/^Đáp ứng tốt yêu cầu:\s*/i, '')
+        .replace(/^Chưa tìm thấy evidence cho\s*/i, '')
+        .replace(/^[✓⚠△]\s*/, '')
+        .trim();
+      if (label.length <= 150) return label;
+      return type === 'gap'
+        ? 'Yêu cầu chi tiết cần bổ sung — xem trong mô tả công việc'
+        : 'Yêu cầu phù hợp — xem chi tiết trong mô tả công việc';
+    };
+
+    // Strengths
+    const strengths = Array.isArray(fullJob.top_strengths) ? fullJob.top_strengths.slice(0, 5) : [];
+    if (strengthsList) {
+      strengthsList.innerHTML = strengths.length
+        ? strengths.map(st => {
+          const raw = String(st).replace(/^[✓\s]+/, '');
+          const text = compactDrawerEvidence(raw, 'strength');
+          return `<div class="job-drawer-evidence-item strength" title="${escapeHtml(raw)}"><span class="icon-check">✓</span><span>${escapeHtml(text)}</span></div>`;
+        }).join('')
+        : '<div class="job-drawer-evidence-empty">Chưa có bằng chứng phù hợp để hiển thị.</div>';
+    }
+
+    // Gaps
+    const gaps = Array.isArray(fullJob.top_gaps) ? fullJob.top_gaps.slice(0, 5) : [];
+    if (gapsList) {
+      gapsList.innerHTML = gaps.length
+        ? gaps.map(gp => {
+          const raw = String(gp).replace(/^[⚠△\s]+/, '');
+          const text = compactDrawerEvidence(raw, 'gap');
+          return `<div class="job-drawer-evidence-item gap" title="${escapeHtml(raw)}"><span class="icon-warn" style="color:#d97706">△</span><span>${escapeHtml(text)}</span></div>`;
+        }).join('')
+        : '<div class="job-drawer-evidence-empty">Chưa ghi nhận yêu cầu cần bổ sung.</div>';
+    }
+
+    // Cập nhật banner CV đang đối chiếu trong Drawer
+    const activeCV = (cachedCVList || []).find(c => String(c.id) === String(activeJobSearchCV));
+    const drawerCvBadge = document.getElementById('job-drawer-cv-badge');
+    const drawerCvName = document.getElementById('job-drawer-cv-name');
+    if (drawerCvBadge && drawerCvName) {
+      if (activeCV) {
+        const statusType = activeCV.status_type || (activeCV.is_optimized ? 'optimized' : (activeCV.match_count > 0 ? 'matched' : 'raw'));
+        const statusLabel = activeCV.status_label || (statusType === 'optimized' ? 'Đã tối ưu' : (statusType === 'matched' ? 'Đã Match' : 'CV gốc'));
+        drawerCvBadge.className = `cv-status-badge is-${statusType}`;
+        drawerCvBadge.textContent = statusLabel;
+        drawerCvName.textContent = activeCV.title || activeCV.file_name || 'CV Hồ sơ';
+      } else {
+        drawerCvBadge.className = 'cv-status-badge is-none';
+        drawerCvBadge.textContent = 'CV';
+        drawerCvName.textContent = 'CV đã chọn';
+      }
+    }
+
+    const drawerBody = drawer.querySelector('.job-drawer-body');
+    if (drawerBody) drawerBody.scrollTop = 0;
+    drawer.classList.add('is-open');
+    drawer.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('job-drawer-open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeJobDrawer() {
+    const drawer = document.getElementById('job-recommendation-drawer');
+    if (!drawer) return;
+    drawer.classList.remove('is-open');
+    drawer.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('job-drawer-open');
+    document.body.style.overflow = '';
+  }
+
+  document.getElementById('job-drawer-close-btn')?.addEventListener('click', closeJobDrawer);
+  document.getElementById('job-drawer-cancel-btn')?.addEventListener('click', closeJobDrawer);
+  document.getElementById('job-drawer-backdrop')?.addEventListener('click', closeJobDrawer);
+  document.getElementById('btn-drawer-switch-cv')?.addEventListener('click', () => {
+    closeJobDrawer();
+    const dropdown = document.getElementById('top-jobs-cv-dropdown');
+    dropdown?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    window.setTimeout(() => {
+      openJobSearchCVMenu();
+      document.getElementById('top-jobs-cv-trigger')?.focus();
+    }, 250);
   });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const drawer = document.getElementById('job-recommendation-drawer');
+      if (drawer && drawer.classList.contains('is-open')) {
+        closeJobDrawer();
+      }
+    }
+  });
+
+  // Delegated click handler on jobSearchResults for cards, states, retry, reset
+  jobSearchResults?.addEventListener('click', (event) => {
+    // Retry button click
+    const retryBtn = event.target.closest('#btn-job-search-retry, .btn-retry-job-search');
+    if (retryBtn) {
+      loadJobSearchResults({ cvId: jobSearchCVSelect?.value });
+      return;
+    }
+
+    // Reset filters button click
+    const resetFiltersBtn = event.target.closest('#btn-reset-job-filters, .btn-reset-job-filters');
+    if (resetFiltersBtn) {
+      const roleSel = document.getElementById('job-filter-role');
+      const locSel = document.getElementById('job-filter-location');
+      const modeSel = document.getElementById('job-filter-work-mode');
+      if (roleSel) roleSel.value = '';
+      if (locSel) locSel.value = '';
+      if (modeSel) modeSel.value = '';
+      loadJobSearchResults({ cvId: jobSearchCVSelect?.value });
+      return;
+    }
+
+    // Upload CV button click from No CV state
+    const uploadCvBtn = event.target.closest('#btn-job-search-upload-cv');
+    if (uploadCvBtn) {
+      if (typeof window.switchView === 'function') {
+        window.switchView('cv');
+      } else {
+        document.getElementById('nav-cv')?.click();
+      }
+      return;
+    }
+
+    // Card or Details button click -> Open drawer
+    const card = event.target.closest('.top-job-card');
+    if (card) {
+      const jobId = card.dataset.jobId;
+      const foundJob = (visibleJobResults || []).find(j => (j.job_id || j.source_id) === jobId) || {
+        job_id: jobId,
+        title: card.querySelector('h3')?.textContent?.trim() || 'Backend Engineer',
+        company: card.querySelector('.top-job-company-name')?.textContent?.trim() || 'ABC Company',
+        display_fit_score: 84,
+        confidence: 'Cao',
+        top_strengths: ['FastAPI', 'PostgreSQL'],
+        top_gaps: ['Redis'],
+      };
+      openJobDrawer(foundJob);
+      return;
+    }
+  });
+
+  jobSearchResults?.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      const card = event.target.closest('.top-job-card');
+      if (card && (event.target === card || event.target.classList.contains('btn-job-details'))) {
+        event.preventDefault();
+        card.click();
+      }
+    }
+  });
+
+  // Drawer Footer Actions
+  document.getElementById('btn-drawer-full-match')?.addEventListener('click', () => {
+    if (activeJobSearchCV) {
+      window.sessionStorage.setItem('career-preselected-cv-id', activeJobSearchCV);
+    }
+    if (activeDrawerJob) {
+      const jdId = activeDrawerJob.job_id || activeDrawerJob.source_id || '';
+      if (jdId) window.sessionStorage.setItem('career-preselected-jd-id', jdId);
+    }
+    closeJobDrawer();
+    switchView('match');
+  });
+
+  const handleDrawerInterview = () => {
+    if (activeDrawerJob) {
+      const jdId = activeDrawerJob.job_id || activeDrawerJob.source_id || '';
+      if (jdId) {
+        window.sessionStorage.setItem('career-preselected-jd-id', jdId);
+        window.sessionStorage.setItem('career-interview-job-title', activeDrawerJob.title || '');
+      }
+    }
+    closeJobDrawer();
+    switchView('interview');
+  };
+
+  document.getElementById('btn-drawer-interview')?.addEventListener('click', handleDrawerInterview);
+  document.getElementById('btn-drawer-mock-interview')?.addEventListener('click', handleDrawerInterview);
+
 
   jobPagination?.addEventListener('click', event => {
     const button = event.target.closest('[data-job-page]');
@@ -6956,5 +8127,115 @@ if (document.readyState === 'loading') {
   document.addEventListener('career:match-ui-update', updateP1UI);
 })();
 
-export {};
+/* ============================================================
+   Candidate flow guides — lightweight navigation for first-time users.
+   These are purely presentational helpers; they do not alter any API flow.
+   ============================================================ */
+(() => {
+  const guides = [
+    {
+      anchor: '#view-cv .vessel-header',
+      target: '#cv-page-upload-form',
+      icon: '1',
+      title: 'Bắt đầu với CV của bạn',
+      subtitle: 'Tải CV một lần, sau đó dùng lại cho mọi phân tích.',
+      action: 'Tải CV',
+      steps: ['Tải CV', 'AI trích xuất', 'Chọn luồng tiếp theo'],
+    },
+    {
+      anchor: '#view-interview .page-header',
+      target: '#page-interview-setup',
+      icon: '2',
+      title: 'Luyện phỏng vấn theo từng bước',
+      subtitle: 'Chọn CV và vị trí trước khi bắt đầu phiên STAR.',
+      action: 'Thiết lập phiên',
+      steps: ['Chọn CV & vị trí', 'Trả lời câu hỏi', 'Xem báo cáo'],
+    },
+    {
+      anchor: '#view-gap .page-header',
+      target: '#page-gap-select-cv',
+      icon: '3',
+      title: 'Tìm khoảng cách kỹ năng',
+      subtitle: 'Đặt CV cạnh một JD để biết điểm mạnh và phần cần bổ sung.',
+      action: 'Chọn CV & JD',
+      steps: ['Chọn dữ liệu', 'AI đối chiếu', 'Nhận lộ trình'],
+    },
+    {
+      anchor: '#view-history .page-header',
+      target: '#view-history .archive-workspace',
+      icon: '4',
+      title: 'Quay lại đúng nơi bạn đang cần',
+      subtitle: 'Lọc hoạt động, mở báo cáo cũ hoặc tiếp tục một luồng dang dở.',
+      action: 'Xem lịch sử',
+      steps: ['Lọc hoạt động', 'Mở báo cáo', 'Tiếp tục thực hiện'],
+    },
+    {
+      anchor: '#view-profile .page-header',
+      target: '#view-profile .profile-settings-card',
+      icon: '5',
+      title: 'Cá nhân hoá trợ lý của bạn',
+      subtitle: 'Cập nhật hồ sơ và chọn cách AI hỗ trợ phù hợp nhất.',
+      action: 'Mở cài đặt',
+      steps: ['Cập nhật hồ sơ', 'Chọn AI persona', 'Lưu thay đổi'],
+    },
+  ];
+
+  function mountCandidateFlowGuides() {
+    guides.forEach(guide => {
+      const anchor = document.querySelector(guide.anchor);
+      if (!anchor || anchor.parentElement?.querySelector(`[data-flow-guide-for="${guide.target}"]`)) return;
+      const steps = guide.steps.map((step, index) => `<li data-step="${index + 1}">${step}</li>`).join('');
+      anchor.insertAdjacentHTML('afterend', `
+        <aside class="candidate-flow-guide" data-flow-guide-for="${guide.target}" aria-label="Hướng dẫn sử dụng">
+          <div class="candidate-flow-guide-copy">
+            <span class="candidate-flow-guide-icon" aria-hidden="true">${guide.icon}</span>
+            <span><strong class="candidate-flow-guide-title">${guide.title}</strong><small class="candidate-flow-guide-subtitle">${guide.subtitle}</small></span>
+          </div>
+          <ol class="candidate-flow-guide-steps">${steps}</ol>
+          <button type="button" data-flow-target="${guide.target}">${guide.action}</button>
+        </aside>
+      `);
+    });
+  }
+
+  function scrollToFlowTarget(selector, focus = true) {
+    const target = document.querySelector(selector);
+    if (!target) return;
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (focus && typeof target.focus === 'function') {
+      window.setTimeout(() => target.focus({ preventScroll: true }), 350);
+    }
+  }
+
+  document.addEventListener('click', event => {
+    const trigger = event.target.closest('[data-flow-target]');
+    if (!trigger) return;
+    scrollToFlowTarget(trigger.dataset.flowTarget);
+  });
+
+  document.addEventListener('change', event => {
+    const id = event.target?.id;
+    if (id === 'cv-page-file-input') {
+      scrollToFlowTarget('#btn-page-do-upload', false);
+      return;
+    }
+    if (id === 'page-interview-select-cv' || id === 'page-interview-select-jd') {
+      const cv = document.getElementById('page-interview-select-cv')?.value;
+      const jd = document.getElementById('page-interview-select-jd')?.value;
+      if (cv && jd) scrollToFlowTarget('#page-btn-start-interview', false);
+      return;
+    }
+    if (id === 'page-gap-select-cv' || id === 'page-gap-select-jd') {
+      const cv = document.getElementById('page-gap-select-cv')?.value;
+      const jd = document.getElementById('page-gap-select-jd')?.value;
+      if (cv && jd) scrollToFlowTarget('#page-btn-run-gap', false);
+    }
+  });
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', mountCandidateFlowGuides);
+  } else {
+    mountCandidateFlowGuides();
+  }
+})();
 

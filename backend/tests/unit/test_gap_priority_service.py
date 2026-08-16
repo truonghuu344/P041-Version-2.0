@@ -5,7 +5,6 @@ Thành viên 4 — feat/match-evaluation-modal
 Chạy: pytest backend/tests/unit/test_gap_priority_service.py -v
 """
 
-import pytest
 
 from src.services.gap_priority_service import (
     ActionType,

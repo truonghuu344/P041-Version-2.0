@@ -11,7 +11,7 @@
 }
 
 #view-match .match-workspace {
-  width: min(1420px, calc(100% - 104px));
+  width: min(1320px, calc(100% - 64px));
   margin: 0 auto;
   padding: 28px 0 72px !important;
   color: var(--text-primary);
@@ -50,7 +50,7 @@
 /* 3-step workflow bar */
 #view-match .match-workflow {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(260px, .76fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(260px, 0.76fr);
   margin-bottom: 14px;
   border: 1px solid #e5e7eb;
   border-radius: 14px;
@@ -331,10 +331,16 @@
   margin-bottom: 14px;
 }
 
-#view-match .match-cv-browser > header { margin: 0; }
-#view-match .match-cv-browser > #p1-cv-browser-content { min-width: 0; }
+#view-match .match-cv-browser > header {
+  margin: 0;
+}
+#view-match .match-cv-browser > #p1-cv-browser-content {
+  min-width: 0;
+}
 
-#view-match .match-job-browser { margin-top: 0; }
+#view-match .match-job-browser {
+  margin-top: 0;
+}
 
 #view-match .match-cv-browser > header,
 #view-match .match-job-browser > header {
@@ -497,7 +503,7 @@
 
 @media (min-width: 900px) {
   #view-match .match-job-toolbar {
-    grid-template-columns: minmax(250px, 1.1fr) minmax(0, 1.9fr) minmax(160px, .62fr);
+    grid-template-columns: minmax(250px, 1.1fr) minmax(0, 1.9fr) minmax(160px, 0.62fr);
     align-items: center;
   }
 
@@ -538,7 +544,9 @@
   background: #fff !important;
   box-shadow: none !important;
   cursor: pointer !important;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease !important;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease !important;
   transform: none !important;
 }
 
@@ -801,9 +809,14 @@
 }
 
 @media (max-width: 900px) {
-  #view-match .match-workflow { position: static; }
+  #view-match .match-workflow {
+    position: static;
+  }
 
-  #view-match .match-cv-browser { grid-template-columns: 1fr; gap: 10px; }
+  #view-match .match-cv-browser {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
 
   #view-match .match-workflow {
     grid-template-columns: 1fr;
@@ -853,9 +866,13 @@
 }
 
 /* GAP result dialog */
-body.gap-result-modal-open { overflow: hidden; }
+body.gap-result-modal-open {
+  overflow: hidden;
+}
 
-body.job-preview-modal-open { overflow: hidden; }
+body.job-preview-modal-open {
+  overflow: hidden;
+}
 
 /* .app-view uses transform for page transitions, which otherwise makes a
    fixed descendant position itself against the full Match page. */
@@ -896,8 +913,12 @@ body.job-preview-modal-open #view-match.app-view.active {
   scrollbar-color: #a9b7b1 transparent;
 }
 
-#view-match .job-preview-modal-content::-webkit-scrollbar { width: 7px; }
-#view-match .job-preview-modal-content::-webkit-scrollbar-track { background: transparent; }
+#view-match .job-preview-modal-content::-webkit-scrollbar {
+  width: 7px;
+}
+#view-match .job-preview-modal-content::-webkit-scrollbar-track {
+  background: transparent;
+}
 #view-match .job-preview-modal-content::-webkit-scrollbar-thumb {
   border-radius: 99px;
   background: #a9b7b1;
@@ -1031,7 +1052,9 @@ body.job-preview-modal-open #view-match.app-view.active {
   border-top: 1px solid var(--border, #dce9e2);
 }
 
-#view-match .gap-result-modal[hidden] { display: none !important; }
+#view-match .gap-result-modal[hidden] {
+  display: none !important;
+}
 
 #view-match .gap-result-modal {
   position: fixed;
@@ -1160,7 +1183,9 @@ body.job-preview-modal-open #view-match.app-view.active {
   background: var(--card, #fff);
 }
 
-#view-match .gap-result-detail-section h4 { margin: 0 0 12px; }
+#view-match .gap-result-detail-section h4 {
+  margin: 0 0 12px;
+}
 
 #view-match .cv-result-evidence-item {
   grid-template-columns: minmax(170px, 0.8fr) minmax(0, 2fr);
@@ -1506,8 +1531,12 @@ body.job-preview-modal-open #view-match.app-view.active {
 }
 
 @media (max-width: 900px) {
-  #view-match .gap-result-detail-grid { grid-template-columns: 1fr; }
-  #view-match .cv-result-evidence-item { grid-template-columns: 1fr; }
+  #view-match .gap-result-detail-grid {
+    grid-template-columns: 1fr;
+  }
+  #view-match .cv-result-evidence-item {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 600px) {
@@ -1537,7 +1566,9 @@ body.job-preview-modal-open #view-match.app-view.active {
     border-radius: 0;
   }
 
-  #view-match .gap-result-modal-header { padding: 16px; }
+  #view-match .gap-result-modal-header {
+    padding: 16px;
+  }
 
   #view-match .gap-result-modal-content {
     max-height: calc(100dvh - 166px);
@@ -1550,5 +1581,7 @@ body.job-preview-modal-open #view-match.app-view.active {
     padding: 12px 16px 16px;
   }
 
-  #view-match .match-result-actions button { flex: 1 1 100%; }
+  #view-match .match-result-actions button {
+    flex: 1 1 100%;
+  }
 }

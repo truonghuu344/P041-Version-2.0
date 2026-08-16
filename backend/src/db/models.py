@@ -5,6 +5,7 @@ from typing import Any, Optional
 from sqlalchemy import (
     JSON,
     Boolean,
+    CheckConstraint,
     DateTime,
     Float,
     ForeignKey,
@@ -180,6 +181,68 @@ class MarketJobEmbedding(Base):
     embedding_provider: Mapped[str] = mapped_column(String(255), nullable=False)
     embedding: Mapped[list[float]] = mapped_column(EmbeddingVector(), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class JobRecommendationRun(Base):
+    """One reproducible Top Jobs retrieval request for a candidate CV snapshot."""
+
+    __tablename__ = "job_recommendation_runs"
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('PENDING', 'RUNNING', 'COMPLETED', 'FAILED')",
+            name="ck_job_recommendation_runs_status",
+        ),
+        Index("ix_job_recommendation_runs_user_created", "user_id", "created_at"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    user_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    cv_snapshot_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("cv_snapshots.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    status: Mapped[str] = mapped_column(String(20), default="PENDING", nullable=False, index=True)
+    filter_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+    retrieval_config_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+    pipeline_version: Mapped[str] = mapped_column(String(40), nullable=False)
+    normalization_version: Mapped[str] = mapped_column(String(40), nullable=False)
+    embedding_model: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    rubric_version: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    trace_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class JobRecommendation(Base):
+    """A ranked job result. Full CV-JD evidence remains reachable via match_id."""
+
+    __tablename__ = "job_recommendations"
+    __table_args__ = (
+        CheckConstraint("rank > 0", name="ck_job_recommendations_rank_positive"),
+        Index("uq_job_recommendations_run_rank", "run_id", "rank", unique=True),
+        Index("uq_job_recommendations_run_job", "run_id", "job_id", unique=True),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    run_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("job_recommendation_runs.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    # job_id is the market catalog source ID; it is not always a persisted JobArtifact row.
+    job_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    jd_snapshot_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("jd_snapshots.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    rank: Mapped[int] = mapped_column(Integer, nullable=False)
+    raw_fit_score: Mapped[float] = mapped_column(Float, nullable=False)
+    display_fit_score: Mapped[float] = mapped_column(Float, nullable=False)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False)
+    mandatory_requirement_failed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    mandatory_gate_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+    # Do not duplicate evidence here. Match artifacts are the evidence source of truth.
+    match_id: Mapped[str | None] = mapped_column(
+        String(64), ForeignKey("matches.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    explanation_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class CVAnalysis(Base):

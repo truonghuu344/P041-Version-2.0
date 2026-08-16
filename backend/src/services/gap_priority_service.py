@@ -15,11 +15,11 @@ Không dùng LLM: action_text dùng template tĩnh để đảm bảo:
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 
-class ActionType(str, Enum):
+class ActionType(StrEnum):
     MANDATORY_MISSING = "mandatory_missing"
     EVIDENCE_WEAK     = "evidence_weak"
     SKILL_MISSING     = "skill_missing"
