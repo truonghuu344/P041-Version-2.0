@@ -47,15 +47,15 @@ export default function JobRecommendationModal() {
             <div className="job-drawer-cv-banner" id="job-drawer-cv-banner">
               <div className="drawer-cv-banner-left">
                 <span className="cv-status-badge is-raw" id="job-drawer-cv-badge">
-                  CV gốc
+                  Bản gốc
                 </span>
                 <div className="drawer-cv-banner-text">
-                  <strong id="job-drawer-cv-name">CV đã chọn</strong>
-                  <small>Bản CV đang dùng để xếp hạng &amp; so sánh</small>
+                  <strong id="job-drawer-cv-name">Hồ sơ đối chiếu</strong>
+                  <small>Bản CV đang dùng để đánh giá mức độ phù hợp</small>
                 </div>
               </div>
               <button type="button" className="btn-drawer-switch-cv" id="btn-drawer-switch-cv">
-                Đổi CV khác
+                Đổi CV
               </button>
             </div>
 
@@ -97,7 +97,7 @@ export default function JobRecommendationModal() {
             <div className="job-drawer-col">
               <section className="job-drawer-section">
                 <h4 className="job-drawer-section-heading">
-                  📋 Mô tả công việc &amp; Trách nhiệm
+                  Mô tả công việc &amp; Trách nhiệm
                 </h4>
                 <div className="job-drawer-desc-content" id="job-drawer-description">
                   <ul className="job-drawer-list">
@@ -118,7 +118,7 @@ export default function JobRecommendationModal() {
               </section>
 
               <section className="job-drawer-section">
-                <h4 className="job-drawer-section-heading">🎯 Yêu cầu ứng viên</h4>
+                <h4 className="job-drawer-section-heading">Yêu cầu ứng viên</h4>
                 <div className="job-drawer-req-content" id="job-drawer-requirements">
                   <ul className="job-drawer-list">
                     <li>
@@ -138,7 +138,7 @@ export default function JobRecommendationModal() {
               </section>
 
               <section className="job-drawer-section">
-                <h4 className="job-drawer-section-heading">⚡ Tech Stack &amp; Kỹ năng</h4>
+                <h4 className="job-drawer-section-heading">Kỹ năng &amp; Công nghệ</h4>
                 <div className="job-drawer-skills-wrap" id="job-drawer-skills-list">
                   <span className="drawer-skill-pill">Python</span>
                   <span className="drawer-skill-pill">FastAPI</span>
@@ -153,7 +153,7 @@ export default function JobRecommendationModal() {
             {/* Column 2: Đánh giá chi tiết với CV */}
             <div className="job-drawer-col">
               <section className="job-drawer-section">
-                <h4 className="job-drawer-section-heading">📊 Đánh giá 5 tiêu chí Rubric</h4>
+                <h4 className="job-drawer-section-heading">Đánh giá 5 tiêu chí năng lực</h4>
                 <div className="job-drawer-breakdown-list">
                   <div className="job-drawer-breakdown-row">
                     <span className="criteria-label">Kỹ năng bắt buộc</span>
@@ -214,7 +214,7 @@ export default function JobRecommendationModal() {
               </section>
 
               <section className="job-drawer-section">
-                <h4 className="job-drawer-section-heading">✓ Điểm mạnh phù hợp</h4>
+                <h4 className="job-drawer-section-heading">Điểm mạnh phù hợp</h4>
                 <div className="job-drawer-evidence-list" id="job-drawer-strengths-list">
                   <div className="job-drawer-evidence-item strength">
                     <span className="icon-check">✓</span>
@@ -228,7 +228,7 @@ export default function JobRecommendationModal() {
               </section>
 
               <section className="job-drawer-section">
-                <h4 className="job-drawer-section-heading">△ Cần bổ sung / Khoảng trống</h4>
+                <h4 className="job-drawer-section-heading">Yêu cầu cần bổ sung</h4>
                 <div className="job-drawer-evidence-list" id="job-drawer-gaps-list">
                   <div className="job-drawer-evidence-item gap">
                     <span className="icon-warn">⚠</span>
@@ -255,14 +255,14 @@ export default function JobRecommendationModal() {
               className="btn-drawer-action btn-full-match"
               id="btn-drawer-full-match"
             >
-              🎯 So khớp chi tiết với CV này
+              So khớp chi tiết với CV này
             </button>
             <button
               type="button"
               className="btn-drawer-action btn-mock-interview"
               id="btn-drawer-mock-interview"
             >
-              🎙️ Luyện phỏng vấn JD này
+              Luyện phỏng vấn vị trí này
             </button>
           </div>
         </div>

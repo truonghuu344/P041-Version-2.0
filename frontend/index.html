@@ -686,11 +686,11 @@
     ============================================================ -->
     <section class="app-view" id="view-find-jobs">
       <div class="page-container job-search-page">
-        <div class="page-header job-search-heading">
-          <div class="page-badge">Gợi ý việc làm theo hồ sơ · Top 10</div>
-          <h1 class="page-title">Công việc phù hợp với CV</h1>
-          <p class="page-sub">Chọn CV để tìm và xếp hạng những công việc phù hợp nhất dành cho bạn.</p>
-        </div>
+        <header class="jobs-page-header">
+          <span class="jobs-eyebrow"><span class="icon-briefcase">💼</span> GỢI Ý VIỆC LÀM</span>
+          <h2>Công việc phù hợp với hồ sơ</h2>
+          <p>Phân tích hồ sơ theo tiêu chí năng lực và đề xuất các vị trí việc làm phù hợp nhất dành cho bạn.</p>
+        </header>
 
         <section class="top-jobs-console-card" aria-labelledby="job-search-console-title">
           <div class="top-jobs-control-grid">
@@ -698,10 +698,10 @@
             <div class="control-group cv-select-group">
               <label for="job-search-cv-select">
                 <span class="control-label-title">Chọn CV đối chiếu</span>
-                <span class="control-label-hint">Áp dụng cho mọi CV trong Kho (CV gốc, Đã Match, Đã tối ưu)</span>
+                <span class="control-label-hint">Hệ thống phân tích dựa trên CV bạn chọn để tìm vị trí thích hợp</span>
               </label>
 
-              <!-- Custom Interactive CV Selector with Status Badges -->
+              <!-- Custom Interactive CV Selector with Logical Categorization -->
               <div class="top-jobs-cv-dropdown" id="top-jobs-cv-dropdown">
                 <button type="button" class="top-jobs-cv-trigger" id="top-jobs-cv-trigger" aria-haspopup="listbox" aria-expanded="false">
                   <div class="cv-trigger-content">
@@ -719,14 +719,59 @@
                   <option value="">Chọn CV đã lưu...</option>
                 </select>
 
-                <!-- Custom Dropdown Menu -->
+                <!-- Custom Categorized Dropdown Menu -->
                 <div class="top-jobs-cv-menu" id="top-jobs-cv-menu" role="listbox" hidden>
                   <div class="top-jobs-cv-menu-header">
-                    <span>Kho CV của bạn</span>
-                    <small>Chọn CV bất kỳ để tìm việc phù hợp</small>
+                    <div class="menu-header-text">
+                      <span class="menu-header-title">Danh sách CV của bạn</span>
+                      <small class="menu-header-subtitle">Chọn hồ sơ để hệ thống đối chiếu với yêu cầu công việc</small>
+                    </div>
                   </div>
+
+                  <!-- Quick Search inside Dropdown -->
+                  <div class="top-jobs-cv-search-wrap">
+                    <div class="top-jobs-cv-search-box">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="cv-search-icon"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                      <input
+                        type="text"
+                        id="top-jobs-cv-search-input"
+                        class="top-jobs-cv-search-input"
+                        placeholder="Tìm kiếm CV theo tên..."
+                        autocomplete="off"
+                      />
+                    </div>
+                  </div>
+
+                  <!-- Category Filter Tabs -->
+                  <div class="top-jobs-cv-tabs-wrap">
+                    <div class="top-jobs-cv-tabs" id="top-jobs-cv-tabs" role="tablist" aria-label="Phân loại CV">
+                      <button type="button" class="cv-tab-btn is-active" data-cv-tab="all" role="tab" aria-selected="true">
+                        Tất cả <span class="cv-tab-count" id="cv-tab-count-all">0</span>
+                      </button>
+                      <button type="button" class="cv-tab-btn" data-cv-tab="raw" role="tab" aria-selected="false">
+                        Bản gốc <span class="cv-tab-count" id="cv-tab-count-raw">0</span>
+                      </button>
+                      <button type="button" class="cv-tab-btn" data-cv-tab="optimized" role="tab" aria-selected="false">
+                        Đã tối ưu <span class="cv-tab-count" id="cv-tab-count-optimized">0</span>
+                      </button>
+                      <button type="button" class="cv-tab-btn" data-cv-tab="matched" role="tab" aria-selected="false">
+                        Đã đối chiếu <span class="cv-tab-count" id="cv-tab-count-matched">0</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Dynamic Categorized CV List -->
                   <div class="top-jobs-cv-list" id="top-jobs-cv-list">
                     <!-- Dynamic CV options populated by JS -->
+                  </div>
+
+                  <!-- Menu Quick Action Footer -->
+                  <div class="top-jobs-cv-menu-footer">
+                    <span class="cv-menu-footer-hint">Hỗ trợ định dạng PDF, DOCX</span>
+                    <button type="button" class="btn-menu-add-cv" id="btn-menu-add-cv">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                      Tải lên CV mới
+                    </button>
                   </div>
                 </div>
               </div>

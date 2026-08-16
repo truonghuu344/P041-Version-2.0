@@ -237,6 +237,7 @@
 }
 
 /* ── Custom Interactive CV Selector ── */
+/* ── Custom Interactive CV Selector with Logical Categorization ── */
 #view-find-jobs .top-jobs-cv-dropdown {
   position: relative;
   width: 100%;
@@ -247,35 +248,36 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  min-height: 52px;
-  padding: 8px 14px;
+  min-height: 56px;
+  padding: 10px 16px;
   border: 1.5px solid var(--input-border, #c8d8d0);
-  border-radius: 12px;
+  border-radius: 14px;
   background: var(--input-bg, #fbfcfb);
   color: var(--text-primary, #17322b);
   cursor: pointer;
   outline: none;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
   text-align: left;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
 }
 
 #view-find-jobs .top-jobs-cv-trigger:hover {
-  border-color: color-mix(in srgb, var(--primary, #147a5a) 50%, var(--input-border, #c8d8d0));
+  border-color: color-mix(in srgb, var(--primary, #147a5a) 60%, var(--input-border, #c8d8d0));
   background: #fff;
-  box-shadow: 0 2px 8px rgba(20, 122, 90, 0.06);
+  box-shadow: 0 4px 14px rgba(20, 122, 90, 0.08);
 }
 
 #view-find-jobs .top-jobs-cv-trigger.is-active,
 #view-find-jobs .top-jobs-cv-trigger:focus {
   border-color: var(--primary, #147a5a);
   background: #fff;
-  box-shadow: 0 0 0 3.5px color-mix(in srgb, var(--primary, #147a5a) 14%, transparent);
+  box-shadow: 0 0 0 3.5px color-mix(in srgb, var(--primary, #147a5a) 16%, transparent);
 }
 
 #view-find-jobs .cv-trigger-content {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   flex: 1;
   min-width: 0;
 }
@@ -308,64 +310,220 @@
   color: var(--text-secondary, #5d716a);
   flex-shrink: 0;
   transition: transform 0.2s ease;
+  margin-left: 8px;
 }
 
 #view-find-jobs .top-jobs-cv-trigger.is-active .cv-trigger-chevron {
   transform: rotate(180deg);
 }
 
+/* ── Menu Container ── */
 #view-find-jobs .top-jobs-cv-menu {
   position: absolute;
   top: calc(100% + 6px);
   left: 0;
   right: 0;
-  z-index: 99;
-  background: var(--card, #fff);
-  border: 1px solid var(--border, #dbe5df);
+  z-index: 120;
+  background: #ffffff;
+  border: 1px solid #dbe5df;
   border-radius: 14px;
-  box-shadow: 0 14px 36px rgba(15, 35, 25, 0.14);
+  box-shadow: 0 12px 32px rgba(15, 35, 25, 0.12), 0 2px 6px rgba(0, 0, 0, 0.03);
   overflow: hidden;
-  max-height: 320px;
   display: flex;
   flex-direction: column;
+  max-height: 440px;
+  animation: cvMenuSlideDown 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes cvMenuSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 #view-find-jobs .top-jobs-cv-menu[hidden] {
   display: none !important;
 }
 
+/* Menu Header */
 #view-find-jobs .top-jobs-cv-menu-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 16px;
-  background: var(--bg-muted, #f4f8f6);
-  border-bottom: 1px solid var(--border, #dbe5df);
+  padding: 12px 16px 8px;
+  background: #ffffff;
+}
+
+#view-find-jobs .menu-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+#view-find-jobs .menu-header-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #17322b;
+  letter-spacing: -0.01em;
+}
+
+#view-find-jobs .menu-header-subtitle {
+  font-size: 11.5px;
+  font-weight: 450;
+  color: #64748b;
+}
+
+/* Quick Search Bar */
+#view-find-jobs .top-jobs-cv-search-wrap {
+  padding: 4px 16px 8px;
+  background: #ffffff;
+}
+
+#view-find-jobs .top-jobs-cv-search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+#view-find-jobs .cv-search-icon {
+  position: absolute;
+  left: 11px;
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+#view-find-jobs .top-jobs-cv-search-input {
+  width: 100%;
+  padding: 7px 12px 7px 32px;
+  font-size: 12.5px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #17322b;
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+#view-find-jobs .top-jobs-cv-search-input:focus {
+  border-color: var(--primary, #147a5a);
+  background: #ffffff;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary, #147a5a) 12%, transparent);
+}
+
+/* Category Filter Tabs (Segmented Bar) */
+#view-find-jobs .top-jobs-cv-tabs-wrap {
+  padding: 2px 16px 10px;
+  background: #ffffff;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+#view-find-jobs .top-jobs-cv-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  background: #f1f5f9;
+  border-radius: 8px;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+#view-find-jobs .top-jobs-cv-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+#view-find-jobs .cv-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
   font-size: 12px;
-  font-weight: 750;
-  color: var(--text-secondary, #5d716a);
-}
-
-#view-find-jobs .top-jobs-cv-menu-header small {
-  font-size: 11px;
   font-weight: 500;
-  color: var(--text-muted, #859990);
+  color: #64748b;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
 }
 
+#view-find-jobs .cv-tab-btn:hover {
+  color: #17322b;
+  background: rgba(255, 255, 255, 0.6);
+}
+
+#view-find-jobs .cv-tab-btn.is-active {
+  background: #ffffff;
+  color: var(--primary, #147a5a);
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+#view-find-jobs .cv-tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  font-size: 10.5px;
+  font-weight: 700;
+  border-radius: 10px;
+  background: #e2e8f0;
+  color: #64748b;
+}
+
+#view-find-jobs .cv-tab-btn.is-active .cv-tab-count {
+  background: #e6f4ef;
+  color: var(--primary, #147a5a);
+}
+
+/* CV List Area */
 #view-find-jobs .top-jobs-cv-list {
   overflow-y: auto;
-  max-height: 260px;
+  max-height: 230px;
+  padding: 2px 0;
 }
 
-#view-find-jobs .top-jobs-cv-option {
+/* Category Group Header */
+#view-find-jobs .top-jobs-cv-group-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 11px 16px;
+  padding: 6px 16px 4px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #859990;
+  background: #fafcfb;
+  border-top: 1px solid #f1f5f9;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+#view-find-jobs .top-jobs-cv-group-header:first-child {
+  border-top: none;
+}
+
+/* Option Row */
+#view-find-jobs .top-jobs-cv-option {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
   gap: 12px;
-  border-bottom: 1px solid var(--border-subtle, #f0f4f2);
+  border-bottom: 1px solid #f1f5f9;
   cursor: pointer;
-  transition: background 0.15s ease;
+  background: #ffffff;
+  transition: all 0.15s ease;
+  position: relative;
 }
 
 #view-find-jobs .top-jobs-cv-option:last-child {
@@ -373,108 +531,257 @@
 }
 
 #view-find-jobs .top-jobs-cv-option:hover {
-  background: var(--bg-hover, #f3f8f5);
+  background: #f0fdf4;
 }
 
 #view-find-jobs .top-jobs-cv-option.is-selected {
-  background: color-mix(in srgb, var(--primary, #147a5a) 9%, transparent);
-  border-left: 3px solid var(--primary, #147a5a);
+  background: #f0fdf4;
+  border-left: 3.5px solid var(--primary, #147a5a);
 }
 
-#view-find-jobs .cv-option-main {
+/* File Format Left Icon */
+#view-find-jobs .cv-option-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
+  flex-shrink: 0;
+  gap: 1px;
+  transition: transform 0.15s ease;
+}
+
+#view-find-jobs .top-jobs-cv-option:hover .cv-option-icon {
+  transform: scale(1.05);
+}
+
+#view-find-jobs .cv-option-icon.is-pdf {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+#view-find-jobs .cv-option-icon.is-docx {
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+}
+
+#view-find-jobs .cv-option-icon.is-cv {
+  background: #f8fafc;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+#view-find-jobs .cv-icon-ext {
+  font-size: 8px;
+  font-weight: 800;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* Option Content */
+#view-find-jobs .cv-option-content {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
   flex: 1;
+  gap: 4px;
 }
 
-#view-find-jobs .cv-option-title {
-  font-size: 13.5px;
-  font-weight: 700;
-  color: var(--text-primary, #17322b);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-#view-find-jobs .cv-option-meta {
+#view-find-jobs .cv-option-main-row {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-shrink: 0;
-  font-size: 11.5px;
-  color: var(--text-secondary, #5d716a);
+  min-width: 0;
 }
 
+#view-find-jobs .cv-option-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #17322b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+#view-find-jobs .cv-option-subrow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: #64748b;
+  line-height: 1.3;
+}
+
+#view-find-jobs .cv-subrow-dot {
+  color: #cbd5e1;
+  font-weight: 700;
+}
+
+#view-find-jobs .cv-option-date,
+#view-find-jobs .cv-option-matches {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+#view-find-jobs .cv-option-matches {
+  color: #059669;
+  font-weight: 500;
+}
+
+#view-find-jobs .inline-svg-icon,
+.inline-svg-icon {
+  display: inline-block;
+  vertical-align: -1.5px;
+  flex-shrink: 0;
+}
+
+#view-find-jobs .cv-meta-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+#view-find-jobs .cv-meta-match {
+  color: #b45309;
+  font-weight: 600;
+}
+
+/* Option Right Status */
+#view-find-jobs .cv-option-right {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+#view-find-jobs .cv-option-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #ecfdf5;
+  color: var(--primary, #147a5a);
+  border: 1px solid #a7f3d0;
+}
+
+/* Empty State */
 #view-find-jobs .top-jobs-cv-empty-item {
   padding: 24px 18px;
   text-align: center;
 }
 
 #view-find-jobs .top-jobs-cv-empty-item p {
-  font-size: 13.5px;
-  color: var(--text-secondary, #5d716a);
+  font-size: 13px;
+  color: #64748b;
   margin-bottom: 10px;
+}
+
+/* Menu Footer Quick Action */
+#view-find-jobs .top-jobs-cv-menu-footer {
+  padding: 10px 16px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+#view-find-jobs .cv-menu-footer-hint {
+  font-size: 11.5px;
+  color: #859990;
+  font-weight: 500;
+}
+
+#view-find-jobs .btn-menu-add-cv {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  background: var(--primary, #147a5a);
+  border: 1px solid transparent;
+  color: #ffffff;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 3px rgba(20, 122, 90, 0.2);
+}
+
+#view-find-jobs .btn-menu-add-cv:hover {
+  background: var(--primary-hover, #0f674a);
+  box-shadow: 0 3px 8px rgba(20, 122, 90, 0.3);
+  transform: translateY(-0.5px);
 }
 
 #view-find-jobs .btn-goto-upload-cv {
   display: inline-flex;
   align-items: center;
-  padding: 6px 14px;
+  gap: 6px;
+  padding: 7px 16px;
   border-radius: 8px;
   background: var(--primary, #147a5a);
-  color: #fff;
+  color: #ffffff;
   font-size: 12.5px;
-  font-weight: 700;
+  font-weight: 600;
   border: none;
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 3px rgba(20, 122, 90, 0.2);
 }
 
 #view-find-jobs .btn-goto-upload-cv:hover {
   background: var(--primary-hover, #0f674a);
+  box-shadow: 0 3px 8px rgba(20, 122, 90, 0.3);
 }
 
-/* ── CV Status Badges ── */
+/* ── CV Status Badges (Semantic Color Differentiation) ── */
 .cv-status-badge {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 3px 8px;
-  border-radius: 6px;
+  padding: 2px 7px;
+  border-radius: 4px;
   font-size: 11px;
-  font-weight: 750;
-  letter-spacing: 0.02em;
+  font-weight: 600;
   white-space: nowrap;
   flex-shrink: 0;
+  line-height: 1.2;
 }
 
 .cv-status-badge.is-raw,
 .cv-status-badge.badge-raw {
-  background: rgba(14, 165, 233, 0.12);
-  border: 1px solid rgba(14, 165, 233, 0.35);
-  color: #0284c7;
-}
-
-.cv-status-badge.is-matched,
-.cv-status-badge.badge-matched {
-  background: rgba(16, 185, 129, 0.12);
-  border: 1px solid rgba(16, 185, 129, 0.35);
-  color: #059669;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
 }
 
 .cv-status-badge.is-optimized,
 .cv-status-badge.badge-optimized {
-  background: rgba(147, 51, 234, 0.12);
-  border: 1px solid rgba(147, 51, 234, 0.35);
-  color: #9333ea;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #047857;
+}
+
+.cv-status-badge.is-matched,
+.cv-status-badge.badge-matched {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #b45309;
 }
 
 .cv-status-badge.is-none {
-  background: rgba(148, 163, 184, 0.12);
-  border: 1px solid rgba(148, 163, 184, 0.3);
-  color: #64748b;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #94a3b8;
 }
 
 /* Optional Filters Group */
