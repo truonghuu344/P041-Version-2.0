@@ -37,6 +37,16 @@ class Settings(BaseSettings):
     clamav_port: int = Field(default=3310, ge=1, le=65535)
     clamav_timeout_seconds: float = Field(default=5, ge=1, le=60)
 
+    # Object storage. R2 exposes an S3-compatible private API; objects are
+    # served through authenticated application endpoints rather than public URLs.
+    storage_provider: Literal["local", "r2"] = "local"
+    s3_endpoint_url: str = ""
+    s3_bucket: str = ""
+    s3_region: str = "auto"
+    s3_access_key_id: str = ""
+    s3_secret_access_key: str = ""
+    file_url_ttl_seconds: int = Field(default=300, ge=60, le=3600)
+
     # Email / password reset OTP. Use a Gmail App Password, never an account password.
     smtp_host: str = "smtp.gmail.com"
     smtp_port: int = Field(default=587, ge=1, le=65535)
