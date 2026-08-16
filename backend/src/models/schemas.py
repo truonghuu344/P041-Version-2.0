@@ -617,7 +617,7 @@ class JobApplicationCreate(BaseModel):
 
 
 class JobApplicationDecision(BaseModel):
-    status: Literal["submitted", "shortlisted", "interview", "rejected"]
+    status: Literal["submitted", "shortlisted", "interview", "hired", "rejected"]
 
 
 class JobApplicationOut(BaseModel):
@@ -633,6 +633,34 @@ class JobApplicationOut(BaseModel):
     status: str
     shared_at: datetime
     decided_at: datetime | None = None
+
+
+class ApplicationFeedbackCreate(BaseModel):
+    rating: int = Field(..., ge=1, le=5)
+    comment: str | None = Field(default=None, max_length=1000)
+
+
+class ApplicationFeedbackOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    application_id: str
+    rating: int
+    comment: str | None = None
+    created_at: datetime
+
+
+class AdminJobOut(BaseModel):
+    id: str
+    title: str
+    company: str | None = None
+    location: str | None = None
+    is_published: bool
+    created_at: datetime
+    enterprise_id: str
+    enterprise_name: str
+    enterprise_email: str
+    application_count: int = 0
 
 
 # --- Operational metrics ---

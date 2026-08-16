@@ -6,8 +6,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.security import require_role
 from src.db.database import get_db
-from src.db.models import CV, CVAnalysis, JobApplication, JobDescription, User
-from src.models.schemas import CVOut, JDOut, JobApplicationCreate, JobApplicationDecision, JobApplicationOut
+from src.db.models import ApplicationFeedback, CV, CVAnalysis, JobApplication, JobDescription, User
+from src.models.schemas import (
+    ApplicationFeedbackCreate,
+    ApplicationFeedbackOut,
+    CVOut,
+    JDOut,
+    JobApplicationCreate,
+    JobApplicationDecision,
+    JobApplicationOut,
+)
 
 router = APIRouter(prefix="/enterprise", tags=["Enterprise Recruitment"])
 
@@ -210,3 +218,44 @@ async def decide_application(
     await db.commit()
     await db.refresh(application)
     return _application_out(application, jd, candidate)
+
+
+@router.post("/applications/{application_id}/feedback", response_model=ApplicationFeedbackOut)
+async def submit_application_feedback(
+    application_id: str,
+    payload: ApplicationFeedbackCreate,
+    db: AsyncSession = Depends(get_db),
+    student: User = Depends(require_role(["student"])),
+) -> ApplicationFeedbackOut:
+    """Allow a candidate to rate a completed recruitment process once."""
+    application = await db.scalar(
+        select(JobApplication).where(
+            JobApplication.id == application_id,
+            JobApplication.student_id == student.id,
+        )
+    )
+    if not application:
+        raise HTTPException(status_code=404, detail="Khong tim thay ho so ung tuyen.")
+    if application.status not in {"hired", "rejected"}:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Chi co the danh gia sau khi quy trinh tuyen dung da ket thuc.",
+        )
+
+    feedback = await db.scalar(
+        select(ApplicationFeedback).where(ApplicationFeedback.application_id == application_id)
+    )
+    if feedback:
+        feedback.rating = payload.rating
+        feedback.comment = payload.comment
+    else:
+        feedback = ApplicationFeedback(
+            application_id=application.id,
+            user_id=student.id,
+            rating=payload.rating,
+            comment=payload.comment,
+        )
+        db.add(feedback)
+    await db.commit()
+    await db.refresh(feedback)
+    return feedback

@@ -2,7 +2,9 @@ from datetime import timedelta
 
 import pytest
 
+# pyrefly: ignore [missing-import]
 from src.core.security import create_access_token
+# pyrefly: ignore [missing-import]
 from tests.helpers import create_admin, register_and_login
 
 
@@ -30,6 +32,7 @@ async def test_register_normalizes_email_and_rejects_duplicate(client):
         },
     )
     assert duplicate.status_code == 400
+    assert "đã được đăng ký" in duplicate.json()["detail"]
 
 
 @pytest.mark.asyncio
@@ -100,6 +103,7 @@ async def test_login_rejects_wrong_password_without_leaking_account_state(client
 
 @pytest.mark.asyncio
 async def test_login_uses_httponly_cookie_and_logout_revokes_browser_session(client, monkeypatch):
+    # pyrefly: ignore [missing-import]
     from src.api.v1 import auth as auth_api
 
     monkeypatch.setattr(auth_api.settings, "app_env", "production")

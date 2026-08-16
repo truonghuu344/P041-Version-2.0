@@ -859,6 +859,24 @@ class InterviewFeedback(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
+class ApplicationFeedback(Base):
+    """Candidate feedback collected after a recruitment application is finalized."""
+
+    __tablename__ = "application_feedback"
+    __table_args__ = (Index("uq_application_feedback_application", "application_id", unique=True),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    application_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("job_applications.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    rating: Mapped[int] = mapped_column(Integer, nullable=False)
+    comment: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
 class UsageEvent(Base):
     __tablename__ = "usage_events"
 

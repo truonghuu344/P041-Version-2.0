@@ -84,7 +84,7 @@ async def register_user(
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email này đã được đăng ký trong hệ thống",
+            detail="Email này đã được đăng ký trong hệ thống. Vui lòng đăng nhập hoặc sử dụng email khác.",
         )
 
     # Khởi tạo user mới
@@ -102,7 +102,7 @@ async def register_user(
         await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email này đã được đăng ký trong hệ thống",
+            detail="Email này đã được đăng ký trong hệ thống. Vui lòng đăng nhập hoặc sử dụng email khác.",
         ) from exc
     except SQLAlchemyError as exc:
         await db.rollback()
