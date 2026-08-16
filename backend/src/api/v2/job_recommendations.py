@@ -29,7 +29,7 @@ from src.core.security import get_current_user
 from src.db.database import get_db
 
 # pyrefly: ignore [missing-import]
-from src.db.models import CVSnapshot, JobRecommendation, JobRecommendationRun, User
+from src.db.models import CV, CVSnapshot, CVVariant, JobRecommendation, JobRecommendationRun, User
 
 # pyrefly: ignore [missing-import]
 from src.schemas.job_recommendation import (
@@ -46,6 +46,8 @@ from src.services.job_recommendations.service import (
     TopJobRecommendationService,
     get_recommendation_service,
 )
+# pyrefly: ignore [missing-import]
+from src.services.pipeline_context import get_or_create_cv_snapshot
 
 logger = logging.getLogger(__name__)
 
@@ -80,17 +82,23 @@ def _build_item_from_model(rec: JobRecommendation) -> JobRecommendationItem:
     exp = dict(rec.explanation_json or {})
     strengths = [s.get("message_vi") or s.get("code") for s in exp.get("strengths", []) if isinstance(s, dict)]
     gaps = [g.get("message_vi") or g.get("code") for g in exp.get("gaps", []) if isinstance(g, dict)]
+    mandatory_gate = dict(rec.mandatory_gate_json or {})
 
     return JobRecommendationItem(
         rank=rec.rank,
         job_id=rec.job_id,
         title=f"Vị trí {rec.job_id}",
         company=None,
+        location=None,
+        work_mode=None,
         display_fit_score=rec.display_fit_score,
         raw_fit_score=rec.raw_fit_score,
         fit_label=get_fit_label(rec.display_fit_score),
         evidence_confidence="high" if rec.confidence >= 0.8 else "medium" if rec.confidence >= 0.5 else "low",
         mandatory_requirement_failed=rec.mandatory_requirement_failed,
+        required_skills_coverage=float(mandatory_gate.get("coverage") or 0.0),
+        mandatory_requirements_matched=int(mandatory_gate.get("matched_requirements") or 0),
+        total_mandatory_requirements=int(mandatory_gate.get("total_requirements") or 0),
         score_breakdown=[],
         top_strengths=strengths[:4],
         top_gaps=gaps[:4],
@@ -112,7 +120,10 @@ async def create_job_recommendations(
     service: TopJobRecommendationService = Depends(get_recommendation_service),
 ) -> JobRecommendationRunResponse:
     """Generate Top 10 Job Recommendations for an owned CV Snapshot with optional filters."""
-    # 1. Ownership & Existence check on CV Snapshot
+    # 1. Resolve the candidate's CV selection to an immutable snapshot.
+    # The CV library exposes CV IDs, while the recommendation pipeline correctly
+    # runs against snapshots. Supporting both IDs prevents a false 404 from a
+    # valid CV selected in the UI.
     cv_snapshot = await db.scalar(
         select(CVSnapshot).where(
             CVSnapshot.id == request.cv_snapshot_id,
@@ -120,10 +131,35 @@ async def create_job_recommendations(
         )
     )
     if cv_snapshot is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="CV snapshot không tồn tại hoặc bạn không có quyền truy cập.",
+        cv = await db.scalar(
+            select(CV).where(
+                CV.id == request.cv_snapshot_id,
+                CV.user_id == current_user.id,
+            )
         )
+        if cv is not None:
+            cv_snapshot = await get_or_create_cv_snapshot(db, cv)
+        else:
+            variant = await db.scalar(
+                select(CVVariant).where(
+                    CVVariant.id == request.cv_snapshot_id,
+                    CVVariant.user_id == current_user.id,
+                )
+            )
+            if variant is not None and variant.source_cv_snapshot_id:
+                cv_snapshot = await db.scalar(
+                    select(CVSnapshot).where(
+                        CVSnapshot.id == variant.source_cv_snapshot_id,
+                        CVSnapshot.user_id == current_user.id,
+                    )
+                )
+            if cv_snapshot is None:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="CV không tồn tại hoặc bạn không có quyền truy cập.",
+                )
+
+    resolved_request = request.model_copy(update={"cv_snapshot_id": cv_snapshot.id})
 
     # 2. Idempotency Check
     if idempotency_key:
@@ -156,7 +192,7 @@ async def create_job_recommendations(
         run_id, top_jobs = await service.recommend_jobs(
             db,
             user_id=current_user.id,
-            request=request,
+            request=resolved_request,
         )
     except ValueError as exc:
         raise HTTPException(
@@ -177,11 +213,16 @@ async def create_job_recommendations(
             job_id=job.job_id,
             title=job.title,
             company=job.company,
+            location=job.location,
+            work_mode=job.work_mode,
             display_fit_score=job.display_fit_score,
             raw_fit_score=job.raw_fit_score,
             fit_label=job.fit_label,
             evidence_confidence=job.evidence_confidence,
             mandatory_requirement_failed=job.mandatory_requirement_failed,
+            required_skills_coverage=job.required_skills_coverage,
+            mandatory_requirements_matched=job.mandatory_requirements_matched,
+            total_mandatory_requirements=job.total_mandatory_requirements,
             score_breakdown=job.score_breakdown,
             top_strengths=job.top_strengths,
             top_gaps=job.top_gaps,

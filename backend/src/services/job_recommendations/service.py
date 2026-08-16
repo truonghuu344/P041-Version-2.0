@@ -22,7 +22,9 @@ from __future__ import annotations
 import logging
 import uuid
 from collections.abc import Mapping, Sequence
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+UTC = getattr(datetime, "UTC", timezone.utc)
 from typing import Any
 
 from sqlalchemy import select
@@ -318,9 +320,13 @@ class TopJobRecommendationService:
             "jd_snapshot_id": jd_id,
             "title": str(job_data.get("title") or "Vị trí tuyển dụng"),
             "company": job_data.get("company"),
+            "location": job_data.get("location"),
+            "work_mode": job_data.get("work_mode") or job_data.get("remote_type"),
             "display_fit_score": gate_res.display_score,
             "raw_fit_score": fit_score_res.raw_fit_score,
             "required_skills_coverage": coverage,
+            "mandatory_requirements_matched": mandatory_reqs_matched,
+            "total_mandatory_requirements": mandatory_reqs_total,
             "supported_requirements_count": conf_res.verified_count,
             "rrf_rank": candidate_retrieval.rank,
             "evidence_confidence": conf_res.confidence_level,
@@ -338,7 +344,11 @@ class TopJobRecommendationService:
             ],
             "top_strengths": exp_res.top_strengths,
             "top_gaps": exp_res.top_gaps,
-            "mandatory_gate_json": gate_res.gate_json,
+            "mandatory_gate_json": {
+                **gate_res.gate_json,
+                "matched_requirements": mandatory_reqs_matched,
+                "total_requirements": mandatory_reqs_total,
+            },
             "explanation_json": exp_res.explanation_json,
         }
 

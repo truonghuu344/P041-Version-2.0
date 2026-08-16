@@ -18,10 +18,11 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 # pyrefly: ignore [missing-import]
-from src.db.models import JobRecommendation
+from src.db.models import JDSnapshot, JobRecommendation, MatchRun
 
 logger = logging.getLogger(__name__)
 
@@ -56,6 +57,10 @@ class RankedTopJob:
     supported_requirements_count: int
     rrf_rank: int
     match_id: str
+    mandatory_requirements_matched: int = 0
+    total_mandatory_requirements: int = 0
+    location: str | None = None
+    work_mode: str | None = None
     score_breakdown: list[dict[str, Any]] = field(default_factory=list)
     top_strengths: list[str] = field(default_factory=list)
     top_gaps: list[str] = field(default_factory=list)
@@ -70,6 +75,11 @@ class RankedTopJob:
             "title": self.title,
             "company": self.company,
             "display_fit_score": self.display_fit_score,
+            "required_skills_coverage": self.required_skills_coverage,
+            "mandatory_requirements_matched": self.mandatory_requirements_matched,
+            "total_mandatory_requirements": self.total_mandatory_requirements,
+            "location": self.location,
+            "work_mode": self.work_mode,
             "raw_fit_score": self.raw_fit_score,
             "fit_label": self.fit_label,
             "evidence_confidence": self.evidence_confidence,
@@ -157,6 +167,10 @@ def rank_top_jobs(
         top_g_list = list(top_g) if isinstance(top_g, Sequence) and not isinstance(top_g, str) else []
 
         gate_json = _extract_item_value(item, "mandatory_gate_json", "gate_json", default={})
+        mandatory_matched = int(_extract_item_value(item, "mandatory_requirements_matched", default=0))
+        mandatory_total = int(_extract_item_value(item, "total_mandatory_requirements", default=0))
+        location = _extract_item_value(item, "location", default=None)
+        work_mode = _extract_item_value(item, "work_mode", "remote_type", default=None)
         exp_json = _extract_item_value(item, "explanation_json", default={})
 
         ranked_jobs.append(
@@ -176,6 +190,10 @@ def rank_top_jobs(
                 supported_requirements_count=supported_count,
                 rrf_rank=rrf_rank,
                 match_id=match_id,
+                mandatory_requirements_matched=mandatory_matched,
+                total_mandatory_requirements=mandatory_total,
+                location=str(location) if location else None,
+                work_mode=str(work_mode) if work_mode else None,
                 score_breakdown=breakdown_list,
                 top_strengths=top_s_list,
                 top_gaps=top_g_list,
@@ -192,20 +210,37 @@ async def persist_top_recommendations(
     run_id: str,
     top_jobs: Sequence[RankedTopJob],
 ) -> list[JobRecommendation]:
-    """Persist the ranked Top 10 recommendations to the job_recommendations table."""
+    """Persist ranked jobs without treating market-catalog IDs as snapshot IDs."""
+    snapshot_ids = {job.jd_snapshot_id for job in top_jobs if job.jd_snapshot_id}
+    persisted_snapshot_ids: set[str] = set()
+    if snapshot_ids:
+        persisted_snapshot_ids = set(
+            (await db.scalars(select(JDSnapshot.id).where(JDSnapshot.id.in_(snapshot_ids)))).all()
+        )
+    match_ids = {job.match_id for job in top_jobs if job.match_id}
+    persisted_match_ids: set[str] = set()
+    if match_ids:
+        persisted_match_ids = set(
+            (await db.scalars(select(MatchRun.id).where(MatchRun.id.in_(match_ids)))).all()
+        )
+
     records: list[JobRecommendation] = []
     for job in top_jobs:
+        # Catalog entries such as "JD-057" are legitimate job IDs, but not
+        # rows in jd_snapshots and therefore must not be stored in this FK.
+        jd_snapshot_id = job.jd_snapshot_id if job.jd_snapshot_id in persisted_snapshot_ids else None
+        match_id = job.match_id if job.match_id in persisted_match_ids else None
         rec = JobRecommendation(
             run_id=run_id,
             job_id=job.job_id,
-            jd_snapshot_id=job.jd_snapshot_id or None,
+            jd_snapshot_id=jd_snapshot_id,
             rank=job.rank,
             raw_fit_score=job.raw_fit_score,
             display_fit_score=job.display_fit_score,
             confidence=job.confidence_score,
             mandatory_requirement_failed=job.mandatory_requirement_failed,
             mandatory_gate_json=job.mandatory_gate_json or None,
-            match_id=job.match_id or None,
+            match_id=match_id,
             explanation_json=job.explanation_json or None,
         )
         db.add(rec)

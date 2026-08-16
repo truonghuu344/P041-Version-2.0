@@ -7,8 +7,10 @@ import re
 import unicodedata
 from collections import Counter, defaultdict
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from time import perf_counter
+
+UTC = getattr(datetime, "UTC", timezone.utc)
 from typing import Any
 
 PIPELINE_VERSION = "1.0"

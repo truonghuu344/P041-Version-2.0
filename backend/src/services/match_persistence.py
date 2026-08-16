@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import re
 import uuid
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+UTC = getattr(datetime, "UTC", timezone.utc)
 from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
