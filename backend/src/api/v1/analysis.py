@@ -1,7 +1,7 @@
 from time import perf_counter
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import or_, select
+from sqlalchemy import delete, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.security import get_current_user
@@ -12,10 +12,13 @@ from src.models.schemas import (
     CVOptimizationDecisionRequest,
     GapAnalysisRequest,
     GapAnalysisResponse,
+    ResumeOptimizationRequest,
+    ResumeOptimizationResponse,
 )
 from src.services.gap_analysis_service import perform_cv_jd_gap_analysis
 from src.services.match_persistence import persist_match_artifacts
 from src.services.pipeline_context import PIPELINE_VERSION, get_or_create_cv_snapshot, get_or_create_jd_snapshot
+from src.services.resume_optimization_service import optimize_resume_for_jd, validate_resume_change
 
 router = APIRouter(prefix="/analysis", tags=["CV Match & Gap Analysis"])
 
@@ -344,6 +347,88 @@ async def get_match_report(
     }
 
 
+@router.post("/{analysis_id}/optimize", response_model=ResumeOptimizationResponse)
+async def optimize_analysis_resume(
+    analysis_id: str,
+    payload: ResumeOptimizationRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> ResumeOptimizationResponse:
+    """Generate a new evidence-checked optimization draft for one immutable CV-JD pair."""
+    started_at = perf_counter()
+    analysis = await _owned_analysis(analysis_id, db, current_user.id)
+    cv_result = await db.execute(select(CV).where(CV.id == analysis.cv_id, CV.user_id == current_user.id))
+    cv = cv_result.scalar_one_or_none()
+    jd_result = await db.execute(
+        select(JobDescription).where(
+            JobDescription.id == analysis.jd_id,
+            or_(JobDescription.is_system.is_(True), JobDescription.created_by_user_id == current_user.id),
+        )
+    )
+    jd = jd_result.scalar_one_or_none()
+    if not cv or not jd:
+        raise HTTPException(status_code=404, detail="CV hoặc JD của kết quả phân tích không còn tồn tại.")
+
+    gap_data = dict(analysis.gap_analysis_json or {})
+    stored_optimization_suggestions = list(analysis.optimized_suggestions_json or [])
+    if stored_optimization_suggestions:
+        gap_data["suggestions"] = stored_optimization_suggestions
+    else:
+        # The first optimization must keep the evidence-backed suggestions produced
+        # by Gap Analysis. Replacing them with an empty persisted draft leaves the
+        # deterministic fallback with no safe source when the LLM draft is rejected.
+        gap_data["suggestions"] = list(gap_data.get("suggestions") or [])
+    result = await optimize_resume_for_jd(
+        cv_text=(cv.raw_text or cv.title or "").strip(),
+        parsed_cv=dict(cv.parsed_json or {}),
+        jd_title=jd.title or "Vị trí tuyển dụng",
+        jd_text=(jd.requirements_text or jd.title or "").strip(),
+        parsed_jd=dict(jd.normalized_json or {}),
+        analysis=gap_data,
+        language=payload.language,
+        optimization_mode=payload.optimization_mode,
+    )
+
+    analysis.optimized_suggestions_json = [
+        {
+            "block_id": item["block_id"],
+            "section": item["section"],
+            "original_text": item["original"],
+            "suggested_improvement": item["optimized"],
+            "action_verb": item["optimized"].split(maxsplit=1)[0] if item["optimized"] else None,
+            "reason": item["reason"],
+            "jd_alignment": item["jd_alignment"],
+            "evidence": item["evidence"],
+            "fact_check_status": next(
+                (claim["status"] for claim in result["fact_check"]["claims"] if claim["claim"] == item["optimized"]),
+                "supported_rephrase",
+            ),
+            "requires_confirmation": item.get("requires_confirmation", False),
+            "risk_flags": item.get("risk_flags", []),
+        }
+        for item in result["changes"]
+    ]
+    gap_data["resume_optimization"] = result
+    analysis.gap_analysis_json = gap_data
+    await db.execute(delete(CVOptimizationDecision).where(CVOptimizationDecision.analysis_id == analysis.id))
+    db.add(
+        UsageEvent(
+            user_id=current_user.id,
+            event_name="resume_optimization",
+            duration_ms=round((perf_counter() - started_at) * 1000),
+            metadata_json={
+                "cv_id": cv.id,
+                "jd_id": jd.id,
+                "analysis_id": analysis.id,
+                "mode": payload.optimization_mode,
+                "provider": result["provider"],
+            },
+        )
+    )
+    await db.commit()
+    return ResumeOptimizationResponse.model_validate(result)
+
+
 @router.put("/{analysis_id}/suggestions", response_model=CVOptimizationDecisionOut)
 async def decide_optimization_suggestion(
     analysis_id: str,
@@ -369,6 +454,20 @@ async def decide_optimization_suggestion(
         final_text = source.get("suggested_improvement", "")
     if not payload.accepted:
         final_text = None
+    if payload.accepted and final_text:
+        cv_result = await db.execute(select(CV).where(CV.id == analysis.cv_id, CV.user_id == current_user.id))
+        cv = cv_result.scalar_one_or_none()
+        if not cv:
+            raise HTTPException(status_code=404, detail="Không tìm thấy CV gốc để kiểm tra bằng chứng.")
+        integrity_error = validate_resume_change(
+            original=str(source.get("original_text") or ""),
+            optimized=final_text,
+            cv_text=(cv.raw_text or cv.title or "").strip(),
+            parsed_cv=dict(cv.parsed_json or {}),
+            missing_skills=list((analysis.gap_analysis_json or {}).get("hard_skills_missing", [])),
+        )
+        if integrity_error:
+            raise HTTPException(status_code=422, detail=f"Gợi ý không vượt qua fact-check: {integrity_error}")
 
     existing_result = await db.execute(
         select(CVOptimizationDecision).where(

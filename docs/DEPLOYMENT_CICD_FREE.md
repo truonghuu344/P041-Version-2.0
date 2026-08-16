@@ -1,6 +1,6 @@
 # CI/CD và deploy miễn phí cho Career Assistant X
 
-**Mục tiêu:** Mọi thay đổi backend, frontend hoặc hạ tầng phải được kiểm tra tự động trước khi merge; khi merge vào nhánh production, frontend/backend tự deploy từ commit đã được duyệt.  
+**Mục tiêu:** Mọi thay đổi backend, frontend hoặc hạ tầng phải được kiểm tra tự động trước khi merge; khi merge vào nhánh production, frontend/backend tự deploy từ commit đã được duyệt.
 **Phạm vi:** môi trường demo/portfolio, không cam kết SLA production. Các free tier có giới hạn và có thể thay đổi.
 
 ---

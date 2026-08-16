@@ -76,6 +76,17 @@ class Settings(BaseSettings):
     vector_sync_on_startup: bool = True
     vector_auto_sync: bool = True
 
+    # Top Jobs recommendation (BM25 + vector + weighted RRF + eligibility gate)
+    job_recommend_bm25_k: int = Field(default=30, ge=1, le=200)
+    job_recommend_vector_k: int = Field(default=30, ge=1, le=200)
+    job_recommend_candidate_k: int = Field(default=30, ge=1, le=200)
+    job_recommend_final_k: int = Field(default=10, ge=1, le=100)
+    job_recommend_rrf_k: int = Field(default=60, ge=1, le=1000)
+    job_recommend_bm25_weight: float = Field(default=1.0, ge=0.0, le=10.0)
+    job_recommend_vector_weight: float = Field(default=1.0, ge=0.0, le=10.0)
+    job_recommend_must_have_threshold: float = Field(default=0.50, ge=0.0, le=1.0)
+    job_recommend_score_cap: float = Field(default=49.0, ge=0.0, le=100.0)
+
     # CV-JD Matching v1 (Requirement -> BM25/Vector -> RRF -> Evidence -> Rubric)
     cv_jd_embedding_provider: Literal["auto", "gemini", "hashing"] = "auto"
     cv_jd_embedding_model: str = "gemini-embedding-2"

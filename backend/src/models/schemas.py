@@ -74,6 +74,12 @@ class CVOut(BaseModel):
     raw_text: str | None = None
     parsed_json: dict[str, Any] | None = None
     created_at: datetime
+    updated_at: datetime | None = None
+    status_type: str = "raw"
+    status_label: str = "CV gốc"
+    match_count: int = 0
+    is_optimized: bool = False
+    last_used_at: datetime | None = None
 
 
 # --- Job Description Schemas ---
@@ -149,10 +155,17 @@ class GapAnalysisRequest(BaseModel):
 
 
 class CVOptimizationSuggestion(BaseModel):
+    block_id: str | None = None
+    section: str | None = None
     original_text: str
     suggested_improvement: str
     action_verb: str | None = None
     reason: str
+    jd_alignment: list[str] = Field(default_factory=list)
+    evidence: list[str] = Field(default_factory=list)
+    fact_check_status: str = "supported_rephrase"
+    requires_confirmation: bool = False
+    risk_flags: list[str] = Field(default_factory=list)
 
 
 class GapPriorityAction(BaseModel):
@@ -293,6 +306,61 @@ class GapAnalysisResponse(BaseModel):
     score_breakdown: dict[str, float] = {}
     integrity_guardrail: str = "passed"
     created_at: datetime
+
+
+class ResumeOptimizationRequest(BaseModel):
+    language: Literal["vi", "en"] = "vi"
+    optimization_mode: Literal["conservative", "balanced", "aggressive"] = "balanced"
+
+
+class ResumeOptimizationChange(BaseModel):
+    block_id: str
+    section: str
+    original: str
+    optimized: str
+    reason: str
+    jd_alignment: list[str] = Field(default_factory=list)
+    evidence: list[str] = Field(default_factory=list)
+    requires_confirmation: bool = False
+    risk_flags: list[str] = Field(default_factory=list)
+
+
+class ResumeFactCheckClaim(BaseModel):
+    claim: str
+    status: Literal["supported", "supported_rephrase", "reasonable_inference", "unsupported"]
+    evidence: str
+    confidence: float = Field(ge=0.0, le=1.0)
+
+
+class MissingSkillRecommendation(BaseModel):
+    skill: str
+    reason: str
+    recommended_action: str
+
+
+class ResumeOptimizationResponse(BaseModel):
+    status: Literal["completed"] = "completed"
+    target_job_title: str
+    target_role: str
+    summary: dict[str, Any]
+    jd_analysis: dict[str, Any]
+    resume_analysis: dict[str, Any]
+    match_analysis: dict[str, float]
+    requirements: list[dict[str, Any]] = Field(default_factory=list)
+    strengths: list[str] = Field(default_factory=list)
+    gaps: dict[str, list[str]]
+    optimization_plan: dict[str, list[str]]
+    optimized_resume: dict[str, Any]
+    changes: list[ResumeOptimizationChange] = Field(default_factory=list)
+    patches: list[dict[str, Any]] = Field(default_factory=list)
+    duplicate_candidates: list[dict[str, Any]] = Field(default_factory=list)
+    confirmation_questions: list[str] = Field(default_factory=list)
+    validation: dict[str, bool]
+    fact_check: dict[str, Any]
+    missing_skills_recommendations: list[MissingSkillRecommendation] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+    optimization_mode: Literal["conservative", "balanced", "aggressive"] = "balanced"
+    provider: str = "deterministic_guarded"
 
 
 class ManualCVCreate(BaseModel):

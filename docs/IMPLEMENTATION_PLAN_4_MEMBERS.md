@@ -346,7 +346,7 @@ Mọi expected point factual phải có `knowledge_evidence_id`. JD xác định
 ### 6.2 Đưa dữ liệu vào đâu và quy trình duyệt
 
 - PostgreSQL + pgvector: metadata, question text embedding, rubric, transcript, score/audit.
-- MinIO/S3: audio upload/TTS output, encryption, retention TTL và delete workflow.
+- Cloudflare R2 (S3-compatible): audio upload/TTS output, encryption, retention TTL và delete workflow.
 - Redis: WebSocket presence, partial transcript, timeout; không lưu final score.
 
 Quy trình question bank:
@@ -495,10 +495,11 @@ Không phân chia theo lớp BE/FE/QA. Mỗi người chịu trách nhiệm mộ
 
 **Backend/data/AI**
 
-1. Chốt và triển khai snapshot/version contract cần cho feature: `cv_variants`, `cv_variant_claims`, `cv_variant_revisions`, `cv_templates`; không ghi đè CV gốc.
-2. Triển khai Mode A (có CV + JD) và Mode B (chưa có CV + JD), autosave draft và controlled user write-back.
-3. Tạo Generation Contract, LLM structured-output adapter/fallback và 7 hard validators: schema, atomic claim, entailment, numeric/date, JD leakage, protected content, render/layout.
-4. Tạo APIs create/get/edit/validate/publish/export/list; PDF render, checksum, asset/retention policy và authorization.
+1. Owner nền tảng Cloudflare R2 dùng chung: `StorageService` S3-compatible, private bucket, object key không chứa PII, pre-signed URL TTL 5 phút, MIME/size validation, audit metadata và delete-by-key. Lưu CV gốc, CV variant đã tối ưu và PDF export trên R2; PostgreSQL chỉ lưu object key, checksum, MIME, size và metadata.
+2. Chốt và triển khai snapshot/version contract cần cho feature: `cv_variants`, `cv_variant_claims`, `cv_variant_revisions`, `cv_templates`; không ghi đè CV gốc.
+3. Triển khai Mode A (có CV + JD) và Mode B (chưa có CV + JD), autosave draft và controlled user write-back.
+4. Tạo Generation Contract, LLM structured-output adapter/fallback và 7 hard validators: schema, atomic claim, entailment, numeric/date, JD leakage, protected content, render/layout.
+5. Tạo APIs create/get/edit/validate/publish/export/list; PDF render, checksum, asset/retention policy và authorization.
 
 **Frontend**
 
@@ -520,10 +521,11 @@ Không phân chia theo lớp BE/FE/QA. Mỗi người chịu trách nhiệm mộ
 
 **Backend/data/AI**
 
-1. Tạo migration/model cho Question Bank, Technical Knowledge Base, interview plan, turns, transcripts, technical entities, criterion evaluations, evidence spans, scores, audio assets, audit.
-2. Viết import/curation CLI: DRAFT → review → APPROVED → embed/index → RETIRED; seed ít nhất 100 approved questions, mỗi rubric factual có knowledge evidence.
-3. Implement metadata/BM25/dense/RRF/rerank, duplicate/assumption/rubric gates, interview plan và generated fallback grounded.
-4. Implement provider-agnostic STT/TTS adapters, REST v2/WebSocket, final transcript/entity/evidence validators, deterministic score commit và report. LLM chỉ trả coverage/evidence, không trả final score.
+1. Dùng `StorageService`/private R2 bucket do Thành viên 2 cung cấp cho audio input, TTS output và replay. `audio_assets` chỉ lưu object key/checksum/consent/retention status; owner audio retention là 30 ngày, delete khi user xoá session hoặc hết hạn, pre-signed URL TTL 5 phút, không public URL.
+2. Tạo migration/model cho Question Bank, Technical Knowledge Base, interview plan, turns, transcripts, technical entities, criterion evaluations, evidence spans, scores, audio assets, audit.
+3. Viết import/curation CLI: DRAFT → review → APPROVED → embed/index → RETIRED; seed ít nhất 100 approved questions, mỗi rubric factual có knowledge evidence.
+4. Implement metadata/BM25/dense/RRF/rerank, duplicate/assumption/rubric gates, interview plan và generated fallback grounded.
+5. Implement provider-agnostic STT/TTS adapters, REST v2/WebSocket, final transcript/entity/evidence validators, deterministic score commit và report. LLM chỉ trả coverage/evidence, không trả final score.
 
 **Frontend**
 

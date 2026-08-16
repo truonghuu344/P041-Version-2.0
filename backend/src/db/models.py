@@ -5,6 +5,7 @@ from typing import Any, Optional
 from sqlalchemy import (
     JSON,
     Boolean,
+    CheckConstraint,
     DateTime,
     Float,
     ForeignKey,
@@ -182,6 +183,68 @@ class MarketJobEmbedding(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
 
+class JobRecommendationRun(Base):
+    """One reproducible Top Jobs retrieval request for a candidate CV snapshot."""
+
+    __tablename__ = "job_recommendation_runs"
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('PENDING', 'RUNNING', 'COMPLETED', 'FAILED')",
+            name="ck_job_recommendation_runs_status",
+        ),
+        Index("ix_job_recommendation_runs_user_created", "user_id", "created_at"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    user_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    cv_snapshot_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("cv_snapshots.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    status: Mapped[str] = mapped_column(String(20), default="PENDING", nullable=False, index=True)
+    filter_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+    retrieval_config_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+    pipeline_version: Mapped[str] = mapped_column(String(40), nullable=False)
+    normalization_version: Mapped[str] = mapped_column(String(40), nullable=False)
+    embedding_model: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    rubric_version: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    trace_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class JobRecommendation(Base):
+    """A ranked job result. Full CV-JD evidence remains reachable via match_id."""
+
+    __tablename__ = "job_recommendations"
+    __table_args__ = (
+        CheckConstraint("rank > 0", name="ck_job_recommendations_rank_positive"),
+        Index("uq_job_recommendations_run_rank", "run_id", "rank", unique=True),
+        Index("uq_job_recommendations_run_job", "run_id", "job_id", unique=True),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    run_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("job_recommendation_runs.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    # job_id is the market catalog source ID; it is not always a persisted JobArtifact row.
+    job_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    jd_snapshot_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("jd_snapshots.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    rank: Mapped[int] = mapped_column(Integer, nullable=False)
+    raw_fit_score: Mapped[float] = mapped_column(Float, nullable=False)
+    display_fit_score: Mapped[float] = mapped_column(Float, nullable=False)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False)
+    mandatory_requirement_failed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    mandatory_gate_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+    # Do not duplicate evidence here. Match artifacts are the evidence source of truth.
+    match_id: Mapped[str | None] = mapped_column(
+        String(64), ForeignKey("matches.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    explanation_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
 class CVAnalysis(Base):
     __tablename__ = "cv_analyses"
 
@@ -294,6 +357,9 @@ class MatchEvidenceArtifact(Base):
     bm25_score: Mapped[float | None] = mapped_column(Float, nullable=True)
     fusion_score: Mapped[float] = mapped_column(Float, nullable=False)
     ranks_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+    # TM4 feat/match-evaluation-modal: vị trí câu bằng chứng trong CV raw text
+    span_start: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    span_end: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
 
 class CriterionEvaluationArtifact(Base):
@@ -657,6 +723,102 @@ class CVOptimizationDecision(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
+
+
+class CVTemplate(Base):
+    """Versioned renderer contract used by immutable CV variants."""
+
+    __tablename__ = "cv_templates"
+    __table_args__ = (Index("uq_cv_template_name_version", "name", "version", unique=True),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    name: Mapped[str] = mapped_column(String(80), nullable=False, index=True)
+    schema_json: Mapped[Any] = mapped_column(JSON, nullable=False)
+    renderer_config: Mapped[Any] = mapped_column(JSON, nullable=False)
+    status: Mapped[str] = mapped_column(String(20), default="active", nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class CVVariant(Base):
+    """A publishable CV copy; the source CV snapshot is never mutated."""
+
+    __tablename__ = "cv_variants"
+    __table_args__ = (
+        Index("ix_cv_variants_user_status_created", "user_id", "status", "created_at"),
+        Index("uq_cv_variants_user_idempotency", "user_id", "idempotency_key", unique=True),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    source_cv_snapshot_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("cv_snapshots.id", ondelete="RESTRICT"), nullable=True, index=True
+    )
+    target_jd_snapshot_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("jd_snapshots.id", ondelete="RESTRICT"), nullable=False, index=True
+    )
+    match_id: Mapped[str | None] = mapped_column(
+        String(64), ForeignKey("matches.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    template_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("cv_templates.id", ondelete="RESTRICT"), nullable=False, index=True
+    )
+    mode: Mapped[str] = mapped_column(String(16), nullable=False)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    content_json: Mapped[Any] = mapped_column(JSON, nullable=False)
+    status: Mapped[str] = mapped_column(String(30), default="DRAFT", nullable=False, index=True)
+    prompt_version: Mapped[str] = mapped_column(String(64), nullable=False)
+    pipeline_version: Mapped[str] = mapped_column(String(40), nullable=False)
+    validator_result_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+    ai_metadata_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+    rendered_uri: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+    rendered_checksum: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    trace_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    idempotency_key: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    revision_no: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    retention_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+
+class CVVariantClaim(Base):
+    __tablename__ = "cv_variant_claims"
+    __table_args__ = (Index("ix_cv_variant_claims_variant_status", "variant_id", "validation_status"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    variant_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("cv_variants.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    claim_key: Mapped[str] = mapped_column(String(255), nullable=False)
+    claim_text: Mapped[str] = mapped_column(Text, nullable=False)
+    source_evidence_ids: Mapped[Any] = mapped_column(JSON, nullable=False)
+    source_spans_json: Mapped[Any] = mapped_column(JSON, nullable=False)
+    validation_status: Mapped[str] = mapped_column(String(30), nullable=False, index=True)
+    validator_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class CVVariantRevision(Base):
+    __tablename__ = "cv_variant_revisions"
+    __table_args__ = (Index("uq_cv_variant_revision", "variant_id", "revision_no", unique=True),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    variant_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("cv_variants.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    revision_no: Mapped[int] = mapped_column(Integer, nullable=False)
+    content_json: Mapped[Any] = mapped_column(JSON, nullable=False)
+    editor_type: Mapped[str] = mapped_column(String(20), nullable=False)
+    editor_user_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    change_summary: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class JobApplication(Base):

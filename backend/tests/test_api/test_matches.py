@@ -44,6 +44,8 @@ async def test_match_job_api_completes_and_persists_traceability(client):
     status = await client.get(f"/api/v1/matches/{match_id}", headers=headers)
     assert status.status_code == 200
     assert status.json()["status"] == "COMPLETED"
+    assert status.json()["current_step"] == "COMPLETED"
+    assert status.json()["progress_percent"] == 100
     assert 0 <= status.json()["final_score"] <= 100
 
     evidence = await client.get(f"/api/v1/matches/{match_id}/evidence", headers=headers)
@@ -74,3 +76,11 @@ async def test_match_api_returns_standard_error_envelope(client):
     assert response.json() == {
         "error": {"code": "MATCH_001", "message": "Match không tồn tại.", "retryable": False}
     }
+
+
+async def test_match_api_requires_login(client):
+    response = await client.post(
+        "/api/v1/matches",
+        json={"cv_id": "CV_ANY", "job_id": "JD_ANY"},
+    )
+    assert response.status_code == 401

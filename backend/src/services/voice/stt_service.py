@@ -6,7 +6,12 @@ import logging
 from collections.abc import Callable, Coroutine
 from typing import Any
 
-from deepgram import DeepgramClient, LiveOptions, LiveTranscriptionEvents
+try:
+    from deepgram import DeepgramClient, LiveOptions, LiveTranscriptionEvents
+except ImportError:
+    DeepgramClient = None
+    LiveOptions = None
+    LiveTranscriptionEvents = None
 
 from src.config import get_settings
 

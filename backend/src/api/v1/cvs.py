@@ -3,6 +3,7 @@ import os
 import uuid
 from io import BytesIO
 from time import perf_counter
+from typing import Literal
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from fastapi.responses import StreamingResponse
@@ -13,11 +14,23 @@ from src.config import get_settings
 from src.core.errors import PipelineError, pipeline_error_from_message
 from src.core.security import get_current_user
 from src.db.database import get_db
-from src.db.models import CV, CVAnalysis, CVOptimizationDecision, DocumentArtifact, UsageEvent, User
+from src.db.models import (
+    CV,
+    CVAnalysis,
+    CVOptimizationDecision,
+    CVSnapshot,
+    CVVariant,
+    DocumentArtifact,
+    JobRecommendationRun,
+    MatchRun,
+    UsageEvent,
+    User,
+)
 from src.models.schemas import CVBulkDeleteRequest, CVBulkDeleteResponse, CVOut, ManualCVCreate
+from src.services.cv_blocks import apply_cv_block_patches
 from src.services.cv_parser import extract_text_from_document, parse_cv_to_structured_json
 from src.services.file_security import FileSecurityError, scan_uploaded_file
-from src.services.pdf_export import build_cv_pdf
+from src.services.pdf_export import apply_accepted_rewrites, build_cv_pdf
 
 router = APIRouter(prefix="/cvs", tags=["CV Management"])
 logger = logging.getLogger(__name__)
@@ -62,9 +75,11 @@ def _manual_cv_raw_text(payload: ManualCVCreate) -> str:
 
 
 CV_TEMPLATE_DOWNLOADS = {
-    "modern": ("cv-template-modern.pdf", "Mẫu CV Hiện Đại - Hai Cột"),
-    "classic": ("cv-template-classic-ats.pdf", "Mẫu CV ATS - Một Cột"),
-    "compact": ("cv-template-creative-tech.pdf", "Mẫu CV Creative Tech - Timeline"),
+    "modern": ("cv-template-modern.pdf", "Mẫu CV Modern Tech - Hai Cột"),
+    "classic": ("cv-template-classic-ats.pdf", "Mẫu CV Harvard ATS - Một Cột"),
+    "elegant": ("cv-template-topcv-emerald.pdf", "Mẫu CV TopCV Emerald - Doanh Nghiệp"),
+    "compact": ("cv-template-creative-tech.pdf", "Mẫu CV Compact - Tối Ưu 1 Trang"),
+    "creative": ("cv-template-creative-dark.pdf", "Mẫu CV Creative Dark - Timeline"),
 }
 
 
@@ -98,6 +113,7 @@ async def upload_cv(
     file: UploadFile = File(...),
     title: str = Form(default=""),
     use_llm: bool = Form(default=True),
+    parse_mode: Literal["configured", "auto"] = Form(default="configured"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> CVOut:
@@ -134,9 +150,11 @@ async def upload_cv(
             status_code=400,
         )
 
-    # Structured JSON Parsing via LLM/Fallback
+    # Match CV uses auto mode: parse locally first and escalate to the LLM only
+    # when the deterministic extraction is not structured enough.
+    parse_policy: bool | Literal["auto"] = "auto" if parse_mode == "auto" else use_llm
     try:
-        parsed_json = await parse_cv_to_structured_json(raw_text, use_llm=use_llm)
+        parsed_json = await parse_cv_to_structured_json(raw_text, use_llm=parse_policy)
     except ValueError as exc:
         raise pipeline_error_from_message(str(exc), "EXTRACTION_001", status_code=422) from exc
 
@@ -162,7 +180,11 @@ async def upload_cv(
             user_id=current_user.id,
             event_name="cv_parse",
             duration_ms=round((perf_counter() - started_at) * 1000),
-            metadata_json={"use_llm": use_llm, "file_type": file_ext},
+            metadata_json={
+                "use_llm": bool(parsed_json.get("agent_metadata", {}).get("llm_called")),
+                "llm_policy": parse_mode,
+                "file_type": file_ext,
+            },
         )
     )
     try:
@@ -187,10 +209,125 @@ async def list_user_cvs(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> list[CVOut]:
-    """Danh sách tất cả CV của người dùng hiện tại."""
-    stmt = select(CV).where(CV.user_id == current_user.id).order_by(CV.created_at.desc())
+    """Danh sách tất cả CV của người dùng hiện tại kèm trạng thái (CV gốc, Đã Match, Đã tối ưu) và sắp xếp theo lần sử dụng gần nhất."""
+    stmt = select(CV).where(CV.user_id == current_user.id)
     result = await db.execute(stmt)
-    return result.scalars().all()
+    cvs = list(result.scalars().all())
+    if not cvs:
+        return []
+
+    cv_ids = [cv.id for cv in cvs]
+
+    # 1. Lấy tất cả CVAnalysis của user
+    analyses_stmt = select(CVAnalysis).where(
+        CVAnalysis.user_id == current_user.id,
+        CVAnalysis.cv_id.in_(cv_ids),
+    )
+    analyses = (await db.scalars(analyses_stmt)).all()
+
+    # 2. Lấy tất cả MatchRun của user
+    matches_stmt = select(MatchRun).where(
+        MatchRun.user_id == current_user.id,
+        MatchRun.cv_id.in_(cv_ids),
+    )
+    matches = (await db.scalars(matches_stmt)).all()
+
+    # 3. Lấy snapshots và variants của user
+    snapshots_stmt = select(CVSnapshot).where(
+        CVSnapshot.user_id == current_user.id,
+        CVSnapshot.cv_id.in_(cv_ids),
+    )
+    snapshots = (await db.scalars(snapshots_stmt)).all()
+    snap_id_to_cv_id = {s.id: s.cv_id for s in snapshots}
+    snap_ids = list(snap_id_to_cv_id.keys())
+
+    variants_by_cv_id: dict[str, list] = {cid: [] for cid in cv_ids}
+    if snap_ids:
+        variants_stmt = select(CVVariant).where(
+            CVVariant.user_id == current_user.id,
+            CVVariant.source_cv_snapshot_id.in_(snap_ids),
+        )
+        variants = (await db.scalars(variants_stmt)).all()
+        for var in variants:
+            cid = snap_id_to_cv_id.get(var.source_cv_snapshot_id)
+            if cid:
+                variants_by_cv_id.setdefault(cid, []).append(var)
+
+    # 4. Lấy JobRecommendationRun của user
+    rec_runs_by_cv_id: dict[str, list] = {cid: [] for cid in cv_ids}
+    if snap_ids:
+        rec_stmt = select(JobRecommendationRun).where(
+            JobRecommendationRun.user_id == current_user.id,
+            JobRecommendationRun.cv_snapshot_id.in_(snap_ids),
+        )
+        rec_runs = (await db.scalars(rec_stmt)).all()
+        for r in rec_runs:
+            cid = snap_id_to_cv_id.get(r.cv_snapshot_id)
+            if cid:
+                rec_runs_by_cv_id.setdefault(cid, []).append(r)
+
+    # Nhóm analyses và matches theo cv_id
+    analyses_by_cv_id: dict[str, list] = {cid: [] for cid in cv_ids}
+    for a in analyses:
+        analyses_by_cv_id.setdefault(a.cv_id, []).append(a)
+
+    matches_by_cv_id: dict[str, list] = {cid: [] for cid in cv_ids}
+    for m in matches:
+        matches_by_cv_id.setdefault(m.cv_id, []).append(m)
+
+    enriched_cvs: list[CVOut] = []
+    for cv in cvs:
+        cv_analyses = analyses_by_cv_id.get(cv.id, [])
+        cv_matches = matches_by_cv_id.get(cv.id, [])
+        cv_variants = variants_by_cv_id.get(cv.id, [])
+        cv_rec_runs = rec_runs_by_cv_id.get(cv.id, [])
+
+        match_count = len(cv_matches) if cv_matches else len(cv_analyses)
+        has_variant = len(cv_variants) > 0
+        has_optimized_analysis = any(bool(a.optimized_suggestions_json) for a in cv_analyses)
+        is_title_optimized = any(k in (cv.title or "").lower() for k in ["tối ưu", "optimized", "variant"])
+
+        is_optimized = has_variant or has_optimized_analysis or is_title_optimized
+        if is_optimized:
+            status_type = "optimized"
+            status_label = "Đã tối ưu"
+        elif match_count > 0:
+            status_type = "matched"
+            status_label = "Đã Match"
+        else:
+            status_type = "raw"
+            status_label = "CV gốc"
+
+        # Tính thời điểm sử dụng gần nhất
+        timestamps = [cv.updated_at, cv.created_at]
+        timestamps.extend(a.created_at for a in cv_analyses if a.created_at)
+        timestamps.extend(m.created_at for m in cv_matches if m.created_at)
+        timestamps.extend(v.updated_at or v.created_at for v in cv_variants if (v.updated_at or v.created_at))
+        timestamps.extend(r.created_at for r in cv_rec_runs if r.created_at)
+        valid_timestamps = [t for t in timestamps if t is not None]
+        last_used_at = max(valid_timestamps) if valid_timestamps else cv.created_at
+
+        enriched_cvs.append(
+            CVOut(
+                id=cv.id,
+                user_id=cv.user_id,
+                title=cv.title,
+                file_path=cv.file_path,
+                raw_text=cv.raw_text,
+                parsed_json=cv.parsed_json,
+                created_at=cv.created_at,
+                updated_at=cv.updated_at,
+                status_type=status_type,
+                status_label=status_label,
+                match_count=match_count,
+                is_optimized=is_optimized,
+                last_used_at=last_used_at,
+            )
+        )
+
+    # Sắp xếp ưu tiên CV được sử dụng gần nhất lên đầu
+    enriched_cvs.sort(key=lambda item: item.last_used_at or item.created_at, reverse=True)
+    return enriched_cvs
 
 
 @router.post("/manual", response_model=CVOut, status_code=status.HTTP_201_CREATED)
@@ -275,6 +412,8 @@ async def export_cv_pdf(
         raise HTTPException(status_code=404, detail="Không tìm thấy CV để xuất PDF.")
 
     accepted_texts: list[str] = []
+    accepted_replacements: list[tuple[str, str]] = []
+    accepted_block_patches: list[dict[str, str]] = []
     if analysis_id:
         analysis_result = await db.execute(
             select(CVAnalysis).where(
@@ -283,7 +422,8 @@ async def export_cv_pdf(
                 CVAnalysis.user_id == current_user.id,
             )
         )
-        if not analysis_result.scalar_one_or_none():
+        analysis = analysis_result.scalar_one_or_none()
+        if not analysis:
             raise HTTPException(status_code=404, detail="Kết quả tối ưu không thuộc CV này.")
         decision_result = await db.execute(
             select(CVOptimizationDecision)
@@ -294,9 +434,39 @@ async def export_cv_pdf(
             )
             .order_by(CVOptimizationDecision.suggestion_index)
         )
-        accepted_texts = [item.final_text for item in decision_result.scalars().all() if item.final_text]
+        suggestions = list(analysis.optimized_suggestions_json or [])
+        for decision in decision_result.scalars().all():
+            if not decision.final_text:
+                continue
+            source = suggestions[decision.suggestion_index] if decision.suggestion_index < len(suggestions) else {}
+            original = str(source.get("original_text") or "").strip()
+            block_id = str(source.get("block_id") or "").strip()
+            section = str(source.get("section") or "").strip()
+            if block_id and original and section:
+                accepted_block_patches.append(
+                    {
+                        "block_id": block_id,
+                        "section": section,
+                        "original_text": original,
+                        "optimized_text": decision.final_text,
+                    }
+                )
+            elif original:
+                accepted_replacements.append((original, decision.final_text))
+            else:
+                accepted_texts.append(decision.final_text)
 
-    parsed = cv.parsed_json or {}
+    parsed = dict(cv.parsed_json or {})
+    if accepted_block_patches:
+        parsed, _, invalid_block_ids = apply_cv_block_patches(parsed, accepted_block_patches)
+        if invalid_block_ids:
+            logger.warning(
+                "Bỏ qua patch CV không hợp lệ khi export; không append nội dung: %s",
+                ", ".join(block_id or "<empty>" for block_id in invalid_block_ids),
+            )
+    if accepted_replacements:
+        parsed, unmatched_texts = apply_accepted_rewrites(parsed, accepted_replacements)
+        accepted_texts.extend(unmatched_texts)
     template_name = template or parsed.get("template_name") or "classic"
     if template_name not in {"classic", "modern", "compact"}:
         raise HTTPException(status_code=422, detail="Template CV không hợp lệ.")

@@ -35,6 +35,7 @@ Thumbs.db
 *.sqlite3
 postgres_data/
 data/raw/
+data/generated/
 
 # Chroma DB (using PostgreSQL instead)
 chroma_db/

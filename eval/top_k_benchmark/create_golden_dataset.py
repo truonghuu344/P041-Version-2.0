@@ -1,0 +1,942 @@
+"""Script to generate/validate the 52-case Golden Dataset for Top K Job Recommendation Benchmark."""
+
+from __future__ import annotations
+
+import json
+import os
+import sys
+from pathlib import Path
+from typing import Any
+
+if sys.platform == "win32":
+    sys.stdout.reconfigure(encoding="utf-8")
+
+ROOT = Path(__file__).resolve().parents[2]
+DATA_PATH = ROOT / "data" / "clean" / "jds_clean.json"
+OUTPUT_PATH = ROOT / "eval" / "top_k_benchmark" / "golden_dataset.json"
+
+
+def generate_golden_dataset() -> list[dict[str, Any]]:
+    """Build a comprehensive 52-case golden set covering diverse roles, seniorities, and domains."""
+    raw_jds = json.loads(DATA_PATH.read_text(encoding="utf-8")) if DATA_PATH.exists() else []
+    jd_ids = [j.get("job_id") for j in raw_jds if j.get("job_id")]
+
+    # Map JDs by domain / keywords for robust ground-truth tagging
+    jd_map = {j.get("job_id"): j for j in raw_jds}
+
+    cases: list[dict[str, Any]] = [
+        # =========================================================================
+        # 1. BACKEND ENGINEERS (12 cases)
+        # =========================================================================
+        {
+            "cv_id": "CV_BENCH_001",
+            "cv_title": "Junior Python & FastAPI Backend Developer",
+            "role_category": "Backend",
+            "experience_years": 1.5,
+            "skills": ["Python", "FastAPI", "PostgreSQL", "Docker", "REST API", "Git", "Redis"],
+            "location_preference": "Hồ Chí Minh",
+            "cv_summary": "Junior Backend Developer with 1.5 years experience building high-performance REST APIs using Python, FastAPI, PostgreSQL, and Docker containerization.",
+            "cv_raw_text": "KỸ SƯ BACKEND PYTHON\nKinh nghiệm: 1.5 năm\nKỹ năng: Python, FastAPI, PostgreSQL, Docker, Redis, RESTful API, Git\nDự án: Xây dựng hệ thống microservices API xử lý thanh toán, tối ưu query database PostgreSQL, deploy container với Docker.",
+            "relevant_jds": {
+                "JD-001": 3, "JD-008": 3, "JD-019": 2, "JD-023": 2, "JD-039": 2, "JD-045": 1
+            },
+            "ideal_top_3": ["JD-001", "JD-008", "JD-019"],
+            "mandatory_fail_jds": ["JD-015", "JD-028", "JD-055"],
+            "notes": "Strong Python/FastAPI junior, fails senior 5+ years or Java-specific requirements."
+        },
+        {
+            "cv_id": "CV_BENCH_002",
+            "cv_title": "Senior Java Spring Boot Engineer",
+            "role_category": "Backend",
+            "experience_years": 6.0,
+            "skills": ["Java", "Spring Boot", "Microservices", "Kafka", "PostgreSQL", "Kubernetes", "AWS", "JUnit"],
+            "location_preference": "Hà Nội",
+            "cv_summary": "Senior Java Backend Engineer with 6+ years experience architecting enterprise banking and fintech microservices using Spring Boot, Kafka, and Kubernetes.",
+            "cv_raw_text": "SENIOR JAVA ENGINEER\nKinh nghiệm: 6 năm\nKỹ năng chuyên môn: Java, Spring Boot, Spring Cloud, Kafka event streaming, PostgreSQL, Docker, Kubernetes, CI/CD\nKinh nghiệm: Lead đội ngũ 5 engineers phát triển core banking system xử lý 10,000 TPS.",
+            "relevant_jds": {
+                "JD-002": 3, "JD-015": 3, "JD-028": 3, "JD-042": 2, "JD-058": 2
+            },
+            "ideal_top_3": ["JD-015", "JD-028", "JD-002"],
+            "mandatory_fail_jds": ["JD-001", "JD-003", "JD-011"],
+            "notes": "Java Spring enterprise lead."
+        },
+        {
+            "cv_id": "CV_BENCH_003",
+            "cv_title": "Mid-level Node.js / NestJS Backend Developer",
+            "role_category": "Backend",
+            "experience_years": 3.0,
+            "skills": ["Node.js", "TypeScript", "NestJS", "MongoDB", "PostgreSQL", "Redis", "Docker", "GraphQL"],
+            "location_preference": "Hồ Chí Minh",
+            "cv_summary": "Backend Developer specializing in TypeScript, NestJS, scalable REST/GraphQL APIs, caching with Redis and containerization.",
+            "cv_raw_text": "BACKEND DEVELOPER (NODE.JS / NESTJS)\nKinh nghiệm: 3 năm\nKỹ năng: TypeScript, Node.js, NestJS, Express, PostgreSQL, MongoDB, Redis, Docker, GraphQL, Unit Testing\nDự án: Xây dựng nền tảng thương mại điện tử phục vụ 500k active users.",
+            "relevant_jds": {
+                "JD-004": 3, "JD-018": 3, "JD-024": 3, "JD-039": 2, "JD-061": 2
+            },
+            "ideal_top_3": ["JD-004", "JD-018", "JD-024"],
+            "mandatory_fail_jds": ["JD-002", "JD-015", "JD-070"],
+            "notes": "TypeScript backend engineer."
+        },
+        {
+            "cv_id": "CV_BENCH_004",
+            "cv_title": "Golang Backend & Distributed Systems Engineer",
+            "role_category": "Backend",
+            "experience_years": 4.0,
+            "skills": ["Golang", "gRPC", "Protobuf", "PostgreSQL", "Redis", "Kafka", "Docker", "Kubernetes"],
+            "location_preference": "Hồ Chí Minh",
+            "cv_summary": "Backend Engineer with 4 years building high-throughput microservices using Go, gRPC, distributed queues, and PostgreSQL.",
+            "cv_raw_text": "GOLANG BACKEND ENGINEER\n4 năm kinh nghiệm phát triển hệ thống backend phân tán với Go (Golang), gRPC, Protobuf, Kafka, Redis caching và Docker/K8s.",
+            "relevant_jds": {
+                "JD-008": 3, "JD-020": 3, "JD-035": 2, "JD-044": 2
+            },
+            "ideal_top_3": ["JD-008", "JD-020", "JD-035"],
+            "mandatory_fail_jds": ["JD-011", "JD-025"],
+            "notes": "Golang distributed services."
+        },
+        {
+            "cv_id": "CV_BENCH_005",
+            "cv_title": "PHP / Laravel Web Developer",
+            "role_category": "Backend",
+            "experience_years": 2.5,
+            "skills": ["PHP", "Laravel", "MySQL", "JavaScript", "HTML/CSS", "Git", "REST API"],
+            "location_preference": "Đà Nẵng",
+            "cv_summary": "Web Developer with 2.5 years experience in PHP, Laravel framework, MySQL database design and RESTful web services.",
+            "cv_raw_text": "LẬP TRÌNH VIÊN PHP / LARAVEL\nKinh nghiệm: 2.5 năm\nKỹ năng: PHP, Laravel, MySQL, REST API, JavaScript, Bootstrap, Git\nDự án: Web portal doanh nghiệp và CRM.",
+            "relevant_jds": {
+                "JD-012": 3, "JD-039": 3, "JD-054": 2
+            },
+            "ideal_top_3": ["JD-012", "JD-039", "JD-054"],
+            "mandatory_fail_jds": ["JD-015", "JD-020", "JD-033"],
+            "notes": "PHP specialist."
+        },
+        {
+            "cv_id": "CV_BENCH_006",
+            "cv_title": ".NET Core / C# Backend Engineer",
+            "role_category": "Backend",
+            "experience_years": 5.0,
+            "skills": ["C#", ".NET Core", "ASP.NET", "SQL Server", "Entity Framework", "Azure", "Docker"],
+            "location_preference": "Hà Nội",
+            "cv_summary": "Senior .NET Developer with 5 years building scalable web services on .NET Core, SQL Server, and Microsoft Azure Cloud.",
+            "cv_raw_text": "SENIOR .NET CORE DEVELOPER\n5 năm kinh nghiệm C#, ASP.NET Core, Entity Framework, SQL Server, Azure DevOps, CI/CD pipelines.",
+            "relevant_jds": {
+                "JD-016": 3, "JD-031": 3, "JD-062": 2
+            },
+            "ideal_top_3": ["JD-016", "JD-031", "JD-062"],
+            "mandatory_fail_jds": ["JD-001", "JD-008", "JD-018"],
+            "notes": ".NET Core enterprise stack."
+        },
+        {
+            "cv_id": "CV_BENCH_007",
+            "cv_title": "Python Data & Backend Developer Intern",
+            "role_category": "Backend",
+            "experience_years": 0.5,
+            "skills": ["Python", "FastAPI", "SQL", "Git", "Data Analysis", "Pandas"],
+            "location_preference": "Hồ Chí Minh",
+            "cv_summary": "Recent CS Graduate seeking Backend or Data Internship, proficient in Python, SQL, and building basic REST APIs.",
+            "cv_raw_text": "THỰC TẬP SINH BACKEND / PYTHON\nSinh viên năm cuối ĐH Bách Khoa. Nắm vững Python, FastAPI cơ bản, SQL, cấu trúc dữ liệu và giải thuật.",
+            "relevant_jds": {
+                "JD-001": 3, "JD-002": 3, "JD-039": 3
+            },
+            "ideal_top_3": ["JD-001", "JD-002", "JD-039"],
+            "mandatory_fail_jds": ["JD-015", "JD-028", "JD-062"],
+            "notes": "Internship level - must not match Senior roles."
+        },
+        {
+            "cv_id": "CV_BENCH_008",
+            "cv_title": "Senior Python Microservices Architect",
+            "role_category": "Backend",
+            "experience_years": 7.0,
+            "skills": ["Python", "FastAPI", "Django", "PostgreSQL", "Kafka", "Redis", "Docker", "Kubernetes", "AWS"],
+            "location_preference": "Hồ Chí Minh",
+            "cv_summary": "Lead Backend Architect with 7+ years designing high-scale distributed systems in Python, event-driven architectures with Kafka, and cloud infrastructure.",
+            "cv_raw_text": "LEAD PYTHON ARCHITECT\n7 năm kinh nghiệm thiết kế hệ thống phân tán chịu tải lớn bằng Python, FastAPI, Django, Kafka, Redis, K8s trên AWS.",
+            "relevant_jds": {
+                "JD-008": 3, "JD-019": 3, "JD-045": 3, "JD-001": 2
+            },
+            "ideal_top_3": ["JD-008", "JD-019", "JD-045"],
+            "mandatory_fail_jds": ["JD-011", "JD-025"],
+            "notes": "Senior/Lead Python."
+        },
+        {
+            "cv_id": "CV_BENCH_009",
+            "cv_title": "Ruby on Rails Web Developer",
+            "role_category": "Backend",
+            "experience_years": 3.0,
+            "skills": ["Ruby", "Ruby on Rails", "PostgreSQL", "Redis", "Sidekiq", "RSpec", "Docker"],
+            "location_preference": "Hồ Chí Minh",
+            "cv_summary": "Ruby on Rails developer with 3 years building web apps, background job processing with Sidekiq, and automated RSpec testing.",
+            "cv_raw_text": "RUBY ON RAILS DEVELOPER\n3 năm kinh nghiệm lập trình web Ruby on Rails, PostgreSQL, Redis, Sidekiq, Docker, RESTful APIs.",
+            "relevant_jds": {
+                "JD-039": 3, "JD-047": 3
+            },
+            "ideal_top_3": ["JD-039", "JD-047", "JD-004"],
+            "mandatory_fail_jds": ["JD-015", "JD-028"],
+            "notes": "Ruby on Rails niche."
+        },
+        {
+            "cv_id": "CV_BENCH_010",
+            "cv_title": "Backend API & Database Performance Engineer",
+            "role_category": "Backend",
+            "experience_years": 4.5,
+            "skills": ["PostgreSQL", "MySQL", "Python", "Go", "Redis", "Database Optimization", "Docker"],
+            "location_preference": "Hà Nội",
+            "cv_summary": "Backend specialist focused on database query optimization, indexing strategies, caching layers, and high-performance API design.",
+            "cv_raw_text": "DATABASE & BACKEND PERFORMANCE ENGINEER\n4.5 năm kinh nghiệm tối ưu hóa CSDL PostgreSQL/MySQL, thiết kế Redis cache clustering, viết backend bằng Python và Go.",
+            "relevant_jds": {
+                "JD-008": 3, "JD-019": 3, "JD-028": 2
+            },
+            "ideal_top_3": ["JD-008", "JD-019", "JD-028"],
+            "mandatory_fail_jds": ["JD-011", "JD-025"],
+            "notes": "Performance & DB focus."
+        },
+        {
+            "cv_id": "CV_BENCH_011",
+            "cv_title": "Junior Java Developer",
+            "role_category": "Backend",
+            "experience_years": 1.0,
+            "skills": ["Java", "Spring Boot", "MySQL", "REST API", "Git", "Maven"],
+            "location_preference": "Hồ Chí Minh",
+            "cv_summary": "Junior Java developer with 1 year experience developing Spring Boot microservices, writing unit tests with JUnit, and working with MySQL.",
+            "cv_raw_text": "JUNIOR JAVA DEVELOPER\n1 năm kinh nghiệm phát triển REST API với Java Spring Boot, MySQL, Hibernate, Maven, Git.",
+            "relevant_jds": {
+                "JD-002": 3, "JD-015": 2, "JD-039": 2
+            },
+            "ideal_top_3": ["JD-002", "JD-015", "JD-039"],
+            "mandatory_fail_jds": ["JD-028", "JD-062"],
+            "notes": "Junior Java."
+        },
+        {
+            "cv_id": "CV_BENCH_012",
+            "cv_title": "Scala / Akka Functional Backend Developer",
+            "role_category": "Backend",
+            "experience_years": 4.0,
+            "skills": ["Scala", "Akka", "Java", "Kafka", "PostgreSQL", "Docker", "Functional Programming"],
+            "location_preference": "Hồ Chí Minh",
+            "cv_summary": "Backend engineer specializing in functional programming, Scala, Akka actor model, and reactive stream architectures.",
+            "cv_raw_text": "SCALA / FUNCTIONAL BACKEND DEVELOPER\n4 năm kinh nghiệm Scala, Akka, Kafka, reactive architectures, Java interoperability.",
+            "relevant_jds": {
+                "JD-015": 2, "JD-028": 2, "JD-008": 2
+            },
+            "ideal_top_3": ["JD-015", "JD-028", "JD-008"],
+            "mandatory_fail_jds": ["JD-003", "JD-011"],
+            "notes": "Functional Scala/Java."
+        },
+
+        # =========================================================================
+        # 2. FRONTEND ENGINEERS (10 cases)
+        # =========================================================================
+        {
+            "cv_id": "CV_BENCH_013",
+            "cv_title": "Senior React & Next.js Frontend Architect",
+            "role_category": "Frontend",
+            "experience_years": 5.5,
+            "skills": ["React", "Next.js", "TypeScript", "TailwindCSS", "Redux", "GraphQL", "Web Performance", "Jest"],
+            "location_preference": "Hồ Chí Minh",
+            "cv_summary": "Lead Frontend Engineer with 5+ years building modern SPAs and SSR apps with React, Next.js, TypeScript, and state management.",
+            "cv_raw_text": "SENIOR FRONTEND DEVELOPER (REACT / NEXT.JS)\n5.5 năm kinh nghiệm phát triển giao diện web hiệu năng cao với React, Next.js (App Router), TypeScript, TailwindCSS, Jest testing.",
+            "relevant_jds": {
+                "JD-003": 3, "JD-011": 3, "JD-025": 3, "JD-040": 2, "JD-057": 2
+            },
+            "ideal_top_3": ["JD-003", "JD-011", "JD-025"],
+            "mandatory_fail_jds": ["JD-015", "JD-028", "JD-035"],
+            "notes": "React/Next.js senior."
+        },
+        {
+            "cv_id": "CV_BENCH_014",
+            "cv_title": "Mid-level Vue.js / Nuxt Developer",
+            "role_category": "Frontend",
+            "experience_years": 3.0,
+            "skills": ["Vue.js", "Nuxt.js", "JavaScript", "TypeScript", "Pinia", "CSS3", "REST API"],
+            "location_preference": "Hà Nội",
+            "cv_summary": "Frontend developer with 3 years building responsive web interfaces with Vue 3, Nuxt, Pinia, and modern CSS architectures.",
+            "cv_raw_text": "FRONTEND DEVELOPER (VUE.JS / NUXT)\n3 năm kinh nghiệm xây dựng ứng dụng web với Vue 3 Composition API, Nuxt.js, Pinia state management, SCSS, REST API.",
+            "relevant_jds": {
+                "JD-003": 2, "JD-011": 2, "JD-039": 2, "JD-050": 3
+            },
+            "ideal_top_3": ["JD-050", "JD-003", "JD-011"],
+            "mandatory_fail_jds": ["JD-015", "JD-020"],
+            "notes": "Vue.js stack."
+        },
+        {
+            "cv_id": "CV_BENCH_015",
+            "cv_title": "Junior Frontend Developer (React)",
+            "role_category": "Frontend",
+            "experience_years": 1.0,
+            "skills": ["React", "JavaScript", "HTML5", "CSS3", "Git", "Responsive Design"],
+            "location_preference": "Hồ Chí Minh",
+            "cv_summary": "Junior Frontend developer proficient in HTML, CSS, JavaScript, and React component-driven development.",
+            "cv_raw_text": "JUNIOR FRONTEND DEVELOPER\n1 năm kinh nghiệm làm việc với ReactJS, JavaScript ES6+, HTML5, CSS3, Flexbox/Grid, Git.",
+            "relevant_jds": {
+                "JD-003": 3, "JD-039": 3, "JD-011": 2
+            },
+            "ideal_top_3": ["JD-003", "JD-039", "JD-011"],
+            "mandatory_fail_jds": ["JD-025", "JD-015"],
+            "notes": "Junior React."
+        },
+        {
+            "cv_id": "CV_BENCH_016",
+            "cv_title": "Angular & TypeScript Enterprise Developer",
+            "role_category": "Frontend",
+            "experience_years": 4.0,
+            "skills": ["Angular", "TypeScript", "RxJS", "NgRx", "SCSS", "Karma/Jasmine", "REST API"],
+            "location_preference": "Đà Nẵng",
+            "cv_summary": "Frontend engineer with 4 years building complex enterprise dashboards and forms using Angular, RxJS, and NgRx.",
+            "cv_raw_text": "ANGULAR FRONTEND DEVELOPER\n4 năm kinh nghiệm phát triển Single Page Applications với Angular (v12-v17), TypeScript, RxJS, NgRx, SCSS, Karma unit tests.",
+            "relevant_jds": {
+                "JD-002": 3, "JD-027": 3, "JD-003": 2
+            },
+            "ideal_top_3": ["JD-002", "JD-027", "JD-003"],
+            "mandatory_fail_jds": ["JD-008", "JD-020"],
+            "notes": "Angular specialist."
+        },
+        {
+            "cv_id": "CV_BENCH_017",
+            "cv_title": "UI/UX Designer & Frontend Developer",
+            "role_category": "Frontend",
+            "experience_years": 3.0,
+            "skills": ["Figma", "UI/UX Design", "HTML/CSS", "JavaScript", "React", "Design Systems", "TailwindCSS"],
+            "location_preference": "Hồ Chí Minh",
+            "cv_summary": "Hybrid designer-developer bridging Figma wireframing/prototyping with clean React & TailwindCSS implementation.",
+            "cv_raw_text": "UI/UX DESIGNER & FRONTEND DEVELOPER\n3 năm kinh nghiệm thiết kế giao diện Figma, user research, design system và code trực tiếp bằng React, TailwindCSS.",
+            "relevant_jds": {
+                "JD-039": 3, "JD-003": 2, "JD-011": 2
+            },
+            "ideal_top_3": ["JD-039", "JD-003", "JD-011"],
+            "mandatory_fail_jds": ["JD-015", "JD-028"],
+            "notes": "UI/UX + Frontend hybrid."
+        },
+        {
+            "cv_id": "CV_BENCH_018",
+            "cv_title": "Web Performance & Core Web Vitals Specialist",
+            "role_category": "Frontend",
+            "experience_years": 4.5,
+            "skills": ["JavaScript", "TypeScript", "React", "Next.js", "Web Performance", "Lighthouse", "SEO", "PWA"],
+            "location_preference": "Hồ Chí Minh",
+            "cv_summary": "Frontend engineer specializing in web performance tuning, SSR caching, asset optimization, and Core Web Vitals.",
+            "cv_raw_text": "FRONTEND PERFORMANCE ENGINEER\n4.5 năm kinh nghiệm tối ưu tốc độ tải trang, Next.js SSR/SSG, bundle analyzer, SEO kỹ thuật và PWA.",
+            "relevant_jds": {
+                "JD-003": 3, "JD-011": 3, "JD-025": 3
+            },
+            "ideal_top_3": ["JD-011", "JD-025", "JD-003"],
+            "mandatory_fail_jds": ["JD-020", "JD-035"],
+            "notes": "Performance focus."
+        },
+        {
+            "cv_id": "CV_BENCH_019",
+            "cv_title": "Frontend Intern (HTML/CSS/JS)",
+            "role_category": "Frontend",
+            "experience_years": 0.0,
+            "skills": ["HTML", "CSS", "JavaScript", "Git", "Responsive Design"],
+            "location_preference": "Hà Nội",
+            "cv_summary": "Passionate IT student seeking Frontend Intern position, solid fundamentals in HTML5, CSS3, JavaScript DOM manipulation.",
+            "cv_raw_text": "THỰC TẬP SINH FRONTEND\nSinh viên năm 4 ngành CNTT. Có kiến thức nền tảng tốt về HTML, CSS, JavaScript, Git, ham học hỏi.",
+            "relevant_jds": {
+                "JD-039": 3, "JD-003": 2, "JD-002": 2
+            },
+            "ideal_top_3": ["JD-039", "JD-003", "JD-002"],
+            "mandatory_fail_jds": ["JD-025", "JD-015", "JD-028"],
+            "notes": "Internship."
+        },
+        {
+            "cv_id": "CV_BENCH_020",
+            "cv_title": "React Micro-frontends & State Management Engineer",
+            "role_category": "Frontend",
+            "experience_years": 4.0,
+            "skills": ["React", "TypeScript", "Module Federation", "Zustand", "Webpack", "TailwindCSS", "Jest"],
+            "location_preference": "Hồ Chí Minh",
+            "cv_summary": "Frontend engineer experienced in micro-frontends architecture with Module Federation, TypeScript, and modern state tools.",
+            "cv_raw_text": "FRONTEND ARCHITECT (REACT / MICRO-FRONTENDS)\n4 năm kinh nghiệm xây dựng kiến trúc Micro-frontends, Module Federation, TypeScript, Webpack, Zustand.",
+            "relevant_jds": {
+                "JD-003": 3, "JD-011": 3, "JD-025": 3
+            },
+            "ideal_top_3": ["JD-003", "JD-025", "JD-011"],
+            "mandatory_fail_jds": ["JD-015", "JD-035"],
+            "notes": "Micro-frontends."
+        },
+        {
+            "cv_id": "CV_BENCH_021",
+            "cv_title": "Creative 3D / WebGL & Canvas Developer",
+            "role_category": "Frontend",
+            "experience_years": 3.5,
+            "skills": ["Three.js", "WebGL", "JavaScript", "React", "Canvas", "GSAP", "CSS Animation"],
+            "location_preference": "Hồ Chí Minh",
+            "cv_summary": "Creative frontend engineer building interactive 3D web experiences, WebGL shaders, Canvas simulations, and smooth animations.",
+            "cv_raw_text": "CREATIVE FRONTEND & WEBGL DEVELOPER\n3.5 năm kinh nghiệm lập trình hiệu ứng 3D web với Three.js, WebGL, Canvas 2D, GSAP animations và React.",
+            "relevant_jds": {
+                "JD-003": 2, "JD-011": 2, "JD-039": 2
+            },
+            "ideal_top_3": ["JD-003", "JD-011", "JD-039"],
+            "mandatory_fail_jds": ["JD-028", "JD-015"],
+            "notes": "Creative web tech."
+        },
+        {
+            "cv_id": "CV_BENCH_022",
+            "cv_title": "Accessible & Design System Frontend Engineer",
+            "role_category": "Frontend",
+            "experience_years": 3.0,
+            "skills": ["React", "TypeScript", "Storybook", "WCAG/a11y", "TailwindCSS", "CSS Modules"],
+            "location_preference": "Hà Nội",
+            "cv_summary": "Frontend developer dedicated to web accessibility (WCAG 2.1 AA), reusable component libraries, and Storybook documentation.",
+            "cv_raw_text": "FRONTEND DESIGN SYSTEM & ACCESSIBILITY ENGINEER\n3 năm kinh nghiệm xây dựng thư viện component chuẩn Accessibility (a11y), Storybook, React, TypeScript.",
+            "relevant_jds": {
+                "JD-003": 3, "JD-011": 3, "JD-025": 2
+            },
+            "ideal_top_3": ["JD-003", "JD-011", "JD-025"],
+            "mandatory_fail_jds": ["JD-020", "JD-035"],
+            "notes": "Design systems & a11y."
+        },
+
+        # =========================================================================
+        # 3. FULLSTACK ENGINEERS (8 cases)
+        # =========================================================================
+        {
+            "cv_id": "CV_BENCH_023",
+            "cv_title": "Fullstack JavaScript Developer (React + Node.js)",
+            "role_category": "Fullstack",
+            "experience_years": 3.5,
+            "skills": ["React", "Node.js", "TypeScript", "Express", "PostgreSQL", "Docker", "REST API", "TailwindCSS"],
+            "location_preference": "Hồ Chí Minh",
+            "cv_summary": "Fullstack developer with 3.5 years delivering end-to-end web products with React, Node.js, TypeScript, and SQL databases.",
+            "cv_raw_text": "FULLSTACK JAVASCRIPT DEVELOPER\n3.5 năm kinh nghiệm phát triển fullstack React frontend + Node.js backend, PostgreSQL database, Docker containerization.",
+            "relevant_jds": {
+                "JD-004": 3, "JD-018": 3, "JD-039": 3, "JD-003": 2, "JD-008": 2
+            },
+            "ideal_top_3": ["JD-004", "JD-018", "JD-039"],
+            "mandatory_fail_jds": ["JD-015", "JD-028"],
+            "notes": "Fullstack JS."
+        },
+        {
+            "cv_id": "CV_BENCH_024",
+            "cv_title": "Senior Python & React Fullstack Engineer",
+            "role_category": "Fullstack",
+            "experience_years": 5.0,
+            "skills": ["Python", "FastAPI", "React", "TypeScript", "PostgreSQL", "Docker", "AWS", "Redis"],
+            "location_preference": "Hồ Chí Minh",
+            "cv_summary": "Senior fullstack engineer with 5 years building scalable Python backends (FastAPI) and rich React frontend interfaces.",
+            "cv_raw_text": "SENIOR FULLSTACK ENGINEER (PYTHON + REACT)\n5 năm kinh nghiệm: Backend Python/FastAPI + Frontend React/TypeScript, PostgreSQL, Redis, AWS deployment.",
+            "relevant_jds": {
+                "JD-001": 3, "JD-008": 3, "JD-003": 3, "JD-018": 2, "JD-045": 2
+            },
+            "ideal_top_3": ["JD-008", "JD-001", "JD-003"],
+            "mandatory_fail_jds": ["JD-015", "JD-028"],
+            "notes": "Senior Python+React."
+        },
+        {
+            "cv_id": "CV_BENCH_025",
+            "cv_title": "Fullstack Intern (MERN Stack)",
+            "role_category": "Fullstack",
+            "experience_years": 0.5,
+            "skills": ["MongoDB", "Express", "React", "Node.js", "JavaScript", "Git"],
+            "location_preference": "Hồ Chí Minh",
+            "cv_summary": "Final year student with hands-on capstone project building web apps using MongoDB, Express, React, and Node.js.",
+            "cv_raw_text": "THỰC TẬP SINH FULLSTACK MERN\nSinh viên năm cuối ngành Kỹ thuật Phần mềm. Đã thực hiện đồ án tốt nghiệp bằng ReactJS, Node.js, Express, MongoDB.",
+            "relevant_jds": {
+                "JD-039": 3, "JD-004": 2, "JD-003": 2
+            },
+            "ideal_top_3": ["JD-039", "JD-004", "JD-003"],
+            "mandatory_fail_jds": ["JD-015", "JD-025", "JD-028"],
+            "notes": "Fullstack intern."
+        },
+        {
+            "cv_id": "CV_BENCH_026",
+            "cv_title": "Fullstack .NET & Angular Developer",
+            "role_category": "Fullstack",
+            "experience_years": 4.0,
+            "skills": ["C#", ".NET Core", "Angular", "TypeScript", "SQL Server", "Azure", "Entity Framework"],
+            "location_preference": "Hà Nội",
+            "cv_summary": "Fullstack engineer building enterprise portals with ASP.NET Core backend and Angular frontend.",
+            "cv_raw_text": "FULLSTACK .NET & ANGULAR DEVELOPER\n4 năm kinh nghiệm phát triển ứng dụng doanh nghiệp với C# ASP.NET Core, Angular, SQL Server, Azure.",
+            "relevant_jds": {
+                "JD-002": 3, "JD-016": 3, "JD-031": 3
+            },
+            "ideal_top_3": ["JD-016", "JD-002", "JD-031"],
+            "mandatory_fail_jds": ["JD-001", "JD-008"],
+            "notes": ".NET & Angular."
+        },
+        {
+            "cv_id": "CV_BENCH_027",
+            "cv_title": "Java Spring Boot & React Fullstack Engineer",
+            "role_category": "Fullstack",
+            "experience_years": 4.5,
+            "skills": ["Java", "Spring Boot", "React", "TypeScript", "PostgreSQL", "Docker", "Kafka"],
+            "location_preference": "Hồ Chí Minh",
+            "cv_summary": "Fullstack developer with 4.5 years developing Spring Boot backends and interactive React dashboards.",
+            "cv_raw_text": "FULLSTACK JAVA & REACT DEVELOPER\n4.5 năm kinh nghiệm Java Spring Boot, React, TypeScript, PostgreSQL, Docker, Kafka microservices.",
+            "relevant_jds": {
+                "JD-002": 3, "JD-015": 3, "JD-003": 2, "JD-028": 2
+            },
+            "ideal_top_3": ["JD-002", "JD-015", "JD-003"],
+            "mandatory_fail_jds": ["JD-020", "JD-035"],
+            "notes": "Java + React fullstack."
+        },
+        {
+            "cv_id": "CV_BENCH_028",
+            "cv_title": "Fullstack Next.js & Serverless Developer",
+            "role_category": "Fullstack",
+            "experience_years": 3.0,
+            "skills": ["Next.js", "TypeScript", "Node.js", "Prisma", "PostgreSQL", "TailwindCSS", "AWS Lambda"],
+            "location_preference": "Remote",
+            "cv_summary": "Fullstack developer crafting full-stack SaaS apps with Next.js App Router, Prisma ORM, and Serverless deployment.",
+            "cv_raw_text": "FULLSTACK NEXT.JS & SERVERLESS DEVELOPER\n3 năm kinh nghiệm Next.js, TypeScript, Node.js, Prisma ORM, PostgreSQL, Serverless, TailwindCSS.",
+            "relevant_jds": {
+                "JD-003": 3, "JD-004": 3, "JD-011": 2, "JD-018": 2
+            },
+            "ideal_top_3": ["JD-003", "JD-004", "JD-018"],
+            "mandatory_fail_jds": ["JD-015", "JD-028"],
+            "notes": "Serverless Next.js."
+        },
+        {
+            "cv_id": "CV_BENCH_029",
+            "cv_title": "Lead Fullstack Cloud Architect",
+            "role_category": "Fullstack",
+            "experience_years": 8.0,
+            "skills": ["Node.js", "Python", "React", "AWS", "Kubernetes", "PostgreSQL", "Microservices", "System Design"],
+            "location_preference": "Hồ Chí Minh",
+            "cv_summary": "Principal / Lead Fullstack Engineer with 8 years leading engineering teams, architecting cloud-native web systems, and mentoring developers.",
+            "cv_raw_text": "TECH LEAD / FULLSTACK ARCHITECT\n8 năm kinh nghiệm lead đội ngũ kỹ thuật, thiết kế hệ thống cloud-native trên AWS, Node.js, Python, React, K8s.",
+            "relevant_jds": {
+                "JD-008": 3, "JD-018": 3, "JD-025": 3, "JD-045": 3
+            },
+            "ideal_top_3": ["JD-008", "JD-018", "JD-025"],
+            "mandatory_fail_jds": ["JD-039"],
+            "notes": "Staff/Lead level."
+        },
+        {
+            "cv_id": "CV_BENCH_030",
+            "cv_title": "Fullstack PHP / Laravel & Vue.js Developer",
+            "role_category": "Fullstack",
+            "experience_years": 3.0,
+            "skills": ["PHP", "Laravel", "Vue.js", "MySQL", "JavaScript", "Bootstrap", "Git"],
+            "location_preference": "Đà Nẵng",
+            "cv_summary": "Fullstack developer with 3 years building web applications with Laravel API backend and Vue.js interactive frontend.",
+            "cv_raw_text": "FULLSTACK PHP LARAVEL & VUE.JS\n3 năm kinh nghiệm phát triển ứng dụng web PHP Laravel + Vue.js, MySQL database, REST API, Git.",
+            "relevant_jds": {
+                "JD-012": 3, "JD-039": 3, "JD-054": 2
+            },
+            "ideal_top_3": ["JD-012", "JD-039", "JD-054"],
+            "mandatory_fail_jds": ["JD-015", "JD-028"],
+            "notes": "Laravel + Vue."
+        },
+
+        # =========================================================================
+        # 4. DEVOPS / CLOUD / SRE (8 cases)
+        # =========================================================================
+        {
+            "cv_id": "CV_BENCH_031",
+            "cv_title": "Senior DevOps & Cloud Infrastructure Engineer",
+            "role_category": "DevOps",
+            "experience_years": 5.0,
+            "skills": ["AWS", "Kubernetes", "Docker", "Terraform", "CI/CD", "Linux", "Prometheus", "Grafana", "Bash"],
+            "location_preference": "Hà Nội",
+            "cv_summary": "DevOps engineer with 5 years managing production Kubernetes clusters on AWS, automated Terraform provisioning, and GitOps pipelines.",
+            "cv_raw_text": "SENIOR DEVOPS ENGINEER (AWS / KUBERNETES)\n5 năm kinh nghiệm vận hành hạ tầng đám mây AWS, Kubernetes (EKS), Terraform IaC, CI/CD GitLab/GitHub Actions, Prometheus/Grafana monitoring.",
+            "relevant_jds": {
+                "JD-005": 3, "JD-017": 3, "JD-033": 3, "JD-039": 2, "JD-060": 2
+            },
+            "ideal_top_3": ["JD-005", "JD-017", "JD-033"],
+            "mandatory_fail_jds": ["JD-003", "JD-011", "JD-012"],
+            "notes": "Senior DevOps AWS/K8s."
+        },
+        {
+            "cv_id": "CV_BENCH_032",
+            "cv_title": "Site Reliability Engineer (SRE)",
+            "role_category": "DevOps",
+            "experience_years": 4.0,
+            "skills": ["Linux", "Kubernetes", "Go", "Python", "Prometheus", "ELK", "Chaos Engineering", "Incident Management"],
+            "location_preference": "Hồ Chí Minh",
+            "cv_summary": "SRE specializing in 99.99% uptime systems, automated runbooks in Python/Go, observability with Prometheus/ELK, and SLO tracking.",
+            "cv_raw_text": "SITE RELIABILITY ENGINEER (SRE)\n4 năm kinh nghiệm tối ưu độ sẵn sàng hệ thống (SLO/SLA), giám sát hạ tầng với Prometheus, Grafana, ELK, tự động hóa bằng Python/Bash.",
+            "relevant_jds": {
+                "JD-005": 3, "JD-017": 3, "JD-033": 3
+            },
+            "ideal_top_3": ["JD-005", "JD-017", "JD-033"],
+            "mandatory_fail_jds": ["JD-003", "JD-012"],
+            "notes": "SRE focus."
+        },
+        {
+            "cv_id": "CV_BENCH_033",
+            "cv_title": "Junior DevOps / Cloud Intern",
+            "role_category": "DevOps",
+            "experience_years": 0.5,
+            "skills": ["Linux", "Docker", "Bash", "Git", "CI/CD", "AWS Basics"],
+            "location_preference": "Hồ Chí Minh",
+            "cv_summary": "Recent graduate with strong Linux skills, Docker containerization knowledge, and basic CI/CD pipeline automation.",
+            "cv_raw_text": "THỰC TẬP SINH DEVOPS / CLOUD\nSinh viên năm cuối ngành Mạng Máy Tính & Viễn Thông. Nắm vững Linux OS, Bash script, Docker, Git, kiến thức cơ bản về AWS.",
+            "relevant_jds": {
+                "JD-039": 3, "JD-005": 2, "JD-017": 2
+            },
+            "ideal_top_3": ["JD-039", "JD-005", "JD-017"],
+            "mandatory_fail_jds": ["JD-033", "JD-015", "JD-028"],
+            "notes": "DevOps Intern."
+        },
+        {
+            "cv_id": "CV_BENCH_034",
+            "cv_title": "Kubernetes & Platform Engineer",
+            "role_category": "DevOps",
+            "experience_years": 4.5,
+            "skills": ["Kubernetes", "Helm", "ArgoCD", "Docker", "Terraform", "Go", "GCP", "Linux"],
+            "location_preference": "Hồ Chí Minh",
+            "cv_summary": "Platform engineer building internal developer platforms (IDP), GitOps with ArgoCD, and Kubernetes cluster management on GCP.",
+            "cv_raw_text": "PLATFORM ENGINEER (KUBERNETES & GITOPS)\n4.5 năm kinh nghiệm xây dựng Internal Developer Platform, ArgoCD GitOps, Helm charts, GCP GKE.",
+            "relevant_jds": {
+                "JD-005": 3, "JD-017": 3, "JD-033": 3
+            },
+            "ideal_top_3": ["JD-005", "JD-017", "JD-033"],
+            "mandatory_fail_jds": ["JD-003", "JD-011"],
+            "notes": "K8s platform specialist."
+        },
+        {
+            "cv_id": "CV_BENCH_035",
+            "cv_title": "DevSecOps & Cloud Security Engineer",
+            "role_category": "DevOps",
+            "experience_years": 4.0,
+            "skills": ["Security", "DevSecOps", "Docker", "Kubernetes", "SonarQube", "Trivy", "AWS", "CI/CD"],
+            "location_preference": "Hà Nội",
+            "cv_summary": "Security-focused DevOps engineer embedding SAST/DAST scanning, container vulnerability management, and IAM policies into CI/CD.",
+            "cv_raw_text": "DEVSECOPS / CLOUD SECURITY ENGINEER\n4 năm kinh nghiệm tích hợp bảo mật tự động vào pipeline CI/CD: SonarQube, Trivy scan, AWS IAM, K8s security policies.",
+            "relevant_jds": {
+                "JD-005": 3, "JD-017": 3, "JD-033": 2
+            },
+            "ideal_top_3": ["JD-005", "JD-017", "JD-033"],
+            "mandatory_fail_jds": ["JD-003", "JD-012"],
+            "notes": "DevSecOps."
+        },
+        {
+            "cv_id": "CV_BENCH_036",
+            "cv_title": "Azure Cloud Solutions Architect",
+            "role_category": "DevOps",
+            "experience_years": 6.0,
+            "skills": ["Azure", "Terraform", "Kubernetes", "Azure DevOps", "PowerShell", "ARM Templates", "Linux"],
+            "location_preference": "Hà Nội",
+            "cv_summary": "Senior Cloud Engineer with 6 years designing enterprise Microsoft Azure infrastructure, AKS clusters, and Azure DevOps CI/CD.",
+            "cv_raw_text": "SENIOR AZURE CLOUD ARCHITECT\n6 năm kinh nghiệm thiết kế kiến trúc hạ tầng Microsoft Azure, AKS, Terraform IaC, Azure DevOps pipelines, PowerShell.",
+            "relevant_jds": {
+                "JD-005": 3, "JD-016": 2, "JD-031": 2, "JD-017": 2
+            },
+            "ideal_top_3": ["JD-005", "JD-016", "JD-017"],
+            "mandatory_fail_jds": ["JD-001", "JD-011"],
+            "notes": "Azure cloud specialist."
+        },
+        {
+            "cv_id": "CV_BENCH_037",
+            "cv_title": "CI/CD & Automation Build Engineer",
+            "role_category": "DevOps",
+            "experience_years": 3.0,
+            "skills": ["Jenkins", "GitHub Actions", "GitLab CI", "Docker", "Bash", "Python", "Linux"],
+            "location_preference": "Hồ Chí Minh",
+            "cv_summary": "DevOps engineer specializing in building fast, reliable multi-stage build pipelines with Jenkins, GitHub Actions, and container caching.",
+            "cv_raw_text": "CI/CD & AUTOMATION BUILD ENGINEER\n3 năm kinh nghiệm xây dựng pipeline tự động hóa build/test/deploy với Jenkins, GitHub Actions, Docker, Bash scripting.",
+            "relevant_jds": {
+                "JD-005": 3, "JD-017": 3, "JD-039": 2
+            },
+            "ideal_top_3": ["JD-005", "JD-017", "JD-039"],
+            "mandatory_fail_jds": ["JD-003", "JD-015"],
+            "notes": "CI/CD automation."
+        },
+        {
+            "cv_id": "CV_BENCH_038",
+            "cv_title": "Linux Systems & Network Administrator",
+            "role_category": "DevOps",
+            "experience_years": 4.0,
+            "skills": ["Linux", "Ubuntu/CentOS", "Nginx", "DNS", "Firewall", "Bash", "Docker", "Monitoring"],
+            "location_preference": "Hồ Chí Minh",
+            "cv_summary": "System Administrator with 4 years managing on-premise and VPS Linux servers, Nginx reverse proxies, SSL/TLS, and network security.",
+            "cv_raw_text": "QUẢN TRỊ HỆ THỐNG LINUX & MẠNG\n4 năm kinh nghiệm quản trị server Linux (CentOS, Ubuntu), Nginx, bảo mật mạng, tường lửa, Docker.",
+            "relevant_jds": {
+                "JD-005": 2, "JD-039": 3, "JD-017": 2
+            },
+            "ideal_top_3": ["JD-039", "JD-005", "JD-017"],
+            "mandatory_fail_jds": ["JD-003", "JD-011"],
+            "notes": "SysAdmin to DevOps."
+        },
+
+        # =========================================================================
+        # 5. DATA / AI / ML (8 cases)
+        # =========================================================================
+        {
+            "cv_id": "CV_BENCH_039",
+            "cv_title": "Senior Machine Learning & NLP Engineer",
+            "role_category": "Data/AI",
+            "experience_years": 4.5,
+            "skills": ["Python", "PyTorch", "Transformers", "NLP", "LLM", "HuggingFace", "Docker", "FastAPI"],
+            "location_preference": "Hồ Chí Minh",
+            "cv_summary": "AI Engineer specializing in NLP, Large Language Models fine-tuning (LoRA), RAG architectures, and deploying inference APIs with FastAPI.",
+            "cv_raw_text": "SENIOR MACHINE LEARNING & NLP ENGINEER\n4.5 năm kinh nghiệm AI/NLP: PyTorch, Transformers, Large Language Models (LLM), RAG pipeline, Vector DB, FastAPI inference service.",
+            "relevant_jds": {
+                "JD-001": 3, "JD-006": 3, "JD-021": 3, "JD-037": 2, "JD-053": 2
+            },
+            "ideal_top_3": ["JD-006", "JD-021", "JD-001"],
+            "mandatory_fail_jds": ["JD-015", "JD-003", "JD-012"],
+            "notes": "AI/LLM/NLP specialist."
+        },
+        {
+            "cv_id": "CV_BENCH_040",
+            "cv_title": "Data Engineer (Spark + Airflow + BigQuery)",
+            "role_category": "Data/AI",
+            "experience_years": 3.5,
+            "skills": ["Python", "PySpark", "Apache Spark", "Airflow", "SQL", "BigQuery", "Data Pipeline", "Docker"],
+            "location_preference": "Hà Nội",
+            "cv_summary": "Data Engineer building robust batch and streaming ETL pipelines with Apache Spark, Airflow DAGs, and Google BigQuery data warehouse.",
+            "cv_raw_text": "DATA ENGINEER (ETL / SPARK / AIRFLOW)\n3.5 năm kinh nghiệm xây dựng data pipeline với PySpark, Apache Airflow, SQL nâng cao, Google BigQuery, tối ưu data lake.",
+            "relevant_jds": {
+                "JD-006": 3, "JD-022": 3, "JD-038": 2, "JD-008": 2
+            },
+            "ideal_top_3": ["JD-006", "JD-022", "JD-038"],
+            "mandatory_fail_jds": ["JD-003", "JD-011"],
+            "notes": "Data engineering."
+        },
+        {
+            "cv_id": "CV_BENCH_041",
+            "cv_title": "Computer Vision Engineer",
+            "role_category": "Data/AI",
+            "experience_years": 3.0,
+            "skills": ["Python", "OpenCV", "PyTorch", "YOLO", "TensorFlow", "Image Processing", "Docker"],
+            "location_preference": "Hồ Chí Minh",
+            "cv_summary": "Computer Vision engineer building real-time object detection, face recognition, and video analytics with YOLO and PyTorch.",
+            "cv_raw_text": "KỸ SƯ COMPUTER VISION & IMAGE PROCESSING\n3 năm kinh nghiệm xử lý ảnh và thị giác máy tính: OpenCV, PyTorch, YOLOv8 object detection, model quantization.",
+            "relevant_jds": {
+                "JD-001": 3, "JD-006": 3, "JD-021": 3
+            },
+            "ideal_top_3": ["JD-006", "JD-021", "JD-001"],
+            "mandatory_fail_jds": ["JD-015", "JD-012"],
+            "notes": "Computer vision."
+        },
+        {
+            "cv_id": "CV_BENCH_042",
+            "cv_title": "Data Analyst & Business Intelligence (BI)",
+            "role_category": "Data/AI",
+            "experience_years": 2.5,
+            "skills": ["SQL", "Power BI", "Python", "Tableau", "Data Visualization", "Excel", "Statistics"],
+            "location_preference": "Hồ Chí Minh",
+            "cv_summary": "Data Analyst with 2.5 years experience querying relational databases, building Power BI executive dashboards, and deriving business insights.",
+            "cv_raw_text": "DATA ANALYST & BUSINESS INTELLIGENCE\n2.5 năm kinh nghiệm phân tích dữ liệu, viết câu lệnh SQL phức tạp, thiết kế dashboard Power BI/Tableau, phân tích số liệu kinh doanh.",
+            "relevant_jds": {
+                "JD-006": 2, "JD-022": 2, "JD-039": 2
+            },
+            "ideal_top_3": ["JD-006", "JD-022", "JD-039"],
+            "mandatory_fail_jds": ["JD-015", "JD-033"],
+            "notes": "BI & Analytics."
+        },
+        {
+            "cv_id": "CV_BENCH_043",
+            "cv_title": "Junior AI / Data Science Intern",
+            "role_category": "Data/AI",
+            "experience_years": 0.5,
+            "skills": ["Python", "Pandas", "Scikit-Learn", "SQL", "Machine Learning", "Jupyter"],
+            "location_preference": "Hà Nội",
+            "cv_summary": "Undergraduate student in Data Science seeking internship, solid foundation in Python, data cleaning with Pandas, and classic ML algorithms.",
+            "cv_raw_text": "THỰC TẬP SINH DATA SCIENCE / AI\nSinh viên năm 4 ngành Khoa học Dữ liệu. Nắm vững Python, Pandas, Scikit-Learn, SQL, thống kê ứng dụng.",
+            "relevant_jds": {
+                "JD-001": 3, "JD-006": 2, "JD-039": 2
+            },
+            "ideal_top_3": ["JD-001", "JD-006", "JD-039"],
+            "mandatory_fail_jds": ["JD-028", "JD-062"],
+            "notes": "AI intern."
+        },
+        {
+            "cv_id": "CV_BENCH_044",
+            "cv_title": "MLOps & AI Infrastructure Engineer",
+            "role_category": "Data/AI",
+            "experience_years": 4.0,
+            "skills": ["Python", "MLflow", "Docker", "Kubernetes", "Kubeflow", "AWS Sagemaker", "CI/CD"],
+            "location_preference": "Hồ Chí Minh",
+            "cv_summary": "MLOps engineer bridging data science models and production serving pipelines with MLflow, Kubeflow, and automated model tracking.",
+            "cv_raw_text": "MLOPS & AI DEPLOYMENT ENGINEER\n4 năm kinh nghiệm triển khai mô hình ML vào production: MLflow, Kubeflow, Docker/K8s, CI/CD for ML, AWS Sagemaker.",
+            "relevant_jds": {
+                "JD-006": 3, "JD-005": 3, "JD-021": 2
+            },
+            "ideal_top_3": ["JD-006", "JD-005", "JD-021"],
+            "mandatory_fail_jds": ["JD-003", "JD-011"],
+            "notes": "MLOps."
+        },
+        {
+            "cv_id": "CV_BENCH_045",
+            "cv_title": "Generative AI & LLM Application Developer",
+            "role_category": "Data/AI",
+            "experience_years": 3.0,
+            "skills": ["Python", "LangChain", "OpenAI API", "Gemini API", "FastAPI", "Vector Database", "RAG"],
+            "location_preference": "Remote",
+            "cv_summary": "AI application developer building production chatbots, agentic workflows, and semantic search systems with LangChain and Vector DBs.",
+            "cv_raw_text": "KỸ SƯ ỨNG DỤNG GENERATIVE AI & RAG\n3 năm kinh nghiệm phát triển giải pháp GenAI, RAG, tích hợp Gemini/OpenAI API, LangChain, Qdrant/Chroma vector DB, FastAPI.",
+            "relevant_jds": {
+                "JD-001": 3, "JD-006": 3, "JD-008": 2
+            },
+            "ideal_top_3": ["JD-001", "JD-006", "JD-008"],
+            "mandatory_fail_jds": ["JD-015", "JD-028"],
+            "notes": "GenAI & LLM apps."
+        },
+        {
+            "cv_id": "CV_BENCH_046",
+            "cv_title": "Quantitative Data Analyst & Financial Modeling",
+            "role_category": "Data/AI",
+            "experience_years": 3.5,
+            "skills": ["Python", "R", "SQL", "Statistics", "Time Series", "Risk Modeling", "Tableau"],
+            "location_preference": "Hồ Chí Minh",
+            "cv_summary": "Data analyst with 3.5 years in fintech, forecasting time-series metrics, statistical modeling, and financial risk analysis.",
+            "cv_raw_text": "CHUYÊN VIÊN PHÂN TÍCH DỮ LIỆU TÀI CHÍNH\n3.5 năm kinh nghiệm phân tích định lượng (Quantitative Analysis), Python, R, SQL, mô hình chuỗi thời gian, báo cáo rủi ro.",
+            "relevant_jds": {
+                "JD-006": 3, "JD-022": 2
+            },
+            "ideal_top_3": ["JD-006", "JD-022", "JD-001"],
+            "mandatory_fail_jds": ["JD-003", "JD-015"],
+            "notes": "Fintech analytics."
+        },
+
+        # =========================================================================
+        # 6. MOBILE DEVELOPERS & QA (6 cases)
+        # =========================================================================
+        {
+            "cv_id": "CV_BENCH_047",
+            "cv_title": "Senior Flutter / Dart Mobile Developer",
+            "role_category": "Mobile",
+            "experience_years": 4.5,
+            "skills": ["Flutter", "Dart", "iOS", "Android", "REST API", "Bloc", "Firebase", "App Store/Play Store"],
+            "location_preference": "Hồ Chí Minh",
+            "cv_summary": "Senior mobile engineer with 4.5 years building cross-platform apps in Flutter, Bloc state management, and native plugin bridges.",
+            "cv_raw_text": "SENIOR FLUTTER MOBILE DEVELOPER\n4.5 năm kinh nghiệm phát triển ứng dụng di động đa nền tảng với Flutter & Dart, Bloc pattern, Firebase, CI/CD publish App Store & Google Play.",
+            "relevant_jds": {
+                "JD-007": 3, "JD-023": 3, "JD-039": 2
+            },
+            "ideal_top_3": ["JD-007", "JD-023", "JD-039"],
+            "mandatory_fail_jds": ["JD-015", "JD-028"],
+            "notes": "Flutter mobile."
+        },
+        {
+            "cv_id": "CV_BENCH_048",
+            "cv_title": "React Native Mobile Engineer",
+            "role_category": "Mobile",
+            "experience_years": 3.0,
+            "skills": ["React Native", "JavaScript", "TypeScript", "Redux", "iOS", "Android", "REST API"],
+            "location_preference": "Hà Nội",
+            "cv_summary": "Mobile developer with 3 years building iOS and Android apps with React Native, TypeScript, and native modules integration.",
+            "cv_raw_text": "REACT NATIVE MOBILE DEVELOPER\n3 năm kinh nghiệm phát triển mobile app React Native, TypeScript, Redux Toolkit, tích hợp native bridge iOS/Android.",
+            "relevant_jds": {
+                "JD-007": 3, "JD-023": 3, "JD-003": 2
+            },
+            "ideal_top_3": ["JD-007", "JD-023", "JD-003"],
+            "mandatory_fail_jds": ["JD-005", "JD-015"],
+            "notes": "React Native."
+        },
+        {
+            "cv_id": "CV_BENCH_049",
+            "cv_title": "Native iOS Developer (Swift)",
+            "role_category": "Mobile",
+            "experience_years": 4.0,
+            "skills": ["Swift", "iOS", "SwiftUI", "UIKit", "CoreData", "Combine", "CocoaPods", "Xcode"],
+            "location_preference": "Hồ Chí Minh",
+            "cv_summary": "Native iOS engineer with 4 years crafting fluid iOS experiences with Swift, SwiftUI, UIKit, and App Store submission.",
+            "cv_raw_text": "KỸ SƯ PHÁT TRIỂN NATIVE IOS (SWIFT)\n4 năm kinh nghiệm lập trình ứng dụng native iOS: Swift, SwiftUI, UIKit, Combine, CoreData, tối ưu hiệu năng app.",
+            "relevant_jds": {
+                "JD-007": 3, "JD-023": 3
+            },
+            "ideal_top_3": ["JD-007", "JD-023", "JD-039"],
+            "mandatory_fail_jds": ["JD-005", "JD-015"],
+            "notes": "Native iOS."
+        },
+        {
+            "cv_id": "CV_BENCH_050",
+            "cv_title": "Senior Automation QA / QC Engineer",
+            "role_category": "QA/QC",
+            "experience_years": 4.5,
+            "skills": ["Selenium", "Cypress", "Playwright", "Python", "JavaScript", "API Testing", "Postman", "CI/CD"],
+            "location_preference": "Hồ Chí Minh",
+            "cv_summary": "QA Automation lead with 4.5 years developing E2E test suites with Cypress, Playwright, Python test frameworks, and CI/CD integration.",
+            "cv_raw_text": "SENIOR AUTOMATION QA ENGINEER\n4.5 năm kinh nghiệm xây dựng framework kiểm thử tự động với Cypress, Playwright, Python Pytest, API testing Postman, CI/CD integration.",
+            "relevant_jds": {
+                "JD-009": 3, "JD-024": 2, "JD-039": 2
+            },
+            "ideal_top_3": ["JD-009", "JD-024", "JD-039"],
+            "mandatory_fail_jds": ["JD-015", "JD-028"],
+            "notes": "QA Automation."
+        },
+        {
+            "cv_id": "CV_BENCH_051",
+            "cv_title": "IT Project Coordinator / Scrum Master",
+            "role_category": "Management",
+            "experience_years": 3.5,
+            "skills": ["Agile", "Scrum", "Jira", "Project Management", "English Communication", "Documentation"],
+            "location_preference": "Hồ Chí Minh",
+            "cv_summary": "Project coordinator with 3.5 years facilitating Scrum ceremonies, managing sprint backlogs in Jira, and client communication in English.",
+            "cv_raw_text": "IT PROJECT COORDINATOR / SCRUM MASTER\n3.5 năm kinh nghiệm điều phối dự án phần mềm, tổ chức Scrum sprint, quản lý tiến độ Jira, giao tiếp tiếng Anh lưu loát với khách hàng quốc tế.",
+            "relevant_jds": {
+                "JD-039": 3, "JD-010": 3
+            },
+            "ideal_top_3": ["JD-039", "JD-010", "JD-004"],
+            "mandatory_fail_jds": ["JD-015", "JD-028", "JD-005"],
+            "notes": "Project coordinator."
+        },
+        {
+            "cv_id": "CV_BENCH_052",
+            "cv_title": "Engineering Manager & Technical Director",
+            "role_category": "Management",
+            "experience_years": 9.0,
+            "skills": ["Engineering Management", "People Leadership", "System Architecture", "Hiring", "Cloud", "Agile", "Strategy"],
+            "location_preference": "Hồ Chí Minh",
+            "cv_summary": "Engineering leader with 9+ years experience scaling tech teams from 10 to 50+ engineers, aligning tech roadmaps with business goals.",
+            "cv_raw_text": "ENGINEERING MANAGER / TECH LEAD\n9 năm kinh nghiệm quản lý đội ngũ kỹ sư 20+ người, định hướng kiến trúc công nghệ, tuyển dụng, quy trình Agile và chiến lược sản phẩm.",
+            "relevant_jds": {
+                "JD-008": 3, "JD-025": 3, "JD-045": 3, "JD-018": 2
+            },
+            "ideal_top_3": ["JD-008", "JD-025", "JD-045"],
+            "notes": "Engineering Manager level."
+        }
+    ]
+
+    # Calibrate relevant_jds and mandatory_fail_jds against actual clean JDs
+    if raw_jds:
+        for case in cases:
+            cv_skills = {s.casefold() for s in case.get("skills", [])}
+            cv_role = case.get("role_category", "").casefold()
+            cv_title_words = set(case.get("cv_title", "").casefold().split())
+
+            calibrated_relevant: dict[str, int] = {}
+            mandatory_fails: list[str] = []
+
+            for jd in raw_jds:
+                jid = jd.get("job_id")
+                if not jid:
+                    continue
+                jd_skills = {s.casefold() for s in jd.get("skills", [])}
+                jd_domain = str(jd.get("domain_category", "")).casefold()
+                jd_title_words = set(str(jd.get("job_title", "")).casefold().split())
+
+                overlap = len(cv_skills.intersection(jd_skills))
+                title_overlap = len(cv_title_words.intersection(jd_title_words))
+                domain_match = (cv_role == jd_domain) or (cv_role in jd_domain) or (jd_domain in cv_role)
+
+                # Determine graded relevance (0-3)
+                if domain_match and (overlap >= 3 or (overlap >= 2 and title_overlap >= 1)):
+                    calibrated_relevant[jid] = 3
+                elif domain_match and overlap >= 1:
+                    calibrated_relevant[jid] = 2
+                elif overlap >= 3:
+                    calibrated_relevant[jid] = 2
+                elif not domain_match and overlap == 0 and len(jd_skills) >= 2:
+                    if len(mandatory_fails) < 3:
+                        mandatory_fails.append(jid)
+
+            # Ensure every case has relevant JDs
+            if not calibrated_relevant:
+                # Fallback to top skill overlap
+                scored_jds = []
+                for jd in raw_jds:
+                    jid = jd.get("job_id")
+                    jd_skills = {s.casefold() for s in jd.get("skills", [])}
+                    scored_jds.append((jid, len(cv_skills.intersection(jd_skills))))
+                scored_jds.sort(key=lambda x: -x[1])
+                for jid, cnt in scored_jds[:4]:
+                    calibrated_relevant[jid] = 3 if cnt >= 2 else 2
+
+            case["relevant_jds"] = calibrated_relevant
+            sorted_rel = sorted(calibrated_relevant.items(), key=lambda x: -x[1])
+            case["ideal_top_3"] = [jid for jid, _ in sorted_rel[:3]]
+            if mandatory_fails:
+                case["mandatory_fail_jds"] = mandatory_fails
+
+    OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    OUTPUT_PATH.write_text(json.dumps(cases, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"[OK] Generated golden dataset with {len(cases)} cases at {OUTPUT_PATH}")
+    return cases
+
+
+if __name__ == "__main__":
+    generate_golden_dataset()

@@ -155,33 +155,47 @@ class MarketJobRAGService:
         """Incrementally store the market-JD semantic index in PostgreSQL/pgvector."""
         async with self._sync_lock:
             embedder = self._get_embedder()
-            catalog = list(load_enterprise_job_catalog())
-            async with self._session_factory() as session:
-                existing = {row.source_id: row for row in (await session.scalars(select(MarketJobEmbedding))).all()}
-                pending: list[tuple[dict[str, Any], str, str]] = []
-                valid_ids: set[str] = set()
-                for job in catalog:
-                    source_id = str(job["source_id"])
-                    document = build_job_document(job)
-                    digest = _content_hash(document, embedder.name, embedder.vector_size)
-                    valid_ids.add(source_id)
-                    if source_id not in existing or existing[source_id].content_hash != digest:
-                        pending.append((job, document, digest))
-                vectors = await embedder.embed_documents([item[1] for item in pending]) if pending else []
-                for (job, document, digest), vector in zip(pending, vectors, strict=True):
-                    source_id = str(job["source_id"])
-                    row = existing.get(source_id)
-                    if row is None:
-                        session.add(MarketJobEmbedding(source_id=source_id, document=document, content_hash=digest,
-                            embedding_provider=embedder.name, embedding=vector))
-                    else:
-                        row.document, row.content_hash, row.embedding_provider, row.embedding = document, digest, embedder.name, vector
-                stale_ids = set(existing) - valid_ids
-                if stale_ids:
-                    await session.execute(delete(MarketJobEmbedding).where(MarketJobEmbedding.source_id.in_(stale_ids)))
-                await session.commit()
-            return {"indexed": len(pending), "unchanged": len(catalog) - len(pending), "deleted": len(stale_ids),
-                    "total": len(catalog), "collection": INDEX_NAME, "embedding_provider": embedder.name}
+            try:
+                return await self._sync_catalog_with(embedder)
+            except JobRAGUnavailableError as exc:
+                if self.settings.vector_embedding_provider != "auto" or isinstance(embedder, HashingEmbeddingProvider):
+                    raise
+                logger.warning(
+                    "Configured embedding provider is unavailable; retrying market-JD sync with hashing fallback: %s",
+                    exc,
+                )
+                self._embedder = HashingEmbeddingProvider(self.settings.vector_dimensions)
+                return await self._sync_catalog_with(self._embedder)
+
+    async def _sync_catalog_with(self, embedder: EmbeddingProvider) -> dict[str, Any]:
+        """Synchronize the catalog with one resolved embedding provider."""
+        catalog = list(load_enterprise_job_catalog())
+        async with self._session_factory() as session:
+            existing = {row.source_id: row for row in (await session.scalars(select(MarketJobEmbedding))).all()}
+            pending: list[tuple[dict[str, Any], str, str]] = []
+            valid_ids: set[str] = set()
+            for job in catalog:
+                source_id = str(job["source_id"])
+                document = build_job_document(job)
+                digest = _content_hash(document, embedder.name, embedder.vector_size)
+                valid_ids.add(source_id)
+                if source_id not in existing or existing[source_id].content_hash != digest:
+                    pending.append((job, document, digest))
+            vectors = await embedder.embed_documents([item[1] for item in pending]) if pending else []
+            for (job, document, digest), vector in zip(pending, vectors, strict=True):
+                source_id = str(job["source_id"])
+                row = existing.get(source_id)
+                if row is None:
+                    session.add(MarketJobEmbedding(source_id=source_id, document=document, content_hash=digest,
+                        embedding_provider=embedder.name, embedding=vector))
+                else:
+                    row.document, row.content_hash, row.embedding_provider, row.embedding = document, digest, embedder.name, vector
+            stale_ids = set(existing) - valid_ids
+            if stale_ids:
+                await session.execute(delete(MarketJobEmbedding).where(MarketJobEmbedding.source_id.in_(stale_ids)))
+            await session.commit()
+        return {"indexed": len(pending), "unchanged": len(catalog) - len(pending), "deleted": len(stale_ids),
+                "total": len(catalog), "collection": INDEX_NAME, "embedding_provider": embedder.name}
 
     async def _semantic_candidates(self, vector: list[float], limit: int) -> list[tuple[str, float]]:
         async with self._session_factory() as session:

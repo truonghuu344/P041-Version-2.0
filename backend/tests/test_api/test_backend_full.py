@@ -6,6 +6,7 @@ from sqlalchemy.exc import IntegrityError
 
 from src.core.security import get_password_hash
 from src.db.models import CV, User
+from src.services.pipeline_context import PIPELINE_VERSION
 from tests.conftest import TestingSessionLocal
 
 
@@ -317,7 +318,7 @@ async def test_two_ai_agent_workflows_match_frontend_contract(client, monkeypatc
     gap = gap_response.json()
     assert set(gap["hard_skills_matching"]) == {"Python", "FastAPI", "REST API"}
     assert set(gap["hard_skills_missing"]) == {"PostgreSQL", "Docker"}
-    assert gap["pipeline_version"] == "2.0"
+    assert gap["pipeline_version"] == PIPELINE_VERSION
     assert gap["requirement_evidence"]
     assert gap["final_score"] == gap["match_score"]
     assert gap["criteria"]
