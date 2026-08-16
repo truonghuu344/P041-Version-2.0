@@ -6,12 +6,16 @@
 
 /* ── Section wrapper ── */
 #view-find-jobs {
-  display: block;
+  display: none;
   min-height: calc(100vh - 72px);
   background: var(--background, #f6f8f7) !important;
   color: var(--text-primary, #17322b) !important;
   margin-top: 0 !important;
   padding-top: 0 !important;
+}
+
+#view-find-jobs.active {
+  display: block !important;
 }
 
 /* ── Override legacy page-container & container frame matching Trang chủ ── */
