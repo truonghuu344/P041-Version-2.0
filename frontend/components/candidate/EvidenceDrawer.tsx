@@ -11,59 +11,99 @@ interface EvidenceDrawerProps {
 
 function HighlightedText({ text, query }: { text: string; query: string }) {
   if (!query) return <>{text}</>;
-  
-  const stopWords = new Set(['và', 'hoặc', 'các', 'của', 'với', 'trong', 'cho', 'từ', 'để', 'có', 'là', 'những', 'một', 'được', 'vào', 'khi', 'như', 'tại', 'thì', 'mà', 'ra', 'lại', 'rằng', 'việc', 'sự', 'làm']);
-  const words = Array.from(new Set(
-    query.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, ' ').split(/\s+/).filter(w => w.length > 2 && !stopWords.has(w))
-  ));
-  
+
+  const stopWords = new Set([
+    'và',
+    'hoặc',
+    'các',
+    'của',
+    'với',
+    'trong',
+    'cho',
+    'từ',
+    'để',
+    'có',
+    'là',
+    'những',
+    'một',
+    'được',
+    'vào',
+    'khi',
+    'như',
+    'tại',
+    'thì',
+    'mà',
+    'ra',
+    'lại',
+    'rằng',
+    'việc',
+    'sự',
+    'làm',
+  ]);
+  const words = Array.from(
+    new Set(
+      query
+        .toLowerCase()
+        .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+        .split(/\s+/)
+        .filter((w) => w.length > 2 && !stopWords.has(w)),
+    ),
+  );
+
   if (words.length === 0) return <>{text}</>;
-  
+
   const regex = new RegExp(`(${words.join('|')})`, 'gi');
-  
+
   const rawSegments = text.split(/[\n.]+/);
-  const relevantSegments = rawSegments.filter(s => regex.test(s)).map(s => s.trim()).filter(Boolean);
-  
+  const relevantSegments = rawSegments
+    .filter((s) => regex.test(s))
+    .map((s) => s.trim())
+    .filter(Boolean);
+
   let contentToRender = text;
   if (relevantSegments.length > 0 && relevantSegments.length < rawSegments.length) {
-     contentToRender = relevantSegments.join('. [...] ') + '.';
+    contentToRender = relevantSegments.join('. [...] ') + '.';
   }
 
   const parts = contentToRender.split(regex);
   return (
     <>
       {parts.map((part, i) =>
-        words.some(w => w === part.toLowerCase()) ? (
-          <mark key={i} className="eval-evidence-mark">{part}</mark>
+        words.some((w) => w === part.toLowerCase()) ? (
+          <mark key={i} className="eval-evidence-mark">
+            {part}
+          </mark>
         ) : (
           <span key={i}>{part}</span>
-        )
+        ),
       )}
     </>
   );
 }
 
-function EvidenceItem({ ev, requirementText }: { ev: EvidenceDetail, requirementText: string }) {
+function EvidenceItem({ ev, requirementText }: { ev: EvidenceDetail; requirementText: string }) {
   return (
     <article className="eval-evidence-item">
       <blockquote className="eval-evidence-quote">
         <HighlightedText text={ev.text} query={requirementText} />
       </blockquote>
       <div className="eval-evidence-meta">
-        {ev.source_section && (
-          <span className="eval-evidence-tag">{ev.source_section}</span>
-        )}
+        {ev.source_section && <span className="eval-evidence-tag">{ev.source_section}</span>}
         {ev.source_page != null && (
           <span className="eval-evidence-tag">Trang {ev.source_page}</span>
         )}
         {ev.semantic_score != null ? (
-          <span className="eval-evidence-tag eval-evidence-tag--score"
-            title={`BM25: ${ev.bm25_score?.toFixed(3) ?? 'n/a'} | Semantic: ${ev.semantic_score?.toFixed(3) ?? 'n/a'}`}>
+          <span
+            className="eval-evidence-tag eval-evidence-tag--score"
+            title={`BM25: ${ev.bm25_score?.toFixed(3) ?? 'n/a'} | Semantic: ${ev.semantic_score?.toFixed(3) ?? 'n/a'}`}
+          >
             Độ liên quan: {(ev.semantic_score * 100).toFixed(0)}%
           </span>
         ) : ev.fusion_score != null ? (
-          <span className="eval-evidence-tag eval-evidence-tag--score"
-            title={`BM25: ${ev.bm25_score?.toFixed(3) ?? 'n/a'} | Semantic: n/a`}>
+          <span
+            className="eval-evidence-tag eval-evidence-tag--score"
+            title={`BM25: ${ev.bm25_score?.toFixed(3) ?? 'n/a'} | Semantic: n/a`}
+          >
             Điểm hệ thống: {ev.fusion_score.toFixed(3)}
           </span>
         ) : null}
@@ -72,7 +112,12 @@ function EvidenceItem({ ev, requirementText }: { ev: EvidenceDetail, requirement
   );
 }
 
-export default function EvidenceDrawer({ requirementText, evidence, loading, onClose }: EvidenceDrawerProps) {
+export default function EvidenceDrawer({
+  requirementText,
+  evidence,
+  loading,
+  onClose,
+}: EvidenceDrawerProps) {
   return (
     <aside className="eval-evidence-drawer" role="complementary" aria-label="Bằng chứng trong CV">
       <header className="eval-evidence-drawer__header">
@@ -103,7 +148,9 @@ export default function EvidenceDrawer({ requirementText, evidence, loading, onC
         {!loading && evidence && evidence.items.length > 0 && (
           <ul className="eval-evidence-list" role="list">
             {evidence.items.map((ev) => (
-              <li key={ev.evidence_id}><EvidenceItem ev={ev} requirementText={requirementText} /></li>
+              <li key={ev.evidence_id}>
+                <EvidenceItem ev={ev} requirementText={requirementText} />
+              </li>
             ))}
           </ul>
         )}
