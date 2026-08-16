@@ -78,6 +78,7 @@ async def init_db() -> None:
                         "ADD COLUMN IF NOT EXISTS is_published BOOLEAN NOT NULL DEFAULT FALSE"
                     )
                 )
+                await conn.execute(text("ALTER TABLE job_descriptions ADD COLUMN IF NOT EXISTS file_path VARCHAR(500)"))
                 await conn.execute(
                     text("UPDATE job_descriptions SET is_published = TRUE WHERE is_system = TRUE")
                 )

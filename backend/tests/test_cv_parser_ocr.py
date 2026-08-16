@@ -1,6 +1,6 @@
 from io import BytesIO
 
-import fitz
+import pymupdf
 import pytest
 from pypdf import PdfWriter
 
@@ -9,7 +9,7 @@ from src.services.cv_parser import extract_text_from_pdf, extract_text_from_scan
 
 @pytest.mark.asyncio
 async def test_scanned_pdf_renders_and_ocrs_every_page(monkeypatch):
-    document = fitz.open()
+    document = pymupdf.open()
     document.new_page()
     document.new_page()
     payload = document.tobytes()

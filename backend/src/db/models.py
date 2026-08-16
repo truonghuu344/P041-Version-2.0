@@ -113,6 +113,7 @@ class JobDescription(Base):
     company: Mapped[str | None] = mapped_column(String(255), nullable=True)
     location: Mapped[str | None] = mapped_column(String(255), nullable=True)
     requirements_text: Mapped[str] = mapped_column(Text, nullable=False)
+    file_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
     normalized_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
     is_system: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     is_published: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
