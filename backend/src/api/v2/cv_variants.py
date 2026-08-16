@@ -335,7 +335,7 @@ async def publish_cv_variant(
         }
     try:
         result, _ = await publish_variant(db, variant, trace_id=_trace_id(request))
-    except ObjectStorageError as exc:
+    except ObjectStorageError:
         _error("STORAGE_001", "Không thể lưu file CV Variant. Vui lòng thử lại sau.", request, 503)
     except ValueError as exc:
         if str(exc) == "VALIDATION_BLOCKED":

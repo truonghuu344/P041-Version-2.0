@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.security import require_role
 from src.db.database import get_db
-from src.db.models import ApplicationFeedback, CV, CVAnalysis, JobApplication, JobDescription, User
+from src.db.models import CV, ApplicationFeedback, CVAnalysis, JobApplication, JobDescription, User
 from src.models.schemas import (
     ApplicationFeedbackCreate,
     ApplicationFeedbackOut,

@@ -4,6 +4,7 @@ import pytest
 
 # pyrefly: ignore [missing-import]
 from src.core.security import create_access_token
+
 # pyrefly: ignore [missing-import]
 from tests.helpers import create_admin, register_and_login
 

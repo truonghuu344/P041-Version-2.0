@@ -6,9 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.core.security import get_current_user
 from src.db.database import get_db
 from src.db.models import User
-
 from src.models.schemas import (
-    NotificationCreate,
     NotificationOut,
     NotificationPreferenceOut,
     NotificationPreferenceUpdate,

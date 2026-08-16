@@ -1,13 +1,10 @@
+from collections.abc import Sequence
 from datetime import UTC, datetime
-from typing import Any, Sequence
 
 from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.db.models import (
-    CV,
-    JobApplication,
-    JobDescription,
     Notification,
     NotificationPreference,
     User,
@@ -603,7 +600,7 @@ class NotificationService:
             title="Ứng viên đã xác nhận lịch",
             message=f"{student_name} đã xác nhận lịch tư vấn ngày {time_str}.",
             priority="important",
-            action_url=f"/counselor/schedule",
+            action_url="/counselor/schedule",
         )
         db.add(notif)
         await db.commit()

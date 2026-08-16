@@ -14,8 +14,8 @@ from src.models.schemas import JDCreate, JDOut
 from src.services.cv_jd_matching import parse_job_description
 from src.services.cv_parser import extract_text_from_document, sanitize_extracted_text
 from src.services.file_security import FileSecurityError, scan_uploaded_file
-from src.services.object_storage import ObjectStorageError, delete_async, put_bytes_async
 from src.services.job_catalog import load_enterprise_job_catalog
+from src.services.object_storage import ObjectStorageError, delete_async, put_bytes_async
 
 router = APIRouter(prefix="/jds", tags=["Job Description Management"])
 
