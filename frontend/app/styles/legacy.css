@@ -1895,23 +1895,15 @@ body {
   max-height: calc(100dvh - 40px);
   padding: 30px 40px 28px;
   overflow-x: hidden;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(104, 185, 198, 0.48) rgba(255, 255, 255, 0.04);
+  overflow-y: auto;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
 }
 
 #modal-card::-webkit-scrollbar {
-  width: 7px;
-}
-#modal-card::-webkit-scrollbar-track {
-  margin: 22px 0;
-  background: rgba(255, 255, 255, 0.035);
-  border-radius: 999px;
-}
-#modal-card::-webkit-scrollbar-thumb {
-  border: 2px solid transparent;
-  border-radius: 999px;
-  background: rgba(104, 185, 198, 0.5);
-  background-clip: padding-box;
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 .modal-overlay.open .modal-card {
   transform: translateY(0) scale(1);
@@ -2259,6 +2251,27 @@ body {
 }
 .register-link:hover {
   color: #c084fc;
+}
+
+.auth-form-feedback {
+  margin: 4px 0 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.auth-form-feedback.is-error {
+  color: #b42318;
+  background: #fff1f0;
+  border: 1px solid #fecaca;
+}
+
+.auth-form-feedback.is-success {
+  color: #087443;
+  background: #edfdf3;
+  border: 1px solid #abefc6;
 }
 
 /* ── Decorative stars inside modal ── */
@@ -8469,6 +8482,14 @@ html.light .form-input:focus,
   text-align: center;
 }
 
+.google-auth-note {
+  margin: 8px 0 0;
+  color: var(--text-dim);
+  font-size: 12px;
+  line-height: 1.45;
+  text-align: center;
+}
+
 .auth-divider {
   display: flex;
   align-items: center;
@@ -10752,16 +10773,55 @@ select {
 
 .candidate-account-menu {
   position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+.application-notification-bell {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--border, #dbe5df);
+  border-radius: 50%;
+  background: var(--card, #ffffff);
+  font-size: 18px;
+  cursor: pointer;
+  transition: transform .18s ease, border-color .18s ease, background .18s ease;
+}
+.application-notification-bell:hover { transform: translateY(-1px); border-color: #5dae87; background: #eef9f2; }
+.application-notification-bell b {
+  position: absolute;
+  top: -4px;
+  right: -5px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  background: #e75b3a;
+  color: #fff;
+  font-size: 10px;
+  line-height: 14px;
+  font-weight: 800;
 }
 .candidate-avatar-trigger {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  border: 0;
-  background: transparent;
-  padding: 2px;
-  color: var(--text-secondary);
+  gap: 8px;
+  border: 1px solid var(--border, #dbe5df);
+  background: var(--card, #ffffff);
+  padding: 3px 10px 3px 4px;
+  border-radius: 9999px;
+  color: var(--text-primary, #17322b);
   cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(19, 50, 43, 0.04);
+}
+.candidate-avatar-trigger:hover,
+.candidate-account-menu.open .candidate-avatar-trigger {
+  border-color: var(--primary, #147a5a);
+  background: var(--primary-soft, #e7f4ed);
 }
 .candidate-avatar-initial {
   display: grid;
@@ -10769,70 +10829,144 @@ select {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: var(--primary-soft);
-  color: var(--primary);
+  background: linear-gradient(135deg, #147a5a, #20a77d);
+  color: #ffffff;
   font-size: 13px;
   font-weight: 800;
+  box-shadow: 0 2px 6px rgba(20, 122, 90, 0.25);
 }
 .candidate-avatar-chevron {
-  font-size: 15px;
-  line-height: 1;
+  font-size: 12px;
+  color: var(--text-secondary, #5d716a);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.candidate-account-menu.open .candidate-avatar-chevron {
+  transform: rotate(180deg);
 }
 .candidate-account-dropdown {
   position: absolute;
-  z-index: 100;
+  z-index: 1000;
   top: calc(100% + 10px);
   right: 0;
   display: none;
-  width: 210px;
+  width: 250px;
   padding: 8px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--card);
-  box-shadow: 0 16px 36px rgba(20, 33, 61, 0.14);
+  border: 1px solid var(--border, #dbe5df);
+  border-radius: 16px;
+  background: var(--card, #ffffff);
+  box-shadow:
+    0 16px 36px rgba(19, 50, 43, 0.12),
+    0 4px 12px rgba(19, 50, 43, 0.04);
+  animation: dropdownFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 .candidate-account-menu.open .candidate-account-dropdown {
   display: block;
 }
-.candidate-account-summary {
-  padding: 8px 9px 10px;
+.candidate-dropdown-user-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px 10px;
 }
-.candidate-account-summary strong,
-.candidate-account-summary span {
-  display: block;
+.candidate-dropdown-user-avatar {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #147a5a, #20a77d);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 800;
+  flex-shrink: 0;
+  box-shadow: 0 3px 8px rgba(20, 122, 90, 0.25);
 }
-.candidate-account-summary strong {
-  color: var(--text-primary);
+.candidate-dropdown-user-meta {
+  min-width: 0;
+  flex: 1;
+}
+.candidate-dropdown-user-name {
   font-size: 13px;
+  font-weight: 750;
+  color: var(--text-primary, #17322b);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.candidate-account-summary span {
-  margin-top: 3px;
-  color: var(--text-secondary);
+.candidate-dropdown-user-email {
   font-size: 11px;
+  color: var(--text-secondary, #5d716a);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-top: 1px;
+}
+.candidate-dropdown-role-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  padding: 2px 7px;
+  border-radius: 9999px;
+  font-size: 10px;
+  font-weight: 750;
+  background: var(--primary-soft, #e7f4ed);
+  color: var(--primary, #147a5a);
+}
+.candidate-dropdown-role-pill.role-admin {
+  background: #fdf4ff;
+  color: #a855f7;
+}
+.candidate-dropdown-role-pill.role-counselor {
+  background: #eff6ff;
+  color: #3b82f6;
+}
+.candidate-dropdown-role-pill.role-enterprise {
+  background: #fff7ed;
+  color: #ea580c;
 }
 .candidate-account-divider {
   height: 1px;
-  margin: 5px 2px;
-  background: var(--border);
+  margin: 6px 4px;
+  background: var(--border, #dbe5df);
 }
 .candidate-account-dropdown button:not(.candidate-avatar-trigger) {
+  display: flex;
+  align-items: center;
   width: 100%;
-  padding: 9px;
+  padding: 9px 12px;
   border: 0;
-  border-radius: 6px;
+  border-radius: 8px;
   background: transparent;
-  color: var(--text-primary);
+  color: var(--text-primary, #17322b);
   font: inherit;
   font-size: 13px;
+  font-weight: 500;
   text-align: left;
   cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 .candidate-account-dropdown button:not(.candidate-avatar-trigger):hover {
-  background: var(--primary-soft);
-  color: var(--primary);
+  background: var(--primary-soft, #e7f4ed);
+  color: var(--primary, #147a5a);
 }
 .candidate-account-dropdown .candidate-logout {
-  color: var(--danger) !important;
+  color: #e11d48 !important;
+  margin-top: 2px;
+}
+.candidate-account-dropdown .candidate-logout:hover {
+  background: #fef2f2 !important;
+  color: #be123c !important;
 }
 
 .candidate-bottom-nav {
@@ -11866,38 +12000,6 @@ html.light .job-search-input-wrap input,
 }
 .header-utilities #auth-container {
   order: initial;
-}
-.candidate-avatar-trigger {
-  padding: 2px 0 2px 2px;
-  color: #9eaeac;
-}
-.candidate-avatar-initial {
-  width: 34px;
-  height: 34px;
-  background: rgba(92, 198, 165, 0.16);
-  color: #5cc6a5;
-}
-.candidate-account-dropdown {
-  width: 176px;
-  padding: 5px;
-  border-color: rgba(255, 255, 255, 0.08);
-  border-radius: 10px;
-  background: #17282b;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
-}
-.candidate-account-dropdown button:not(.candidate-avatar-trigger) {
-  min-height: 38px;
-  padding: 0 9px;
-  color: #f3f7f6;
-  font-size: 13px;
-}
-.candidate-account-dropdown button:not(.candidate-avatar-trigger):hover {
-  background: rgba(92, 198, 165, 0.08);
-  color: #f3f7f6;
-}
-.candidate-account-divider {
-  margin: 4px 2px;
-  background: rgba(255, 255, 255, 0.08);
 }
 
 html.light .navbar,
@@ -13190,24 +13292,31 @@ body.role-student .nav-link {
 }
 #modal-card.auth-modal-card {
   max-width: 450px;
-  padding: 30px 32px 26px;
+  max-height: min(92vh, 680px);
+  padding: 24px 28px 22px;
   background: #fff;
   border: 1px solid #dce8e2;
   border-radius: 22px;
   box-shadow: 0 24px 64px rgba(24, 52, 43, 0.2);
   color: var(--buddy-navy);
-  scrollbar-color: #bad7c7 transparent;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+#modal-card.auth-modal-card::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 #modal-card.auth-modal-card::before {
-  width: 100%;
-  height: 5px;
-  background: #bfe7d0;
+  display: none;
 }
 #modal-card.auth-modal-card .modal-close {
-  top: 14px;
-  right: 14px;
-  width: 34px;
-  height: 34px;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
   border-color: #e0ebe5;
   border-radius: 10px;
   color: #607184;
@@ -13219,52 +13328,65 @@ body.role-student .nav-link {
   background: #eef8f2;
 }
 #modal-card.auth-modal-card .modal-header {
-  margin: 2px 0 20px;
+  margin: 0 0 14px;
   text-align: center;
 }
 .auth-welcome-mark {
   display: grid;
   place-items: center;
-  width: 42px;
-  height: 42px;
-  margin: 0 auto 10px;
-  border-radius: 13px;
+  width: 36px;
+  height: 36px;
+  margin: 0 auto 6px;
+  border-radius: 11px;
   color: var(--buddy-emerald);
   background: #eaf7ef;
 }
 .auth-welcome-mark span {
-  font-size: 19px;
+  font-size: 17px;
 }
 .auth-eyebrow {
-  margin: 0 0 6px;
+  margin: 0 0 4px;
   color: var(--buddy-emerald);
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.11em;
 }
 .auth-modal-card .modal-title {
-  margin: 0 0 5px;
+  margin: 0 0 4px;
   color: var(--buddy-navy);
-  font-size: 24px;
+  font-size: 22px;
   letter-spacing: -0.03em;
 }
 .auth-modal-card .modal-sub {
   margin: 0 auto;
   max-width: 330px;
   color: #607184;
-  font-size: 13px;
+  font-size: 12.5px;
 }
 #modal-card.auth-modal-card .google-auth-wrap {
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 .auth-modal-card .google-signin-button {
-  min-height: 46px;
-  border: 1px solid #dce8e2;
-  border-radius: 12px;
-  background: #fff;
+  min-height: 44px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none !important;
+  border-radius: 999px;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+.auth-modal-card .google-signin-button > div,
+.auth-modal-card .google-signin-button iframe {
+  margin: 0 auto !important;
+  border-radius: 999px !important;
+  width: 100% !important;
+  max-width: 100% !important;
 }
 .auth-modal-card .auth-divider {
-  margin: 16px 0 0;
+  margin: 12px 0 0;
   color: #8a9995;
 }
 .auth-modal-card .auth-divider::before,
@@ -13275,13 +13397,13 @@ body.role-student .nav-link {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 4px;
-  margin: 0 0 20px;
+  margin: 0 0 14px;
   padding: 4px;
   border-radius: 12px;
   background: #f0f5f2;
 }
 .auth-tabs .tab {
-  min-height: 38px;
+  min-height: 36px;
   border: 0;
   border-radius: 9px;
   color: #6b7c76;
@@ -13296,19 +13418,19 @@ body.role-student .nav-link {
   box-shadow: 0 1px 5px rgba(30, 70, 51, 0.1);
 }
 .auth-modal-card .login-form {
-  gap: 14px;
+  gap: 11px;
 }
 .auth-modal-card .form-group {
   margin: 0;
 }
 .auth-modal-card .form-label {
-  margin-bottom: 7px;
+  margin-bottom: 5px;
   color: #385348;
   font-size: 12px;
   font-weight: 700;
 }
 .auth-modal-card .form-input {
-  min-height: 46px;
+  min-height: 44px;
   border-color: #d8e5df;
   border-radius: 11px;
   color: var(--buddy-navy);
@@ -13321,8 +13443,66 @@ body.role-student .nav-link {
   border-color: var(--buddy-emerald);
   box-shadow: 0 0 0 3px rgba(30, 143, 101, 0.11);
 }
+
+/* Password visibility toggle */
+.password-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+.password-input-wrap .form-input {
+  width: 100%;
+  padding-right: 44px !important;
+}
+.btn-toggle-password {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #8a9995;
+  cursor: pointer;
+  border-radius: 8px;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
+  z-index: 10;
+  pointer-events: auto !important;
+}
+.btn-toggle-password svg {
+  pointer-events: none;
+}
+.btn-toggle-password:hover {
+  color: var(--buddy-emerald, #087d4e);
+  background: rgba(8, 125, 78, 0.08);
+}
+.btn-toggle-password:focus-visible {
+  outline: 2px solid var(--buddy-emerald, #087d4e);
+  outline-offset: 1px;
+}
+.password-input-wrap .eye-icon-show {
+  display: block;
+}
+.password-input-wrap .eye-icon-hide {
+  display: none;
+}
+.password-input-wrap.is-visible .eye-icon-show {
+  display: none !important;
+}
+.password-input-wrap.is-visible .eye-icon-hide {
+  display: block !important;
+}
+
 .auth-modal-card .btn-submit {
-  min-height: 46px;
+  min-height: 44px;
   margin-top: 4px;
   border-radius: 11px;
   background: var(--buddy-emerald);
@@ -13337,42 +13517,208 @@ body.role-student .nav-link {
 .auth-modal-card .auth-forgot-password {
   display: block;
   width: max-content;
-  margin: 14px auto 0;
+  margin: 10px auto 0;
   color: #4f7463;
   font-size: 12px;
   font-weight: 700;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.15s ease;
 }
-.auth-modal-card .auth-role-trigger {
-  min-height: 46px;
-  border-color: #d8e5df;
-  border-radius: 11px;
-  background: #fbfdfc;
+.auth-modal-card .auth-forgot-password:hover {
+  color: var(--buddy-emerald);
+  text-decoration: underline;
+}
+.auth-modal-card .auth-role-trigger,
+#modal-card .auth-role-trigger {
+  min-height: 44px;
+  border: 1px solid #d8e5df !important;
+  border-radius: 11px !important;
+  background: #fbfdfc !important;
+  color: var(--buddy-navy) !important;
 }
 .auth-modal-card .auth-role-current strong,
-.auth-modal-card .auth-role-option-copy strong {
-  color: var(--buddy-navy);
+.auth-modal-card .auth-role-option-copy strong,
+#modal-card .auth-role-current strong,
+#modal-card .auth-role-option-copy strong {
+  color: var(--buddy-navy) !important;
+  font-size: 13.5px;
+  font-weight: 600;
 }
 .auth-modal-card .auth-role-current small,
-.auth-modal-card .auth-role-option-copy small {
-  color: #72827c;
+.auth-modal-card .auth-role-option-copy small,
+#modal-card .auth-role-current small,
+#modal-card .auth-role-option-copy small {
+  color: #72827c !important;
+  font-size: 11px;
 }
-.auth-modal-card .auth-role-menu {
-  border-color: #d8e5df;
-  background: #fff;
-  box-shadow: 0 14px 30px rgba(27, 61, 45, 0.14);
+.auth-modal-card .auth-role-chevron,
+#modal-card .auth-role-chevron {
+  color: #72827c !important;
+}
+.auth-modal-card .auth-role-menu,
+#modal-card .auth-role-menu {
+  border: 1px solid #d8e5df !important;
+  background: #fff !important;
+  box-shadow: 0 14px 30px rgba(27, 61, 45, 0.14) !important;
+}
+.auth-modal-card .auth-role-option,
+#modal-card .auth-role-option {
+  color: var(--buddy-navy) !important;
 }
 .auth-modal-card .auth-role-option:hover,
-.auth-modal-card .auth-role-option:focus-visible {
-  background: #f0f8f3;
+.auth-modal-card .auth-role-option:focus-visible,
+#modal-card .auth-role-option:hover,
+#modal-card .auth-role-option:focus-visible {
+  background: #f0f8f3 !important;
+}
+
+/* ── Password Reset Modal: Harmonized with Career Buddy UI ── */
+#password-reset-overlay {
+  background: rgba(20, 38, 47, 0.42);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+}
+.password-reset-card {
+  max-width: 450px;
+  max-height: min(92vh, 640px);
+  padding: 24px 28px 22px;
+  background: #fff;
+  border: 1px solid #dce8e2;
+  border-radius: 22px;
+  box-shadow: 0 24px 64px rgba(24, 52, 43, 0.2);
+  color: var(--buddy-navy);
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+.password-reset-card::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+.password-reset-card::before {
+  display: none;
+}
+.password-reset-card .modal-close {
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border-color: #e0ebe5;
+  border-radius: 10px;
+  color: #607184;
+  background: #f8fbf9;
+}
+.password-reset-card .modal-close:hover {
+  color: #315b4a;
+  border-color: #b8d9c8;
+  background: #eef8f2;
+}
+.password-reset-card .modal-header {
+  margin: 0 0 14px;
+  text-align: center;
+}
+.password-reset-card .modal-title {
+  margin: 0 0 4px;
+  color: var(--buddy-navy);
+  font-size: 22px;
+  letter-spacing: -0.03em;
+}
+.password-reset-card .modal-sub {
+  margin: 0 auto;
+  max-width: 330px;
+  color: #607184;
+  font-size: 12.5px;
+}
+.password-reset-card .login-form {
+  gap: 11px;
+}
+.password-reset-card .form-group {
+  margin: 0 0 11px;
+}
+.password-reset-card .form-label {
+  margin-bottom: 5px;
+  color: #385348;
+  font-size: 12px;
+  font-weight: 700;
+}
+.password-reset-card .form-input {
+  min-height: 44px;
+  border-color: #d8e5df;
+  border-radius: 11px;
+  color: var(--buddy-navy);
+  background: #fbfdfc;
+}
+.password-reset-card .form-input::placeholder {
+  color: #a2aea9;
+}
+.password-reset-card .form-input:focus {
+  border-color: var(--buddy-emerald);
+  box-shadow: 0 0 0 3px rgba(30, 143, 101, 0.11);
+}
+.password-reset-card #reset-otp {
+  font-size: 1.5rem !important;
+  letter-spacing: 0.4em !important;
+  text-align: center !important;
+  font-weight: 800 !important;
+  color: var(--buddy-navy) !important;
+  background: #f8fbf9 !important;
+  border: 1.5px dashed #bfe7d0 !important;
+}
+.password-reset-card #reset-otp:focus {
+  border-style: solid !important;
+  border-color: var(--buddy-emerald) !important;
+  background: #fff !important;
+}
+.password-reset-card .auth-reset-timer {
+  color: var(--buddy-emerald) !important;
+  font-size: 13px !important;
+  font-weight: 600;
+  margin: 8px 0 12px !important;
+  text-align: center;
+}
+.password-reset-card .btn-submit {
+  min-height: 44px;
+  margin-top: 4px;
+  border-radius: 11px;
+  background: var(--buddy-emerald);
+  box-shadow: none;
+  font-size: 14px;
+}
+.password-reset-card .btn-submit:hover {
+  background: #087d4e;
+  transform: translateY(-1px);
+  box-shadow: 0 7px 16px rgba(8, 125, 78, 0.16);
+}
+.password-reset-card .auth-forgot-password {
+  display: block;
+  width: max-content;
+  margin: 10px auto 0;
+  color: #4f7463;
+  font-size: 12.5px;
+  font-weight: 700;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+.password-reset-card .auth-forgot-password:hover {
+  color: var(--buddy-emerald);
+  text-decoration: underline;
 }
 @media (max-width: 520px) {
-  #modal-card.auth-modal-card {
+  #modal-card.auth-modal-card,
+  .password-reset-card {
     max-width: 100%;
-    padding: 28px 20px 22px;
+    padding: 22px 18px 18px;
     border-radius: 18px;
   }
-  .auth-modal-card .modal-title {
-    font-size: 22px;
+  .auth-modal-card .modal-title,
+  .password-reset-card .modal-title {
+    font-size: 20px;
   }
 }
 .p1-analysis-heading {

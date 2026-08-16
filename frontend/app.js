@@ -1122,7 +1122,7 @@ function startAppLogic() {
   /* ============================================================
      🚀 ROUTER & SPACESHIP SINGLE PAGE VIEW SWITCHER
   ============================================================ */
-  const ALL_VIEWS = ['dashboard', 'cv', 'find-jobs', 'jobs', 'match', 'gap', 'interview', 'history', 'profile', 'counselor', 'enterprise', 'admin'];
+  const ALL_VIEWS = ['dashboard', 'cv', 'find-jobs', 'jobs', 'match', 'gap', 'interview', 'history', 'profile', 'counselor', 'enterprise', 'admin', 'notifications'];
   const ROLE_HOME_VIEWS = Object.freeze({
     student: 'dashboard',
     counselor: 'counselor',
@@ -1166,7 +1166,8 @@ function startAppLogic() {
     profile: 'DECK ZETA // CREW TERMINAL',
     counselor: 'HITL DECK // COUNSELOR',
     enterprise: 'RECRUITMENT DECK // ENTERPRISE',
-    admin: 'DECK OMEGA // ADMIN PORTAL'
+    admin: 'DECK OMEGA // ADMIN PORTAL',
+    notifications: 'NOTIFICATIONS // TRUNG TÂM THÔNG BÁO'
   };
 
   function switchView(targetViewName) {
@@ -1177,7 +1178,8 @@ function startAppLogic() {
       showToast('Bạn đã được chuyển về dashboard phù hợp với vai trò.', 'info');
     }
 
-    const VIEW_ORDER = ['dashboard', 'cv', 'find-jobs', 'jobs', 'match', 'gap', 'interview', 'history', 'profile', 'counselor', 'enterprise', 'admin'];
+    const VIEW_ORDER = ['dashboard', 'cv', 'find-jobs', 'jobs', 'match', 'gap', 'interview', 'history', 'profile', 'counselor', 'enterprise', 'admin', 'notifications'];
+
     const currentIndex = VIEW_ORDER.indexOf(currentViewName);
     const targetIndex = VIEW_ORDER.indexOf(targetViewName);
     const direction = targetIndex >= currentIndex ? 'right' : 'left';

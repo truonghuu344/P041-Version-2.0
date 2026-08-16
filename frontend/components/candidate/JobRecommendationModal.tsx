@@ -68,10 +68,7 @@ export default function JobRecommendationModal() {
                   Độ phù hợp hồ sơ
                 </span>
               </div>
-              <div
-                className="job-drawer-confidence-badge is-high"
-                id="job-drawer-confidence-badge"
-              >
+              <div className="job-drawer-confidence-badge is-high" id="job-drawer-confidence-badge">
                 Độ tin cậy: <strong>Cao</strong>
               </div>
             </div>
@@ -85,8 +82,8 @@ export default function JobRecommendationModal() {
             <div className="mandatory-alert-content">
               <strong>Thiếu yêu cầu bắt buộc</strong>
               <p id="job-drawer-mandatory-detail">
-                Hồ sơ chưa đáp ứng đủ tiêu chí bắt buộc của vị trí này. Điểm hiển thị được giới
-                hạn tối đa 49%.
+                Hồ sơ chưa đáp ứng đủ tiêu chí bắt buộc của vị trí này. Điểm hiển thị được giới hạn
+                tối đa 49%.
               </p>
             </div>
           </div>
@@ -96,9 +93,7 @@ export default function JobRecommendationModal() {
             {/* Column 1: JD Chi tiết công việc */}
             <div className="job-drawer-col">
               <section className="job-drawer-section">
-                <h4 className="job-drawer-section-heading">
-                  Mô tả công việc &amp; Trách nhiệm
-                </h4>
+                <h4 className="job-drawer-section-heading">Mô tả công việc &amp; Trách nhiệm</h4>
                 <div className="job-drawer-desc-content" id="job-drawer-description">
                   <ul className="job-drawer-list">
                     <li>
@@ -110,8 +105,7 @@ export default function JobRecommendationModal() {
                       nền tảng.
                     </li>
                     <li>
-                      Tối ưu hóa truy vấn cơ sở dữ liệu PostgreSQL và quản lý dữ liệu hiệu năng
-                      cao.
+                      Tối ưu hóa truy vấn cơ sở dữ liệu PostgreSQL và quản lý dữ liệu hiệu năng cao.
                     </li>
                   </ul>
                 </div>

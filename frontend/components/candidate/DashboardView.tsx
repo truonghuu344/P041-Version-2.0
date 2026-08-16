@@ -50,7 +50,7 @@ export default function DashboardView() {
             </div>
           </div>
 
-          <div className="home-hero-visual" aria-label="Minh họa các tính năng CV Assistant">
+          <div className="home-hero-visual" aria-label="Minh họa các tính năng Career Assistant">
             <div className="home-visual-aura" aria-hidden="true" />
             <div className="home-buddy-stage">
               <Image
