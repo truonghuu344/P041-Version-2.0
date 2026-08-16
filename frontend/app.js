@@ -3736,12 +3736,9 @@ TÊN CÔNG TY:
           <span class="cv-icon-ext">${escapeHtml(format)}</span>
         </div>
         <div class="cv-option-content">
-          <div class="cv-option-main-row">
-            <span class="cv-option-title" title="${escapeHtml(cv.title || cv.file_name || 'CV Hồ sơ')}">
-              ${escapeHtml(cv.title || cv.file_name || 'CV Hồ sơ')}
-            </span>
-            <span class="cv-status-badge is-${type}">${escapeHtml(label)}</span>
-          </div>
+          <span class="cv-option-title" title="${escapeHtml(cv.title || cv.file_name || 'CV Hồ sơ')}">
+            ${escapeHtml(cv.title || cv.file_name || 'CV Hồ sơ')}
+          </span>
           <div class="cv-option-subrow">
             <span class="cv-option-date">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-svg-icon"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
@@ -3757,6 +3754,7 @@ TÊN CÔNG TY:
           </div>
         </div>
         <div class="cv-option-right">
+          <span class="cv-status-badge is-${type}">${escapeHtml(label)}</span>
           ${isSelected ? `
             <span class="cv-option-check" aria-label="Đang chọn">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
@@ -3785,11 +3783,7 @@ TÊN CÔNG TY:
       `;
       listEl.querySelector('#btn-goto-upload-cv')?.addEventListener('click', () => {
         closeJobSearchCVMenu();
-        if (typeof switchView === 'function') switchView('cv');
-        window.location.hash = '#cv';
-        window.requestAnimationFrame(() => {
-          document.getElementById('career-portfolio-workspace')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        });
+        document.getElementById('find-jobs-cv-upload-input')?.click();
       });
       return;
     }
@@ -3850,6 +3844,60 @@ TÊN CÔNG TY:
     });
   }
 
+  async function handleFindJobsCVUpload(file) {
+    if (!file) return;
+    if (!ApiClient.isAuthenticated()) {
+      showToast('Vui lòng đăng nhập để tải CV và tìm việc làm phù hợp.', 'warning');
+      return;
+    }
+
+    const triggerTitle = document.getElementById('top-jobs-selected-cv-title');
+    const triggerBadge = document.getElementById('top-jobs-selected-cv-badge');
+    const triggerMeta = document.getElementById('top-jobs-selected-cv-meta');
+    const prevTitle = triggerTitle ? triggerTitle.textContent : '';
+
+    try {
+      showToast('Đang tải lên Bản CV gốc...', 'info');
+      if (triggerTitle) triggerTitle.textContent = file.name;
+      if (triggerBadge) {
+        triggerBadge.className = 'cv-status-badge is-raw';
+        triggerBadge.textContent = 'CV gốc';
+      }
+      if (triggerMeta) {
+        triggerMeta.innerHTML = `<span class="cv-meta-inline"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-svg-icon"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Đang tải file...</span>`;
+      }
+
+      const newCv = await ApiClient.uploadCV(file, file.name, false);
+
+      // Cập nhật danh sách Spaceship/Portfolio CV nếu có
+      if (typeof loadSpaceshipCVList === 'function') {
+        loadSpaceshipCVList().catch(() => {});
+      }
+
+      // Tải lại danh sách CV và tự động chọn CV gốc vừa tải
+      await loadJobSearchCVOptions(newCv?.id);
+      if (newCv?.id) {
+        selectJobSearchCV(newCv.id);
+      }
+
+      closeJobSearchCVMenu();
+      showToast('✅ Đã thêm Bản CV gốc thành công! Bạn có thể nhấn "Tìm công việc phù hợp".', 'success');
+    } catch (err) {
+      if (triggerTitle) triggerTitle.textContent = prevTitle || 'Chọn CV đã lưu...';
+      showToast(`Không thể tải CV: ${err.message || err}`, 'error');
+    } finally {
+      const uploadInput = document.getElementById('find-jobs-cv-upload-input');
+      if (uploadInput) uploadInput.value = '';
+    }
+  }
+
+  document.getElementById('find-jobs-cv-upload-input')?.addEventListener('change', (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleFindJobsCVUpload(file);
+    }
+  });
+
   function setupCVMenuInteractions() {
     // Tab switching
     const tabContainer = document.getElementById('top-jobs-cv-tabs');
@@ -3879,18 +3927,11 @@ TÊN CÔNG TY:
       searchInput.addEventListener('click', (e) => e.stopPropagation());
     }
 
-    // Add CV button in menu footer -> Navigate smoothly to CV View upload section
+    // Add CV button in menu footer -> Trigger in-place CV upload directly
     document.getElementById('btn-menu-add-cv')?.addEventListener('click', (e) => {
       e.stopPropagation();
       closeJobSearchCVMenu();
-      if (typeof switchView === 'function') {
-        switchView('cv');
-      }
-      window.location.hash = '#cv';
-      window.requestAnimationFrame(() => {
-        const workspace = document.getElementById('career-portfolio-workspace') || document.getElementById('view-cv');
-        workspace?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      });
+      document.getElementById('find-jobs-cv-upload-input')?.click();
     });
   }
 
@@ -4410,13 +4451,18 @@ TÊN CÔNG TY:
       return;
     }
 
-    // Upload CV button click from No CV state
+    // Upload CV button click from No CV state -> Trigger in-place file upload
     const uploadCvBtn = event.target.closest('#btn-job-search-upload-cv');
     if (uploadCvBtn) {
-      if (typeof window.switchView === 'function') {
-        window.switchView('cv');
+      if (cachedCVList && cachedCVList.length > 0) {
+        const dropdown = document.getElementById('top-jobs-cv-dropdown');
+        dropdown?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        window.setTimeout(() => {
+          openJobSearchCVMenu();
+          document.getElementById('top-jobs-cv-trigger')?.focus();
+        }, 150);
       } else {
-        document.getElementById('nav-cv')?.click();
+        document.getElementById('find-jobs-cv-upload-input')?.click();
       }
       return;
     }

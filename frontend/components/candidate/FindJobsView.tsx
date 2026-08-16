@@ -38,6 +38,16 @@ export default function FindJobsView() {
                   <option value="">Chọn CV đã lưu...</option>
                 </select>
 
+                {/* Hidden file input for in-place CV upload */}
+                <input
+                  type="file"
+                  id="find-jobs-cv-upload-input"
+                  accept=".pdf,.docx"
+                  className="visually-hidden-select"
+                  hidden
+                  aria-hidden="true"
+                />
+
                 {/* Custom Categorized Dropdown Menu */}
                 <div className="top-jobs-cv-menu" id="top-jobs-cv-menu" role="listbox" hidden>
                   <div className="top-jobs-cv-menu-header">

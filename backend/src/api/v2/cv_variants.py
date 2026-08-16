@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import copy
 import uuid
-from pathlib import Path
 
 from fastapi import APIRouter, Depends, Header, Query, Request, Response, status
 from fastapi.responses import StreamingResponse
@@ -42,6 +41,7 @@ from src.services.cv_variant_service import (
     validate_claim_contract,
     validate_variant,
 )
+from src.services.object_storage import ObjectStorageError, get_bytes_async
 
 router = APIRouter(prefix="/cv-variants", tags=["CV Variants v2"])
 
@@ -335,6 +335,8 @@ async def publish_cv_variant(
         }
     try:
         result, _ = await publish_variant(db, variant, trace_id=_trace_id(request))
+    except ObjectStorageError as exc:
+        _error("STORAGE_001", "Không thể lưu file CV Variant. Vui lòng thử lại sau.", request, 503)
     except ValueError as exc:
         if str(exc) == "VALIDATION_BLOCKED":
             _error("CV_VARIANT_PUBLISH_BLOCKED", "Variant chưa vượt qua đủ 7 hard validators.", request, 422)
@@ -351,8 +353,11 @@ async def export_cv_variant(
     current_user: User = Depends(get_current_user),
 ) -> StreamingResponse:
     variant = await _owned_variant(db, variant_id, current_user.id, request)
-    if variant.status == "PUBLISHED" and variant.rendered_uri and Path(variant.rendered_uri).is_file():
-        pdf_bytes = Path(variant.rendered_uri).read_bytes()
+    if variant.status == "PUBLISHED" and variant.rendered_uri:
+        try:
+            pdf_bytes = await get_bytes_async(variant.rendered_uri)
+        except (ObjectStorageError, OSError):
+            _error("CV_VARIANT_ASSET_UNAVAILABLE", "Không thể đọc file CV Variant đã publish.", request, 503)
     elif preview:
         report, pdf_bytes = await validate_variant(db, variant, trace_id=_trace_id(request))
         if not report["passed"]:
@@ -379,7 +384,7 @@ async def delete_cv_variant(
     current_user: User = Depends(get_current_user),
 ) -> Response:
     variant = await _owned_variant(db, variant_id, current_user.id, request)
-    remove_variant_asset(variant)
+    await remove_variant_asset(variant)
     db.add(
         UsageEvent(
             user_id=current_user.id,

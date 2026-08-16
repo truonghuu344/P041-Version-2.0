@@ -658,7 +658,9 @@
 #view-find-jobs .cv-option-right {
   display: flex;
   align-items: center;
+  gap: 8px;
   flex-shrink: 0;
+  margin-left: auto;
 }
 
 #view-find-jobs .cv-option-check {
@@ -671,6 +673,7 @@
   background: #ecfdf5;
   color: var(--primary, #147a5a);
   border: 1px solid #a7f3d0;
+  flex-shrink: 0;
 }
 
 /* Empty State */

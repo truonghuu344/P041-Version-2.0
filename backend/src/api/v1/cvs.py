@@ -2,6 +2,7 @@ import logging
 import os
 import uuid
 from io import BytesIO
+from pathlib import Path
 from time import perf_counter
 from typing import Literal
 
@@ -30,17 +31,20 @@ from src.models.schemas import CVBulkDeleteRequest, CVBulkDeleteResponse, CVOut,
 from src.services.cv_blocks import apply_cv_block_patches
 from src.services.cv_parser import extract_text_from_document, parse_cv_to_structured_json
 from src.services.file_security import FileSecurityError, scan_uploaded_file
+from src.services.object_storage import ObjectStorageError, delete_async, put_bytes_async
 from src.services.pdf_export import apply_accepted_rewrites, build_cv_pdf
 
 router = APIRouter(prefix="/cvs", tags=["CV Management"])
 logger = logging.getLogger(__name__)
 
 UPLOAD_DIR = "./data/uploads"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
-def _remove_uploaded_file(saved_filepath: str | None) -> None:
+async def _remove_uploaded_file(saved_filepath: str | None) -> None:
     if not saved_filepath:
+        return
+    if saved_filepath.startswith("r2://"):
+        await delete_async(saved_filepath, local_root=Path(UPLOAD_DIR))
         return
     upload_root = os.path.abspath(UPLOAD_DIR)
     resolved_path = os.path.abspath(saved_filepath)
@@ -159,11 +163,17 @@ async def upload_cv(
         raise pipeline_error_from_message(str(exc), "EXTRACTION_001", status_code=422) from exc
 
     # Chỉ lưu file sau khi đã xác nhận có thể trích xuất và parse, tránh file rác khi lỗi.
-    file_ext = os.path.splitext(filename)[1]
+    file_ext = Path(filename).suffix
     saved_filename = f"{uuid.uuid4().hex}{file_ext}"
-    saved_filepath = os.path.join(UPLOAD_DIR, saved_filename)
-    with open(saved_filepath, "wb") as f:
-        f.write(content_bytes)
+    try:
+        saved_filepath = await put_bytes_async(
+            content=content_bytes,
+            key=f"cvs/{current_user.id}/{saved_filename}",
+            content_type=file.content_type or "application/octet-stream",
+            local_path=Path(UPLOAD_DIR) / saved_filename,
+        )
+    except ObjectStorageError as exc:
+        raise PipelineError("STORAGE_001", "Không thể lưu file CV. Vui lòng thử lại sau.", status_code=503) from exc
 
     cv_title = title.strip() if title.strip() else file.filename
 
@@ -192,7 +202,7 @@ async def upload_cv(
     except Exception as exc:
         await db.rollback()
         try:
-            os.remove(saved_filepath)
+            await _remove_uploaded_file(saved_filepath)
         except OSError:
             logger.warning("Không thể dọn file CV sau khi database rollback: %s", saved_filepath)
         logger.exception("Không thể lưu CV vào database")
@@ -510,7 +520,7 @@ async def bulk_delete_cvs(
     await db.commit()
 
     for saved_filepath in saved_filepaths:
-        _remove_uploaded_file(saved_filepath)
+        await _remove_uploaded_file(saved_filepath)
     return CVBulkDeleteResponse(deleted_ids=deleted_ids, deleted_count=len(deleted_ids))
 
 
@@ -606,4 +616,4 @@ async def delete_cv(
     await db.delete(cv)
     await db.commit()
 
-    _remove_uploaded_file(saved_filepath)
+    await _remove_uploaded_file(saved_filepath)
