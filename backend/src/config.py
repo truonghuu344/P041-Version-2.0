@@ -1,13 +1,17 @@
 from functools import lru_cache
+from pathlib import Path
 from typing import Literal
+from urllib.parse import quote
 
-from pydantic import Field
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=".env",
+        # Resolve from the repository root so `uvicorn src.main:app` works
+        # when launched inside `backend/` as well as from the project root.
+        env_file=Path(__file__).resolve().parents[2] / ".env",
         env_file_encoding="utf-8",
         extra="ignore",
     )
@@ -75,8 +79,24 @@ class Settings(BaseSettings):
     voice_llm_model: str = "gemini-3.5-flash"
 
     # Database
-    database_url: str = "postgresql+asyncpg://postgres:postgrespassword@localhost:5432/career_assistant_db"
+    # `DATABASE_URL` is preferred for hosted databases. For the local Docker
+    # stack, derive it from POSTGRES_* so the API never silently falls back to
+    # a hard-coded `postgres` account.
+    database_url: str = ""
+    postgres_user: str = "career_assistant"
+    postgres_password: str = ""
+    postgres_db: str = "career_assistant"
     database_echo: bool = False
+
+    @model_validator(mode="after")
+    def resolve_database_url(self) -> "Settings":
+        if not self.database_url:
+            password = quote(self.postgres_password, safe="")
+            self.database_url = (
+                f"postgresql+asyncpg://{quote(self.postgres_user, safe='')}:{password}"
+                f"@localhost:5432/{quote(self.postgres_db, safe='')}"
+            )
+        return self
 
     # pgvector / Market JD RAG
     vector_search_enabled: bool = False

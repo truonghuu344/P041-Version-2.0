@@ -888,3 +888,70 @@ class UsageEvent(Base):
     duration_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
     metadata_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), index=True)
+
+
+class Notification(Base):
+    """Central notification entity supporting multi-role two-way interactions."""
+
+    __tablename__ = "notifications"
+    __table_args__ = (
+        Index("ix_notifications_recipient_created", "recipient_user_id", "created_at"),
+        Index("ix_notifications_recipient_unread", "recipient_user_id", "is_read"),
+        Index("ix_notifications_category", "recipient_user_id", "category"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    recipient_user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    recipient_role: Mapped[str] = mapped_column(String(50), nullable=False)  # student, enterprise, counselor, admin
+    actor_user_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    actor_role: Mapped[str | None] = mapped_column(String(50), nullable=True)
+
+    type: Mapped[str] = mapped_column(String(80), nullable=False, index=True)
+    category: Mapped[str] = mapped_column(String(50), default="application", nullable=False)  # application, job, interview, advisor, candidate, message, offer, system
+    entity_type: Mapped[str] = mapped_column(String(50), default="application", nullable=False)  # job, application, cv, interview, advisor_session, message, email
+    entity_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    message: Mapped[str] = mapped_column(Text, nullable=False)
+    is_read: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    read_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    priority: Mapped[str] = mapped_column(String(20), default="normal", nullable=False)  # normal, important, high
+    action_url: Mapped[str] = mapped_column(String(500), nullable=False)
+
+    # Scoped entity references for deep linking
+    company_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    job_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    application_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    candidate_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    advisor_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    metadata_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class NotificationPreference(Base):
+    """User preferences for in-app and email notifications."""
+
+    __tablename__ = "notification_preferences"
+    __table_args__ = (
+        Index("uq_notification_preferences_user", "user_id", unique=True),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    email_job_alerts: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    email_application_updates: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    email_interviews: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    email_offers: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    email_advisor_messages: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    inapp_job_alerts: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    inapp_advisor_updates: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+

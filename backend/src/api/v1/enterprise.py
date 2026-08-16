@@ -16,8 +16,10 @@ from src.models.schemas import (
     JobApplicationDecision,
     JobApplicationOut,
 )
+from src.services.notification_service import NotificationService
 
 router = APIRouter(prefix="/enterprise", tags=["Enterprise Recruitment"])
+
 
 
 def _application_out(
@@ -130,6 +132,18 @@ async def share_cv_with_enterprise(
         db.add(application)
     await db.commit()
     await db.refresh(application)
+
+    await NotificationService.trigger_application_submitted(
+        db=db,
+        application_id=application.id,
+        job_id=jd.id,
+        job_title=jd.title,
+        company_name=jd.company or "Doanh nghiệp tuyển dụng",
+        student_id=student.id,
+        student_name=student.full_name or student.email,
+        enterprise_user_id=jd.created_by_user_id,
+    )
+
     return _application_out(application, jd, student)
 
 
@@ -213,10 +227,25 @@ async def decide_application(
     if not row:
         raise HTTPException(status_code=404, detail="Không tìm thấy hồ sơ ứng tuyển thuộc doanh nghiệp.")
     application, jd, candidate = row
+    previous_status = application.status
     application.status = payload.status
     application.decided_at = datetime.now(UTC) if payload.status != "submitted" else None
     await db.commit()
     await db.refresh(application)
+
+    if previous_status != payload.status:
+        await NotificationService.trigger_application_decision(
+            db=db,
+            application_id=application.id,
+            job_id=jd.id,
+            job_title=jd.title,
+            company_name=jd.company or "Doanh nghiệp tuyển dụng",
+            student_id=candidate.id,
+            enterprise_user_id=enterprise.id,
+            decision="accepted" if payload.status in ("shortlisted", "interview", "accepted", "hired") else "rejected",
+            next_stage="Phỏng vấn chuyên môn" if payload.status in ("shortlisted", "interview") else None,
+        )
+
     return _application_out(application, jd, candidate)
 
 

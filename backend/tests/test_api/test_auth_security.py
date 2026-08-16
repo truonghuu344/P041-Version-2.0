@@ -221,3 +221,43 @@ async def test_admin_cannot_create_duplicate_gmail_alias(client):
         },
     )
     assert response.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_update_profile_and_change_password(client):
+    user, headers = await register_and_login(client, email="profile.user@example.com", password="OldPassword123!")
+
+    # Cập nhật tên hồ sơ
+    update_res = await client.put(
+        "/api/v1/auth/me",
+        headers=headers,
+        json={"full_name": "Nguyễn Văn Profile"},
+    )
+    assert update_res.status_code == 200
+    assert update_res.json()["full_name"] == "Nguyễn Văn Profile"
+
+    # Đổi mật khẩu thành công
+    pwd_res = await client.post(
+        "/api/v1/auth/change-password",
+        headers=headers,
+        json={
+            "current_password": "OldPassword123!",
+            "new_password": "NewSecurePassword456!",
+        },
+    )
+    assert pwd_res.status_code == 200
+
+    # Đăng nhập bằng mật khẩu mới
+    login_new = await client.post(
+        "/api/v1/auth/login",
+        json={"email": "profile.user@example.com", "password": "NewSecurePassword456!"},
+    )
+    assert login_new.status_code == 200
+
+    # Mật khẩu cũ không còn dùng được
+    login_old = await client.post(
+        "/api/v1/auth/login",
+        json={"email": "profile.user@example.com", "password": "OldPassword123!"},
+    )
+    assert login_old.status_code == 401
+

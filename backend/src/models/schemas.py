@@ -19,6 +19,17 @@ class UserUpdate(BaseModel):
     password: str | None = None
 
 
+class ProfileUpdateRequest(BaseModel):
+    full_name: str | None = Field(default=None, min_length=2, max_length=255)
+    current_password: str | None = None
+    new_password: str | None = Field(default=None, min_length=6, max_length=72)
+
+
+class PasswordChangeRequest(BaseModel):
+    current_password: str = Field(..., min_length=1)
+    new_password: str = Field(..., min_length=6, max_length=72)
+
+
 class UserLogin(BaseModel):
     email: str
     password: str
@@ -36,7 +47,6 @@ class PasswordResetConfirm(BaseModel):
 
 class GoogleAuthRequest(BaseModel):
     credential: str = Field(..., min_length=20, description="Google Identity Services ID token")
-    role: Literal["student", "counselor", "enterprise"] = "student"
 
 
 class UserOut(BaseModel):
@@ -46,6 +56,7 @@ class UserOut(BaseModel):
     email: str
     full_name: str
     role: str
+    avatar_url: str | None = None
     created_at: datetime
 
 
@@ -633,6 +644,91 @@ class JobApplicationOut(BaseModel):
     status: str
     shared_at: datetime
     decided_at: datetime | None = None
+
+
+class ApplicationStatusNotificationOut(BaseModel):
+    id: str
+    application_id: str
+    jd_title: str
+    status: str
+    read_at: datetime | None = None
+    created_at: datetime
+
+
+class NotificationOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    recipient_user_id: str
+    recipient_role: str
+    actor_user_id: str | None = None
+    actor_role: str | None = None
+    type: str
+    category: str
+    entity_type: str
+    entity_id: str | None = None
+    title: str
+    message: str
+    is_read: bool
+    read_at: datetime | None = None
+    priority: str
+    action_url: str
+    company_id: str | None = None
+    job_id: str | None = None
+    application_id: str | None = None
+    candidate_id: str | None = None
+    advisor_id: str | None = None
+    metadata_json: Any | None = None
+    created_at: datetime
+
+
+class NotificationCreate(BaseModel):
+    recipient_user_id: str
+    recipient_role: str
+    actor_user_id: str | None = None
+    actor_role: str | None = None
+    type: str
+    category: str = "application"
+    entity_type: str = "application"
+    entity_id: str | None = None
+    title: str
+    message: str
+    priority: str = "normal"
+    action_url: str
+    company_id: str | None = None
+    job_id: str | None = None
+    application_id: str | None = None
+    candidate_id: str | None = None
+    advisor_id: str | None = None
+    metadata_json: Any | None = None
+
+
+class NotificationUnreadCountOut(BaseModel):
+    unread_count: int
+    total_count: int
+
+
+class NotificationPreferenceOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    email_job_alerts: bool
+    email_application_updates: bool
+    email_interviews: bool
+    email_offers: bool
+    email_advisor_messages: bool
+    inapp_job_alerts: bool
+    inapp_advisor_updates: bool
+
+
+class NotificationPreferenceUpdate(BaseModel):
+    email_job_alerts: bool | None = None
+    email_application_updates: bool | None = None
+    email_interviews: bool | None = None
+    email_offers: bool | None = None
+    email_advisor_messages: bool | None = None
+    inapp_job_alerts: bool | None = None
+    inapp_advisor_updates: bool | None = None
+
 
 
 class ApplicationFeedbackCreate(BaseModel):
