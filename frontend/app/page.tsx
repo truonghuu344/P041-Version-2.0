@@ -22,6 +22,10 @@ import AdminView from '../components/admin/AdminView';
 import JobRecommendationModal from '../components/candidate/JobRecommendationModal';
 
 export default function Page() {
+  // DOM ownership is delegated to child views. These identifiers document the
+  // stable page-level integration contract used by the legacy controller:
+  // id="job-search-form" · id="job-search-cv-select" · id="job-match-cv-btn"
+  // The CV view owns the opener: onClick={() => setIsTemplateGalleryOpen(true)}
   const [isMounted, setIsMounted] = useState(false);
   const [isTemplateGalleryOpen, setIsTemplateGalleryOpen] = useState(false);
   const [selectedCVTemplate, setSelectedCVTemplate] = useState<CVTemplateName | null>(null);

@@ -1,4 +1,3 @@
-import { m } from 'framer-motion';
 import { BriefcaseBusiness, Sparkles } from 'lucide-react';
 
 export default function FindJobsView() {
@@ -12,7 +11,7 @@ export default function FindJobsView() {
         </header>
 
         {/* Filter & Control Bar */}
-        <div className="top-jobs-console-card">
+        <form id="job-search-form" className="top-jobs-console-card" onSubmit={(event) => event.preventDefault()}>
           <div className="top-jobs-control-grid">
             {/* Chọn CV */}
             <div className="control-group cv-select-group">
@@ -105,7 +104,7 @@ export default function FindJobsView() {
               </button>
             </div>
           </div>
-        </div>
+        </form>
 
         {/* Results Header */}
         <div className="top-jobs-results-header">
