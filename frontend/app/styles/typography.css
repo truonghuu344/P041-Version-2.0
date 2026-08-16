@@ -16,7 +16,7 @@
   font-size: var(--page-title-size) !important;
   font-weight: 800 !important;
   line-height: var(--page-title-line-height) !important;
-  letter-spacing: -.045em !important;
+  letter-spacing: -0.045em !important;
 }
 
 #view-cv .career-table-header h2 span,
@@ -51,12 +51,20 @@
 }
 
 /* Remove repeated legacy top spacing from workspace headers. */
-#view-cv .career-portfolio-workspace { padding-top: 24px !important; }
+#view-cv .career-portfolio-workspace {
+  padding-top: 24px !important;
+}
 #view-jobs .buddy-hero-shell,
-#view-history .buddy-hero-shell { padding-top: 24px !important; }
+#view-history .buddy-hero-shell {
+  padding-top: 24px !important;
+}
 
-#view-history .history-workspace { padding-bottom: 72px !important; }
-#view-history .history-heading { margin-bottom: 20px !important; }
+#view-history .history-workspace {
+  padding-bottom: 72px !important;
+}
+#view-history .history-heading {
+  margin-bottom: 20px !important;
+}
 #view-history .history-heading p {
   max-width: 62ch;
   margin: 8px 0 0;
@@ -70,30 +78,58 @@
   border-radius: 16px;
   background: var(--card);
 }
-#view-history .archive-filters { margin: 0 0 20px; }
-#view-history .archive-filter-btn { display: inline-flex; align-items: center; gap: 7px; }
-#view-history .archive-card[data-type="match"] .archive-tag { color: var(--primary); background: var(--primary-soft); }
-#view-history .archive-card[data-type="optimized"] .archive-tag { color: #6d4cc4; background: #f3efff; }
-#view-profile .buddy-hero-shell { padding-top: 28px !important; }
-#view-gap .gap-detail-workspace { padding-top: 20px !important; }
+#view-history .archive-filters {
+  margin: 0 0 20px;
+}
+#view-history .archive-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+#view-history .archive-card[data-type='match'] .archive-tag {
+  color: var(--primary);
+  background: var(--primary-soft);
+}
+#view-history .archive-card[data-type='optimized'] .archive-tag {
+  color: #6d4cc4;
+  background: #f3efff;
+}
+#view-profile .buddy-hero-shell {
+  padding-top: 28px !important;
+}
+#view-gap .gap-detail-workspace {
+  padding-top: 20px !important;
+}
 #view-interview .interview-shell,
-#view-find-jobs .jobs-shell { padding-top: 30px !important; }
+#view-find-jobs .jobs-shell {
+  padding-top: 30px !important;
+}
 
-#view-interview .interview-shell { padding-top: 12px !important; }
+#view-interview .interview-shell {
+  padding-top: 12px !important;
+}
 
-#view-interview .interview-page-header { max-width: 920px; }
+#view-interview .interview-page-header {
+  max-width: 920px;
+}
 
 #view-interview .interview-page-header h2 {
   max-width: none;
 }
 
 @media (max-width: 760px) {
-  :root { --page-title-size: clamp(28px, 8vw, 36px); }
+  :root {
+    --page-title-size: clamp(28px, 8vw, 36px);
+  }
   #view-cv .career-portfolio-workspace,
   #view-jobs .buddy-hero-shell,
   #view-history .buddy-hero-shell,
   #view-profile .buddy-hero-shell,
   #view-gap .gap-detail-workspace,
-  #view-find-jobs .jobs-shell { padding-top: 20px !important; }
-  #view-interview .interview-shell { padding-top: 16px !important; }
+  #view-find-jobs .jobs-shell {
+    padding-top: 20px !important;
+  }
+  #view-interview .interview-shell {
+    padding-top: 16px !important;
+  }
 }

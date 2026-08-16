@@ -687,66 +687,297 @@
     <section class="app-view" id="view-find-jobs">
       <div class="page-container job-search-page">
         <div class="page-header job-search-heading">
-          <div class="page-badge">AI JOB RECOMMENDATIONS // TOP 10</div>
+          <div class="page-badge">Gợi ý việc làm theo hồ sơ · Top 10</div>
           <h1 class="page-title">Công việc phù hợp với CV</h1>
-          <p class="page-sub">Phân tích CV theo hệ tiêu chí rubric và đề xuất Top 10 vị trí phù hợp nhất dành cho bạn.</p>
+          <p class="page-sub">Chọn CV để tìm và xếp hạng những công việc phù hợp nhất dành cho bạn.</p>
         </div>
+
         <section class="top-jobs-console-card" aria-labelledby="job-search-console-title">
           <div class="top-jobs-control-grid">
+            <!-- Chọn CV -->
             <div class="control-group cv-select-group">
-              <label for="job-search-cv-select"><span>Chọn CV:</span></label>
-              <select id="job-search-cv-select" class="form-select top-jobs-select">
-                <option value="">Chọn CV đã lưu</option>
-              </select>
+              <label for="job-search-cv-select">
+                <span class="control-label-title">Chọn CV đối chiếu</span>
+                <span class="control-label-hint">Áp dụng cho mọi CV trong Kho (CV gốc, Đã Match, Đã tối ưu)</span>
+              </label>
+
+              <!-- Custom Interactive CV Selector with Status Badges -->
+              <div class="top-jobs-cv-dropdown" id="top-jobs-cv-dropdown">
+                <button type="button" class="top-jobs-cv-trigger" id="top-jobs-cv-trigger" aria-haspopup="listbox" aria-expanded="false">
+                  <div class="cv-trigger-content">
+                    <span class="cv-status-badge is-none" id="top-jobs-selected-cv-badge">Chưa chọn</span>
+                    <div class="cv-trigger-details">
+                      <strong class="cv-trigger-title" id="top-jobs-selected-cv-title">Chọn CV đã lưu...</strong>
+                      <small class="cv-trigger-meta" id="top-jobs-selected-cv-meta"></small>
+                    </div>
+                  </div>
+                  <span class="cv-trigger-chevron" aria-hidden="true">▾</span>
+                </button>
+
+                <!-- Hidden native select for form & compatibility -->
+                <select id="job-search-cv-select" class="visually-hidden-select" tabindex="-1" aria-hidden="true">
+                  <option value="">Chọn CV đã lưu...</option>
+                </select>
+
+                <!-- Custom Dropdown Menu -->
+                <div class="top-jobs-cv-menu" id="top-jobs-cv-menu" role="listbox" hidden>
+                  <div class="top-jobs-cv-menu-header">
+                    <span>Kho CV của bạn</span>
+                    <small>Chọn CV bất kỳ để tìm việc phù hợp</small>
+                  </div>
+                  <div class="top-jobs-cv-list" id="top-jobs-cv-list">
+                    <!-- Dynamic CV options populated by JS -->
+                  </div>
+                </div>
+              </div>
             </div>
+
+            <!-- Bước 2: Bộ lọc tùy chọn -->
             <div class="control-group filter-dropdowns-group">
-              <div class="filter-item">
-                <select id="job-filter-role" class="form-select filter-select">
-                  <option value="">Role ▼</option>
-                  <option value="Backend">Backend</option>
-                  <option value="Frontend">Frontend</option>
-                  <option value="Fullstack">Fullstack</option>
-                  <option value="DevOps">DevOps / Cloud</option>
-                  <option value="Data">Data / AI / ML</option>
-                  <option value="Mobile">Mobile Developer</option>
-                </select>
+              <div class="filter-header-label-wrap">
+                <span class="filter-group-title">Bộ lọc tùy chọn</span>
+                <span class="filter-group-hint">Không chọn gì → tự động xếp hạng toàn diện theo CV</span>
               </div>
-              <div class="filter-item">
-                <select id="job-filter-location" class="form-select filter-select">
-                  <option value="">Địa điểm ▼</option>
-                  <option value="Hà Nội">Hà Nội</option>
-                  <option value="Hồ Chí Minh">Hồ Chí Minh</option>
-                  <option value="Đà Nẵng">Đà Nẵng</option>
-                </select>
-              </div>
-              <div class="filter-item">
-                <select id="job-filter-work-mode" class="form-select filter-select">
-                  <option value="">Remote ▼</option>
-                  <option value="remote">Remote Only</option>
-                  <option value="hybrid">Hybrid</option>
-                  <option value="onsite">Onsite</option>
-                </select>
+              <div class="filter-items-row">
+                <div class="filter-item">
+                  <label for="job-filter-role" class="filter-item-label">Vị trí mong muốn (Tùy chọn)</label>
+                  <select id="job-filter-role" class="form-select filter-select">
+                    <option value="">Tất cả vị trí</option>
+                    <option value="Backend">Backend</option>
+                    <option value="Frontend">Frontend</option>
+                    <option value="Fullstack">Fullstack</option>
+                    <option value="DevOps">DevOps / Cloud</option>
+                    <option value="Data">Data / AI / ML</option>
+                    <option value="Mobile">Mobile Developer</option>
+                  </select>
+                </div>
+                <div class="filter-item">
+                  <label for="job-filter-location" class="filter-item-label">Địa điểm (Tùy chọn)</label>
+                  <select id="job-filter-location" class="form-select filter-select">
+                    <option value="">Tất cả địa điểm</option>
+                    <option value="Hồ Chí Minh">Hồ Chí Minh</option>
+                    <option value="Hà Nội">Hà Nội</option>
+                    <option value="Đà Nẵng">Đà Nẵng</option>
+                  </select>
+                </div>
+                <div class="filter-item">
+                  <label for="job-filter-work-mode" class="filter-item-label">Hình thức làm việc (Tùy chọn)</label>
+                  <select id="job-filter-work-mode" class="form-select filter-select">
+                    <option value="">Tất cả hình thức</option>
+                    <option value="hybrid">Hybrid</option>
+                    <option value="remote">Remote Only</option>
+                    <option value="onsite">Onsite</option>
+                  </select>
+                </div>
               </div>
             </div>
+
+            <!-- Tìm kiếm -->
             <div class="control-group action-group">
+              <div class="top-jobs-submit-copy">
+                <span class="top-jobs-submit-status-pill">Sẵn sàng gợi ý</span>
+                <span>Hệ thống hỗ trợ tìm việc trực tiếp từ CV gốc, Đã Match và Đã tối ưu.</span>
+              </div>
               <button type="button" id="job-match-cv-btn" class="btn-find-top-jobs" disabled>
-                <span aria-hidden="true">✦</span> Tìm công việc phù hợp
+                ✦ Tìm công việc phù hợp
               </button>
             </div>
           </div>
         </section>
+
+        <!-- Results Header -->
         <div class="top-jobs-results-header">
           <div class="results-title-wrap">
             <span class="pulse-dot green"></span>
-            <h3 id="job-results-summary">Top 10 dành cho bạn</h3>
+            <div>
+              <h3 id="job-results-summary">Gợi ý việc làm</h3>
+              <p class="results-subtitle" id="job-results-subtitle">Xếp hạng theo mức độ phù hợp với CV</p>
+            </div>
           </div>
-          <span id="job-results-mode" class="results-mode-badge">AI Xếp Hạng</span>
+          <span id="job-results-mode" class="results-mode-badge">Xếp hạng theo mức độ phù hợp</span>
         </div>
-        <div id="job-search-results" class="top-jobs-single-column-list" aria-live="polite">
-          <div class="job-search-loading"><span></span><p>AI đang tải danh sách việc làm phù hợp...</p></div>
+
+        <!-- Results List -->
+        <div id="job-search-results" class="top-jobs-grid top-jobs-single-column-list" aria-live="polite">
+          <div class="job-search-loading"><span></span><p>Đang tải danh sách việc làm phù hợp...</p></div>
         </div>
+
+        <nav id="job-pagination" class="job-pagination" aria-label="Phân trang danh sách việc làm" hidden></nav>
       </div>
+
+      <!-- ══ Modal — Chi tiết công việc & Đối chiếu với CV ══ -->
+      <div id="job-recommendation-drawer" class="job-recommendation-drawer job-modal-overlay" aria-hidden="true">
+        <div class="job-drawer-backdrop" id="job-drawer-backdrop"></div>
+        <aside class="job-drawer-panel job-modal-panel" role="dialog" aria-modal="true" aria-labelledby="job-drawer-job-title">
+
+          <!-- 1. Modal Header -->
+          <div class="job-drawer-header">
+            <div class="job-drawer-header-left">
+              <div class="job-drawer-badge-row">
+                <span class="job-modal-tag">Chi tiết tuyển dụng &amp; Đối chiếu</span>
+              </div>
+              <h3 id="job-drawer-job-title" class="job-drawer-title">Backend Engineer</h3>
+              <p id="job-drawer-job-company" class="job-drawer-company">ABC Company · Hồ Chí Minh · Hybrid</p>
+            </div>
+            <button type="button" class="job-drawer-close" id="job-drawer-close-btn" aria-label="Đóng chi tiết">✕</button>
+          </div>
+
+          <!-- 2. Modal Body -->
+          <div class="job-drawer-body">
+
+            <!-- Top Highlight Strip: Active CV + Score Card -->
+            <div class="job-drawer-top-banner">
+              <div class="job-drawer-cv-banner" id="job-drawer-cv-banner">
+                <div class="drawer-cv-banner-left">
+                  <span class="cv-status-badge is-raw" id="job-drawer-cv-badge">CV gốc</span>
+                  <div class="drawer-cv-banner-text">
+                    <strong id="job-drawer-cv-name">CV đã chọn</strong>
+                    <small>Bản CV đang dùng để xếp hạng &amp; so sánh</small>
+                  </div>
+                </div>
+                <button type="button" class="btn-drawer-switch-cv" id="btn-drawer-switch-cv">
+                  Đổi CV khác
+                </button>
+              </div>
+
+              <div class="job-drawer-hero-card" id="job-drawer-hero-card">
+                <div class="job-drawer-score-badge">
+                  <span id="job-drawer-score-pct" class="job-drawer-score-num">84%</span>
+                  <span id="job-drawer-score-label" class="job-drawer-score-label">Độ phù hợp hồ sơ</span>
+                </div>
+                <div class="job-drawer-confidence-badge is-high" id="job-drawer-confidence-badge">
+                  Độ tin cậy: <strong>Cao</strong>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mandatory Alert (hidden by default) -->
+            <div class="job-drawer-mandatory-alert" id="job-drawer-mandatory-alert" hidden>
+              <span class="icon-warn">⚠</span>
+              <div class="mandatory-alert-content">
+                <strong>Thiếu yêu cầu bắt buộc</strong>
+                <p id="job-drawer-mandatory-detail">Hồ sơ chưa đáp ứng đủ tiêu chí bắt buộc của vị trí này. Điểm hiển thị được giới hạn tối đa 49%.</p>
+              </div>
+            </div>
+
+            <!-- 2-Column Content Layout -->
+            <div class="job-drawer-grid">
+              <!-- Column 1: JD Chi tiết công việc -->
+              <div class="job-drawer-col">
+                <section class="job-drawer-section">
+                  <h4 class="job-drawer-section-heading">📋 Mô tả công việc &amp; Trách nhiệm</h4>
+                  <div class="job-drawer-desc-content" id="job-drawer-description">
+                    <ul class="job-drawer-list">
+                      <li>Thiết kế, xây dựng và tối ưu các RESTful API và microservices backend đáp ứng tải cao.</li>
+                      <li>Phối hợp với frontend team và product team để triển khai các tính năng mới cho nền tảng.</li>
+                      <li>Tối ưu hóa truy vấn cơ sở dữ liệu PostgreSQL và quản lý dữ liệu hiệu năng cao.</li>
+                    </ul>
+                  </div>
+                </section>
+
+                <section class="job-drawer-section">
+                  <h4 class="job-drawer-section-heading">🎯 Yêu cầu ứng viên</h4>
+                  <div class="job-drawer-req-content" id="job-drawer-requirements">
+                    <ul class="job-drawer-list">
+                      <li>Tối thiểu 2+ năm kinh nghiệm phát triển backend với Python / FastAPI hoặc Node.js.</li>
+                      <li>Thành thạo cơ sở dữ liệu quan hệ (PostgreSQL / MySQL) và thiết kế schema hiệu quả.</li>
+                      <li>Hiểu biết về kiến trúc hệ thống, Docker, CI/CD và tối ưu hóa hiệu năng ứng dụng.</li>
+                    </ul>
+                  </div>
+                </section>
+
+                <section class="job-drawer-section">
+                  <h4 class="job-drawer-section-heading">⚡ Tech Stack &amp; Kỹ năng</h4>
+                  <div class="job-drawer-skills-wrap" id="job-drawer-skills-list">
+                    <span class="drawer-skill-pill">Python</span>
+                    <span class="drawer-skill-pill">FastAPI</span>
+                    <span class="drawer-skill-pill">PostgreSQL</span>
+                    <span class="drawer-skill-pill">Docker</span>
+                    <span class="drawer-skill-pill">Redis</span>
+                    <span class="drawer-skill-pill">REST API</span>
+                  </div>
+                </section>
+              </div>
+
+              <!-- Column 2: Đánh giá chi tiết với CV -->
+              <div class="job-drawer-col">
+                <section class="job-drawer-section">
+                  <h4 class="job-drawer-section-heading">📊 Đánh giá 5 tiêu chí Rubric</h4>
+                  <div class="job-drawer-breakdown-list">
+                    <div class="job-drawer-breakdown-row">
+                      <span class="criteria-label">Kỹ năng bắt buộc</span>
+                      <span class="criteria-bar-wrap"><span class="criteria-bar"><span class="criteria-bar-fill" style="width:89%"></span></span></span>
+                      <span class="criteria-score" id="job-drawer-must-have">31/35</span>
+                    </div>
+                    <div class="job-drawer-breakdown-row">
+                      <span class="criteria-label">Kinh nghiệm</span>
+                      <span class="criteria-bar-wrap"><span class="criteria-bar"><span class="criteria-bar-fill" style="width:83%"></span></span></span>
+                      <span class="criteria-score" id="job-drawer-experience">25/30</span>
+                    </div>
+                    <div class="job-drawer-breakdown-row">
+                      <span class="criteria-label">Học vấn</span>
+                      <span class="criteria-bar-wrap"><span class="criteria-bar"><span class="criteria-bar-fill" style="width:80%"></span></span></span>
+                      <span class="criteria-score" id="job-drawer-education">8/10</span>
+                    </div>
+                    <div class="job-drawer-breakdown-row">
+                      <span class="criteria-label">Kỹ năng ưu tiên</span>
+                      <span class="criteria-bar-wrap"><span class="criteria-bar"><span class="criteria-bar-fill" style="width:80%"></span></span></span>
+                      <span class="criteria-score" id="job-drawer-nice-to-have">8/10</span>
+                    </div>
+                    <div class="job-drawer-breakdown-row">
+                      <span class="criteria-label">Domain / Ngành</span>
+                      <span class="criteria-bar-wrap"><span class="criteria-bar"><span class="criteria-bar-fill" style="width:80%"></span></span></span>
+                      <span class="criteria-score" id="job-drawer-domain">12/15</span>
+                    </div>
+                  </div>
+                </section>
+
+                <section class="job-drawer-section">
+                  <h4 class="job-drawer-section-heading">✓ Điểm mạnh phù hợp</h4>
+                  <div class="job-drawer-evidence-list" id="job-drawer-strengths-list">
+                    <div class="job-drawer-evidence-item strength">
+                      <span class="icon-check">✓</span>
+                      <span>FastAPI — khớp yêu cầu chính về backend framework</span>
+                    </div>
+                    <div class="job-drawer-evidence-item strength">
+                      <span class="icon-check">✓</span>
+                      <span>PostgreSQL — kinh nghiệm thiết kế schema</span>
+                    </div>
+                  </div>
+                </section>
+
+                <section class="job-drawer-section">
+                  <h4 class="job-drawer-section-heading">△ Cần bổ sung / Khoảng trống</h4>
+                  <div class="job-drawer-evidence-list" id="job-drawer-gaps-list">
+                    <div class="job-drawer-evidence-item gap">
+                      <span class="icon-warn">⚠</span>
+                      <span>Redis — JD yêu cầu caching layer, CV chưa đề cập</span>
+                    </div>
+                  </div>
+                </section>
+              </div>
+            </div>
+
+          </div><!-- /.job-drawer-body -->
+
+          <!-- 3. Modal Footer -->
+          <div class="job-drawer-footer">
+            <div class="job-drawer-footer-actions">
+              <button type="button" class="btn-drawer-action btn-modal-close" id="job-drawer-cancel-btn">
+                Đóng
+              </button>
+              <button type="button" class="btn-drawer-action btn-full-match" id="btn-drawer-full-match">
+                🎯 So khớp chi tiết với CV này
+              </button>
+              <button type="button" class="btn-drawer-action btn-mock-interview" id="btn-drawer-mock-interview">
+                🎙️ Luyện phỏng vấn JD này
+              </button>
+            </div>
+          </div>
+        </aside>
+      </div><!-- /.job-recommendation-drawer -->
     </section>
+
 
     <section class="app-view" id="view-jobs">
       <div class="page-container">

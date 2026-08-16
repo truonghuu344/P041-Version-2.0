@@ -7,9 +7,9 @@ export const metadata: Metadata = {
   title: 'Career Assistant',
   description: 'Tối ưu CV và phỏng vấn với AI.',
   icons: {
-    icon: '/images/buddy1.png',
-    shortcut: '/images/buddy1.png',
-    apple: '/images/buddy1.png',
+    icon: '/images/image2.png',
+    shortcut: '/images/image2.png',
+    apple: '/images/image2.png',
   },
 };
 
