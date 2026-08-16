@@ -29,6 +29,7 @@ def _live_options(language: LanguageCode) -> LiveOptions:
         interim_results=True,
         utterance_end_ms=1500,
         vad_events=True,
+        channels=1,
     )
 
 

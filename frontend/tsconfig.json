@@ -21,11 +21,12 @@
     ]
   },
   "include": [
-    "**/*.ts",
-    "**/*.tsx",
+    "app/**/*",
+    "components/**/*",
+    "global.d.ts",
     ".next/types/**/*.ts",
     "next-env.d.ts",
     "node_modules/.cache/next-dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules", "**/*.test.ts", "**/*.test.tsx", "jest.setup.ts"]
+  "exclude": ["node_modules", "components/**/__tests__/**/*", "**/*.test.ts", "**/*.test.tsx", "jest.setup.ts"]
 }

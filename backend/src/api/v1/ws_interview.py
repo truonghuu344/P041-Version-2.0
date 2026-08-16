@@ -34,17 +34,22 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-async def _authenticate_ws(token: str | None) -> str | None:
-    """Validate JWT and return user_id, or None on failure."""
+async def _authenticate_ws(websocket: WebSocket, token: str | None) -> str | None:
+    """Validate JWT from query param or cookie, return user_id or None."""
     if not token:
+        token = websocket.cookies.get("career_session")
+    if not token:
+        logger.warning("WS auth: no token in query param or cookie")
         return None
     settings = get_settings()
     try:
         payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
         if payload.get("ver") != settings.jwt_token_version:
+            logger.warning("WS auth: token version mismatch (got %s, expected %s)", payload.get("ver"), settings.jwt_token_version)
             return None
         return payload.get("sub")
-    except jwt.PyJWTError:
+    except jwt.PyJWTError as exc:
+        logger.warning("WS auth: JWT decode failed: %s", exc)
         return None
 
 
@@ -263,7 +268,6 @@ class VoiceInterviewSession:
                 "score": evaluation.get("star_score", {}),
             })
 
-        # Update stored questions with STAR scores
         questions = await db.scalars(
             select(InterviewQuestion)
             .where(InterviewQuestion.session_id == self.session_id)
@@ -274,10 +278,23 @@ class VoiceInterviewSession:
 
         session.total_questions = len(history_list)
 
-        report_data = await generate_final_star_report(
-            qa_history=history_list,
-            jd_title=self.orchestrator.jd_title,
-        )
+        if history_list:
+            try:
+                report_data = await generate_final_star_report(
+                    qa_history=history_list,
+                    jd_title=self.orchestrator.jd_title,
+                )
+            except Exception:
+                logger.warning("Report generation failed, using defaults")
+                report_data = {}
+        else:
+            report_data = {
+                "total_score": 0,
+                "star_scores": {"situation": 0, "task": 0, "action": 0, "result": 0},
+                "strengths": [],
+                "improvements": ["Phiên phỏng vấn kết thúc sớm, chưa có câu trả lời để đánh giá."],
+                "recommendations": ["Hãy thử lại và trả lời ít nhất một câu hỏi để nhận phản hồi chi tiết."],
+            }
 
         db.add(InterviewReport(
             session_id=self.session_id,
@@ -357,7 +374,7 @@ async def voice_interview_ws(websocket: WebSocket, session_id: str, token: str |
     """WebSocket endpoint for voice mock interviews."""
     await websocket.accept()
 
-    user_id = await _authenticate_ws(token)
+    user_id = await _authenticate_ws(websocket, token)
     if not user_id:
         await _send_json(websocket, {"type": "error", "message": "Xác thực thất bại."})
         await websocket.close(code=4001, reason="Unauthorized")
