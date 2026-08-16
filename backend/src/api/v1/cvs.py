@@ -75,10 +75,10 @@ def _manual_cv_raw_text(payload: ManualCVCreate) -> str:
 
 
 CV_TEMPLATE_DOWNLOADS = {
-    "modern": ("cv-template-modern-tech.pdf", "Mẫu CV Modern Tech - Hai Cột"),
+    "modern": ("cv-template-modern.pdf", "Mẫu CV Modern Tech - Hai Cột"),
     "classic": ("cv-template-classic-ats.pdf", "Mẫu CV Harvard ATS - Một Cột"),
     "elegant": ("cv-template-topcv-emerald.pdf", "Mẫu CV TopCV Emerald - Doanh Nghiệp"),
-    "compact": ("cv-template-compact-1page.pdf", "Mẫu CV Compact - Tối Ưu 1 Trang"),
+    "compact": ("cv-template-creative-tech.pdf", "Mẫu CV Compact - Tối Ưu 1 Trang"),
     "creative": ("cv-template-creative-dark.pdf", "Mẫu CV Creative Dark - Timeline"),
 }
 

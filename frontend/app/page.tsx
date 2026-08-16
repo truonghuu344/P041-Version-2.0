@@ -237,32 +237,6 @@ export default function Page() {
                 </a>
               </div>
             </article>
-            <article className="template-preview template-preview-elegant">
-              <span className="template-card-badge topcv">TOPCV EMERALD</span>
-              <h3>TopCV Emerald</h3>
-              <p>Màu xanh ngọc bích TopCV thanh lịch, tối ưu cho Sales, Marketing &amp; Business.</p>
-              <div className="template-preview-actions">
-                <button type="button" onClick={() => selectCVTemplate('elegant')}>
-                  Dùng mẫu này
-                </button>
-                <a className="template-download-btn" href="/api/v1/cvs/templates/elegant">
-                  Tải PDF mẫu
-                </a>
-              </div>
-            </article>
-            <article className="template-preview template-preview-compact">
-              <span className="template-card-badge">TỐI ƯU 1 TRANG</span>
-              <h3>Compact 1-Page</h3>
-              <p>Bố cục cô đọng, căn lề chuẩn xác đảm bảo không tràn sang trang 2.</p>
-              <div className="template-preview-actions">
-                <button type="button" onClick={() => selectCVTemplate('compact')}>
-                  Dùng mẫu này
-                </button>
-                <a className="template-download-btn" href="/api/v1/cvs/templates/compact">
-                  Tải PDF mẫu
-                </a>
-              </div>
-            </article>
             <article className="template-preview template-preview-creative">
               <span className="template-card-badge creative">DARK CREATIVE</span>
               <h3>Creative Dark</h3>
