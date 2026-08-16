@@ -19,6 +19,10 @@ if db_url.startswith("postgresql://"):
 elif db_url.startswith("sqlite://"):
     db_url = db_url.replace("sqlite://", "sqlite+aiosqlite://", 1)
 
+# asyncpg không nhận tham số `sslmode` của libpq, mà sử dụng `ssl`
+if "postgresql+asyncpg://" in db_url and "sslmode=" in db_url:
+    db_url = db_url.replace("sslmode=", "ssl=")
+
 # Sử dụng NullPool khi chạy test để không giữ connection trong pool
 engine_kwargs = {
     # SQL echo can leak CV/JD content and raises UnicodeEncodeError on Windows
@@ -39,8 +43,10 @@ AsyncSessionLocal = async_sessionmaker(
     autoflush=False,
 )
 
+
 class Base(DeclarativeBase):
     pass
+
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """Dependency cung cấp AsyncSession cho FastAPI routes."""
@@ -52,6 +58,7 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
         raise
     finally:
         await session.close()
+
 
 async def init_db() -> None:
     """Tự động khởi tạo cấu trúc bảng trong Database & seed tài khoản Admin."""
