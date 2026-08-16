@@ -5167,6 +5167,30 @@ TÊN CÔNG TY:
     }
   });
 
+  const interviewUploadCvBtn = document.getElementById('page-interview-upload-cv-btn');
+  const interviewUploadCvInput = document.getElementById('page-interview-upload-cv-input');
+  interviewUploadCvBtn?.addEventListener('click', () => interviewUploadCvInput?.click());
+  interviewUploadCvInput?.addEventListener('change', async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (!ApiClient.isAuthenticated()) {
+      showToast('Vui lòng đăng nhập để tải CV.', 'warning');
+      return;
+    }
+    try {
+      interviewUploadCvBtn.disabled = true;
+      showToast('Đang tải lên và phân tích CV...', 'info');
+      const uploaded = await ApiClient.uploadCV(file);
+      showToast('Tải CV thành công! Đã tự động chọn.', 'success');
+      await populatePageInterviewOptions(uploaded.id);
+    } catch (err) {
+      showToast(`Lỗi tải CV: ${err.message}`, 'error');
+    } finally {
+      interviewUploadCvBtn.disabled = false;
+      event.target.value = '';
+    }
+  });
+
   async function populatePageInterviewOptions(preferredCvId = '') {
     if (!pageSelectIntCv || !pageSelectIntJd) return;
     try {
@@ -5306,6 +5330,8 @@ TÊN CÔNG TY:
   let voiceWs = null;
   let voiceMediaStream = null;
   let voiceMediaRecorder = null;
+  let voiceAudioContext = null;
+  let voiceGainNode = null;
   let voiceIsRecording = false;
   let voiceTranscriptParts = [];
   let voiceConversationHistory = [];
@@ -5315,6 +5341,10 @@ TÊN CÔNG TY:
 
   function startVoiceSession(sessionId, language) {
     const token = ApiClient.getToken();
+    if (!token) {
+      showToast('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.', 'error');
+      return;
+    }
     const backendHost = (window.__CAREER_API_BASE_URL__ || '').match(/^https?:\/\/([^/]+)/)?.[1] || 'localhost:8000';
     const wsProto = location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${wsProto}//${backendHost}/api/v1/ws/interview/${sessionId}?token=${encodeURIComponent(token)}`;
@@ -5432,22 +5462,44 @@ TÊN CÔNG TY:
     }
   }
 
+  let voiceCurrentAudio = null;
+
   function playAudioBase64(b64) {
     try {
+      stopCurrentAudio();
       const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
       const blob = new Blob([bytes], { type: 'audio/mpeg' });
       const url = URL.createObjectURL(blob);
       const audio = new Audio(url);
-      audio.onended = () => URL.revokeObjectURL(url);
+      audio.onended = () => { URL.revokeObjectURL(url); voiceCurrentAudio = null; };
+      voiceCurrentAudio = audio;
       audio.play().catch(() => {});
     } catch { /* ignore playback errors */ }
+  }
+
+  function stopCurrentAudio() {
+    if (voiceCurrentAudio) {
+      voiceCurrentAudio.pause();
+      voiceCurrentAudio.currentTime = 0;
+      voiceCurrentAudio = null;
+    }
   }
 
   async function startVoiceRecording() {
     if (voiceIsRecording) return;
     try {
-      voiceMediaStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, sampleRate: 16000 } });
-      voiceMediaRecorder = new MediaRecorder(voiceMediaStream, { mimeType: MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm' });
+      voiceMediaStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: false, autoGainControl: true, channelCount: 1, sampleRate: { ideal: 16000 } } });
+
+      const actualRate = voiceMediaStream.getAudioTracks()[0]?.getSettings()?.sampleRate || 48000;
+      voiceAudioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: actualRate });
+      const source = voiceAudioContext.createMediaStreamSource(voiceMediaStream);
+      voiceGainNode = voiceAudioContext.createGain();
+      voiceGainNode.gain.value = 2.5;
+      const dest = voiceAudioContext.createMediaStreamDestination();
+      source.connect(voiceGainNode);
+      voiceGainNode.connect(dest);
+
+      voiceMediaRecorder = new MediaRecorder(dest.stream, { mimeType: MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm' });
       voiceIsRecording = true;
       voiceTranscriptParts = [];
 
@@ -5478,6 +5530,11 @@ TÊN CÔNG TY:
     if (voiceMediaRecorder && voiceMediaRecorder.state !== 'inactive') {
       voiceMediaRecorder.stop();
     }
+    if (voiceAudioContext) {
+      voiceAudioContext.close().catch(() => {});
+      voiceAudioContext = null;
+      voiceGainNode = null;
+    }
     if (voiceMediaStream) {
       voiceMediaStream.getTracks().forEach(t => t.stop());
       voiceMediaStream = null;
@@ -5502,6 +5559,7 @@ TÊN CÔNG TY:
 
   document.querySelector('.interview-end-session')?.addEventListener('click', () => {
     if (voiceWs && voiceWs.readyState === WebSocket.OPEN) {
+      stopCurrentAudio();
       stopVoiceRecording();
       voiceWs.send(JSON.stringify({ type: 'end_session' }));
       const btn = document.querySelector('.interview-end-session');

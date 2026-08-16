@@ -22,9 +22,9 @@ NUDGE_MESSAGES = {
 }
 
 SILENCE_THRESHOLDS = {
-    "gentle": 5,
-    "prompt": 10,
-    "skip": 20,
+    "gentle": 15,
+    "prompt": 30,
+    "skip": 60,
 }
 FILLER_THRESHOLD = 3
 SHORT_ANSWER_WORDS = 10
