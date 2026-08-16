@@ -37,9 +37,11 @@ class JobRecommendationItem(BaseModel):
     fit_label: str = Field(min_length=1, max_length=40)
     evidence_confidence: str = Field(min_length=1, max_length=40)
     mandatory_requirement_failed: bool
-    required_skills_coverage: float = Field(ge=0.0, le=1.0)
-    mandatory_requirements_matched: int = Field(ge=0)
-    total_mandatory_requirements: int = Field(ge=0)
+    # These values were added after the initial response contract.  Defaults
+    # preserve compatibility for callers that only need the ranked result.
+    required_skills_coverage: float = Field(default=0.0, ge=0.0, le=1.0)
+    mandatory_requirements_matched: int = Field(default=0, ge=0)
+    total_mandatory_requirements: int = Field(default=0, ge=0)
     score_breakdown: list[dict[str, Any]] = Field(default_factory=list)
     top_strengths: list[str] = Field(default_factory=list)
     top_gaps: list[str] = Field(default_factory=list)

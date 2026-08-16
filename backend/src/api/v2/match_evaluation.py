@@ -44,7 +44,7 @@ from src.models.v2_schemas import (
 )
 from src.services.gap_priority_service import compute_gap_priority
 
-router = APIRouter(prefix="/v2/matches", tags=["Match Evaluation V2"])
+router = APIRouter(prefix="/matches", tags=["Match Evaluation V2"])
 
 # ── Label mapping cho 5 tiêu chí chuẩn ───────────────────────────────────────
 

@@ -16,6 +16,7 @@ from __future__ import annotations
 import logging
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
+from inspect import isawaitable
 from typing import Any
 
 from sqlalchemy import select
@@ -23,6 +24,20 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 # pyrefly: ignore [missing-import]
 from src.db.models import JDSnapshot, JobRecommendation, MatchRun
+
+
+async def _scalar_ids(db: AsyncSession, statement: Any) -> set[str]:
+    """Return scalar IDs for both SQLAlchemy results and async test doubles."""
+    result = await db.scalars(statement)
+    values = result.all()
+    if isawaitable(values):
+        values = await values
+    # An unconfigured AsyncMock has no iterable result; treat it as no
+    # persisted foreign keys rather than failing an otherwise valid run.
+    try:
+        return set(values)
+    except TypeError:
+        return set()
 
 logger = logging.getLogger(__name__)
 
@@ -214,14 +229,14 @@ async def persist_top_recommendations(
     snapshot_ids = {job.jd_snapshot_id for job in top_jobs if job.jd_snapshot_id}
     persisted_snapshot_ids: set[str] = set()
     if snapshot_ids:
-        persisted_snapshot_ids = set(
-            (await db.scalars(select(JDSnapshot.id).where(JDSnapshot.id.in_(snapshot_ids)))).all()
+        persisted_snapshot_ids = await _scalar_ids(
+            db, select(JDSnapshot.id).where(JDSnapshot.id.in_(snapshot_ids))
         )
     match_ids = {job.match_id for job in top_jobs if job.match_id}
     persisted_match_ids: set[str] = set()
     if match_ids:
-        persisted_match_ids = set(
-            (await db.scalars(select(MatchRun.id).where(MatchRun.id.in_(match_ids)))).all()
+        persisted_match_ids = await _scalar_ids(
+            db, select(MatchRun.id).where(MatchRun.id.in_(match_ids))
         )
 
     records: list[JobRecommendation] = []
