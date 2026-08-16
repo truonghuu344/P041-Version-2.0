@@ -8,7 +8,8 @@
 
 // Gọi cùng origin; Next.js sẽ proxy sang FastAPI. Cách này tránh lỗi CORS khi
 // người dùng mở UI bằng localhost, 127.0.0.1 hoặc một hostname triển khai khác.
-const API_BASE_URL = window.__CAREER_API_BASE_URL__ || '/api/v1';
+const API_BASE_URL =
+  typeof window === 'undefined' ? '/api/v1' : window.__CAREER_API_BASE_URL__ || '/api/v1';
 
 function getSafeApiMessage(status, endpoint = '') {
   if (status === 401) return 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.';
