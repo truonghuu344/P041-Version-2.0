@@ -132,6 +132,7 @@ Cloudflare R2 là storage chính thức của dự án khi deploy. R2 Free hiệ
 
 ```text
 cvs/{user_id}/{upload_id}.pdf
+jds/{user_id}/{upload_id}.pdf
 cv-variants/{user_id}/{variant_id}-r{revision}.pdf
 users/{user_id}/interviews/{session_id}/audio/{turn_id}.webm
 ```
