@@ -83,3 +83,7 @@ note.txt
 
 # Local demo guide (personal, do not commit)
 setup_demo.md
+
+# graphify
+docs/graphify-out/
+graphify-out/
