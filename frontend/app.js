@@ -3001,6 +3001,33 @@ TÊN CÔNG TY:
   let jobProcessingModalVisible = false;
   let jobProcessingCloseTimer = null;
 
+  async function populateJobLocationFilter() {
+    const locationSelect = document.getElementById('job-filter-location');
+    if (!locationSelect) return;
+    try {
+      const jds = await ApiClient.listJDs();
+      const previous = locationSelect.value;
+      const locations = [...new Set((jds || [])
+        .map(jd => String(jd.location || '').trim())
+        .filter(Boolean))]
+        .sort((left, right) => left.localeCompare(right, 'vi'));
+      locationSelect.replaceChildren(
+        new Option('Tất cả địa điểm', ''),
+        ...locations.map(location => {
+        const option = document.createElement('option');
+        option.value = location;
+        option.textContent = location;
+        return option;
+        }),
+      );
+      if ([...locationSelect.options].some(option => option.value === previous)) {
+        locationSelect.value = previous;
+      }
+    } catch (_) {
+      // Keep the default “all locations” option if the JD catalog is unavailable.
+    }
+  }
+
   function setJobJourneyStage(stage) {
     if (!jobJourney) return;
     const order = ['cv', 'filters', 'results'];
@@ -4112,6 +4139,7 @@ TÊN CÔNG TY:
 
   async function initializeJobSearchView() {
     await loadJobSearchCVOptions();
+    void populateJobLocationFilter();
     await loadJobSearchResults();
   }
 
@@ -4143,6 +4171,7 @@ TÊN CÔNG TY:
       if (activeJobSearchCV) setJobJourneyStage('results');
     });
   });
+
 
   jobMatchCVButton?.addEventListener('click', async () => {
     jobMatchCVButton.disabled = true;

@@ -127,11 +127,8 @@ export default function FindJobsView() {
 
                 <div className="filter-item">
                   <label htmlFor="job-filter-location" className="filter-item-label">Địa điểm (Tùy chọn)</label>
-                  <select id="job-filter-location" className="form-select filter-select">
+                  <select id="job-filter-location" className="form-select filter-select" defaultValue="">
                     <option value="">Tất cả địa điểm</option>
-                    <option value="Hồ Chí Minh">Hồ Chí Minh</option>
-                    <option value="Hà Nội">Hà Nội</option>
-                    <option value="Đà Nẵng">Đà Nẵng</option>
                   </select>
                 </div>
 
