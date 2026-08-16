@@ -262,8 +262,9 @@ class VoiceInterviewOrchestrator:
         messages.append({"role": "system", "content": self._build_phase_hint()})
 
         content = await self._try_gemini(api_key, settings.voice_llm_model, messages)
-        if content is None and settings.openai_api_key:
-            content = await self._try_openai(settings.openai_api_key, messages)
+        if content is None:
+            logger.info("Primary model failed, trying fallback: %s", settings.voice_llm_fallback_model)
+            content = await self._try_gemini(api_key, settings.voice_llm_fallback_model, messages)
         if content is None:
             return self._fallback_response()
 
@@ -333,25 +334,6 @@ class VoiceInterviewOrchestrator:
             return None
         except Exception as exc:
             logger.warning("Gemini failed: %s", exc)
-            return None
-
-    async def _try_openai(self, api_key: str, messages: list[dict]) -> str | None:
-        try:
-            from openai import AsyncOpenAI
-            client = AsyncOpenAI(api_key=api_key)
-            response = await asyncio.wait_for(
-                client.chat.completions.create(
-                    model="gpt-4o-mini",
-                    messages=messages,
-                    temperature=0.7,
-                    max_completion_tokens=400,
-                    response_format={"type": "json_object"},
-                ),
-                timeout=30,
-            )
-            return response.choices[0].message.content or None
-        except Exception as exc:
-            logger.warning("OpenAI fallback failed: %s", exc)
             return None
 
     async def _force_closing(self) -> dict[str, Any]:

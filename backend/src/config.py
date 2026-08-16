@@ -59,10 +59,11 @@ class Settings(BaseSettings):
     cv_parser_mode: Literal["local", "gemini"] = "gemini"
     weather_api_key: str = ""
 
-    # Voice Interview (Pipeline 3): Deepgram STT + Gemini Flash LLM + Edge TTS
+    # Voice Interview (Pipeline 3): Deepgram STT + Gemini LLM + gTTS
     deepgram_api_key: str = ""
     openai_api_key: str = ""
     voice_llm_model: str = "gemini-3.5-flash"
+    voice_llm_fallback_model: str = "gemini-2.0-flash"
 
     # Database
     database_url: str = "postgresql+asyncpg://postgres:postgrespassword@localhost:5432/career_assistant_db"
