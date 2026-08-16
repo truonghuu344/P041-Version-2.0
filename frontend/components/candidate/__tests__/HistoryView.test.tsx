@@ -46,8 +46,9 @@ describe('HistoryView Component (Redesigned)', () => {
   test('renders data table headers and pagination controls', () => {
     render(<HistoryView />);
 
-    expect(screen.getByRole('columnheader', { name: /Loại/i })).toBeInTheDocument();
-    expect(screen.getByRole('columnheader', { name: /CV \/ Công việc/i })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: /Hoạt động/i })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: /^CV$/i })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: /Công việc \/ JD/i })).toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: /Trạng thái/i })).toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: /Hành động/i })).toBeInTheDocument();
 
