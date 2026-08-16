@@ -685,7 +685,7 @@
 #view-find-jobs .top-jobs-cv-empty-item p {
   font-size: 13px;
   color: #64748b;
-  margin-bottom: 10px;
+  margin: 0;
 }
 
 /* Menu Footer Quick Action */
@@ -724,27 +724,6 @@
   background: var(--primary-hover, #0f674a);
   box-shadow: 0 3px 8px rgba(20, 122, 90, 0.3);
   transform: translateY(-0.5px);
-}
-
-#view-find-jobs .btn-goto-upload-cv {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 16px;
-  border-radius: 8px;
-  background: var(--primary, #147a5a);
-  color: #ffffff;
-  font-size: 12.5px;
-  font-weight: 600;
-  border: none;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  box-shadow: 0 1px 3px rgba(20, 122, 90, 0.2);
-}
-
-#view-find-jobs .btn-goto-upload-cv:hover {
-  background: var(--primary-hover, #0f674a);
-  box-shadow: 0 3px 8px rgba(20, 122, 90, 0.3);
 }
 
 /* ── CV Status Badges (Semantic Color Differentiation) ── */
