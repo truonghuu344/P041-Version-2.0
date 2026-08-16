@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
-from typing import Any
 
 import pytest
 
@@ -12,7 +10,6 @@ import pytest
 from eval.top_k_benchmark.benchmark_top_k import (
     GOLDEN_SET_PATH,
     InMemorySemanticIndex,
-    _dcg_at_k,
     _ndcg_at_k,
     run_benchmark_for_k,
 )

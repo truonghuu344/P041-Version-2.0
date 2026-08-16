@@ -1,7 +1,6 @@
 from src.schemas.job_recommendation import JobRecommendationRequest
 from src.services.job_recommendation_filters import apply_filters
 
-
 JOBS = [
     {
         "source_id": "remote-platform",

@@ -8,7 +8,7 @@ from io import BytesIO
 try:
     from gtts import gTTS
 except ImportError:
-    gTTS = None
+    gTTS = None  # noqa: N816
 
 logger = logging.getLogger(__name__)
 

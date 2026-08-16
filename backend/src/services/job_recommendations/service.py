@@ -22,9 +22,7 @@ from __future__ import annotations
 import logging
 import uuid
 from collections.abc import Mapping, Sequence
-from datetime import datetime, timezone
-
-UTC = getattr(datetime, "UTC", timezone.utc)
+from datetime import UTC, datetime
 from typing import Any
 
 from sqlalchemy import select

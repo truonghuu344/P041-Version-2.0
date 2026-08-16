@@ -1,6 +1,5 @@
 from src.services.job_recommendations.bm25_retriever import BM25Retriever, retrieve_bm25
 
-
 JOBS = [
     {
         "jd_snapshot_id": "jd-python",
