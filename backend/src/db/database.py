@@ -1,5 +1,6 @@
 import logging
 import os
+import urllib.parse
 from collections.abc import AsyncGenerator
 
 from sqlalchemy import text
@@ -12,16 +13,43 @@ from src.config import get_settings
 logger = logging.getLogger(__name__)
 settings = get_settings()
 
-db_url = settings.database_url
 
-if db_url.startswith("postgresql://"):
-    db_url = db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
-elif db_url.startswith("sqlite://"):
-    db_url = db_url.replace("sqlite://", "sqlite+aiosqlite://", 1)
+def normalize_database_url(url: str) -> str:
+    """Normalize DATABASE_URL for SQLAlchemy async drivers (asyncpg, aiosqlite).
 
-# asyncpg không nhận tham số `sslmode` của libpq, mà sử dụng `ssl`
-if "postgresql+asyncpg://" in db_url and "sslmode=" in db_url:
-    db_url = db_url.replace("sslmode=", "ssl=")
+    - Converts sync driver prefixes to async variants.
+    - Maps libpq's `sslmode` to asyncpg's `ssl`.
+    - Strips parameters unsupported by asyncpg.connect (e.g. `channel_binding`,
+      `gssencmode`, `target_session_attrs`).
+    """
+    if url.startswith("postgresql://"):
+        url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    elif url.startswith("sqlite://"):
+        url = url.replace("sqlite://", "sqlite+aiosqlite://", 1)
+
+    if url.startswith("postgresql+asyncpg://"):
+        parsed = urllib.parse.urlparse(url)
+        if parsed.query:
+            query_params = urllib.parse.parse_qs(parsed.query, keep_blank_values=True)
+            # asyncpg accepts `ssl` query parameter (e.g. ssl=require), not `sslmode`
+            if "sslmode" in query_params:
+                sslmode_val = query_params.pop("sslmode")[0]
+                if "ssl" not in query_params:
+                    query_params["ssl"] = [sslmode_val]
+            # Strip libpq-specific parameters unsupported by asyncpg
+            for unsupported in ("channel_binding", "gssencmode", "target_session_attrs"):
+                query_params.pop(unsupported, None)
+
+            new_query = urllib.parse.urlencode(
+                [(k, v) for k, values in query_params.items() for v in values]
+            )
+            parsed = parsed._replace(query=new_query)
+            url = urllib.parse.urlunparse(parsed)
+
+    return url
+
+
+db_url = normalize_database_url(settings.database_url)
 
 # Sử dụng NullPool khi chạy test để không giữ connection trong pool
 engine_kwargs = {
