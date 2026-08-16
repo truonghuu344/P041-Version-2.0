@@ -340,7 +340,7 @@
   color: #6b7d83;
   font-weight: 500;
 }
-@media (max-width: 760px) {
+@media(max-width:760px) {
   .cv-variant-wizard {
     padding: 18px;
   }

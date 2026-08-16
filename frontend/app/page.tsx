@@ -141,7 +141,7 @@ export default function Page() {
               <span className="nav-text">Báo cáo</span>
             </a>
             <a href="#" className="nav-link role-only-link" id="nav-enterprise" hidden>
-              <span className="nav-text">Dashboard</span>
+              <span className="nav-text">Dashboard Tuyá»ƒn Dá»¥ng</span>
             </a>
             <a href="#" className="nav-link role-only-link" id="nav-enterprise-jobs" hidden>
               <span className="nav-text">Tin tuyển dụng</span>
