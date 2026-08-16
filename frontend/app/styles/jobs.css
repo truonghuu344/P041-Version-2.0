@@ -6,7 +6,7 @@
 
 /* ── Section wrapper ── */
 #view-find-jobs {
-  display: block;
+  display: none;
   min-height: calc(100vh - 72px);
   background: var(--background, #ffffff) !important;
   color: var(--text-primary, #0f172a) !important;
@@ -14,6 +14,9 @@
   padding-top: 0 !important;
 }
 
+#view-find-jobs.active {
+  display: block !important;
+}
 
 /* ── Override legacy page-container & container frame matching Trang chủ ── */
 #view-find-jobs .jobs-shell,
