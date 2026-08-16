@@ -14,7 +14,7 @@ class CVVariantCreate(BaseModel):
     jd_id: str
     cv_id: str | None = None
     match_id: str | None = None
-    template_name: Literal["classic", "modern", "compact"] = "classic"
+    template_name: Literal["classic", "modern", "elegant", "compact", "creative"] = "classic"
     title: str = Field(default="CV tối ưu theo JD", min_length=2, max_length=255)
     content: dict[str, Any] | None = None
     candidate_evidence_confirmed: bool = False

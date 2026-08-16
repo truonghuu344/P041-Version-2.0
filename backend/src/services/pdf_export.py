@@ -171,7 +171,7 @@ def build_cv_pdf(
     styles = getSampleStyleSheet()
 
     if template_name == "modern":
-        # ===== TEMPLATE 1: MODERN TWO-COLUMN LAYOUT =====
+        # ===== TEMPLATE 1: MODERN TWO-COLUMN TECH LAYOUT =====
         accent = colors.HexColor("#2563eb")
         sidebar_bg = colors.HexColor("#e0f2fe")
 
@@ -219,7 +219,6 @@ def build_cv_pdf(
             spaceAfter=6,
         )
 
-        # Left sidebar mirrors the visual preview: avatar, contact, skills and education.
         left_flowables = []
         personal = parsed.get("personal_info") or {}
         full_name = personal.get("full_name") or title
@@ -252,7 +251,6 @@ def build_cv_pdf(
                     line = _text(edu)
                 left_flowables.append(Paragraph(f"- {line}", body_style))
 
-        # Right column uses the candidate name as the document hero, like the preview.
         right_flowables = [
             Paragraph(_text(full_name), title_style),
             Paragraph(_text(parsed.get("headline") or title), body_style),
@@ -281,7 +279,6 @@ def build_cv_pdf(
             for sug in accepted_suggestions:
                 right_flowables.append(Paragraph(f"- {_text(sug)}", body_style))
 
-        # Build 2-Column Table
         col_widths = [65 * mm, 118 * mm]
         layout_table = Table(
             [[left_flowables, right_flowables]],
@@ -304,8 +301,139 @@ def build_cv_pdf(
         )
         document.build([layout_table])
 
-    elif template_name in ("compact", "creative"):
-        # ===== TEMPLATE 3: TECH MINIMALIST / CREATIVE TIMELINE =====
+    elif template_name == "elegant":
+        # ===== TEMPLATE 2: TOPCV SIGNATURE EMERALD PRO =====
+        accent = colors.HexColor("#059669")
+        sidebar_bg = colors.HexColor("#ecfdf5")
+
+        document = SimpleDocTemplate(
+            buffer,
+            pagesize=A4,
+            rightMargin=12 * mm,
+            leftMargin=12 * mm,
+            topMargin=12 * mm,
+            bottomMargin=12 * mm,
+            title=title,
+        )
+
+        left_heading = ParagraphStyle(
+            name="EleLeftHeading",
+            fontName=font,
+            fontSize=11,
+            leading=14,
+            textColor=colors.HexColor("#047857"),
+            spaceBefore=8,
+            spaceAfter=4,
+        )
+        right_heading = ParagraphStyle(
+            name="EleRightHeading",
+            fontName=font,
+            fontSize=12,
+            leading=15,
+            textColor=accent,
+            spaceBefore=10,
+            spaceAfter=4,
+        )
+        body_style = ParagraphStyle(
+            name="EleBody",
+            fontName=font,
+            fontSize=9,
+            leading=12.5,
+            textColor=colors.HexColor("#1e293b"),
+        )
+        title_style = ParagraphStyle(
+            name="EleTitle",
+            fontName=font,
+            fontSize=19,
+            leading=23,
+            textColor=accent,
+            spaceAfter=5,
+        )
+
+        left_flowables = []
+        personal = parsed.get("personal_info") or {}
+        full_name = personal.get("full_name") or title
+        left_flowables.extend(
+            [
+                Table([[_AvatarPlaceholder(28 * mm, colors.HexColor("#059669"))]], hAlign="CENTER"),
+                Spacer(1, 8),
+                Paragraph("LIÊN HỆ", left_heading),
+            ]
+        )
+        for key in ("email", "phone", "location", "linkedin", "website"):
+            if personal.get(key):
+                left_flowables.append(Paragraph(f"• {_text(personal[key])}", body_style))
+
+        skills = parsed.get("skills") or []
+        if skills:
+            left_flowables.append(Spacer(1, 8))
+            left_flowables.append(Paragraph("KỸ NĂNG NỔI BẬT", left_heading))
+            for skill in skills:
+                left_flowables.append(Paragraph(f"✓ {_text(skill)}", body_style))
+
+        education = parsed.get("education") or []
+        if education:
+            left_flowables.append(Spacer(1, 8))
+            left_flowables.append(Paragraph("HỌC VẤN", left_heading))
+            for edu in education:
+                if isinstance(edu, dict):
+                    line = " - ".join(_text(v) for v in edu.values() if v)
+                else:
+                    line = _text(edu)
+                left_flowables.append(Paragraph(f"• {line}", body_style))
+
+        right_flowables = [
+            Paragraph(_text(full_name), title_style),
+            Paragraph(_text(parsed.get("headline") or title), body_style),
+            HRFlowable(width="100%", thickness=2, color=accent, spaceBefore=6, spaceAfter=8),
+        ]
+        if parsed.get("summary"):
+            right_flowables.append(Paragraph("MỤC TIÊU NGHỀ NGHIỆP", right_heading))
+            right_flowables.append(Paragraph(_text(parsed["summary"]), body_style))
+
+        experience = parsed.get("experience") or []
+        if experience:
+            right_flowables.append(Paragraph("KINH NGHIỆM LÀM VIỆC", right_heading))
+            for item in experience:
+                line = _item_text(item)
+                right_flowables.append(Paragraph(f"• {line}", body_style))
+
+        projects = parsed.get("projects") or []
+        if projects:
+            right_flowables.append(Paragraph("DỰ ÁN NỔI BẬT", right_heading))
+            for item in projects:
+                line = _item_text(item)
+                right_flowables.append(Paragraph(f"• {line}", body_style))
+
+        if accepted_suggestions:
+            right_flowables.append(Paragraph("NỘI DUNG TỐI ƯU ĐÃ XÁC NHẬN", right_heading))
+            for sug in accepted_suggestions:
+                right_flowables.append(Paragraph(f"• {_text(sug)}", body_style))
+
+        col_widths = [65 * mm, 118 * mm]
+        layout_table = Table(
+            [[left_flowables, right_flowables]],
+            colWidths=col_widths,
+        )
+        layout_table.setStyle(
+            TableStyle([
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ("BACKGROUND", (0, 0), (0, 0), sidebar_bg),
+                ("LEFTPADDING", (0, 0), (0, 0), 12),
+                ("RIGHTPADDING", (0, 0), (0, 0), 12),
+                ("TOPPADDING", (0, 0), (0, 0), 14),
+                ("BOTTOMPADDING", (0, 0), (0, 0), 14),
+                ("LEFTPADDING", (1, 0), (1, 0), 12),
+                ("RIGHTPADDING", (1, 0), (1, 0), 8),
+                ("TOPPADDING", (1, 0), (1, 0), 14),
+                ("BOTTOMPADDING", (1, 0), (1, 0), 14),
+                ("LINERIGHT", (0, 0), (0, 0), 1, colors.HexColor("#a7f3d0")),
+            ])
+        )
+        document.build([layout_table])
+
+    elif template_name == "creative":
+        # ===== TEMPLATE 3: CREATIVE DARK HEADER & TIMELINE =====
         accent = colors.HexColor("#0d9488")
         dark_header_bg = colors.HexColor("#0f172a")
 
@@ -417,6 +545,94 @@ def build_cv_pdf(
             story.append(HRFlowable(width="100%", thickness=1, color=accent, spaceBefore=2, spaceAfter=6))
             for suggestion in accepted_suggestions:
                 story.append(Paragraph(f"- {_text(suggestion)}", body_style))
+
+        document.build(story)
+
+    elif template_name == "compact":
+        # ===== TEMPLATE 4: COMPACT 1-PAGE EXECUTIVE =====
+        accent = colors.HexColor("#334155")
+        document = SimpleDocTemplate(
+            buffer,
+            pagesize=A4,
+            rightMargin=10 * mm,
+            leftMargin=10 * mm,
+            topMargin=10 * mm,
+            bottomMargin=10 * mm,
+            title=title,
+        )
+
+        title_style = ParagraphStyle(
+            name="CompactTitle",
+            fontName=font,
+            fontSize=16,
+            leading=19,
+            textColor=accent,
+            alignment=TA_LEFT,
+            spaceAfter=2,
+        )
+        heading_style = ParagraphStyle(
+            name="CompactHeading",
+            fontName=font,
+            fontSize=10,
+            leading=12,
+            textColor=accent,
+            spaceBefore=6,
+            spaceAfter=2,
+        )
+        body_style = ParagraphStyle(
+            name="CompactBody",
+            fontName=font,
+            fontSize=8.5,
+            leading=11.5,
+            textColor=colors.HexColor("#1e293b"),
+        )
+        contact_style = ParagraphStyle(
+            name="CompactContact",
+            fontName=font,
+            fontSize=8.5,
+            leading=11.5,
+            textColor=colors.HexColor("#64748b"),
+        )
+
+        personal = parsed.get("personal_info") or {}
+        full_name = personal.get("full_name") or title
+        contact = " | ".join(
+            _text(value)
+            for key, value in personal.items()
+            if key != "full_name" and value
+        )
+        story = [
+            Paragraph(f"<b>{_text(full_name)}</b>", title_style),
+            Paragraph(contact, contact_style),
+            HRFlowable(width="100%", thickness=1, color=accent, spaceBefore=4, spaceAfter=5),
+        ]
+
+        if parsed.get("summary"):
+            story.append(Paragraph("TÓM TẮT NGHỀ NGHIỆP", heading_style))
+            story.append(Paragraph(_text(parsed["summary"]), body_style))
+
+        if parsed.get("skills"):
+            story.append(Paragraph("KỸ NĂNG CHÍNH", heading_style))
+            story.append(Paragraph(", ".join(parsed.get("skills") or []), body_style))
+
+        sections = (
+            ("KINH NGHIỆM", parsed.get("experience") or []),
+            ("DỰ ÁN TIÊU BIỂU", parsed.get("projects") or []),
+            ("HỌC VẤN & BẰNG CẤP", parsed.get("education") or []),
+        )
+        for heading, items in sections:
+            if not items:
+                continue
+            story.append(Paragraph(heading, heading_style))
+            for item in items:
+                line = _item_text(item)
+                if line:
+                    story.append(Paragraph(f"• {line}", body_style))
+
+        if accepted_suggestions:
+            story.append(Paragraph("TỐI ƯU ATS", heading_style))
+            for suggestion in accepted_suggestions:
+                story.append(Paragraph(f"• {_text(suggestion)}", body_style))
 
         document.build(story)
 

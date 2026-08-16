@@ -74,6 +74,12 @@ class CVOut(BaseModel):
     raw_text: str | None = None
     parsed_json: dict[str, Any] | None = None
     created_at: datetime
+    updated_at: datetime | None = None
+    status_type: str = "raw"
+    status_label: str = "CV gốc"
+    match_count: int = 0
+    is_optimized: bool = False
+    last_used_at: datetime | None = None
 
 
 # --- Job Description Schemas ---

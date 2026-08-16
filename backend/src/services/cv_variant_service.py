@@ -44,7 +44,9 @@ PUBLIC_SECTIONS = ("personal_info", "summary", "skills", "experience", "projects
 TEMPLATE_DEFINITIONS: dict[str, dict[str, Any]] = {
     "classic": {"layout": "single-column", "ats_safe": True, "preferred_pages": 1, "max_pages": 2},
     "modern": {"layout": "two-column", "ats_safe": True, "preferred_pages": 1, "max_pages": 2},
+    "elegant": {"layout": "two-column", "ats_safe": True, "preferred_pages": 1, "max_pages": 2},
     "compact": {"layout": "compact", "ats_safe": True, "preferred_pages": 1, "max_pages": 2},
+    "creative": {"layout": "creative", "ats_safe": True, "preferred_pages": 1, "max_pages": 2},
 }
 
 CONTENT_SCHEMA = {

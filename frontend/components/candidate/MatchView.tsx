@@ -46,7 +46,8 @@ export default function MatchView() {
             Match CV <span>với công việc</span>
           </h2>
           <span data-i18n-text="match-description">
-            Chọn CV và công việc. Bạn sẽ thấy phân tích mức độ phù hợp, điểm mạnh và những kỹ năng cần bổ sung để ứng tuyển hiệu quả hơn.
+            Chọn CV và công việc. Bạn sẽ thấy phân tích mức độ phù hợp, điểm mạnh và những kỹ năng
+            cần bổ sung để ứng tuyển hiệu quả hơn.
           </span>
         </header>
 
@@ -79,7 +80,9 @@ export default function MatchView() {
               <div id="p1-cv-input-area">
                 <div id="p1-cv-login-gate" className="p1-login-gate" style={{ display: 'none' }}>
                   <span>Đăng nhập để dùng CV đã lưu.</span>
-                  <button id="p1-cv-login-btn" type="button">Đăng nhập</button>
+                  <button id="p1-cv-login-btn" type="button">
+                    Đăng nhập
+                  </button>
                 </div>
                 <div id="p1-cv-select-section">
                   <label htmlFor="cv-analysis-cv-select" style={{ display: 'none' }}>
@@ -200,7 +203,7 @@ export default function MatchView() {
                     </button>
                   </div>
 
-                  <div className="match-job-grid-footer">
+                  {/* <div className="match-job-grid-footer">
                     <p id="p1-job-count" />
                     <nav
                       id="p1-job-pagination"
@@ -214,13 +217,15 @@ export default function MatchView() {
                       </select>
                       / trang
                     </label>
-                  </div>
+                  </div> */}
                 </div>
 
                 <div id="p1-job-upload-panel" hidden>
                   <div id="p1-jd-login-gate" className="p1-login-gate" style={{ display: 'none' }}>
                     <span>Đăng nhập để lưu JD riêng.</span>
-                    <button id="p1-jd-login-btn" type="button">Đăng nhập</button>
+                    <button id="p1-jd-login-btn" type="button">
+                      Đăng nhập
+                    </button>
                   </div>
                   <div id="p1-jd-select-section" hidden>
                     <select id="cv-analysis-jd-select">
@@ -234,7 +239,12 @@ export default function MatchView() {
                       <Upload size={25} />
                       <strong>Upload Job Description</strong>
                       <span id="cv-jd-file-name">PDF, DOCX, TXT hoặc ảnh</span>
-                      <input id="cv-jd-file-input" type="file" accept=".pdf,.docx,.txt,image/*" hidden />
+                      <input
+                        id="cv-jd-file-input"
+                        type="file"
+                        accept=".pdf,.docx,.txt,image/*"
+                        hidden
+                      />
                     </label>
                     <button type="submit">Dùng JD này để phân tích</button>
                   </form>
@@ -256,7 +266,11 @@ export default function MatchView() {
           </section>
         </div>
 
-        <section className="match-cv-browser" id="p1-cv-browser" aria-labelledby="match-cv-browser-title">
+        <section
+          className="match-cv-browser"
+          id="p1-cv-browser"
+          aria-labelledby="match-cv-browser-title"
+        >
           <header>
             <h3 id="match-cv-browser-title">Chọn CV</h3>
             <p>Chọn một CV đã lưu hoặc tải lên CV tạm thời.</p>
@@ -264,7 +278,11 @@ export default function MatchView() {
           <div id="p1-cv-browser-content" />
         </section>
 
-        <section className="match-job-browser" id="p1-job-browser" aria-labelledby="match-job-browser-title">
+        <section
+          className="match-job-browser"
+          id="p1-job-browser"
+          aria-labelledby="match-job-browser-title"
+        >
           <header>
             <h3 id="match-job-browser-title">Chọn công việc</h3>
           </header>
@@ -291,34 +309,41 @@ export default function MatchView() {
               </button>
             </header>
 
-            <section id="cv-analysis-results-card" className="match-summary gap-result-modal-content" hidden>
+            <section
+              id="cv-analysis-results-card"
+              className="match-summary gap-result-modal-content"
+              hidden
+            >
               <div id="cv-analysis-empty-state" />
               <div id="cv-analysis-result-content" className="cv-analysis-result-content" hidden>
-            <header className="match-result-overview">
-              <div className="cv-result-score-ring">
-                <strong id="cv-result-match-score">—</strong>
-                <span>Match score</span>
-              </div>
-              <div className="cv-result-summary-block">
-                <p id="cv-result-context" />
-                <h3>Kết quả đánh giá</h3>
-                <p id="cv-result-summary" />
-                <div id="cv-result-confidence-summary" className="cv-result-confidence-summary" />
-              </div>
-            </header>
-            <div className="cv-result-skills-grid">
-              <section className="cv-result-panel is-matched">
-                <h4>✓ Điểm phù hợp nổi bật</h4>
-                <div id="cv-result-matching-skills" className="cv-result-tags" />
-              </section>
-              <section className="cv-result-panel is-missing">
-                <h4>! Cần bổ sung cho JD</h4>
-                <small>Thiếu</small>
-                <div id="cv-result-missing-skills" className="cv-result-tags" />
-                <small>Đã có nhưng chưa rõ</small>
-                <div id="cv-result-partial-skills" className="cv-result-tags" />
-              </section>
-            </div>
+                <header className="match-result-overview">
+                  <div className="cv-result-score-ring">
+                    <strong id="cv-result-match-score">—</strong>
+                    <span>Match score</span>
+                  </div>
+                  <div className="cv-result-summary-block">
+                    <p id="cv-result-context" />
+                    <h3>Kết quả đánh giá</h3>
+                    <p id="cv-result-summary" />
+                    <div
+                      id="cv-result-confidence-summary"
+                      className="cv-result-confidence-summary"
+                    />
+                  </div>
+                </header>
+                <div className="cv-result-skills-grid">
+                  <section className="cv-result-panel is-matched">
+                    <h4>✓ Điểm phù hợp nổi bật</h4>
+                    <div id="cv-result-matching-skills" className="cv-result-tags" />
+                  </section>
+                  <section className="cv-result-panel is-missing">
+                    <h4>! Cần bổ sung cho JD</h4>
+                    <small>Thiếu bắt buộc (Must-have)</small>
+                    <div id="cv-result-missing-skills" className="cv-result-tags" />
+                    <small>Kỹ năng mềm &amp; Cần làm rõ</small>
+                    <div id="cv-result-partial-skills" className="cv-result-tags" />
+                  </section>
+                </div>
                 <section className="cv-result-priority-panel">
                   <div>
                     <h4>3 việc nên làm trước khi ứng tuyển</h4>
@@ -340,12 +365,25 @@ export default function MatchView() {
                       </select>
                     </label>
                   </div>
-                  <div id="cv-optimization-detail-summary" className="cv-optimization-detail-summary" hidden />
+                  <div
+                    id="cv-optimization-detail-summary"
+                    className="cv-optimization-detail-summary"
+                    hidden
+                  />
                   <div id="cv-result-suggestions-preview" className="cv-result-action-list" />
                 </section>
-                <div id="cv-ai-optimization-status" className="cv-ai-optimization-status" aria-live="polite" hidden />
+                <div
+                  id="cv-ai-optimization-status"
+                  className="cv-ai-optimization-status"
+                  aria-live="polite"
+                  hidden
+                />
                 <div className="match-result-actions">
-                  <button id="btn-optimize-cv-ai" className="gap-result-optimize-button" type="button">
+                  <button
+                    id="btn-optimize-cv-ai"
+                    className="gap-result-optimize-button"
+                    type="button"
+                  >
                     <Sparkles size={16} /> Tối ưu &amp; tải CV
                   </button>
                   <button id="btn-compare-multi-position" type="button">

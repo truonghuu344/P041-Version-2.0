@@ -1,0 +1,1338 @@
+{
+  "JD-001": {
+    "title": "Software Engineer Intern - Backend",
+    "domain": "Backend",
+    "company": "ShopBack",
+    "level": "Intern",
+    "skills": [
+      "AI",
+      "Algorithms",
+      "C",
+      "ChatGPT",
+      "Claude",
+      "Data Structure",
+      "Gemini",
+      "Go",
+      "Java",
+      "JavaScript",
+      "Objective-C",
+      "Python",
+      "Software Engineering"
+    ]
+  },
+  "JD-002": {
+    "title": "Software Developer - Intern",
+    "domain": "Frontend",
+    "company": "Bouygues Construction IT Vietnam",
+    "level": "Intern",
+    "skills": [
+      "Angular",
+      "JUnit",
+      "Java",
+      "JavaScript",
+      "PHP"
+    ]
+  },
+  "JD-003": {
+    "title": "Thực tập sinh Java",
+    "domain": "Frontend",
+    "company": "CÔNG TY TNHH BZCOM",
+    "level": "Intern",
+    "skills": [
+      "C",
+      "Git",
+      "Java",
+      "JavaScript",
+      "SQL"
+    ]
+  },
+  "JD-004": {
+    "title": "Thực tập sinhBackend Developer",
+    "domain": "Backend",
+    "company": "Công ty Cổ phần HouseNow",
+    "level": "Intern",
+    "skills": [
+      "Git",
+      "Java",
+      "MySQL",
+      "NodeJS",
+      "PostgreSQL",
+      "RESTful API"
+    ]
+  },
+  "JD-005": {
+    "title": "Lập trình viênJava",
+    "domain": "Backend",
+    "company": "CÔNG TY CỔ PHẦN ADVANCE TECH VIỆT NAM",
+    "level": "Intern",
+    "skills": [
+      "Algorithms",
+      "DevOps",
+      "Java",
+      "MySQL",
+      "PostgreSQL",
+      "RESTful API",
+      "SQL",
+      "Spring",
+      "Spring Boot",
+      "Tester"
+    ]
+  },
+  "JD-006": {
+    "title": "JavaBackend Developer(Middle-Senior)",
+    "domain": "Backend",
+    "company": "Công ty TNHH SoftRoad",
+    "level": "Senior",
+    "skills": [
+      "AI",
+      "CI/CD",
+      "Docker",
+      "Git",
+      "Hibernate",
+      "JPA",
+      "Java",
+      "Kubernetes",
+      "MySQL",
+      "PostgreSQL",
+      "RabbitMQ",
+      "Redis",
+      "SQL",
+      "Spring",
+      "Spring Boot"
+    ]
+  },
+  "JD-007": {
+    "title": "SeniorJava Developer",
+    "domain": "Backend",
+    "company": "CÔNG TY TNHH TẬP ĐOÀN CÔNG NGHỆ WIKEX EXCHANGE",
+    "level": "Senior",
+    "skills": [
+      "Hibernate",
+      "JPA",
+      "Java",
+      "MongoDB",
+      "MySQL",
+      "PostgreSQL",
+      "Redis",
+      "Spring",
+      "Spring Boot"
+    ]
+  },
+  "JD-008": {
+    "title": "JAVA DEVELOPER",
+    "domain": "Backend",
+    "company": "Công Ty Cổ Phần Truyền Thông VMG",
+    "level": "Not Specified",
+    "skills": [
+      "CI/CD",
+      "Docker",
+      "Java",
+      "Linux",
+      "RabbitMQ",
+      "Redis",
+      "SQL",
+      "Spring",
+      "Spring Boot"
+    ]
+  },
+  "JD-009": {
+    "title": "Senior JavaBackend DeveloperSpring Boot",
+    "domain": "Backend",
+    "company": "CÔNG TY CỔ PHẦN EASTGATE SOFTWARE",
+    "level": "Senior",
+    "skills": [
+      "CI/CD",
+      "DevOps",
+      "Docker",
+      "Express",
+      "Hibernate",
+      "JUnit",
+      "Java",
+      "Kafka",
+      "Kubernetes",
+      "Microservices",
+      "Mockito",
+      "QA",
+      "RESTful API",
+      "RabbitMQ",
+      "Redis",
+      "Spring",
+      "Spring Boot",
+      "Spring Security"
+    ]
+  },
+  "JD-010": {
+    "title": "TTS Frontend Engineer",
+    "domain": "Frontend",
+    "company": "Công Ty CP Công Nghệ Teko Việt Nam",
+    "level": "Intern",
+    "skills": [
+      "Algorithms",
+      "Automation",
+      "CI/CD",
+      "Kubernetes",
+      "ReactJS"
+    ]
+  },
+  "JD-011": {
+    "title": "Thực Tập SinhFrontend Developer",
+    "domain": "Frontend",
+    "company": "Công Ty Cổ Phần Ftf-Edugroup",
+    "level": "Intern",
+    "skills": [
+      "JavaScript"
+    ]
+  },
+  "JD-012": {
+    "title": "Thực Tập Sinh IT",
+    "domain": "AI/Data",
+    "company": "CÔNG TY TNHH AUTOMATION LAND",
+    "level": "Intern",
+    "skills": [
+      "AI",
+      "Automation",
+      "Java",
+      "ReactJS"
+    ]
+  },
+  "JD-013": {
+    "title": "FresherJava",
+    "domain": "Frontend",
+    "company": "Công Ty CP Đầu Tư Công Nghệ Và Thương Mại Softdreams",
+    "level": "Intern",
+    "skills": [
+      "Angular",
+      "Java",
+      "JavaScript",
+      "MySQL",
+      "SQL",
+      "Spring",
+      "Spring Boot"
+    ]
+  },
+  "JD-014": {
+    "title": "Lập Trình Viên.Net",
+    "domain": "Frontend",
+    "company": "Công ty Cổ phần Công nghệ KiotViet",
+    "level": "Not Specified",
+    "skills": [
+      "AI",
+      "Angular",
+      "C",
+      "Claude",
+      "React",
+      "Redis",
+      "SQL",
+      "TypeScript"
+    ]
+  },
+  "JD-015": {
+    "title": "Lập Trình ViênFrontend/ Frontend Developer - Upto 15 Triệu",
+    "domain": "Frontend",
+    "company": "Công Ty TNHH Hóa Đơn Điện Tử M-invoice",
+    "level": "Not Specified",
+    "skills": [
+      "AI",
+      "C",
+      "Git",
+      "JavaScript",
+      "NodeJS",
+      "RESTful API",
+      "React",
+      "ReactJS"
+    ]
+  },
+  "JD-016": {
+    "title": "PHP DeveloperFresher",
+    "domain": "Backend",
+    "company": "CÔNG TY CP CÔNG NGHỆ K-SOLUTIONS",
+    "level": "Fresher",
+    "skills": [
+      "Git",
+      "JavaScript",
+      "Laravel",
+      "MySQL",
+      "PHP",
+      "RESTful API",
+      "ReactJS"
+    ]
+  },
+  "JD-017": {
+    "title": "Fullstack WebDeveloper(Reactjs & Nodejs)",
+    "domain": "Backend",
+    "company": "Công ty TNHH JITS Innovation Labs",
+    "level": "Not Specified",
+    "skills": [
+      "Java",
+      "JavaScript",
+      "NodeJS",
+      "Python",
+      "QA"
+    ]
+  },
+  "JD-018": {
+    "title": "Lập trình viêngiao diện web Front-End Developer",
+    "domain": "Frontend",
+    "company": "Công ty Cổ Phần Tin học Giải Pháp Tích Hợp Mở",
+    "level": "Not Specified",
+    "skills": [
+      "Angular",
+      "JavaScript",
+      "MongoDB",
+      "TypeScript"
+    ]
+  },
+  "JD-019": {
+    "title": "Frontend ReactJSDeveloper",
+    "domain": "Frontend",
+    "company": "Công ty TNHH LG CNS Việt Nam",
+    "level": "Intern",
+    "skills": [
+      "Angular",
+      "Git",
+      "JavaScript",
+      "ReactJS",
+      "TypeScript",
+      "Vue"
+    ]
+  },
+  "JD-020": {
+    "title": "[Junior]Mobile Developer(Flutter)",
+    "domain": "Mobile",
+    "company": "CÔNG TY TNHH ANFIN",
+    "level": "Intern",
+    "skills": []
+  },
+  "JD-021": {
+    "title": "Lập trình viênFrontend",
+    "domain": "Frontend",
+    "company": "Công ty Cổ phần Y Dược Vietlife",
+    "level": "Not Specified",
+    "skills": [
+      "Angular",
+      "Go",
+      "JavaScript",
+      "React",
+      "Tester",
+      "TypeScript",
+      "Vue"
+    ]
+  },
+  "JD-022": {
+    "title": "[LTH] FULL STACKDEVELOPERINTERN (.NET & Angular)",
+    "domain": "Frontend",
+    "company": "Công ty cổ phần giao nhận và vận chuyển indo trần",
+    "level": "Intern",
+    "skills": [
+      ".NET",
+      "Angular",
+      "C",
+      "JavaScript",
+      "SQL"
+    ]
+  },
+  "JD-023": {
+    "title": "Intern Full StackDeveloper",
+    "domain": "Frontend",
+    "company": "CÔNG TY TNHH GIẢI PHÁP SAMSET",
+    "level": "Intern",
+    "skills": [
+      "AI",
+      "DevOps",
+      "Express",
+      "GraphQL",
+      "Java",
+      "MongoDB",
+      "MySQL",
+      "NodeJS",
+      "PHP",
+      "PostgreSQL",
+      "Python",
+      "QC",
+      "ReactJS",
+      "SQL",
+      "TypeScript",
+      "Vue"
+    ]
+  },
+  "JD-024": {
+    "title": "Javascript Intern",
+    "domain": "Frontend",
+    "company": "Công ty TNHH 8Seneca",
+    "level": "Intern",
+    "skills": [
+      "AI",
+      "ChatGPT",
+      "Claude",
+      "Docker",
+      "Git",
+      "JavaScript",
+      "MySQL",
+      "NodeJS",
+      "PostgreSQL",
+      "React",
+      "ReactJS",
+      "Software Engineering",
+      "TypeScript"
+    ]
+  },
+  "JD-025": {
+    "title": "Junior - MiddleFullstack Developer",
+    "domain": "Frontend",
+    "company": "ISB Vietnam Company Limited",
+    "level": "Junior",
+    "skills": [
+      "Docker",
+      "Golang",
+      "PostgreSQL",
+      "React",
+      "ReactJS",
+      "TypeScript"
+    ]
+  },
+  "JD-026": {
+    "title": "IT Developer/ Junior Full-Stack Developer (Thu Nhập Lên Đến 15 Triệu)",
+    "domain": "AI/Data",
+    "company": "CÔNG TY TNHH THƯƠNG MẠI VÀ DỊCH VỤ SA LY GROUP",
+    "level": "Junior",
+    "skills": [
+      "AI",
+      "Automation",
+      "ChatGPT",
+      "Claude",
+      "Git"
+    ]
+  },
+  "JD-027": {
+    "title": "Thực tập sinh Tester/Quality Assurance có lương hỗ trợ",
+    "domain": "QA/QC",
+    "company": "CÔNG TY CỔ PHẦN CÔNG NGHỆ VÀ DỊCH VỤ CODLUCK",
+    "level": "Intern",
+    "skills": [
+      "QA",
+      "Tester"
+    ]
+  },
+  "JD-028": {
+    "title": "Thực tập sinh QA/Tester",
+    "domain": "QA/QC",
+    "company": "Công ty Cổ phần HouseNow",
+    "level": "Intern",
+    "skills": [
+      "AI",
+      "Automation",
+      "Manual Testing",
+      "QA",
+      "Tester"
+    ]
+  },
+  "JD-029": {
+    "title": "QA/TesterIntern",
+    "domain": "QA/QC",
+    "company": "Công ty Cổ phần HouseNow",
+    "level": "Intern",
+    "skills": [
+      "Manual Testing",
+      "QA",
+      "Tester"
+    ]
+  },
+  "JD-030": {
+    "title": "[LTH] QC/TESTERINTERN",
+    "domain": "QA/QC",
+    "company": "Công ty cổ phần giao nhận và vận chuyển indo trần",
+    "level": "Intern",
+    "skills": [
+      "Manual Testing",
+      "QC",
+      "Tester"
+    ]
+  },
+  "JD-031": {
+    "title": "Intern - Quality Engineer (QC)",
+    "domain": "QA/QC",
+    "company": "Công ty TNHH Cạnh Xoắn Ốc",
+    "level": "Intern",
+    "skills": [
+      "AI",
+      "Automation",
+      "ChatGPT",
+      "Claude",
+      "Gemini",
+      "Postman",
+      "QA",
+      "SQL"
+    ]
+  },
+  "JD-032": {
+    "title": "Quality Control Intern (QA QC,Tester)",
+    "domain": "QA/QC",
+    "company": "TAPTAP Việt Nam - Công Ty TNHH Thương Mại Vui Việt Nam",
+    "level": "Intern",
+    "skills": [
+      "AI",
+      "Manual Testing",
+      "Postman",
+      "QA",
+      "QC",
+      "SQL",
+      "Tester"
+    ]
+  },
+  "JD-033": {
+    "title": "Thực Tập Sinh Tester",
+    "domain": "QA/QC",
+    "company": "CÔNG TY TNHH NET AGENT",
+    "level": "Intern",
+    "skills": [
+      "SQL",
+      "Tester"
+    ]
+  },
+  "JD-034": {
+    "title": "Kỹ Sư QA -Quản Lý Chất Lượng(Làm việc tại Phú Mỹ)",
+    "domain": "QA/QC",
+    "company": "CÔNG TY CỔ PHẦN THÉP NAM KIM",
+    "level": "Not Specified",
+    "skills": [
+      "QA",
+      "QC"
+    ]
+  },
+  "JD-035": {
+    "title": "Talent InternTester(ENG Fluent)",
+    "domain": "QA/QC",
+    "company": "CÔNG TY CỔ PHẦN NTQ SOLUTION",
+    "level": "Intern",
+    "skills": [
+      "Automation",
+      "C",
+      "Git",
+      "Java",
+      "JavaScript",
+      "Python",
+      "SQL",
+      "Selenium",
+      "Tester"
+    ]
+  },
+  "JD-036": {
+    "title": "SoftwareDeveloperIntern 5G",
+    "domain": "DevOps",
+    "company": "Endava Limited Liability Company",
+    "level": "Intern",
+    "skills": [
+      "Automation",
+      "C",
+      "Git",
+      "Linux"
+    ]
+  },
+  "JD-037": {
+    "title": "TesterIntern",
+    "domain": "QA/QC",
+    "company": "Công Ty CP Thương Mại Điện Tử Aloha",
+    "level": "Intern",
+    "skills": [
+      "AI",
+      "Automation",
+      "Manual Testing",
+      "Tester"
+    ]
+  },
+  "JD-038": {
+    "title": "Junior CloudOps / SysOps Engineer Linux",
+    "domain": "DevOps",
+    "company": "Teamwork Vietnam Ltd",
+    "level": "Intern",
+    "skills": [
+      "AWS",
+      "Automation",
+      "CI/CD",
+      "DevOps",
+      "Docker",
+      "Git",
+      "Kubernetes",
+      "Linux",
+      "Python"
+    ]
+  },
+  "JD-039": {
+    "title": "[HCM] Công Ty Công nghệ Golden Owl Solutions Tuyển DụngThực Tập SinhJS Full-stack/DevOps/Ruby on Rails/PHP/UI/UX Designer/Điều phối Full-time 2026",
+    "domain": "DevOps",
+    "company": "Công Ty Công Nghệ Golden Owl Solutions",
+    "level": "Intern",
+    "skills": [
+      "PHP"
+    ]
+  },
+  "JD-040": {
+    "title": "DevOps Intern",
+    "domain": "DevOps",
+    "company": "CHI NHÁNH TẠI TP. HỒ CHÍ MINH CÔNG TY TNHH HỆ THỐNG THÔNG TIN FPT (TP HÀ NỘI)",
+    "level": "Intern",
+    "skills": [
+      "CI/CD",
+      "DevOps",
+      "Docker",
+      "Git",
+      "Kubernetes",
+      "Linux"
+    ]
+  },
+  "JD-041": {
+    "title": "Internship Programs - DevOps",
+    "domain": "DevOps",
+    "company": "Công Ty Cổ Phần NCCPLUS Việt Nam",
+    "level": "Intern",
+    "skills": [
+      "AI",
+      "DevOps",
+      "Linux",
+      "Microservices"
+    ]
+  },
+  "JD-042": {
+    "title": "Google Cloud Infrastructure SE (Junior/Middle)",
+    "domain": "DevOps",
+    "company": "Công ty Cổ phần HBLAB",
+    "level": "Junior",
+    "skills": [
+      "GCP"
+    ]
+  },
+  "JD-043": {
+    "title": "DevOps Engineer",
+    "domain": "DevOps",
+    "company": "Công Ty CP Đầu Tư Công Nghệ Và Thương Mại Softdreams",
+    "level": "Not Specified",
+    "skills": [
+      "AWS",
+      "Azure",
+      "CI/CD",
+      "DevOps",
+      "Docker",
+      "Kafka",
+      "Kubernetes",
+      "Linux",
+      "MySQL",
+      "PostgreSQL",
+      "SQL"
+    ]
+  },
+  "JD-044": {
+    "title": "Thực Tập SinhKỹ Sư AI & Thị Giác Máy Tính (AI/Computer Vision)",
+    "domain": "AI/Data",
+    "company": "CÔNG TY TNHH CÔNG NGHỆ XB",
+    "level": "Intern",
+    "skills": [
+      "AI",
+      "Computer Vision",
+      "Python"
+    ]
+  },
+  "JD-045": {
+    "title": "[VELA]AI ENGINEERINTERN (Smart Input / OCR)",
+    "domain": "AI/Data",
+    "company": "Công ty cổ phần giao nhận và vận chuyển indo trần",
+    "level": "Intern",
+    "skills": [
+      "AI",
+      "Computer Vision",
+      "Git",
+      "OCR",
+      "Python"
+    ]
+  },
+  "JD-046": {
+    "title": "AI Application Intern",
+    "domain": "AI/Data",
+    "company": "Công ty Cổ phần Vàng bạc Đá quý Phú Nhuận - PNJ",
+    "level": "Intern",
+    "skills": [
+      "AI",
+      "Automation",
+      "ChatGPT"
+    ]
+  },
+  "JD-047": {
+    "title": "AI EngineerIntern",
+    "domain": "AI/Data",
+    "company": "200 Intel Technology of Canada, ULC",
+    "level": "Intern",
+    "skills": [
+      "AI",
+      "Algorithms",
+      "Automation",
+      "Python",
+      "SQL"
+    ]
+  },
+  "JD-048": {
+    "title": "AI EngineerIntern",
+    "domain": "AI/Data",
+    "company": "CÔNG TY TNHH AI POWER",
+    "level": "Intern",
+    "skills": [
+      "AI",
+      "Python"
+    ]
+  },
+  "JD-049": {
+    "title": "AI EngineerIntern",
+    "domain": "AI/Data",
+    "company": "Công ty TNHH 8Seneca",
+    "level": "Intern",
+    "skills": [
+      "AI",
+      "ChatGPT",
+      "Claude",
+      "Computer Vision",
+      "FastAPI",
+      "MongoDB",
+      "Python",
+      "ReactJS",
+      "SQL",
+      "Software Engineering"
+    ]
+  },
+  "JD-050": {
+    "title": "Thực tập sinh AIVision",
+    "domain": "AI/Data",
+    "company": "CÔNG TY CỔ PHẦN CÔNG NGHỆ MOBIWORK VIỆT NAM",
+    "level": "Intern",
+    "skills": [
+      "AI",
+      "Computer Vision",
+      "Python"
+    ]
+  },
+  "JD-051": {
+    "title": "Thực Tập Sinh AI",
+    "domain": "AI/Data",
+    "company": "CÔNG TY CỔ PHẦN ASOFT",
+    "level": "Intern",
+    "skills": [
+      "AI",
+      "C",
+      "Claude",
+      "Gemini",
+      "JavaScript",
+      "Python",
+      "SQL"
+    ]
+  },
+  "JD-052": {
+    "title": "Thực Tập Sinh AIContent Creator Intern",
+    "domain": "AI/Data",
+    "company": "Công Ty TNHH Sinh Học Nông Nghiệp Rồng Vàng",
+    "level": "Intern",
+    "skills": [
+      "AI"
+    ]
+  },
+  "JD-053": {
+    "title": "Software Engineer",
+    "domain": "DevOps",
+    "company": "3 Lý do để gia nhập công ty",
+    "level": "Junior",
+    "skills": [
+      "AWS",
+      "Automation",
+      "Azure",
+      "CI/CD",
+      "DevOps",
+      "EC2",
+      "GitHub Actions",
+      "Go",
+      "Jenkins",
+      "Kubernetes",
+      "Lambda",
+      "Linux",
+      "Python",
+      "S3"
+    ]
+  },
+  "JD-061": {
+    "title": "Thực Tập Sinh -Lập Trình ViênBackend",
+    "domain": "Backend",
+    "company": "Công ty TNHH Công Nghệ Số Nam Phương",
+    "level": "Intern",
+    "skills": [
+      ".NET",
+      "C"
+    ]
+  },
+  "JD-062": {
+    "title": "Thực Tập Sinh.Net Developer",
+    "domain": "Frontend",
+    "company": "CÔNG TY TNHH W2SOLUTION VIỆT NAM",
+    "level": "Intern",
+    "skills": [
+      ".NET",
+      "C",
+      "JavaScript",
+      "SQL"
+    ]
+  },
+  "JD-063": {
+    "title": "Thực Tập Sinh Lập TrìnhPython (Python Development Internship)",
+    "domain": "Backend",
+    "company": "CÔNG TY TNHH AH-LONGQUAN",
+    "level": "Intern",
+    "skills": [
+      "AI",
+      "Automation",
+      "Python",
+      "SQL",
+      "Selenium"
+    ]
+  },
+  "JD-064": {
+    "title": "TUYỂN DỤNGLẬP TRÌNH VIÊNFRONTEND",
+    "domain": "Frontend",
+    "company": "Công ty Cổ phần Blueco toàn cầu",
+    "level": "Not Specified",
+    "skills": [
+      "Angular",
+      "Java",
+      "JavaScript",
+      "React",
+      "ReactJS",
+      "SQL",
+      "Spring",
+      "Spring Boot"
+    ]
+  },
+  "JD-065": {
+    "title": "Product Engineer Intern (allowance 5 mil)",
+    "domain": "AI/Data",
+    "company": "Gene Solutions",
+    "level": "Intern",
+    "skills": [
+      "AI",
+      "CI/CD",
+      "Docker",
+      "Git",
+      "MongoDB",
+      "PostgreSQL",
+      "Python",
+      "Software Engineering"
+    ]
+  },
+  "JD-066": {
+    "title": "AI Engineer Intern",
+    "domain": "AI/Data",
+    "company": "Intel",
+    "level": "Intern",
+    "skills": [
+      "AI",
+      "Algorithms",
+      "Automation",
+      "Python",
+      "SQL"
+    ]
+  },
+  "JD-067": {
+    "title": "Product Engineering Intern",
+    "domain": "AI/Data",
+    "company": "MyStorage",
+    "level": "Intern",
+    "skills": [
+      "AI",
+      "Automation",
+      "Claude",
+      "Git",
+      "JavaScript",
+      "Next.js",
+      "Python",
+      "React",
+      "SQL",
+      "TypeScript"
+    ]
+  },
+  "JD-068": {
+    "title": "Product Intern / Fresher",
+    "domain": "QA/QC",
+    "company": "Flowmingo AI",
+    "level": "Intern",
+    "skills": [
+      "AI",
+      "QA"
+    ]
+  },
+  "JD-069": {
+    "title": "Solutions Engineer Intern",
+    "domain": "AI/Data",
+    "company": "Ematic Solutions",
+    "level": "Intern",
+    "skills": [
+      "AI",
+      "ChatGPT",
+      "Gemini",
+      "JavaScript",
+      "QA"
+    ]
+  },
+  "JD-070": {
+    "title": "Intern (QA)",
+    "domain": "QA/QC",
+    "company": "V-Key - Digital Identity & Mobile App Security",
+    "level": "Intern",
+    "skills": [
+      "Automation",
+      "QA"
+    ]
+  },
+  "JD-071": {
+    "title": "Full Stack Engineer (Golang/ReactJS)",
+    "domain": "Backend",
+    "company": "Circa Pharmacy",
+    "level": "Intern",
+    "skills": [
+      "AI",
+      "Claude",
+      "Docker",
+      "Elasticsearch",
+      "Golang",
+      "Kubernetes",
+      "Microservices",
+      "MongoDB",
+      "PostgreSQL",
+      "RabbitMQ",
+      "ReactJS",
+      "Redis",
+      "Software Engineering"
+    ]
+  },
+  "JD-072": {
+    "title": "FullStack Engineer",
+    "domain": "Backend",
+    "company": "NeoX",
+    "level": "Intern",
+    "skills": [
+      "Docker",
+      "Golang",
+      "Microservices",
+      "MongoDB",
+      "MySQL",
+      "NodeJS",
+      "ReactJS"
+    ]
+  },
+  "JD-073": {
+    "title": "Full-stack Engineer (NextJS, Java, AI-native)",
+    "domain": "Backend",
+    "company": "HRS Group",
+    "level": "Intern",
+    "skills": [
+      "AI",
+      "Automation",
+      "Java",
+      "Next.js",
+      "Python",
+      "React",
+      "TypeScript"
+    ]
+  },
+  "JD-074": {
+    "title": "Junior Full Stack Engineer (Python React/Angular)",
+    "domain": "Frontend",
+    "company": "Amaris Consulting",
+    "level": "Junior",
+    "skills": [
+      "Angular",
+      "Django",
+      "FastAPI",
+      "Flask",
+      "Git",
+      "MongoDB",
+      "MySQL",
+      "Python",
+      "React"
+    ]
+  },
+  "JD-075": {
+    "title": "Fullstack Reactjs Developer",
+    "domain": "Frontend",
+    "company": "Capgemini",
+    "level": "Not Specified",
+    "skills": [
+      "AWS",
+      "Azure",
+      "CI/CD",
+      "Data Structure",
+      "Git",
+      "GraphQL",
+      "Java",
+      "JavaScript",
+      "Kafka",
+      "NodeJS",
+      "ReactJS",
+      "SQL",
+      "TypeScript"
+    ]
+  },
+  "JD-076": {
+    "title": "Full-Stack / Platform Engineer – Engineering Tools",
+    "domain": "DevOps",
+    "company": "Renesas Electronics",
+    "level": "Not Specified",
+    "skills": [
+      ".NET",
+      "Automation",
+      "C"
+    ]
+  },
+  "JD-077": {
+    "title": "Full Stack Engineer",
+    "domain": "Frontend",
+    "company": "Avensys Consulting",
+    "level": "Intern",
+    "skills": [
+      "Angular",
+      "Automation",
+      "CI/CD",
+      "DevOps",
+      "GraphQL",
+      "Java",
+      "JavaScript",
+      "Microservices",
+      "NodeJS",
+      "React",
+      "TypeScript",
+      "Vue"
+    ]
+  },
+  "JD-078": {
+    "title": "HCM – Junior Fullstack Developer (ReactJS + NodeJS)",
+    "domain": "DevOps",
+    "company": "Vexere.com - Vietnam’s #1 Transportation Booking Platform (Bus | Flight | Train | Bike Car Rental))",
+    "level": "Intern",
+    "skills": [
+      "AI",
+      "Algorithms",
+      "CI/CD",
+      "Docker",
+      "Elasticsearch",
+      "Express",
+      "Jenkins",
+      "Kafka",
+      "Kubernetes",
+      "Linux",
+      "Microservices",
+      "NodeJS",
+      "PostgreSQL",
+      "RabbitMQ",
+      "React",
+      "ReactJS",
+      "Redis",
+      "TypeScript"
+    ]
+  },
+  "JD-079": {
+    "title": "Fullstack Developer",
+    "domain": "AI/Data",
+    "company": "New Ocean IS Co., Ltd.",
+    "level": "Senior",
+    "skills": [
+      ".NET",
+      "AI",
+      "Automation",
+      "Azure",
+      "C",
+      "CI/CD",
+      "ChatGPT",
+      "Claude",
+      "FastAPI",
+      "Git",
+      "JavaScript",
+      "Python",
+      "React",
+      "SQL",
+      "Selenium",
+      "TypeScript"
+    ]
+  },
+  "JD-080": {
+    "title": "Fullstack Engineer",
+    "domain": "Frontend",
+    "company": "UrBox - Digital Rewards & Loyalty Solution",
+    "level": "Intern",
+    "skills": [
+      "Automation",
+      "DevOps",
+      "Golang",
+      "MongoDB",
+      "MySQL",
+      "NestJS",
+      "Next.js",
+      "NodeJS",
+      "QA",
+      "ReactJS",
+      "Software Engineering"
+    ]
+  },
+  "JD-081": {
+    "title": "Fullstack Python/Nextjs Developer (Middle)",
+    "domain": "Backend",
+    "company": "Amaris Consulting",
+    "level": "Intern",
+    "skills": [
+      "CI/CD",
+      "DevOps",
+      "Django",
+      "Docker",
+      "FastAPI",
+      "Flask",
+      "Git",
+      "JavaScript",
+      "MongoDB",
+      "MySQL",
+      "Next.js",
+      "PostgreSQL",
+      "Python",
+      "RESTful API",
+      "React",
+      "SQL",
+      "TypeScript"
+    ]
+  },
+  "JD-082": {
+    "title": "Fullstack Engineer",
+    "domain": "Frontend",
+    "company": "DXC Technology Vietnam",
+    "level": "Intern",
+    "skills": [
+      "AI",
+      "AWS",
+      "Angular",
+      "Azure",
+      "CI/CD",
+      "GCP",
+      "Git",
+      "Java",
+      "JavaScript",
+      "Microservices",
+      "MySQL",
+      "PostgreSQL",
+      "QA",
+      "React",
+      "ReactJS",
+      "SQL",
+      "Spring",
+      "Spring Boot",
+      "TypeScript"
+    ]
+  },
+  "JD-083": {
+    "title": "Full-Stack AI Engineer",
+    "domain": "AI/Data",
+    "company": "Trusting Social",
+    "level": "Not Specified",
+    "skills": [
+      "AI",
+      "CI/CD",
+      "DevOps",
+      "Software Engineering"
+    ]
+  },
+  "JD-084": {
+    "title": "Software Engineer Intern (Salesforce/Guidewire/RPA)",
+    "domain": "Backend",
+    "company": "Capgemini",
+    "level": "Intern",
+    "skills": [
+      ".NET",
+      "AI",
+      "Automation",
+      "C",
+      "ChatGPT",
+      "Java",
+      "Python",
+      "SQL"
+    ]
+  },
+  "JD-085": {
+    "title": "Software Engineering Intern (6-month contract)",
+    "domain": "AI/Data",
+    "company": "GRADION",
+    "level": "Intern",
+    "skills": [
+      "AI",
+      "ChatGPT",
+      "Claude",
+      "Gemini"
+    ]
+  },
+  "JD-086": {
+    "title": "SOFTWARE DEVELOPER INTERNSHIP",
+    "domain": "Frontend",
+    "company": "WEALLNET",
+    "level": "Intern",
+    "skills": [
+      "Git",
+      "Go",
+      "Golang",
+      "JavaScript",
+      "Next.js",
+      "Python",
+      "SQL",
+      "Software Engineering"
+    ]
+  },
+  "JD-087": {
+    "title": "Intern Full-stack Engineer (AI Prompting)",
+    "domain": "Frontend",
+    "company": "Innotech Vietnam Career",
+    "level": "Intern",
+    "skills": [
+      "AI",
+      "Automation",
+      "JavaScript",
+      "NestJS",
+      "PostgreSQL",
+      "Python",
+      "RESTful API",
+      "React",
+      "TypeScript"
+    ]
+  },
+  "JD-088": {
+    "title": "Typescript Engineer Intern - 6-month Internship",
+    "domain": "Frontend",
+    "company": "CODE LEAP",
+    "level": "Intern",
+    "skills": [
+      "AWS",
+      "Algorithms",
+      "Express",
+      "Git",
+      "JavaScript",
+      "Next.js",
+      "React",
+      "TypeScript"
+    ]
+  },
+  "JD-089": {
+    "title": "ReactJS Engineer Intern - 6-month Internship",
+    "domain": "Frontend",
+    "company": "CODE LEAP",
+    "level": "Intern",
+    "skills": [
+      "Algorithms",
+      "Git",
+      "JavaScript",
+      "React",
+      "ReactJS",
+      "TypeScript"
+    ]
+  },
+  "JD-090": {
+    "title": "JOB OPENING: NODEJS INTERN / FRESHER",
+    "domain": "Frontend",
+    "company": "Tinovation",
+    "level": "Intern",
+    "skills": [
+      "Git",
+      "JavaScript",
+      "MongoDB",
+      "NestJS",
+      "NodeJS",
+      "QA",
+      "SQL",
+      "Software Engineering"
+    ]
+  },
+  "JD-091": {
+    "title": "JOB OPENING: FRESHER NODEJS (MERN STACK)",
+    "domain": "Frontend",
+    "company": "Tinovation",
+    "level": "Fresher",
+    "skills": [
+      "AI",
+      "Git",
+      "JavaScript",
+      "MongoDB",
+      "NestJS",
+      "NodeJS",
+      "ReactJS"
+    ]
+  },
+  "JD-092": {
+    "title": "Penetration Tester - Intern",
+    "domain": "QA/QC",
+    "company": "Bouygues Construction IT Vietnam",
+    "level": "Intern",
+    "skills": []
+  },
+  "JD-093": {
+    "title": "Software Engineer Intern - QA",
+    "domain": "AI/Data",
+    "company": "ShopBack",
+    "level": "Intern",
+    "skills": [
+      "AI",
+      "Automation",
+      "ChatGPT",
+      "Claude",
+      "Gemini",
+      "Go",
+      "QA"
+    ]
+  },
+  "JD-094": {
+    "title": "Trainee 2026 QA/Tester",
+    "domain": "QA/QC",
+    "company": "AvePoint",
+    "level": "Not Specified",
+    "skills": []
+  },
+  "JD-095": {
+    "title": "Design Verification Intern",
+    "domain": "Backend",
+    "company": "Intel",
+    "level": "Intern",
+    "skills": [
+      "Automation",
+      "C",
+      "Python"
+    ]
+  },
+  "JD-096": {
+    "title": "Test Process and Equipment Engineer Intern",
+    "domain": "Backend",
+    "company": "Intel",
+    "level": "Intern",
+    "skills": [
+      "Automation",
+      "Python",
+      "SQL"
+    ]
+  },
+  "JD-097": {
+    "title": "Job Opening: MANUAL QA, QC Junior",
+    "domain": "QA/QC",
+    "company": "Tinovation",
+    "level": "Fresher",
+    "skills": [
+      "AI",
+      "Postman",
+      "QA",
+      "QC",
+      "SQL"
+    ]
+  },
+  "JD-098": {
+    "title": "Security Software Engineer Intern",
+    "domain": "Backend",
+    "company": "GeoComply",
+    "level": "Intern",
+    "skills": [
+      "AI",
+      "Golang",
+      "PHP",
+      "Software Engineering"
+    ]
+  }
+}

@@ -1,1 +1,1 @@
-"""Version 2 API contracts."""
+"""API v2 package."""

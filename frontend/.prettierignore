@@ -1,0 +1,14 @@
+# Generated and installed files
+node_modules
+.next
+.next-dev
+coverage
+
+# Legacy static application: keep outside the Next.js formatting scope.
+app.js
+admin-portal.js
+api-client.js
+canvas-engine.js
+nova-chatbot.js
+utils.js
+index.html

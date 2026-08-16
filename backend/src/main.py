@@ -6,12 +6,25 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
+# pyrefly: ignore [missing-import]
 from src.api.routes import router
+
+# pyrefly: ignore [missing-import]
 from src.api.v2.routes import router as v2_router
+
+# pyrefly: ignore [missing-import]
 from src.config import get_settings
+
+# pyrefly: ignore [missing-import]
 from src.core.errors import CVVariantError, PipelineError
+
+# pyrefly: ignore [missing-import]
 from src.db.database import engine, init_db
+
+# pyrefly: ignore [missing-import]
 from src.middleware.security import ApiProtectionMiddleware
+
+# pyrefly: ignore [missing-import]
 from src.services.job_rag import sync_market_jobs_safely
 
 

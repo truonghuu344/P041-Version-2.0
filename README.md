@@ -118,7 +118,8 @@ curl -X POST http://localhost:8000/api/v1/jobs/rag/sync \
 LangSmith tracing mặc định đang tắt để key mẫu không tạo lỗi `403 Forbidden`. Chỉ đặt `LANGCHAIN_TRACING_V2=true` và `LANGSMITH_TRACING=true` sau khi đã điền `LANGSMITH_API_KEY` hợp lệ.
 
 ```bash
-# Backend (chạy trong backend/ sau khi cài requirements.txt)
+# Backend — chạy sau khi chuyển vào thư mục backend/ (không chạy từ root project)
+cd backend
 python -m ruff check src tests
 python -m pytest -q
 
@@ -126,6 +127,12 @@ python -m pytest -q
 npm run lint
 npm run typecheck
 npm run build
+```
+
+Nếu đang đứng tại root project, dùng đường dẫn đầy đủ thay vì `src tests`:
+
+```bash
+python -m ruff check backend/src backend/tests
 ```
 
 Kết quả kiểm tra gần nhất: backend `198 passed`; frontend lint, TypeScript và production build đều thành công. Runtime đã được smoke test qua proxy frontend: đăng nhập, tạo CV tạm, chọn JD, Match hoàn tất và CV kiểm tra đã được xóa.

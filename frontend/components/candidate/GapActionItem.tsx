@@ -10,26 +10,32 @@ interface GapActionItemProps {
 }
 
 const ICONS: Record<string, React.ReactNode> = {
-  mandatory_missing: <AlertTriangle size={15} className="eval-gap-icon--danger"  aria-hidden="true" />,
-  evidence_weak:     <Lightbulb     size={15} className="eval-gap-icon--warning" aria-hidden="true" />,
-  skill_missing:     <BookOpen      size={15} className="eval-gap-icon--info"    aria-hidden="true" />,
-  uncertain:         <HelpCircle    size={15} className="eval-gap-icon--neutral" aria-hidden="true" />,
-  preferred_missing: <Star          size={15} className="eval-gap-icon--soft"    aria-hidden="true" />,
+  mandatory_missing: (
+    <AlertTriangle size={15} className="eval-gap-icon--danger" aria-hidden="true" />
+  ),
+  evidence_weak: <Lightbulb size={15} className="eval-gap-icon--warning" aria-hidden="true" />,
+  skill_missing: <BookOpen size={15} className="eval-gap-icon--info" aria-hidden="true" />,
+  uncertain: <HelpCircle size={15} className="eval-gap-icon--neutral" aria-hidden="true" />,
+  preferred_missing: <Star size={15} className="eval-gap-icon--soft" aria-hidden="true" />,
 };
 
 const PRIORITY_LABEL: Record<string, string> = {
-  high: 'Ưu tiên cao', medium: 'Ưu tiên vừa', low: 'Ưu tiên thấp',
+  high: 'Ưu tiên cao',
+  medium: 'Ưu tiên vừa',
+  low: 'Ưu tiên thấp',
 };
 
 export default function GapActionItem({ gap, rank, onOptimize, onInterview }: GapActionItemProps) {
-  const icon    = ICONS[gap.action_type] ?? ICONS.uncertain;
+  const icon = ICONS[gap.action_type] ?? ICONS.uncertain;
   const prLabel = PRIORITY_LABEL[gap.priority] ?? gap.priority;
-  const impact  = Math.round(gap.score_impact * 100) / 100;
+  const impact = Math.round(gap.score_impact * 100) / 100;
 
   return (
     <article className={`eval-gap-item ${gap.mandatory ? 'eval-gap-item--mandatory' : ''}`}>
       <div className="eval-gap-item__header">
-        <span className="eval-gap-item__rank" aria-hidden="true">{rank}</span>
+        <span className="eval-gap-item__rank" aria-hidden="true">
+          {rank}
+        </span>
         <span>{icon}</span>
         <div className="eval-gap-item__meta">
           {gap.mandatory && (
@@ -38,7 +44,9 @@ export default function GapActionItem({ gap, rank, onOptimize, onInterview }: Ga
             </span>
           )}
           <span className="eval-badge eval-badge--neutral eval-badge--sm">{prLabel}</span>
-          <span className="eval-gap-item__criterion">{gap.criterion_label ?? gap.criterion_id}</span>
+          <span className="eval-gap-item__criterion">
+            {gap.criterion_label ?? gap.criterion_id}
+          </span>
         </div>
         {impact > 0 && (
           <span className="eval-gap-item__impact" title="Điểm có thể tăng nếu cải thiện">
@@ -61,12 +69,20 @@ export default function GapActionItem({ gap, rank, onOptimize, onInterview }: Ga
       {gap.action_type !== 'preferred_missing' && (
         <div className="eval-gap-item__cta">
           {onOptimize && (
-            <button type="button" className="eval-btn eval-btn--outline eval-btn--sm" onClick={onOptimize}>
+            <button
+              type="button"
+              className="eval-btn eval-btn--outline eval-btn--sm"
+              onClick={onOptimize}
+            >
               Tối ưu CV theo JD
             </button>
           )}
           {onInterview && gap.action_type !== 'skill_missing' && (
-            <button type="button" className="eval-btn eval-btn--ghost eval-btn--sm" onClick={onInterview}>
+            <button
+              type="button"
+              className="eval-btn eval-btn--ghost eval-btn--sm"
+              onClick={onInterview}
+            >
               Luyện phỏng vấn
             </button>
           )}

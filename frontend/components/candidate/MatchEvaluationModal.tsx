@@ -1,12 +1,7 @@
 'use client';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   AlertTriangle,
   ArrowRight,
@@ -21,10 +16,7 @@ import CriterionCard from './CriterionCard';
 import EvidenceDrawer from './EvidenceDrawer';
 import GapActionItem from './GapActionItem';
 import { useMatchEvaluation } from '../../lib/hooks/useMatchEvaluation';
-import type {
-  EvidenceListData,
-  RequirementDetail,
-} from '../../lib/api/matchEvaluationClient';
+import type { EvidenceListData, RequirementDetail } from '../../lib/api/matchEvaluationClient';
 
 interface MatchEvaluationModalProps {
   matchId: string | null;
@@ -40,7 +32,7 @@ const TABS = [
   { id: 'all', label: 'Tất cả tiêu chí' },
 ] as const;
 
-type TabId = typeof TABS[number]['id'];
+type TabId = (typeof TABS)[number]['id'];
 
 const CONFIDENCE_CONFIG: Record<string, { label: string; cls: string }> = {
   high: { label: 'Độ tin cậy cao', cls: 'eval-badge--success' },
@@ -63,9 +55,15 @@ function useFocusTrap(ref: React.RefObject<HTMLElement | null>, active: boolean)
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key !== 'Tab') return;
       if (e.shiftKey) {
-        if (document.activeElement === first) { e.preventDefault(); last?.focus(); }
+        if (document.activeElement === first) {
+          e.preventDefault();
+          last?.focus();
+        }
       } else {
-        if (document.activeElement === last) { e.preventDefault(); first?.focus(); }
+        if (document.activeElement === last) {
+          e.preventDefault();
+          first?.focus();
+        }
       }
     }
     el.addEventListener('keydown', handleKeyDown);
@@ -142,15 +140,31 @@ function ScoreRing({ score }: { score: number | null | undefined }) {
   const r = 38;
   const circ = 2 * Math.PI * r;
   const dash = (pct / 100) * circ;
-  const color = pct >= 70 ? 'var(--eval-color-success)' : pct >= 45 ? 'var(--eval-color-warning)' : 'var(--eval-color-danger)';
+  const color =
+    pct >= 70
+      ? 'var(--eval-color-success)'
+      : pct >= 45
+        ? 'var(--eval-color-warning)'
+        : 'var(--eval-color-danger)';
 
   return (
     <div className="eval-score-ring" aria-label={`Điểm phù hợp: ${pct.toFixed(1)}%`} role="img">
       <svg width="96" height="96" viewBox="0 0 96 96" aria-hidden="true">
-        <circle cx="48" cy="48" r={r} fill="none" stroke="var(--eval-color-track)" strokeWidth="8" />
         <circle
-          cx="48" cy="48" r={r} fill="none"
-          stroke={color} strokeWidth="8"
+          cx="48"
+          cy="48"
+          r={r}
+          fill="none"
+          stroke="var(--eval-color-track)"
+          strokeWidth="8"
+        />
+        <circle
+          cx="48"
+          cy="48"
+          r={r}
+          fill="none"
+          stroke={color}
+          strokeWidth="8"
           strokeDasharray={`${dash} ${circ - dash}`}
           strokeLinecap="round"
           transform="rotate(-90 48 48)"
@@ -158,7 +172,10 @@ function ScoreRing({ score }: { score: number | null | undefined }) {
         />
       </svg>
       <div className="eval-score-ring__label">
-        <strong>{pct.toFixed(0)}<span>%</span></strong>
+        <strong>
+          {pct.toFixed(0)}
+          <span>%</span>
+        </strong>
         <small>Phù hợp</small>
       </div>
     </div>
@@ -205,7 +222,9 @@ export default function MatchEvaluationModal({
 
   useEffect(() => {
     if (matchId) document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = ''; };
+    return () => {
+      document.body.style.overflow = '';
+    };
   }, [matchId]);
 
   useEffect(() => {
@@ -267,7 +286,9 @@ export default function MatchEvaluationModal({
     <div
       className="eval-modal-overlay"
       role="presentation"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
     >
       <div
         ref={dialogRef}
@@ -304,8 +325,8 @@ export default function MatchEvaluationModal({
               </div>
               {evaluation?.criteria_summary && evaluation.criteria_summary.length > 0 && (
                 <p className="eval-modal-header__criteria-summary">
-                  {evaluation.criteria_summary.filter((c) => c.status === 'FULLY_MET').length}
-                  /{evaluation.criteria_summary.length} tiêu chí đạt
+                  {evaluation.criteria_summary.filter((c) => c.status === 'FULLY_MET').length}/
+                  {evaluation.criteria_summary.length} tiêu chí đạt
                 </p>
               )}
             </div>
@@ -321,12 +342,7 @@ export default function MatchEvaluationModal({
           </button>
         </header>
 
-        <div
-          ref={tabBarRef}
-          className="eval-tab-bar"
-          role="tablist"
-          aria-label="Các tab đánh giá"
-        >
+        <div ref={tabBarRef} className="eval-tab-bar" role="tablist" aria-label="Các tab đánh giá">
           {TABS.map((tab, idx) => (
             <button
               key={tab.id}
@@ -355,7 +371,9 @@ export default function MatchEvaluationModal({
               <Loader2 size={28} className="eval-spin" aria-hidden="true" />
               <p>Đang tải kết quả đánh giá...</p>
               <div className="eval-skeleton-grid" aria-hidden="true">
-                {[1, 2, 3, 4, 5].map((n) => <div key={n} className="eval-skeleton-card" />)}
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <div key={n} className="eval-skeleton-card" />
+                ))}
               </div>
             </div>
           )}
@@ -377,7 +395,11 @@ export default function MatchEvaluationModal({
           {evaluationState === 'success' && evaluation?.status !== 'COMPLETED' && (
             <div className="eval-center eval-center--col eval-center--full" role="status">
               <p>Match đang xử lý ({evaluation?.status}). Vui lòng chờ và thử lại.</p>
-              <button type="button" className="eval-btn eval-btn--outline" onClick={refetchEvaluation}>
+              <button
+                type="button"
+                className="eval-btn eval-btn--outline"
+                onClick={refetchEvaluation}
+              >
                 Làm mới
               </button>
             </div>
@@ -406,10 +428,18 @@ export default function MatchEvaluationModal({
                 </div>
 
                 <div className="eval-panel-cta">
-                  <button type="button" className="eval-btn eval-btn--primary" onClick={onNavigateOptimize}>
+                  <button
+                    type="button"
+                    className="eval-btn eval-btn--primary"
+                    onClick={onNavigateOptimize}
+                  >
                     Tối ưu CV theo JD <ArrowRight size={15} aria-hidden="true" />
                   </button>
-                  <button type="button" className="eval-btn eval-btn--outline" onClick={onNavigateInterview}>
+                  <button
+                    type="button"
+                    className="eval-btn eval-btn--outline"
+                    onClick={onNavigateInterview}
+                  >
                     Luyện phỏng vấn
                   </button>
                 </div>
@@ -444,7 +474,9 @@ export default function MatchEvaluationModal({
                 )}
                 {gapsState === 'error' && (
                   <div role="alert">
-                    <button type="button" onClick={fetchGaps}>Thử lại</button>
+                    <button type="button" onClick={fetchGaps}>
+                      Thử lại
+                    </button>
                   </div>
                 )}
                 {gapsState === 'success' && gaps && (
@@ -452,15 +484,24 @@ export default function MatchEvaluationModal({
                     {gaps.mandatory_failed_count > 0 && (
                       <div className="eval-mandatory-warning" role="alert">
                         <AlertTriangle size={16} aria-hidden="true" />
-                        <strong>{gaps.mandatory_failed_count} yêu cầu bắt buộc chưa có bằng chứng.</strong>
-                        <span>Thiếu yêu cầu bắt buộc không tự động loại bạn — nhưng cần bổ sung CV trước khi ứng tuyển.</span>
+                        <strong>
+                          {gaps.mandatory_failed_count} yêu cầu bắt buộc chưa có bằng chứng.
+                        </strong>
+                        <span>
+                          Thiếu yêu cầu bắt buộc không tự động loại bạn — nhưng cần bổ sung CV trước
+                          khi ứng tuyển.
+                        </span>
                       </div>
                     )}
                     {gaps.gaps.length === 0 ? (
                       <div className="eval-center eval-center--col" role="status">
                         <CheckCircle size={24} aria-hidden="true" />
                         <p>Không có gap đáng kể. Bạn đã đáp ứng tốt các yêu cầu.</p>
-                        <button type="button" className="eval-btn eval-btn--primary" onClick={onNavigateInterview}>
+                        <button
+                          type="button"
+                          className="eval-btn eval-btn--primary"
+                          onClick={onNavigateInterview}
+                        >
                           Luyện phỏng vấn ngay <ArrowRight size={15} />
                         </button>
                       </div>
@@ -512,7 +553,8 @@ export default function MatchEvaluationModal({
                       <div className="eval-criterion-section__body">
                         {!requirementsData[crit.criterion_id] && (
                           <div className="eval-center" aria-live="polite">
-                            <Loader2 size={18} className="eval-spin" aria-hidden="true" /> Đang tải...
+                            <Loader2 size={18} className="eval-spin" aria-hidden="true" /> Đang
+                            tải...
                           </div>
                         )}
                         {requirementsData[crit.criterion_id]?.map((req) => (
@@ -520,7 +562,9 @@ export default function MatchEvaluationModal({
                             key={req.requirement_id}
                             req={req}
                             onViewEvidence={handleViewEvidence}
-                            evidenceLoading={evidenceLoading && activeReq?.requirement_id === req.requirement_id}
+                            evidenceLoading={
+                              evidenceLoading && activeReq?.requirement_id === req.requirement_id
+                            }
                           />
                         ))}
                       </div>
@@ -537,7 +581,10 @@ export default function MatchEvaluationModal({
             requirementText={activeReq.text}
             evidence={evidenceData}
             loading={evidenceLoading}
-            onClose={() => { setActiveReq(null); setEvidenceData(null); }}
+            onClose={() => {
+              setActiveReq(null);
+              setEvidenceData(null);
+            }}
           />
         )}
       </div>
@@ -574,7 +621,9 @@ function MatchedPanel({
       }
     }
     load();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [evaluation.criteria_summary, fetchRequirements]);
 
   const matchedReqs = Object.values(loaded)
@@ -604,7 +653,9 @@ function MatchedPanel({
       {matchedReqs.map((req) => (
         <li key={req.requirement_id} className="eval-matched-item">
           <div className="eval-matched-item__header">
-            <span className={`eval-badge ${req.status === 'SUPPORTED' ? 'eval-badge--success' : 'eval-badge--warning'} eval-badge--sm`}>
+            <span
+              className={`eval-badge ${req.status === 'SUPPORTED' ? 'eval-badge--success' : 'eval-badge--warning'} eval-badge--sm`}
+            >
               {req.status === 'SUPPORTED' ? '✓ Đã đáp ứng' : '~ Một phần'}
             </span>
             {req.mandatory && (
