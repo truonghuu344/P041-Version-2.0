@@ -1,0 +1,52 @@
+{
+  "message": "Tôi muốn ứng tuyển vị trí Backend Developer, tôi cần chuẩn bị những kỹ năng gì?",
+  "history": [],
+  "user_context": {
+    "full_name": "Nguyen Van Test",
+    "role": "student",
+    "current_page": "dashboard",
+    "cv_count": 1,
+    "latest_cv_title": "Nguyen_Van_Test_Backend_CV",
+    "analysis_count": 1,
+    "interview_count": 0,
+    "_resources": {
+      "cvs": [
+        {
+          "id": "cv1",
+          "title": "Nguyen_Van_Test_Backend_CV"
+        }
+      ],
+      "jds": [
+        {
+          "id": "jd1",
+          "title": "Junior Backend Developer",
+          "company": "ABC Tech"
+        }
+      ],
+      "analyses": []
+    }
+  },
+  "resource_context": {
+    "cvs": [
+      {
+        "id": "cv1",
+        "title": "Nguyen_Van_Test_Backend_CV"
+      }
+    ],
+    "jds": [
+      {
+        "id": "jd1",
+        "title": "Junior Backend Developer",
+        "company": "ABC Tech"
+      }
+    ],
+    "analyses": []
+  },
+  "intent": "career_chat",
+  "suggested_actions": [],
+  "response": "Nova đang mất kết nối với Gemini. Vui lòng thử lại sau ít phút.",
+  "provider": "google_gemini",
+  "model": "gemini-3.5-flash",
+  "llm_succeeded": false,
+  "error": "503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}"
+}
