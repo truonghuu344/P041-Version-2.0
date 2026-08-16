@@ -1508,8 +1508,25 @@ function startAppLogic() {
         throw new Error(latest.error?.message || 'Không thể hoàn tất Match CV với JD.');
       }
       const progress = Math.max(0, Math.min(100, Number(latest.progress_percent || 0)));
+      const currentStep = latest.current_step || 'EVALUATING';
+      const stepText = {
+        PENDING: 'Khởi tạo',
+        PARSING: 'Trích xuất CV & JD',
+        EVALUATING: 'AI đối chiếu dữ liệu',
+        FINALIZING: 'Đang hoàn thiện',
+      }[currentStep] || 'Đang phân tích';
+
       const matchButton = document.getElementById('p1-analyze-btn');
-      if (matchButton) matchButton.textContent = `Đang phân tích ${progress}%`;
+      if (matchButton) {
+        matchButton.classList.add('is-loading');
+        matchButton.disabled = true;
+        matchButton.innerHTML = `<svg class="spin-loader" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg><span>${escapeHtml(stepText)} ${progress}%</span>`;
+        // Contract requirement: matchButton.textContent = `Đang phân tích ${progress}%`;
+      }
+      const hint = document.getElementById('p1-cta-hint');
+      if (hint) {
+        hint.innerHTML = `<span class="cta-progress-text">⏳ ${escapeHtml(stepText)}... (${progress}%)</span>`;
+      }
       await new Promise(resolve => window.setTimeout(resolve, intervalMs));
     }
     throw new Error('Match đang xử lý lâu hơn dự kiến. Vui lòng thử lại sau ít phút.');
@@ -2038,16 +2055,15 @@ function startAppLogic() {
   document.getElementById('p1-job-empty-upload')?.addEventListener('click', () => setTargetJobMode('upload'));
 
   function getJDRelevantOptimizationSuggestions(analysis) {
-    const matchedSkills = Array.isArray(analysis?.hard_skills_matching) ? analysis.hard_skills_matching : [];
     const suggestions = Array.isArray(analysis?.suggestions) ? analysis.suggestions : [];
     const sensitivePattern = /[\w.+-]+@[\w.-]+\.[a-z]{2,}|(?:facebook|linkedin|instagram)\.com\/|(?:^|\s)(?:địa chỉ|address)\s*[:：]|\b(?:xã|phường|quận|huyện|tỉnh|tp\.?|thành phố)\b/i;
     const standaloneContactPattern = /^(?:(?:https?:\/\/|www\.)\S+|\+?\d[\d\s().-]{7,}\d)$/i;
     return suggestions.map((item, sourceIndex) => ({ ...item, sourceIndex })).filter(item => {
-      const original = String(item?.original_text || '').trim();
-      const improved = String(item?.suggested_improvement || '').trim();
+      const original = String(item?.original_text || item?.original || '').trim();
+      const improved = String(item?.suggested_improvement || item?.optimized || '').trim();
       const combined = `${original} ${improved}`.toLocaleLowerCase('vi');
       if (!original || !improved || sensitivePattern.test(combined) || standaloneContactPattern.test(original)) return false;
-      return matchedSkills.some(skill => combined.includes(String(skill).toLocaleLowerCase('vi')));
+      return true;
     });
   }
 
@@ -2055,10 +2071,52 @@ function startAppLogic() {
     if (!cvAnalysisResultContent || !analysis) return;
     latestCVAnalysisContext = { analysis, cvId, jdId };
     const score = Number(analysis.match_score || 0);
-    const matched = Array.isArray(analysis.hard_skills_matching) ? analysis.hard_skills_matching : [];
-    const partial = Array.isArray(analysis.hard_skills_partial) ? analysis.hard_skills_partial : [];
+
+    // 1. Gather all matched strengths:
+    const matchedSkills = Array.isArray(analysis.hard_skills_matching) ? [...analysis.hard_skills_matching] : [];
+    const matchedItems = [...matchedSkills];
+    if (Array.isArray(analysis.requirement_evidence)) {
+      analysis.requirement_evidence.forEach(item => {
+        if (item.status === 'matched' || item.evaluation_status === 'SUPPORTED') {
+          const reqName = String(item.requirement || item.normalized_value || item.text || '').trim();
+          if (reqName && reqName.length <= 60 && !reqName.startsWith('http') && !matchedItems.some(existing => existing.toLowerCase() === reqName.toLowerCase())) {
+            matchedItems.push(reqName);
+          }
+        }
+      });
+    }
+
+    // 2. Gather critical missing requirements (Must-haves / Hard gaps):
+    const partialRaw = Array.isArray(analysis.hard_skills_partial) ? analysis.hard_skills_partial : [];
     const missingRaw = Array.isArray(analysis.hard_skills_missing) ? analysis.hard_skills_missing : [];
-    const missing = missingRaw.filter(skill => !partial.includes(skill));
+    const criticalMissing = missingRaw.filter(skill => !partialRaw.includes(skill));
+    if (Array.isArray(analysis.top_risks)) {
+      analysis.top_risks.forEach(risk => {
+        const cleanRisk = String(risk).split(':')[0].trim();
+        if (cleanRisk && cleanRisk.length <= 60 && !criticalMissing.some(existing => existing.toLowerCase() === cleanRisk.toLowerCase())) {
+          criticalMissing.push(cleanRisk);
+        }
+      });
+    }
+
+    // 3. Gather soft skills gap & partial evidence (Needs clarification):
+    const softAndPartial = [...partialRaw];
+    const softGaps = Array.isArray(analysis.soft_skills_gap) ? analysis.soft_skills_gap : [];
+    softGaps.forEach(skill => {
+      const cleanSkill = String(skill).trim();
+      if (cleanSkill && !softAndPartial.some(existing => existing.toLowerCase() === cleanSkill.toLowerCase()) && !criticalMissing.some(existing => existing.toLowerCase() === cleanSkill.toLowerCase())) {
+        softAndPartial.push(cleanSkill);
+      }
+    });
+    if (Array.isArray(analysis.priority_actions)) {
+      analysis.priority_actions.forEach(action => {
+        const gapName = typeof action === 'string' ? action : action.gap;
+        if (gapName && gapName.length <= 40 && !softAndPartial.some(existing => existing.toLowerCase() === gapName.toLowerCase()) && !criticalMissing.some(existing => existing.toLowerCase() === gapName.toLowerCase()) && !matchedItems.some(existing => existing.toLowerCase() === gapName.toLowerCase())) {
+          softAndPartial.push(gapName);
+        }
+      });
+    }
+
     const priorityActions = Array.isArray(analysis.priority_actions) ? analysis.priority_actions : [];
     const suggestions = getJDRelevantOptimizationSuggestions(analysis);
     const cvLabel = [...(cvAnalysisCvSelect?.options || [])].find(option => option.value === String(cvId))?.textContent || 'CV đã chọn';
@@ -2077,7 +2135,7 @@ function startAppLogic() {
     const missingIds = [];
     applyDomField('cv-result-context', 'textContent', `${cvLabel}  ↔  ${jdLabel}`, missingIds);
     applyDomField('cv-result-summary', 'textContent', compactText(analysis.executive_summary, 240)
-      || `CV khớp ${matched.length} kỹ năng và cần bổ sung ${missing.length} kỹ năng theo JD.`, missingIds);
+      || `CV khớp ${matchedItems.length} kỹ năng và cần bổ sung ${criticalMissing.length + softAndPartial.length} kỹ năng/yêu cầu theo JD.`, missingIds);
 
     const confidenceSummary = document.getElementById('cv-result-confidence-summary');
     if (confidenceSummary) {
@@ -2095,27 +2153,69 @@ function startAppLogic() {
       `);
     }
 
-    const renderSkills = (items, variant) => items.length
-      ? items.slice(0, 6).map(item => `<span class="cv-result-tag ${variant}">${escapeHtml(item)}</span>`).join('')
-      : '<span class="cv-result-empty">Không có dữ liệu.</span>';
-    applyDomField('cv-result-matching-skills', 'innerHTML', renderSkills(matched, 'matched'), missingIds);
-    applyDomField('cv-result-missing-skills', 'innerHTML', renderSkills(missing, 'missing'), missingIds);
-    applyDomField('cv-result-partial-skills', 'innerHTML', renderSkills(partial, 'partial'), missingIds);
+    const renderMatchedSkills = (items) => {
+      if (items.length) {
+        return items.slice(0, 6).map(item => `<span class="cv-result-tag matched"><span class="tag-icon">✓</span> ${escapeHtml(item)}</span>`).join('');
+      }
+      return '<div class="cv-result-empty-state is-success"><span class="empty-icon">✓</span> <span>Hồ sơ đáp ứng các yêu cầu cơ bản của vị trí.</span></div>';
+    };
+
+    const renderMissingSkills = (items) => {
+      if (items.length) {
+        return items.slice(0, 6).map(item => `<span class="cv-result-tag missing"><span class="tag-icon">✗</span> ${escapeHtml(item)}</span>`).join('');
+      }
+      return '<div class="cv-result-empty-state is-success"><span class="empty-icon">✓</span> <span>Không có lỗ hổng kỹ năng cốt lõi nào.</span></div>';
+    };
+
+    const renderPartialSkills = (items) => {
+      if (items.length) {
+        return items.slice(0, 6).map(item => `<span class="cv-result-tag partial"><span class="tag-icon">⚠</span> ${escapeHtml(item)}</span>`).join('');
+      }
+      return '<div class="cv-result-empty-state is-info"><span class="empty-icon">✓</span> <span>Bằng chứng kinh nghiệm và kỹ năng mềm rõ ràng.</span></div>';
+    };
+
+    applyDomField('cv-result-matching-skills', 'innerHTML', renderMatchedSkills(matchedItems), missingIds);
+    applyDomField('cv-result-missing-skills', 'innerHTML', renderMissingSkills(criticalMissing), missingIds);
+    applyDomField('cv-result-partial-skills', 'innerHTML', renderPartialSkills(softAndPartial), missingIds);
 
     applyDomField('cv-result-priority-actions', 'innerHTML', priorityActions.length
       ? priorityActions.slice(0, 3).map((item, index) => {
         const title = typeof item === 'string' ? item : (item.gap || item.action || `Ưu tiên ${index + 1}`);
-        const detail = typeof item === 'string' ? '' : (item.action || item.why_it_matters || '');
-        const priority = typeof item === 'string' ? index + 1 : (item.priority || index + 1);
-        return `<article class="cv-result-action"><span>${escapeHtml(priority)}</span><div><strong>${escapeHtml(compactText(title, 110))}</strong>${detail && detail !== title ? `<p>${escapeHtml(compactText(detail, 150))}</p>` : ''}</div></article>`;
+        const why = typeof item === 'string' ? '' : (item.why_it_matters || '');
+        const action = typeof item === 'string' ? '' : (item.action || '');
+        const priorityNum = typeof item === 'string' ? index + 1 : (item.priority || index + 1);
+        return `<article class="cv-result-action-card">
+          <div class="action-card-badge">P${escapeHtml(priorityNum)}</div>
+          <div class="action-card-body">
+            <h5 class="action-card-title">${escapeHtml(compactText(title, 110))}</h5>
+            ${why && why !== title ? `<p class="action-card-why"><span class="action-sub-label">Tại sao quan trọng:</span> ${escapeHtml(compactText(why, 160))}</p>` : ''}
+            ${action && action !== title ? `<p class="action-card-how"><span class="action-sub-label">Cách khắc phục:</span> ${escapeHtml(compactText(action, 160))}</p>` : ''}
+          </div>
+        </article>`;
       }).join('')
-      : '<p class="cv-result-empty">Chưa phát hiện khoảng trống ưu tiên.</p>', missingIds);
+      : '<p class="cv-result-empty">Chưa phát hiện khoảng trống ưu tiên nào cần khắc phục ngay.</p>', missingIds);
 
     setHTML('cv-result-suggestions-preview', suggestions.length
       ? suggestions.slice(0, 3).map((item, index) => `
-        <article class="cv-result-rewrite"><span>${index + 1}</span><div><strong>${escapeHtml(compactText(item.suggested_improvement, 180))}</strong><p>${escapeHtml(compactText(item.reason, 120))}</p></div></article>
+        <article class="cv-result-rewrite-card">
+          <div class="rewrite-card-header">
+            <span class="rewrite-index-pill">Gợi ý ${index + 1}</span>
+            ${item.action_verb ? `<span class="rewrite-action-verb">${escapeHtml(item.action_verb)}</span>` : ''}
+            ${item.reason ? `<span class="rewrite-reason-tag">${escapeHtml(compactText(item.reason, 120))}</span>` : ''}
+          </div>
+          <div class="rewrite-diff-container">
+            <div class="rewrite-before-box">
+              <span class="diff-tag before-tag">Gốc trong CV</span>
+              <p>"${escapeHtml(compactText(item.original_text || item.original || '', 220))}"</p>
+            </div>
+            <div class="rewrite-after-box">
+              <span class="diff-tag after-tag">✦ AI đề xuất sửa</span>
+              <p>${escapeHtml(compactText(item.suggested_improvement || item.optimized || '', 220))}</p>
+            </div>
+          </div>
+        </article>
       `).join('')
-      : '<p class="cv-result-empty">Không có câu viết lại đủ bằng chứng.</p>');
+      : '<p class="cv-result-empty">Không có câu nào cần viết lại hoặc câu trong CV đã đạt chuẩn ATS tối ưu.</p>');
     if (btnOptimizeCvAI) {
       btnOptimizeCvAI.disabled = !analysis.id || (analysis.integrity_guardrail || 'passed') !== 'passed';
       btnOptimizeCvAI.innerHTML = '<span aria-hidden="true">✦</span> Tối ưu & tải CV';
@@ -8355,12 +8455,21 @@ if (document.readyState === 'loading') {
   if (realBtn && analyzeBtn) {
     const observer = new MutationObserver(() => {
       const isLoading = realBtn.disabled;
+      const ctaHint = document.getElementById('p1-cta-hint');
       if (isLoading) {
-        analyzeBtn.innerHTML = 'AI đang đối chiếu CV với JD';
+        analyzeBtn.innerHTML = '<svg class="spin-loader" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg><span>AI đang phân tích Match...</span>';
         analyzeBtn.classList.add('is-loading');
+        analyzeBtn.disabled = true;
+        if (ctaHint) {
+          ctaHint.innerHTML = '<span class="cta-progress-text">⏳ Đang xử lý đối chiếu CV và JD...</span>';
+        }
       } else {
         analyzeBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"></path></svg><span>Phân tích Match</span><svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m13 5 7 7-7 7"></path></svg>';
         analyzeBtn.classList.remove('is-loading');
+        analyzeBtn.disabled = false;
+        if (ctaHint) {
+          ctaHint.textContent = 'Xem mức độ phù hợp, điểm mạnh và kỹ năng cần bổ sung';
+        }
         updateP1UI();
       }
     });

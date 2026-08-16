@@ -338,9 +338,9 @@ export default function MatchView() {
                   </section>
                   <section className="cv-result-panel is-missing">
                     <h4>! Cần bổ sung cho JD</h4>
-                    <small>Thiếu</small>
+                    <small>Thiếu bắt buộc (Must-have)</small>
                     <div id="cv-result-missing-skills" className="cv-result-tags" />
-                    <small>Đã có nhưng chưa rõ</small>
+                    <small>Kỹ năng mềm &amp; Cần làm rõ</small>
                     <div id="cv-result-partial-skills" className="cv-result-tags" />
                   </section>
                 </div>
