@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { FileText, Home, Mic, Target, Upload, UserRound } from 'lucide-react';
 
-type CVTemplateName = 'modern' | 'classic' | 'compact';
+type CVTemplateName = 'modern' | 'classic' | 'elegant' | 'compact' | 'creative';
 
 import DashboardView from '../components/candidate/DashboardView';
 import CVView from '../components/candidate/CVView';
@@ -19,6 +19,7 @@ import UpgradeView from '../components/candidate/UpgradeView';
 import CounselorView from '../components/counselor/CounselorView';
 import EnterpriseView from '../components/enterprise/EnterpriseView';
 import AdminView from '../components/admin/AdminView';
+import JobRecommendationModal from '../components/candidate/JobRecommendationModal';
 
 export default function Page() {
   const [isMounted, setIsMounted] = useState(false);
@@ -178,6 +179,8 @@ export default function Page() {
         <UpgradeView />
       </main>
 
+      <JobRecommendationModal />
+
       <div
         id="cv-template-modal-overlay"
         className={`modal-overlay${isTemplateGalleryOpen ? ' open' : ''}`}
@@ -204,35 +207,70 @@ export default function Page() {
             </p>
           </div>
           <div className="template-gallery-grid">
-            <article className="template-preview template-preview-modern">
-              <h3>Modern</h3>
-              <p>Gọn gàng cho vị trí công nghệ.</p>
-              <button type="button" onClick={() => selectCVTemplate('modern')}>
-                Dùng mẫu này
-              </button>
-              <a className="template-download-btn" href="/api/v1/cvs/templates/modern">
-                Tải PDF mẫu
-              </a>
-            </article>
             <article className="template-preview template-preview-classic">
+              <span className="template-card-badge">ATS 100% TIÊU CHUẨN</span>
               <h3>Classic ATS</h3>
-              <p>Dễ đọc với hệ thống ATS.</p>
-              <button type="button" onClick={() => selectCVTemplate('classic')}>
-                Dùng mẫu này
-              </button>
-              <a className="template-download-btn" href="/api/v1/cvs/templates/classic">
-                Tải PDF mẫu
-              </a>
+              <p>Chuẩn Harvard 1 cột, đơn giản và đạt điểm quét cao nhất với mọi hệ thống ATS.</p>
+              <div className="template-preview-actions">
+                <button type="button" onClick={() => selectCVTemplate('classic')}>
+                  Dùng mẫu này
+                </button>
+                <a className="template-download-btn" href="/api/v1/cvs/templates/classic">
+                  Tải PDF mẫu
+                </a>
+              </div>
+            </article>
+            <article className="template-preview template-preview-modern">
+              <span className="template-card-badge highlight">PHỔ BIẾN NHẤT</span>
+              <h3>Modern Tech</h3>
+              <p>Bố cục 2 cột hiện đại, sidebar chuyên nghiệp dành cho Developer &amp; Data.</p>
+              <div className="template-preview-actions">
+                <button type="button" onClick={() => selectCVTemplate('modern')}>
+                  Dùng mẫu này
+                </button>
+                <a className="template-download-btn" href="/api/v1/cvs/templates/modern">
+                  Tải PDF mẫu
+                </a>
+              </div>
+            </article>
+            <article className="template-preview template-preview-elegant">
+              <span className="template-card-badge topcv">TOPCV EMERALD</span>
+              <h3>TopCV Emerald</h3>
+              <p>Màu xanh ngọc bích TopCV thanh lịch, tối ưu cho Sales, Marketing &amp; Business.</p>
+              <div className="template-preview-actions">
+                <button type="button" onClick={() => selectCVTemplate('elegant')}>
+                  Dùng mẫu này
+                </button>
+                <a className="template-download-btn" href="/api/v1/cvs/templates/elegant">
+                  Tải PDF mẫu
+                </a>
+              </div>
+            </article>
+            <article className="template-preview template-preview-compact">
+              <span className="template-card-badge">TỐI ƯU 1 TRANG</span>
+              <h3>Compact 1-Page</h3>
+              <p>Bố cục cô đọng, căn lề chuẩn xác đảm bảo không tràn sang trang 2.</p>
+              <div className="template-preview-actions">
+                <button type="button" onClick={() => selectCVTemplate('compact')}>
+                  Dùng mẫu này
+                </button>
+                <a className="template-download-btn" href="/api/v1/cvs/templates/compact">
+                  Tải PDF mẫu
+                </a>
+              </div>
             </article>
             <article className="template-preview template-preview-creative">
-              <h3>Compact</h3>
-              <p>Tối giản cho portfolio công nghệ.</p>
-              <button type="button" onClick={() => selectCVTemplate('compact')}>
-                Dùng mẫu này
-              </button>
-              <a className="template-download-btn" href="/api/v1/cvs/templates/compact">
-                Tải PDF mẫu
-              </a>
+              <span className="template-card-badge creative">DARK CREATIVE</span>
+              <h3>Creative Dark</h3>
+              <p>Header tối màu cá tính, timeline đồ họa cho UI/UX &amp; Creative Tech.</p>
+              <div className="template-preview-actions">
+                <button type="button" onClick={() => selectCVTemplate('creative')}>
+                  Dùng mẫu này
+                </button>
+                <a className="template-download-btn" href="/api/v1/cvs/templates/creative">
+                  Tải PDF mẫu
+                </a>
+              </div>
             </article>
           </div>
         </div>

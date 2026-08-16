@@ -1532,7 +1532,7 @@
 .job-recommendation-drawer {
   position: fixed;
   inset: 0;
-  z-index: 10100;
+  z-index: 99999 !important;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1552,9 +1552,9 @@
 .job-drawer-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(10, 24, 18, 0.68);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(8, 20, 16, 0.72);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   opacity: 0;
   transition: opacity 0.24s ease;
 }
@@ -1570,8 +1570,8 @@
   max-height: min(90vh, 860px);
   background: #ffffff;
   border-radius: 24px;
-  border: 1px solid rgba(220, 236, 229, 0.9);
-  box-shadow: 0 30px 70px -15px rgba(10, 30, 22, 0.28), 0 0 0 1px rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(20, 122, 90, 0.2);
+  box-shadow: 0 35px 80px -15px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(20, 122, 90, 0.1);
   display: flex;
   flex-direction: column;
   transform: scale(0.95) translateY(14px);
