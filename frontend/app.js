@@ -3200,8 +3200,10 @@ TÊN CÔNG TY:
   const jobCatalogTab = document.getElementById('job-results-tab-catalog');
   let activeJobSearchCV = '';
   let jobSearchPage = 1;
-  const JOBS_PER_PAGE = 9;
+  const JOBS_PER_PAGE = 8; // 2 cột x 4 hàng
   let visibleJobResults = [];
+  let currentJobSearchMode = 'recommended';
+  let lastJobSearchResultContext = null;
   let jobProgressTimers = [];
   let jobSearchUiState = 'idle';
   let jobProcessingModalVisible = false;
@@ -3658,22 +3660,71 @@ TÊN CÔNG TY:
     `;
   }
 
+  function renderJobSearchPage() {
+    const resultsContainer = document.getElementById('job-search-results');
+    if (!resultsContainer) return;
+    if (!visibleJobResults.length) {
+      resultsContainer.innerHTML = renderEmptyState();
+      renderJobPagination();
+      return;
+    }
+    const isCatalog = currentJobSearchMode === 'catalog';
+
+    if (isCatalog) {
+      // Chỉ phân trang bên Khám phá việc làm: 2 cột x 4 hàng = 8 việc / trang
+      const totalPages = Math.ceil(visibleJobResults.length / JOBS_PER_PAGE);
+      if (jobSearchPage > totalPages) jobSearchPage = 1;
+      if (jobSearchPage < 1) jobSearchPage = 1;
+
+      const start = (jobSearchPage - 1) * JOBS_PER_PAGE;
+      const end = Math.min(start + JOBS_PER_PAGE, visibleJobResults.length);
+      const pagedJobs = visibleJobResults.slice(start, end);
+
+      resultsContainer.innerHTML = pagedJobs.map((job, index) => renderJobCatalogCard(job, start + index)).join('');
+      resultsContainer.classList.add('is-ready');
+      renderJobPagination();
+    } else {
+      // Bên Top 10 đề xuất: Hiển thị trọn vẹn danh sách đề xuất (không phân trang)
+      const contextHtml = lastJobSearchResultContext ? renderTopJobsResultContext(lastJobSearchResultContext) : '';
+      resultsContainer.innerHTML = `${contextHtml}${visibleJobResults.map((job, index) => renderJobCatalogCard(job, index)).join('')}`;
+      resultsContainer.classList.add('is-ready');
+      renderJobPagination();
+    }
+  }
+
   function renderJobPagination() {
-    if (!jobPagination) return;
+    const paginationEl = document.getElementById('job-pagination');
+    if (!paginationEl) return;
+    const isCatalog = currentJobSearchMode === 'catalog';
+    // Chỉ hiển thị phân trang khi ở chế độ Khám phá việc làm
+    if (!isCatalog) {
+      paginationEl.hidden = true;
+      paginationEl.innerHTML = '';
+      return;
+    }
     const totalPages = Math.ceil(visibleJobResults.length / JOBS_PER_PAGE);
     if (totalPages <= 1) {
-      jobPagination.hidden = true;
-      jobPagination.innerHTML = '';
+      paginationEl.hidden = true;
+      paginationEl.innerHTML = '';
       return;
     }
     const start = (jobSearchPage - 1) * JOBS_PER_PAGE;
     const end = Math.min(start + JOBS_PER_PAGE, visibleJobResults.length);
-    const pageButtons = Array.from({ length: totalPages }, (_, index) => {
-      const page = index + 1;
-      return `<button type="button" class="${page === jobSearchPage ? 'is-current' : ''}" data-job-page="${page}" aria-label="Trang ${page}" aria-current="${page === jobSearchPage ? 'page' : 'false'}">${page}</button>`;
+    const visiblePages = [...new Set([
+      1,
+      totalPages,
+      jobSearchPage - 1,
+      jobSearchPage,
+      jobSearchPage + 1,
+    ].filter(page => page >= 1 && page <= totalPages))].sort((a, b) => a - b);
+
+    const pageButtons = visiblePages.map((page, index) => {
+      const prev = visiblePages[index - 1];
+      const gap = prev && page - prev > 1 ? '<span class="p1-pagination-ellipsis" aria-hidden="true">…</span>' : '';
+      return `${gap}<button type="button" class="${page === jobSearchPage ? 'is-current' : ''}" data-job-page="${page}" aria-label="Trang ${page}" aria-current="${page === jobSearchPage ? 'page' : 'false'}">${page}</button>`;
     }).join('');
-    jobPagination.hidden = false;
-    jobPagination.innerHTML = `<span class="job-pagination-summary">Hiển thị ${start + 1}–${end} trong ${visibleJobResults.length} công việc</span><div class="job-pagination-controls"><button type="button" data-job-page="prev" ${jobSearchPage === 1 ? 'disabled' : ''} aria-label="Trang trước">‹ <span>Trước</span></button>${pageButtons}<button type="button" data-job-page="next" ${jobSearchPage === totalPages ? 'disabled' : ''} aria-label="Trang sau"><span>Sau</span> ›</button></div>`;
+    paginationEl.hidden = false;
+    paginationEl.innerHTML = `<span class="job-pagination-summary">Hiển thị ${start + 1}–${end} trong ${visibleJobResults.length} công việc</span><div class="job-pagination-controls"><button type="button" data-job-page="prev" ${jobSearchPage === 1 ? 'disabled' : ''} aria-label="Trang trước">‹ <span>Trước</span></button>${pageButtons}<button type="button" data-job-page="next" ${jobSearchPage === totalPages ? 'disabled' : ''} aria-label="Trang sau"><span>Sau</span> ›</button></div>`;
   }
 
   // Kept only as a legacy reference. The accessible AI activity card above is
@@ -4436,13 +4487,15 @@ TÊN CÔNG TY:
           visibleJobResults.length,
           shouldGuide,
         );
-        jobSearchResults.innerHTML = `${renderTopJobsResultContext({
+        lastJobSearchResultContext = {
           cvName: cleanCvName,
           total: visibleJobResults.length,
           retrievalOnlyCount,
           cacheHit: Boolean(data?.cache_hit),
-        })}${visibleJobResults.map((job, idx) => renderJobCatalogCard(job, idx)).join('')}`;
-        jobSearchResults.classList.add('is-ready');
+        };
+        currentJobSearchMode = 'recommended';
+        jobSearchPage = 1;
+        renderJobSearchPage();
         jobResultsHeader?.classList.add('is-complete');
         if (jobResultsSummary) jobResultsSummary.textContent = `${visibleJobResults.length} việc phù hợp với bạn`;
         if (jobResultsMode) jobResultsMode.textContent = retrievalOnlyCount === visibleJobResults.length
@@ -4451,7 +4504,6 @@ TÊN CÔNG TY:
         if (subtitleEl) subtitleEl.textContent = retrievalOnlyCount === visibleJobResults.length
           ? `${visibleJobResults.length} vị trí được đề xuất cho ${cleanCvName}`
           : `${visibleJobResults.length} vị trí cho ${cleanCvName} · ${hasEvidence} vị trí đã được phân tích`;
-        renderJobPagination();
         if (!jobProcessingModalVisible && shouldGuide) requestAnimationFrame(() => jobResultsHeader?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
       }
     } catch (err) {
@@ -4491,13 +4543,14 @@ TÊN CÔNG TY:
       if (!visibleJobResults.length) {
         jobSearchResults.innerHTML = renderEmptyState();
         if (jobResultsSummary) jobResultsSummary.textContent = 'Chưa có JD phù hợp bộ lọc';
+        renderJobPagination();
         return;
       }
-      jobSearchResults.innerHTML = visibleJobResults.map((job, index) => renderJobCatalogCard(job, index)).join('');
-      jobSearchResults.classList.add('is-ready');
+      currentJobSearchMode = 'catalog';
+      jobSearchPage = 1;
+      renderJobSearchPage();
       if (jobResultsSummary) jobResultsSummary.textContent = `${visibleJobResults.length} vị trí đang tuyển`;
       if (jobResultsMode) jobResultsMode.textContent = 'Danh sách JD';
-      renderJobPagination();
     } catch (error) {
       jobSearchResults.innerHTML = renderErrorState(error.message || 'Không thể tải danh sách JD mẫu.');
       if (jobResultsSummary) jobResultsSummary.textContent = 'Không thể tải việc làm';
@@ -4763,7 +4816,7 @@ TÊN CÔNG TY:
     const strengths = Array.isArray(fullJob.top_strengths) ? fullJob.top_strengths.slice(0, 5) : [];
     if (strengthsList) {
       strengthsList.innerHTML = (isCatalog || isRetrievalOnly)
-        ? '<div class="job-drawer-evidence-empty">Chưa chạy đánh giá CV–JD nên chưa có evidence.</div>'
+        ? '<div class="job-drawer-evidence-empty">Chưa có thông tin phù hợp nổi bật để hiển thị.</div>'
         : strengths.length
         ? strengths.map(st => {
           const raw = String(st).replace(/^[✓\s]+/, '');
@@ -4777,7 +4830,7 @@ TÊN CÔNG TY:
     const gaps = Array.isArray(fullJob.top_gaps) ? fullJob.top_gaps.slice(0, 5) : [];
     if (gapsList) {
       gapsList.innerHTML = isRetrievalOnly
-        ? '<div class="job-drawer-evidence-empty">Chưa chạy đánh giá CV–JD nên chưa có gaps.</div>'
+        ? '<div class="job-drawer-evidence-empty">Chưa có điểm cần bổ sung được ghi nhận.</div>'
         : gaps.length
         ? gaps.map(gp => {
           const raw = String(gp).replace(/^[⚠△\s]+/, '');
@@ -4945,8 +4998,8 @@ TÊN CÔNG TY:
   document.getElementById('btn-drawer-mock-interview')?.addEventListener('click', handleDrawerInterview);
 
 
-  jobPagination?.addEventListener('click', event => {
-    const button = event.target.closest('[data-job-page]');
+  document.addEventListener('click', event => {
+    const button = event.target.closest('#job-pagination [data-job-page]');
     if (!button || button.disabled) return;
     const totalPages = Math.ceil(visibleJobResults.length / JOBS_PER_PAGE);
     const target = button.dataset.jobPage;
@@ -4954,7 +5007,7 @@ TÊN CÔNG TY:
     if (!Number.isInteger(nextPage) || nextPage < 1 || nextPage > totalPages || nextPage === jobSearchPage) return;
     jobSearchPage = nextPage;
     renderJobSearchPage();
-    jobSearchResults?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.getElementById('job-search-results')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
   jobSearchResults?.addEventListener('click', async event => {
     const sourceId = event.target.closest('[data-job-match-source]')?.dataset.jobMatchSource;

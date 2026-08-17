@@ -299,6 +299,9 @@ export default function FindJobsView() {
             </div>
           </article>
         </div>
+
+        {/* Phân trang danh sách việc làm */}
+        <nav id="job-pagination" className="job-pagination" aria-label="Phân trang danh sách việc làm" hidden />
       </div>
     </section>
   );
