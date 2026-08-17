@@ -444,20 +444,20 @@
 .ai-operation-progress {
   margin: 12px 0 0;
   padding: 13px 14px;
-  border: 1px solid color-mix(in srgb, var(--accent, #7c5cff) 38%, transparent);
+  border: 1px solid color-mix(in srgb, var(--primary, #147a5a) 26%, transparent);
   border-radius: 12px;
-  background: color-mix(in srgb, var(--surface, #111827) 88%, #4f46e5 12%);
-  color: var(--text-primary, #f8fafc);
+  background: color-mix(in srgb, var(--surface, #fff) 94%, var(--primary, #147a5a) 6%);
+  color: var(--text-primary, #17322b);
 }
 .ai-operation-progress[hidden] { display: none; }
 .ai-operation-progress__heading { display: flex; gap: 10px; align-items: flex-start; }
 .ai-operation-progress__heading strong { display: block; font-size: 13px; }
-.ai-operation-progress__heading p { margin: 3px 0 0; color: var(--text-muted, #aab4c8); font-size: 12px; }
-.ai-operation-spinner { width: 18px; height: 18px; flex: 0 0 18px; border: 2px solid rgba(148, 163, 184, .35); border-top-color: var(--accent, #8b5cf6); border-radius: 50%; animation: ai-operation-spin .85s linear infinite; }
+.ai-operation-progress__heading p { margin: 3px 0 0; color: var(--text-secondary, #5d716a); font-size: 12px; }
+.ai-operation-spinner { width: 18px; height: 18px; flex: 0 0 18px; border: 2px solid color-mix(in srgb, var(--primary, #147a5a) 22%, transparent); border-top-color: var(--primary, #147a5a); border-radius: 50%; animation: ai-operation-spin .85s linear infinite; }
 .ai-operation-progress ol { display: grid; gap: 7px; margin: 12px 0 0; padding: 0; list-style: none; }
-.ai-operation-progress li { display: flex; gap: 8px; align-items: center; color: var(--text-muted, #aab4c8); font-size: 12px; }
+.ai-operation-progress li { display: flex; gap: 8px; align-items: center; color: var(--text-secondary, #5d716a); font-size: 12px; }
 .ai-operation-progress li > span { width: 19px; height: 19px; display: grid; place-items: center; border-radius: 50%; border: 1px solid currentColor; font-size: 10px; }
-.ai-operation-progress li.is-active { color: var(--accent, #a78bfa); font-weight: 700; }
+.ai-operation-progress li.is-active { color: var(--primary, #147a5a); font-weight: 700; }
 .ai-operation-progress li.is-done { color: #34d399; }
 .ai-operation-progress li.is-done > span { background: #047857; border-color: #34d399; font-size: 0; }
 .ai-operation-progress li.is-done > span::after { content: '✓'; font-size: 12px; }
@@ -465,6 +465,22 @@
 .ai-operation-progress.is-complete .ai-operation-spinner { display: none; }
 .ai-operation-progress.is-failed { border-color: rgba(248, 113, 113, .58); }
 @keyframes ai-operation-spin { to { transform: rotate(360deg); } }
+
+/* In Top Jobs, show request progress below the action row instead of as a
+   competing third column beside the primary button. */
+#view-find-jobs .action-group .ai-operation-progress {
+  order: 3;
+  width: 100%;
+  flex-basis: 100%;
+  margin-top: -2px;
+  padding: 10px 12px;
+}
+#view-find-jobs .action-group .ai-operation-progress ol {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 9px;
+}
+#view-find-jobs .action-group .ai-operation-progress li { font-size: 11px; }
 
 /* Context retained above Top JD results after the loading card is replaced. */
 .top-jobs-result-context {
@@ -496,6 +512,7 @@
 .top-jobs-initial-legend i { width: 8px; height: 8px; border-radius: 50%; background: var(--primary, #147a5a); }
 .top-jobs-initial-legend i.is-retrieval { background: #d97706; }
 @media (max-width: 640px) {
+  #view-find-jobs .action-group .ai-operation-progress ol { grid-template-columns: 1fr; }
   .top-jobs-result-context { grid-template-columns: auto minmax(0, 1fr); }
   .top-jobs-result-context__badge { grid-column: 2; justify-self: start; }
   .top-jobs-local-note { align-items: flex-start; border-radius: 12px; }
