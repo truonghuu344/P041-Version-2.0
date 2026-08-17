@@ -53,7 +53,7 @@ export default function HistoryView() {
           <button
             type="button"
             className={`history-page-tab ${activePage === 'history' ? 'is-active' : ''}`}
-            aria-selected={activePage === 'history'}
+            aria-current={activePage === 'history' ? 'page' : undefined}
             onClick={() => setActivePage('history')}
           >
             <Clock size={16} /> Lịch sử hoạt động
@@ -61,7 +61,7 @@ export default function HistoryView() {
           <button
             type="button"
             className={`history-page-tab ${activePage === 'reports' ? 'is-active' : ''}`}
-            aria-selected={activePage === 'reports'}
+            aria-current={activePage === 'reports' ? 'page' : undefined}
             onClick={() => setActivePage('reports')}
           >
             <BarChart3 size={16} /> Báo cáo tiến độ
