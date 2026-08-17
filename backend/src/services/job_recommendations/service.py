@@ -41,6 +41,8 @@ from src.schemas.job_recommendation import (
 )
 
 # pyrefly: ignore [missing-import]
+from src.services.cv_jd_matching import build_cv_jd_evidence
+
 # pyrefly: ignore [missing-import]
 from src.services.cv_retrieval import build_cv_retrieval_text
 
@@ -75,9 +77,6 @@ from src.services.job_recommendations.mandatory_gate import apply_mandatory_gate
 
 # pyrefly: ignore [missing-import]
 from src.services.job_recommendations.match_reuse import find_existing_match
-
-# pyrefly: ignore [missing-import]
-from src.services.cv_jd_matching import build_cv_jd_evidence
 
 # pyrefly: ignore [missing-import]
 from src.services.job_recommendations.rrf import weighted_rrf

@@ -11,10 +11,12 @@ from src.db.models import CVSnapshot
 from src.schemas.job_recommendation import JobRecommendationRequest
 
 # pyrefly: ignore [missing-import]
+from src.services.job_recommendations.bm25_retriever import RankedJob
+
+# pyrefly: ignore [missing-import]
 from src.services.job_recommendations.service import (
     TopJobRecommendationService,
 )
-from src.services.job_recommendations.bm25_retriever import RankedJob
 
 
 @pytest.mark.asyncio

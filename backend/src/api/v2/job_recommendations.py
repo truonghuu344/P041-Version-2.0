@@ -44,6 +44,9 @@ from src.schemas.job_recommendation import (
 )
 
 # pyrefly: ignore [missing-import]
+from src.services.job_catalog import load_enterprise_job_catalog
+
+# pyrefly: ignore [missing-import]
 from src.services.job_recommendations.final_ranking import get_fit_label
 
 # pyrefly: ignore [missing-import]
@@ -54,7 +57,6 @@ from src.services.job_recommendations.service import (
 
 # pyrefly: ignore [missing-import]
 from src.services.pipeline_context import get_or_create_cv_snapshot
-from src.services.job_catalog import load_enterprise_job_catalog
 
 logger = logging.getLogger(__name__)
 
