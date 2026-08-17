@@ -70,7 +70,16 @@ def _repair_fragmented_vietnamese(value: str) -> str:
     """Join OCR-split Vietnamese/mojibake character fragments without touching words."""
     value = re.sub(r"(?<=[A-Za-z])\s+(?=[ÅÆĂá])", "", value)
     value = re.sub(r"(?<=[©¡¯°»™])\s+(?=[a-zá])", "", value)
-    return re.sub(r"\s+", " ", value).strip()
+    # OCR can split a Unicode Vietnamese word into individual characters, e.g.
+    # ``V ũ H ữ u Tr ư ờ ng``. A new capitalized token begins the next word;
+    # non-capitalized fragments belong to the preceding word.
+    words: list[str] = []
+    for token in value.split():
+        if not words or token[:1].isupper():
+            words.append(token)
+        else:
+            words[-1] += token
+    return " ".join(words).strip()
 
 
 def _is_name_candidate(line: str) -> bool:
@@ -82,7 +91,7 @@ def _is_name_candidate(line: str) -> bool:
     }
     return (
         normalized not in excluded
-        and 2 <= len(line.split()) <= 8
+        and 2 <= len(line.split()) <= 12
         and not re.search(r"[@\d&]", line)
         and all(char.isalpha() or char in " '-©¡¯°»™Ă" for char in line)
     )
