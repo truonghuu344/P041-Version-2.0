@@ -1,4 +1,4 @@
-import { BadgeCheck, BriefcaseBusiness, Database, FileText, Plus, Search, ShieldCheck } from 'lucide-react';
+import { BriefcaseBusiness, Database, Plus, Search, ShieldCheck } from 'lucide-react';
 
 export default function FindJobsView() {
   return (
@@ -236,10 +236,10 @@ export default function FindJobsView() {
             {/* Submit Action */}
             <div className="control-group action-group">
               <div className="top-jobs-submit-copy">
-                <span className="top-jobs-submit-status-pill">Hồ sơ sẵn sàng</span>
-                <span>Chọn một CV đã lưu hoặc tải CV mới, rồi nhận Top 10 việc phù hợp nhất.</span>
+                <span className="top-jobs-submit-status-pill">Bắt đầu với CV của bạn</span>
+                <span>Chọn CV, thêm bộ lọc nếu cần, rồi xem các vị trí phù hợp.</span>
                 <small className="top-jobs-submit-privacy">
-                  <Database size={13} aria-hidden="true" /> Dựa trên hồ sơ và tiêu chí bạn chọn · điểm chỉ hiển thị khi đủ thông tin
+                  <Database size={13} aria-hidden="true" /> CV chỉ cần tải lên một lần và có thể dùng lại ở những lần sau
                 </small>
               </div>
               <button type="button" id="job-match-cv-btn" className="btn-find-top-jobs" disabled>
@@ -248,36 +248,6 @@ export default function FindJobsView() {
             </div>
           </div>
         </form>
-
-        <section className="top-jobs-flow-guide" aria-label="Cách hệ thống tạo gợi ý việc làm">
-          <div>
-            <span className="top-jobs-flow-guide__icon"><FileText size={16} aria-hidden="true" /></span>
-            <p><strong>1. Xem hồ sơ đã chọn</strong><span>Dùng kỹ năng và kinh nghiệm để cá nhân hóa gợi ý.</span></p>
-          </div>
-          <div>
-            <span className="top-jobs-flow-guide__icon"><Database size={16} aria-hidden="true" /></span>
-            <p><strong>2. Tìm cơ hội phù hợp</strong><span>Tìm các vị trí liên quan đến mục tiêu của bạn.</span></p>
-          </div>
-          <div>
-            <span className="top-jobs-flow-guide__icon"><BadgeCheck size={16} aria-hidden="true" /></span>
-            <p><strong>3. Làm rõ mức độ phù hợp</strong><span>Hiển thị rõ gợi ý ban đầu và vị trí đã được phân tích chi tiết.</span></p>
-          </div>
-        </section>
-
-        <section className="top-jobs-reuse-guide" aria-label="Cách dữ liệu được dùng lại">
-          <div className="top-jobs-reuse-guide__heading">
-            <BadgeCheck size={17} aria-hidden="true" />
-            <div>
-              <strong>Xử lý một lần, dùng lại khi cần</strong>
-              <span>Giúp bạn nhận kết quả nhanh hơn ở những lần sử dụng sau.</span>
-            </div>
-          </div>
-          <ul>
-            <li><FileText size={14} aria-hidden="true" /><span><strong>CV</strong> được đọc khi tải lên và dùng lại cho các lần tìm việc.</span></li>
-            <li><Database size={14} aria-hidden="true" /><span><strong>Top việc làm</strong> được lưu lại khi hồ sơ và tiêu chí không đổi.</span></li>
-            <li><BadgeCheck size={14} aria-hidden="true" /><span><strong>Phân tích chi tiết</strong> chỉ bắt đầu khi bạn chủ động yêu cầu.</span></li>
-          </ul>
-        </section>
 
         {/* Results Header */}
         <div className="top-jobs-results-header">
