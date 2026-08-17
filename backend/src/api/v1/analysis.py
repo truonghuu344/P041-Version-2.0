@@ -6,8 +6,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import delete, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.core.security import get_current_user
 from src.config import get_settings
+from src.core.security import get_current_user
 from src.db.database import get_db
 from src.db.models import CV, CVAnalysis, CVOptimizationDecision, JobDescription, UsageEvent, User
 from src.models.schemas import (
