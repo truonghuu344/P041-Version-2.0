@@ -5,14 +5,6 @@
 import React from 'react';
 import { X } from 'lucide-react';
 
-type CandidateView = 'cv' | 'match' | 'interview';
-
-declare global {
-  interface Window {
-    switchView?: (view: CandidateView) => void;
-  }
-}
-
 export default function JobRecommendationModal() {
   const handleClose = () => {
     const drawer = document.getElementById('job-recommendation-drawer');
