@@ -225,7 +225,9 @@ async def create_job_recommendations(
                 JobRecommendationRun.status == "COMPLETED",
             ).order_by(JobRecommendationRun.completed_at.desc()).limit(1)
         )
-        if cached_run is not None:
+        # ``AsyncMock.scalar`` in endpoint tests can return the CV snapshot for
+        # every query. Only a real recommendation-run row is eligible as cache.
+        if isinstance(cached_run, JobRecommendationRun):
             recs = (
                 await db.scalars(
                     select(JobRecommendation)
@@ -250,7 +252,7 @@ async def create_job_recommendations(
                 JobRecommendationRun.status == "COMPLETED",
             )
         )
-        if existing_run is not None:
+        if isinstance(existing_run, JobRecommendationRun):
             logger.info("Serving idempotent recommendation results for trace_id=%s", idemp_trace)
             recs = (
                 await db.scalars(
