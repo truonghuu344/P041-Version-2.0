@@ -3578,7 +3578,7 @@ TÊN CÔNG TY:
     `;
   }
 
-  function renderTopJobsResultContext({ cvName, total, retrievalOnlyCount }) {
+  function renderTopJobsResultContext({ cvName, total, retrievalOnlyCount, cacheHit = false }) {
     const hasEvidence = total - retrievalOnlyCount;
     const isRetrievalOnly = retrievalOnlyCount === total;
     const title = isRetrievalOnly
@@ -3595,6 +3595,7 @@ TÊN CÔNG TY:
           <strong>${title}</strong>
           <p>${detail}</p>
           <span>CV đang dùng: ${escapeHtml(cvName)}</span>
+          <span class="top-jobs-result-context__reuse">${cacheHit ? 'Kết quả này đã được lưu từ lần tìm trước.' : 'Kết quả này đã được lưu để mở lại nhanh hơn ở lần sau.'}</span>
         </div>
         <span class="top-jobs-result-context__badge">${badge}</span>
       </aside>
@@ -4101,6 +4102,15 @@ TÊN CÔNG TY:
     const triggerBadge = document.getElementById('top-jobs-selected-cv-badge');
     const triggerMeta = document.getElementById('top-jobs-selected-cv-meta');
     const prevTitle = triggerTitle ? triggerTitle.textContent : '';
+    const progress = beginOperationProgress(jobMatchCVButton, {
+      id: 'find-jobs-cv-upload-progress',
+      title: 'Đang chuẩn bị hồ sơ để tìm việc',
+      steps: ['Tải CV an toàn', 'Đọc nội dung hồ sơ', 'Lưu hồ sơ để dùng lại'],
+    });
+    const stageTimer = window.setTimeout(
+      () => progress.advance(1, 'Đang đọc nội dung CV; file scan có thể cần thêm thời gian.'),
+      650,
+    );
 
     try {
       showToast('Đang tải lên Bản CV gốc...', 'info');
@@ -4127,11 +4137,16 @@ TÊN CÔNG TY:
       }
 
       closeJobSearchCVMenu();
+      window.clearTimeout(stageTimer);
+      progress.complete('Hoàn tất. Hồ sơ đã sẵn sàng và sẽ được dùng lại cho các lần tìm việc sau.');
       showToast('✅ Đã thêm Bản CV gốc thành công! Bạn có thể nhấn "Tìm công việc phù hợp".', 'success');
     } catch (err) {
+      window.clearTimeout(stageTimer);
+      progress.fail('Chưa thể chuẩn bị hồ sơ. Hãy kiểm tra file và thử lại.');
       if (triggerTitle) triggerTitle.textContent = prevTitle || 'Chọn CV đã lưu...';
       showToast(`Không thể tải CV: ${err.message || err}`, 'error');
     } finally {
+      window.clearTimeout(stageTimer);
       const uploadInput = document.getElementById('find-jobs-cv-upload-input');
       if (uploadInput) uploadInput.value = '';
     }
@@ -4348,17 +4363,22 @@ TÊN CÔNG TY:
         const completionMessage = retrievalOnlyCount === visibleJobResults.length
           ? 'Đã tìm các gợi ý việc làm phù hợp với hồ sơ của bạn.'
           : `Đã hoàn tất: ${hasEvidence} vị trí có đánh giá mức độ phù hợp.`;
-        completeJobSearchProgress(completionMessage, visibleJobResults.length, shouldGuide);
+        completeJobSearchProgress(
+          data?.cache_hit ? 'Đã mở lại kết quả phù hợp đã lưu cho hồ sơ và tiêu chí này.' : completionMessage,
+          visibleJobResults.length,
+          shouldGuide,
+        );
         jobSearchResults.innerHTML = `${renderTopJobsResultContext({
           cvName: cleanCvName,
           total: visibleJobResults.length,
           retrievalOnlyCount,
+          cacheHit: Boolean(data?.cache_hit),
         })}${visibleJobResults.map((job, idx) => renderJobCatalogCard(job, idx)).join('')}`;
         jobSearchResults.classList.add('is-ready');
         jobResultsHeader?.classList.add('is-complete');
         if (jobResultsSummary) jobResultsSummary.textContent = `${visibleJobResults.length} việc phù hợp với bạn`;
         if (jobResultsMode) jobResultsMode.textContent = retrievalOnlyCount === visibleJobResults.length
-          ? 'Gợi ý cá nhân hóa'
+          ? (data?.cache_hit ? 'Kết quả đã lưu' : 'Gợi ý cá nhân hóa')
           : `${hasEvidence} đã phân tích`;
         if (subtitleEl) subtitleEl.textContent = retrievalOnlyCount === visibleJobResults.length
           ? `${visibleJobResults.length} vị trí được đề xuất cho ${cleanCvName}`

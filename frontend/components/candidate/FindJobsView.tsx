@@ -264,6 +264,21 @@ export default function FindJobsView() {
           </div>
         </section>
 
+        <section className="top-jobs-reuse-guide" aria-label="Cách dữ liệu được dùng lại">
+          <div className="top-jobs-reuse-guide__heading">
+            <BadgeCheck size={17} aria-hidden="true" />
+            <div>
+              <strong>Xử lý một lần, dùng lại khi cần</strong>
+              <span>Giúp bạn nhận kết quả nhanh hơn ở những lần sử dụng sau.</span>
+            </div>
+          </div>
+          <ul>
+            <li><FileText size={14} aria-hidden="true" /><span><strong>CV</strong> được đọc khi tải lên và dùng lại cho các lần tìm việc.</span></li>
+            <li><Database size={14} aria-hidden="true" /><span><strong>Top việc làm</strong> được lưu lại khi hồ sơ và tiêu chí không đổi.</span></li>
+            <li><BadgeCheck size={14} aria-hidden="true" /><span><strong>Phân tích chi tiết</strong> chỉ bắt đầu khi bạn chủ động yêu cầu.</span></li>
+          </ul>
+        </section>
+
         {/* Results Header */}
         <div className="top-jobs-results-header">
           <div className="results-title-wrap">
