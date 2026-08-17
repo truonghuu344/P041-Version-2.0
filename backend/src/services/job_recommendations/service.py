@@ -8,7 +8,7 @@ Executes the complete, reproducible Top Jobs recommendation pipeline:
    - If filtered jobs <= candidate_k (default 30): use all filtered jobs.
    - Else: run BM25 and Semantic retrievers, then merge via Weighted RRF (top candidate_k).
 5. For each candidate:
-   - Check and reuse existing Match results; run matching pipeline only when needed.
+   - Reuse a completed Match when present; otherwise return a retrieval-only job.
    - Calculate rubric Fit Score with dynamic active-weight normalization.
    - Apply the Mandatory Requirement Gate (capping display score at 49 when coverage < 50%).
    - Calculate Evidence Confidence (high / medium / low).
@@ -40,8 +40,6 @@ from src.schemas.job_recommendation import (
 )
 
 # pyrefly: ignore [missing-import]
-from src.services.cv_jd_pipeline import PipelineConfig, run_cv_jd_pipeline
-
 # pyrefly: ignore [missing-import]
 from src.services.cv_retrieval import build_cv_retrieval_text
 
@@ -74,7 +72,7 @@ from src.services.job_recommendations.fit_score import calculate_fit_score
 from src.services.job_recommendations.mandatory_gate import apply_mandatory_gate
 
 # pyrefly: ignore [missing-import]
-from src.services.job_recommendations.match_reuse import get_or_run_match
+from src.services.job_recommendations.match_reuse import find_existing_match
 
 # pyrefly: ignore [missing-import]
 from src.services.job_recommendations.rrf import weighted_rrf
@@ -248,52 +246,47 @@ class TopJobRecommendationService:
         candidate_retrieval: RankedJob,
         job_catalog_map: Mapping[str, dict[str, Any]],
     ) -> dict[str, Any]:
-        """Evaluate a single candidate using reuse-aware match, fit score, gate, and explanation."""
+        """Reuse a completed Match or return an unscored retrieval-only job."""
         jd_id = candidate_retrieval.jd_snapshot_id
-        job_data = job_catalog_map.get(jd_id) or {"source_id": jd_id, "title": "Vị trí tuyển dụng"}
-
-        # Define inline pipeline runner for fresh matches
-        async def _run_fresh_match(
-            _db: AsyncSession,
-            *,
-            cv_snapshot_id: str,
-            jd_snapshot_id: str,
-            **_kwargs: Any,
-        ) -> dict[str, Any]:
-            requirements = _extract_job_requirements(job_data)
-            pipeline_cfg = PipelineConfig(
-                bm25_top_k=self.settings.cv_jd_bm25_top_k,
-                semantic_top_k=self.settings.cv_jd_semantic_top_k,
-                semantic_min_score=self.settings.cv_jd_semantic_min_score,
-                rrf_k=self.settings.cv_jd_rrf_k,
-                hybrid_top_k=self.settings.cv_jd_hybrid_top_k,
-                max_evidence_per_requirement=self.settings.cv_jd_evidence_max_per_requirement,
-                score_decimal_places=self.settings.cv_jd_score_decimal_places,
-                embedding_provider=self.settings.cv_jd_embedding_provider,
-                embedding_model=self.settings.cv_jd_embedding_model,
-                embedding_api_key=self.settings.google_genai_api_key,
-                embedding_dimensions=self.settings.cv_jd_embedding_dimensions,
-                rating_poor_max=self.settings.cv_jd_rating_poor_max,
-                rating_average_max=self.settings.cv_jd_rating_average_max,
-                rating_good_max=self.settings.cv_jd_rating_good_max,
-                extraction_min_confidence=self.settings.cv_jd_extraction_min_confidence,
-            )
-            return run_cv_jd_pipeline(
-                cv_text=cv_snapshot.raw_text or "",
-                parsed_cv=cv_snapshot.profile_json or {},
-                job_id=jd_id,
-                requirements=requirements,
-                config=pipeline_cfg,
-            )
-
-        match_result = await get_or_run_match(
+        existing_match = await find_existing_match(
             db,
             cv_snapshot_id=cv_snapshot.id,
             jd_snapshot_id=jd_id,
             pipeline_version=CURRENT_PIPELINE_VERSION,
             rubric_version=CURRENT_RUBRIC_VERSION,
-            run_pipeline=_run_fresh_match,
         )
+        if existing_match is None:
+            # Top Jobs is retrieval-only until the user explicitly creates a
+            # CV-JD Match. Do not create embeddings, a MatchRun, or evidence.
+            job_data = job_catalog_map.get(jd_id) or {}
+            return {
+                "job_id": str(job_data.get("source_id") or jd_id),
+                "jd_snapshot_id": jd_id,
+                "title": str(job_data.get("title") or "Job"),
+                "company": job_data.get("company"),
+                "location": job_data.get("location"),
+                "work_mode": job_data.get("work_mode") or job_data.get("remote_type"),
+                "display_fit_score": 0.0,
+                "raw_fit_score": 0.0,
+                "required_skills_coverage": 0.0,
+                "mandatory_requirements_matched": 0,
+                "total_mandatory_requirements": 0,
+                "supported_requirements_count": 0,
+                "rrf_rank": candidate_retrieval.rank,
+                "evidence_confidence": "not_evaluated",
+                "confidence_score": 0.0,
+                "mandatory_requirement_failed": False,
+                "match_id": f"RETRIEVAL_{jd_id}",
+                "score_breakdown": [],
+                "top_strengths": [],
+                "top_gaps": [],
+                "mandatory_gate_json": {},
+                "explanation_json": {"evaluation_status": "RETRIEVAL_ONLY"},
+                "fit_label": "Chua danh gia CV-JD",
+            }
+        job_data = job_catalog_map.get(jd_id) or {"source_id": jd_id, "title": "Vị trí tuyển dụng"}
+
+        match_result = existing_match
 
         # 1. Rubric Fit Score
         criteria = match_result.result_json.get("criteria", [])
@@ -337,7 +330,7 @@ class TopJobRecommendationService:
             "evidence_confidence": conf_res.confidence_level,
             "confidence_score": conf_res.confidence_score,
             "mandatory_requirement_failed": gate_res.failed,
-            "match_id": match_result.match_id,
+            "match_id": match_result.id,
             "score_breakdown": [
                 {
                     "criterion_id": b.criterion_id,

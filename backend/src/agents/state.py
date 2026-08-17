@@ -71,6 +71,7 @@ class CVParserAgentState(TypedDict, total=False):
     llm_requested: bool
     llm_called: bool
     llm_succeeded: bool
+    llm_policy_blocked: bool
     llm_error: str
     provider: str
     model: str

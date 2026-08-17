@@ -156,11 +156,9 @@ RÀNG BUỘC LIÊM CHÍNH:
 - Project status luôn là recommended_not_completed; bullet template phải bắt đầu bằng 'Sau khi hoàn thành:'.
 - Chỉ đề xuất nội dung liên quan trực tiếp tới kỹ năng/yêu cầu trong JD.
 - Với chứng chỉ, luôn nhắc người dùng kiểm tra thông tin hiện hành trên trang nhà cung cấp."""
-    user_prompt = f"""CV:
-{state["cv_raw_text"]}
-
-JD title: {state["jd_title"]}
-JD requirements: {state["jd_requirements"]}
+    # Gemini is a copy editor here, not a scoring or extraction engine. Send
+    # only deterministic, verified evidence instead of full CV/JD text.
+    user_prompt = f"""Job title: {state["jd_title"]}
 Verified matching skills: {evidence["hard_skills_matching"]}
 Partial skills: {evidence.get("hard_skills_partial", [])}
 Missing skills: {evidence["hard_skills_missing"]}

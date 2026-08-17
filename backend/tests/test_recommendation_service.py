@@ -14,6 +14,7 @@ from src.schemas.job_recommendation import JobRecommendationRequest
 from src.services.job_recommendations.service import (
     TopJobRecommendationService,
 )
+from src.services.job_recommendations.bm25_retriever import RankedJob
 
 
 @pytest.mark.asyncio
@@ -96,3 +97,27 @@ async def test_recommend_jobs_unauthorized_cv_raises_value_error():
             user_id="user_123",
             request=request,
         )
+
+
+@pytest.mark.asyncio
+async def test_existing_match_is_reused_without_running_a_new_match(monkeypatch):
+    from src.services.job_recommendations import service as recommendation_service
+
+    snapshot = MagicMock(id="cv-1")
+    existing = MagicMock(
+        id="match-existing",
+        result_json={"criteria": [], "requirements": {"matched": [], "missing": []}},
+    )
+    find_match = AsyncMock(return_value=existing)
+    monkeypatch.setattr(recommendation_service, "find_existing_match", find_match)
+
+    result = await TopJobRecommendationService().evaluate_candidate(
+        AsyncMock(),
+        cv_snapshot=snapshot,
+        candidate_retrieval=RankedJob(jd_snapshot_id="jd-1", rank=1, score=1.0),
+        job_catalog_map={"jd-1": {"source_id": "jd-1", "title": "Backend Engineer"}},
+    )
+
+    assert result["match_id"] == "match-existing"
+    assert result["display_fit_score"] == 0.0
+    find_match.assert_awaited_once()

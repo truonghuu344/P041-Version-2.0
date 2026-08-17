@@ -1,3 +1,5 @@
+import hashlib
+import json
 from time import perf_counter
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -5,6 +7,7 @@ from sqlalchemy import delete, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.security import get_current_user
+from src.config import get_settings
 from src.db.database import get_db
 from src.db.models import CV, CVAnalysis, CVOptimizationDecision, JobDescription, UsageEvent, User
 from src.models.schemas import (
@@ -21,6 +24,44 @@ from src.services.pipeline_context import PIPELINE_VERSION, get_or_create_cv_sna
 from src.services.resume_optimization_service import optimize_resume_for_jd, validate_resume_change
 
 router = APIRouter(prefix="/analysis", tags=["CV Match & Gap Analysis"])
+
+
+def _gap_cache_key(*, user_id: str, cv_snapshot_id: str, jd_snapshot_id: str) -> str:
+    """Stable key which contains no CV/JD content or personally identifiable data."""
+    settings = get_settings()
+    payload = {
+        "feature": "gap_analysis",
+        "user_id": user_id,
+        "cv_snapshot_id": cv_snapshot_id,
+        "jd_snapshot_id": jd_snapshot_id,
+        "pipeline_version": PIPELINE_VERSION,
+        "cache_version": settings.gap_analysis_cache_version,
+        "explanation_enabled": settings.match_explanation_llm_enabled,
+        "model": settings.model_name if settings.match_explanation_llm_enabled else "deterministic",
+    }
+    return hashlib.sha256(json.dumps(payload, sort_keys=True).encode("utf-8")).hexdigest()
+
+
+def _stored_gap_response(analysis: CVAnalysis, *, cache_hit: bool = False) -> GapAnalysisResponse:
+    """Build the API response from the persisted source of truth."""
+    payload = dict(analysis.gap_analysis_json or {})
+    cache = payload.get("cache") if isinstance(payload.get("cache"), dict) else {}
+    return GapAnalysisResponse.model_validate(
+        {
+            **payload,
+            "id": analysis.id,
+            "cv_id": analysis.cv_id,
+            "jd_id": analysis.jd_id,
+            "cv_snapshot_id": analysis.cv_snapshot_id,
+            "jd_snapshot_id": analysis.jd_snapshot_id,
+            "pipeline_version": analysis.pipeline_version or payload.get("pipeline_version", PIPELINE_VERSION),
+            "match_score": analysis.match_score,
+            "suggestions": analysis.optimized_suggestions_json or [],
+            "created_at": analysis.created_at,
+            "cache_hit": cache_hit,
+            "cache_key_version": str(cache.get("version") or ""),
+        }
+    )
 
 
 @router.post("/gap-analysis", response_model=GapAnalysisResponse, status_code=status.HTTP_201_CREATED)
@@ -56,6 +97,33 @@ async def analyze_cv_jd_gap(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Không tìm thấy Job Description hợp lệ để phân tích",
         )
+
+    # Snapshot IDs change whenever the source CV/JD changes. They are the
+    # cache boundary, so cached output can never be reused for edited inputs.
+    cv_snapshot = await get_or_create_cv_snapshot(db, cv)
+    jd_snapshot = await get_or_create_jd_snapshot(db, jd)
+    settings = get_settings()
+    cache_key = _gap_cache_key(
+        user_id=current_user.id,
+        cv_snapshot_id=cv_snapshot.id,
+        jd_snapshot_id=jd_snapshot.id,
+    )
+    if settings.gap_analysis_cache_enabled and not payload.force_refresh:
+        cached = await db.scalar(
+            select(CVAnalysis)
+            .where(
+                CVAnalysis.user_id == current_user.id,
+                CVAnalysis.cv_snapshot_id == cv_snapshot.id,
+                CVAnalysis.jd_snapshot_id == jd_snapshot.id,
+                CVAnalysis.pipeline_version == PIPELINE_VERSION,
+            )
+            .order_by(CVAnalysis.created_at.desc())
+            .limit(1)
+        )
+        cached_metadata_raw = (cached.gap_analysis_json or {}).get("cache", {}) if cached else {}
+        cached_metadata = cached_metadata_raw if isinstance(cached_metadata_raw, dict) else {}
+        if cached and cached_metadata.get("key") == cache_key:
+            return _stored_gap_response(cached, cache_hit=True)
 
     # Perform analysis
     cv_raw_text = (cv.raw_text or "").strip()
@@ -98,8 +166,6 @@ async def analyze_cv_jd_gap(
         ) from exc
 
     # Save to database
-    cv_snapshot = await get_or_create_cv_snapshot(db, cv)
-    jd_snapshot = await get_or_create_jd_snapshot(db, jd)
     new_analysis = CVAnalysis(
         user_id=current_user.id,
         cv_id=cv.id,
@@ -151,6 +217,11 @@ async def analyze_cv_jd_gap(
             "cv_section_recommendations": analysis_result.get("cv_section_recommendations", []),
             "score_breakdown": analysis_result.get("score_breakdown", {}),
             "integrity_guardrail": analysis_result.get("integrity_guardrail", "passed"),
+            "cache": {
+                "key": cache_key,
+                "version": settings.gap_analysis_cache_version,
+                "explanation_enabled": settings.match_explanation_llm_enabled,
+            },
         },
         optimized_suggestions_json=analysis_result.get("suggestions", []),
     )
@@ -224,6 +295,8 @@ async def analyze_cv_jd_gap(
         cv_section_recommendations=analysis_result.get("cv_section_recommendations", []),
         score_breakdown=analysis_result.get("score_breakdown", {}),
         integrity_guardrail=analysis_result.get("integrity_guardrail", "passed"),
+        cache_hit=False,
+        cache_key_version=settings.gap_analysis_cache_version,
         created_at=new_analysis.created_at,
     )
 

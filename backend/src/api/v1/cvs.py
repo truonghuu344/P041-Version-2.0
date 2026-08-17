@@ -116,7 +116,7 @@ def _cv_template_sample() -> dict:
 async def upload_cv(
     file: UploadFile = File(...),
     title: str = Form(default=""),
-    use_llm: bool = Form(default=True),
+    use_llm: bool = Form(default=False),
     parse_mode: Literal["configured", "auto"] = Form(default="configured"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -551,7 +551,7 @@ async def get_cv_agent_status(
 @router.post("/{cv_id}/analyze", response_model=CVOut)
 async def reanalyze_cv(
     cv_id: str,
-    use_llm: bool = Form(default=True),
+    use_llm: bool = Form(default=False),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> CVOut:

@@ -8,12 +8,10 @@ import re
 import tempfile
 import unicodedata
 from datetime import UTC, datetime, timedelta
-from io import BytesIO
 from pathlib import Path
 from time import perf_counter
 from typing import Any
 
-from pypdf import PdfReader
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -513,12 +511,11 @@ async def validate_variant(db: AsyncSession, variant: CVVariant, *, trace_id: st
             accepted_suggestions=[],
             template_name=template.name if template else "classic",
         )
-        reader = PdfReader(BytesIO(pdf_bytes))
-        page_texts = [(page.extract_text() or "").strip() for page in reader.pages]
-        render_meta = {"pages": len(reader.pages), "bytes": len(pdf_bytes), "template": template.name if template else "classic"}
-        if not pdf_bytes.startswith(b"%PDF") or not page_texts or any(not text for text in page_texts):
-            render_errors.append("PDF có trang rỗng hoặc định dạng không hợp lệ.")
-        if len(reader.pages) > int((template.renderer_config if template else {}).get("max_pages", 2)):
+        page_count = len(re.findall(rb"/Type\s*/Page(?!s)", pdf_bytes))
+        render_meta = {"pages": page_count, "bytes": len(pdf_bytes), "template": template.name if template else "classic"}
+        if not pdf_bytes.startswith(b"%PDF") or page_count == 0:
+            render_errors.append("PDF không hợp lệ hoặc không có trang.")
+        if page_count > int((template.renderer_config if template else {}).get("max_pages", 2)):
             render_errors.append("PDF vượt quá giới hạn 2 trang.")
     except Exception as exc:
         render_errors.append(f"Không render được PDF: {exc}")

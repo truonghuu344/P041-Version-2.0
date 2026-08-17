@@ -81,6 +81,7 @@ class JobRecommendationHistoryResponse(BaseModel):
 def _build_item_from_model(rec: JobRecommendation) -> JobRecommendationItem:
     """Map a JobRecommendation database row to the public JobRecommendationItem schema."""
     exp = dict(rec.explanation_json or {})
+    retrieval_only = exp.get("evaluation_status") == "RETRIEVAL_ONLY"
     strengths = [s.get("message_vi") or s.get("code") for s in exp.get("strengths", []) if isinstance(s, dict)]
     gaps = [g.get("message_vi") or g.get("code") for g in exp.get("gaps", []) if isinstance(g, dict)]
     mandatory_gate = dict(rec.mandatory_gate_json or {})
@@ -94,7 +95,7 @@ def _build_item_from_model(rec: JobRecommendation) -> JobRecommendationItem:
         work_mode=None,
         display_fit_score=rec.display_fit_score,
         raw_fit_score=rec.raw_fit_score,
-        fit_label=get_fit_label(rec.display_fit_score),
+        fit_label="Chua danh gia CV-JD" if retrieval_only else get_fit_label(rec.display_fit_score),
         evidence_confidence="high" if rec.confidence >= 0.8 else "medium" if rec.confidence >= 0.5 else "low",
         mandatory_requirement_failed=rec.mandatory_requirement_failed,
         required_skills_coverage=float(mandatory_gate.get("coverage") or 0.0),
@@ -103,7 +104,7 @@ def _build_item_from_model(rec: JobRecommendation) -> JobRecommendationItem:
         score_breakdown=[],
         top_strengths=strengths[:4],
         top_gaps=gaps[:4],
-        match_id=rec.match_id or f"MATCH_{rec.job_id}",
+        match_id=rec.match_id or (f"RETRIEVAL_{rec.job_id}" if retrieval_only else f"MATCH_{rec.job_id}"),
     )
 
 
