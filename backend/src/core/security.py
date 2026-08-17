@@ -79,6 +79,20 @@ async def get_current_user(
     return user
 
 
+async def get_optional_current_user(
+    request: Request,
+    token: str | None = Depends(oauth2_scheme),
+    db: AsyncSession = Depends(get_db),
+) -> User | None:
+    """Return the signed-in user when present without blocking public catalog views."""
+    try:
+        return await get_current_user(request=request, token=token, db=db)
+    except HTTPException as exc:
+        if exc.status_code == status.HTTP_401_UNAUTHORIZED:
+            return None
+        raise
+
+
 def require_role(allowed_roles: list[str]):
     """Dependency kiểm tra quyền truy cập theo vai trò."""
     async def role_checker(current_user: User = Depends(get_current_user)) -> User:

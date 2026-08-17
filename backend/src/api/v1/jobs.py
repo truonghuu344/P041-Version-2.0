@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.errors import PipelineError, pipeline_error_from_message
-from src.core.security import get_current_user, require_role
+from src.core.security import get_current_user, get_optional_current_user, require_role
 from src.db.database import get_db
 from src.db.models import CV, User
 from src.models.schemas import JobCatalogResponse, JobRAGStatus, JobRAGSyncResponse
@@ -73,12 +73,14 @@ async def search_jobs(
     cv_id: str | None = Query(default=None),
     limit: int = Query(default=60, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User | None = Depends(get_optional_current_user),
 ) -> JobCatalogResponse:
     """Search enterprise JDs sourced from data/jds and optionally rank them for one owned CV."""
     cv_text: str | None = None
     parsed_cv: dict = {}
     if cv_id:
+        if current_user is None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Cần đăng nhập để so khớp theo CV.")
         cv_result = await db.execute(
             select(CV).where(CV.id == cv_id, CV.user_id == current_user.id)
         )
