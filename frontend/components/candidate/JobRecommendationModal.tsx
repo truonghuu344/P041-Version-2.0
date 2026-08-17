@@ -3,6 +3,14 @@
 import React from 'react';
 import { X } from 'lucide-react';
 
+type CandidateView = 'cv' | 'match' | 'interview';
+
+declare global {
+  interface Window {
+    switchView?: (view: CandidateView) => void;
+  }
+}
+
 export default function JobRecommendationModal() {
   const handleClose = () => {
     const drawer = document.getElementById('job-recommendation-drawer');
@@ -15,22 +23,22 @@ export default function JobRecommendationModal() {
 
   const handleOptimize = () => {
     handleClose();
-    if (typeof window !== 'undefined' && (window as any).switchView) {
-      (window as any).switchView('cv');
+    if (typeof window !== 'undefined' && window.switchView) {
+      window.switchView('cv');
     }
   };
 
   const handleFullMatch = () => {
     handleClose();
-    if (typeof window !== 'undefined' && (window as any).switchView) {
-      (window as any).switchView('match');
+    if (typeof window !== 'undefined' && window.switchView) {
+      window.switchView('match');
     }
   };
 
   const handleInterview = () => {
     handleClose();
-    if (typeof window !== 'undefined' && (window as any).switchView) {
-      (window as any).switchView('interview');
+    if (typeof window !== 'undefined' && window.switchView) {
+      window.switchView('interview');
     }
   };
 
