@@ -142,6 +142,13 @@ export default function MatchView() {
               </div>
 
               <div id="p1-jd-input-area">
+                {/* Maintains the selected JD for the analysis controller; the visible choice is rendered as job cards below. */}
+                <label htmlFor="cv-analysis-jd-select" style={{ display: 'none' }}>
+                  Job Description đã chọn
+                </label>
+                <select id="cv-analysis-jd-select" style={{ display: 'none' }} defaultValue="">
+                  <option value="">Chọn Job Description...</option>
+                </select>
                 <div className="match-tabs" role="tablist">
                   <button
                     id="p1-job-explore-tab"
@@ -235,11 +242,6 @@ export default function MatchView() {
                     <button id="p1-jd-login-btn" type="button" className="p1-login-btn">
                       Đăng nhập
                     </button>
-                  </div>
-                  <div id="p1-jd-select-section" hidden>
-                    <select id="cv-analysis-jd-select">
-                      <option value="">Chọn JD đã lưu</option>
-                    </select>
                   </div>
                   <form id="cv-jd-upload-form" className="cv-jd-upload-form">
                     <input id="p1-jd-title-field" hidden />
