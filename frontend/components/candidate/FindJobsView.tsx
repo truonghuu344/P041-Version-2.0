@@ -1,4 +1,4 @@
-import { BriefcaseBusiness, Plus, Search } from 'lucide-react';
+import { BadgeCheck, BriefcaseBusiness, Database, FileText, Plus, Search, ShieldCheck } from 'lucide-react';
 
 export default function FindJobsView() {
   return (
@@ -13,6 +13,12 @@ export default function FindJobsView() {
             Phân tích hồ sơ theo tiêu chí năng lực và đề xuất các vị trí việc làm phù hợp nhất dành
             cho bạn.
           </p>
+          <div className="top-jobs-local-note" role="note">
+            <ShieldCheck size={16} aria-hidden="true" />
+            <span>
+              Gợi ý được cá nhân hóa từ CV bạn chọn và các tiêu chí tìm việc của bạn.
+            </span>
+          </div>
         </header>
 
         {/* Filter & Control Bar */}
@@ -232,6 +238,9 @@ export default function FindJobsView() {
               <div className="top-jobs-submit-copy">
                 <span className="top-jobs-submit-status-pill">Hồ sơ sẵn sàng</span>
                 <span>Chọn một CV đã lưu hoặc tải CV mới, rồi nhận Top 10 việc phù hợp nhất.</span>
+                <small className="top-jobs-submit-privacy">
+                  <Database size={13} aria-hidden="true" /> Dựa trên hồ sơ và tiêu chí bạn chọn · điểm chỉ hiển thị khi đủ thông tin
+                </small>
               </div>
               <button type="button" id="job-match-cv-btn" className="btn-find-top-jobs" disabled>
                 <Search size={16} /> Tìm công việc phù hợp
@@ -239,6 +248,21 @@ export default function FindJobsView() {
             </div>
           </div>
         </form>
+
+        <section className="top-jobs-flow-guide" aria-label="Cách hệ thống tạo gợi ý việc làm">
+          <div>
+            <span className="top-jobs-flow-guide__icon"><FileText size={16} aria-hidden="true" /></span>
+            <p><strong>1. Xem hồ sơ đã chọn</strong><span>Dùng kỹ năng và kinh nghiệm để cá nhân hóa gợi ý.</span></p>
+          </div>
+          <div>
+            <span className="top-jobs-flow-guide__icon"><Database size={16} aria-hidden="true" /></span>
+            <p><strong>2. Tìm cơ hội phù hợp</strong><span>Tìm các vị trí liên quan đến mục tiêu của bạn.</span></p>
+          </div>
+          <div>
+            <span className="top-jobs-flow-guide__icon"><BadgeCheck size={16} aria-hidden="true" /></span>
+            <p><strong>3. Làm rõ mức độ phù hợp</strong><span>Hiển thị rõ gợi ý ban đầu và vị trí đã được phân tích chi tiết.</span></p>
+          </div>
+        </section>
 
         {/* Results Header */}
         <div className="top-jobs-results-header">
@@ -273,10 +297,22 @@ export default function FindJobsView() {
 
         {/* 1-Column Results List (No Grid) */}
         <div id="job-search-results" className="top-jobs-single-column-list" aria-live="polite">
-          <div className="job-search-loading">
-            <span />
-            <p>Đang tải danh sách việc làm phù hợp...</p>
-          </div>
+          <article className="ai-activity-card is-compact top-jobs-initial-state" role="status">
+            <header className="ai-activity-header">
+              <div className="ai-activity-title-group">
+                <div className="ai-activity-icon-orb" aria-hidden="true"><Search size={17} /></div>
+                <div className="ai-activity-titles">
+                  <h4 className="ai-activity-title">Sẵn sàng tìm việc theo CV</h4>
+                  <p className="ai-activity-subtitle">Chọn CV rồi hệ thống sẽ hiển thị rõ từng bước xử lý và loại kết quả.</p>
+                </div>
+              </div>
+              <span className="ai-activity-badge">Chờ chọn CV</span>
+            </header>
+            <div className="top-jobs-initial-legend">
+              <span><i className="is-retrieval" />Gợi ý phù hợp: dựa trên hồ sơ của bạn</span>
+              <span><i className="has-evidence" />Đã phân tích: có đánh giá mức độ phù hợp</span>
+            </div>
+          </article>
         </div>
       </div>
     </section>

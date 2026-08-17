@@ -80,7 +80,7 @@ export default function MatchView() {
               <div id="p1-cv-input-area">
                 <div id="p1-cv-login-gate" className="p1-login-gate" style={{ display: 'none' }}>
                   <span>Đăng nhập để dùng CV đã lưu.</span>
-                  <button id="p1-cv-login-btn" type="button">
+                  <button id="p1-cv-login-btn" type="button" className="p1-login-btn">
                     Đăng nhập
                   </button>
                 </div>
@@ -223,7 +223,7 @@ export default function MatchView() {
                 <div id="p1-job-upload-panel" hidden>
                   <div id="p1-jd-login-gate" className="p1-login-gate" style={{ display: 'none' }}>
                     <span>Đăng nhập để lưu JD riêng.</span>
-                    <button id="p1-jd-login-btn" type="button">
+                    <button id="p1-jd-login-btn" type="button" className="p1-login-btn">
                       Đăng nhập
                     </button>
                   </div>
@@ -232,10 +232,9 @@ export default function MatchView() {
                       <option value="">Chọn JD đã lưu</option>
                     </select>
                   </div>
-                  <form id="cv-jd-upload-form">
-                    <input id="cv-jd-title-input" placeholder="Tên vị trí (tuỳ chọn)" />
+                  <form id="cv-jd-upload-form" className="cv-jd-upload-form">
                     <input id="p1-jd-title-field" hidden />
-                    <label className="match-upload" id="cv-jd-dropzone">
+                    <label className="match-upload cv-jd-upload-dropzone" id="cv-jd-dropzone">
                       <Upload size={25} />
                       <strong>Upload Job Description</strong>
                       <span id="cv-jd-file-name">PDF, DOCX, TXT hoặc ảnh</span>
@@ -246,7 +245,9 @@ export default function MatchView() {
                         hidden
                       />
                     </label>
-                    <button type="submit">Dùng JD này để phân tích</button>
+                    <button type="submit" id="btn-submit-jd" className="cv-jd-submit-btn">
+                      Dùng JD này để phân tích
+                    </button>
                   </form>
                 </div>
               </div>
