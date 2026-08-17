@@ -131,9 +131,41 @@ Frontend dùng cache dev tại `frontend/node_modules/.cache/next-dev`, tách bi
 
 ESLint của frontend bật kiểm tra `no-undef` cho các file JavaScript để chặn ngay khi build những lỗi runtime như `ReferenceError: <biến> is not defined`.
 
+### Local-first deployment (không tốn Gemini quota)
+
+Mẫu `.env.example` và Docker Compose mặc định chạy local-first:
+
+```env
+CV_PARSER_MODE=local
+CV_STRUCTURED_PARSE_LLM_ENABLED=false
+VECTOR_EMBEDDING_PROVIDER=hashing
+CV_JD_EMBEDDING_PROVIDER=hashing
+VECTOR_SYNC_ON_STARTUP=false
+VECTOR_AUTO_SYNC=false
+MATCH_EXPLANATION_LLM_ENABLED=false
+GAP_ANALYSIS_CACHE_ENABLED=true
+GAP_ANALYSIS_CACHE_VERSION=v1
+```
+
+`MinerU` vẫn được dùng cho OCR theo cấu hình hiện có. Gemini là tùy chọn: nếu
+đặt `MATCH_EXPLANATION_LLM_ENABLED=true` cùng `GEMINI_API_KEY`, hệ thống chỉ
+gửi ma trận requirement/evidence đã kiểm chứng để biên tập nhận xét Gap
+Analysis; không gửi toàn bộ CV hoặc JD và không thay đổi điểm match. Không bật
+`CV_STRUCTURED_PARSE_LLM_ENABLED` trong production thông thường, vì chế độ đó
+gửi toàn văn CV để trích xuất cấu trúc.
+
+Khi JD catalog thay đổi, admin gọi `POST /api/v1/jobs/rag/sync` một lần. Không
+sync vector lại mỗi lần container khởi động.
+
+Gap Analysis dùng `cv_snapshot_id` + `jd_snapshot_id` + pipeline/prompt version
+làm cache key và lưu kết quả trong PostgreSQL. Chạy lại cùng CV/JD sẽ trả báo
+cáo đã lưu, không gọi Gemini; sửa CV/JD hoặc tăng `GAP_ANALYSIS_CACHE_VERSION`
+sẽ tạo cache key mới. Gửi `force_refresh=true` chỉ dành cho thao tác chủ động
+muốn tạo lại báo cáo.
+
 ### RAG JD thị trường với pgvector
 
-Backend tự đồng bộ ~98 JD mẫu trong `data/jds` vào PostgreSQL/pgvector lúc khởi động. Khi `VECTOR_EMBEDDING_PROVIDER=auto`, nếu Gemini embedding lỗi hoặc hết quota, backend tự đồng bộ lại bằng `hashing-v1` chạy nội bộ; tìm kiếm semantic và Match CV vẫn dùng được mà không phải chờ quota. Nếu cấu hình rõ `VECTOR_EMBEDDING_PROVIDER=gemini`, lỗi Gemini vẫn được báo để người vận hành biết cấu hình bắt buộc không đáp ứng.
+Backend dùng `hashing-v1` local theo mặc định và không sync khi khởi động. Sau khi thay đổi catalog JD, gọi sync thủ công một lần; `content_hash` bảo đảm JD không đổi không bị embed lại. Chỉ đặt `VECTOR_EMBEDDING_PROVIDER=gemini` khi chủ động chấp nhận quota cloud.
 
 ```bash
 # Đồng bộ thủ công từ thư mục root (hoặc sau khi quota reset)

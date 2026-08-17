@@ -163,6 +163,7 @@ class JobRAGSyncResponse(BaseModel):
 class GapAnalysisRequest(BaseModel):
     cv_id: str
     jd_id: str
+    force_refresh: bool = False
 
 
 class CVOptimizationSuggestion(BaseModel):
@@ -316,6 +317,8 @@ class GapAnalysisResponse(BaseModel):
     cv_section_recommendations: list[CVSectionRecommendation] = []
     score_breakdown: dict[str, float] = {}
     integrity_guardrail: str = "passed"
+    cache_hit: bool = False
+    cache_key_version: str = ""
     created_at: datetime
 
 

@@ -564,18 +564,35 @@
 
 #view-match .p1-job-card-radio {
   position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 18px;
-  height: 18px;
-  border: 2px solid #d1d5db;
+  top: 10px;
+  right: 10px;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 2px solid #cbd5e1;
   border-radius: 50%;
-  background: #fff;
+  background: #ffffff;
+  cursor: pointer;
+  z-index: 3;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+}
+
+#view-match .p1-job-card-radio:hover {
+  border-color: #006d44 !important;
+  background-color: #f0fdf4 !important;
+  transform: scale(1.15);
+  box-shadow: 0 0 0 4px rgba(0, 109, 68, 0.15) !important;
 }
 
 #view-match .p1-job-card.is-selected .p1-job-card-radio {
-  border-color: #006d44;
-  background: radial-gradient(circle at center, #006d44 0 5px, #fff 5px 100%);
+  border-color: #006d44 !important;
+  background: radial-gradient(circle at center, #006d44 0 5.5px, #ffffff 5.5px 100%) !important;
+  box-shadow: 0 0 0 3px rgba(0, 109, 68, 0.18) !important;
 }
 
 #view-match .p1-job-card-head {
@@ -753,6 +770,171 @@
   font-size: 16px;
   line-height: 34px;
   text-align: center;
+}
+
+/* ── Login Gates for CV & JD ── */
+#view-match .p1-login-gate {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px !important;
+  border: 1.5px dashed #bbf7d0 !important;
+  border-radius: 12px !important;
+  background: linear-gradient(135deg, #f0fdf4 0%, #f8fafc 100%) !important;
+  margin-bottom: 12px;
+}
+
+#view-match .p1-login-gate[hidden],
+#view-match .p1-login-gate.is-hidden,
+#view-match #p1-cv-login-gate[hidden],
+#view-match #p1-cv-login-gate.is-hidden,
+#view-match #p1-jd-login-gate[hidden],
+#view-match #p1-jd-login-gate.is-hidden {
+  display: none !important;
+}
+
+#view-match .p1-login-gate span {
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: #334155 !important;
+  margin: 0 !important;
+}
+
+#view-match .p1-login-btn,
+#view-match #p1-cv-login-btn,
+#view-match #p1-jd-login-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 6px 14px !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  font-family: inherit !important;
+  color: #059669 !important;
+  background: #ffffff !important;
+  border: 1.5px solid #059669 !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+#view-match .p1-login-btn:hover,
+#view-match #p1-cv-login-btn:hover,
+#view-match #p1-jd-login-btn:hover {
+  background: #059669 !important;
+  color: #ffffff !important;
+  border-color: #059669 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 10px rgba(5, 150, 105, 0.25) !important;
+}
+
+#view-match .p1-login-btn:active,
+#view-match #p1-cv-login-btn:active,
+#view-match #p1-jd-login-btn:active {
+  transform: translateY(0) !important;
+}
+
+/* ── JD Upload Form Controls ── */
+#view-match #cv-jd-upload-form,
+#view-match .cv-jd-upload-form {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  width: 100% !important;
+  margin-top: 4px;
+}
+
+#view-match #cv-jd-title-input,
+#view-match .cv-jd-title-input {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  height: 40px !important;
+  padding: 8px 13px !important;
+  border: 1.5px solid #cbd5e1 !important;
+  border-radius: 9px !important;
+  background: #ffffff !important;
+  font-size: 13px !important;
+  font-family: inherit !important;
+  color: var(--text-primary, #0f172a) !important;
+  outline: none !important;
+  transition: all 0.2s ease !important;
+}
+
+#view-match #cv-jd-title-input::placeholder,
+#view-match .cv-jd-title-input::placeholder {
+  color: #94a3b8 !important;
+  font-weight: 400 !important;
+}
+
+#view-match #cv-jd-title-input:focus,
+#view-match .cv-jd-title-input:focus {
+  border-color: #059669 !important;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.12) !important;
+  background: #ffffff !important;
+}
+
+#view-match #cv-jd-dropzone,
+#view-match .cv-jd-upload-dropzone {
+  min-height: 86px !important;
+  padding: 14px 12px !important;
+  border: 1.5px dashed #86efac !important;
+  border-radius: 10px !important;
+  background: #f0fdf4 !important;
+  transition: all 0.2s ease !important;
+}
+
+#view-match #cv-jd-dropzone:hover,
+#view-match .cv-jd-upload-dropzone:hover {
+  border-color: #059669 !important;
+  background: #ecfdf5 !important;
+}
+
+#view-match #cv-jd-upload-form > button,
+#view-match .cv-jd-submit-btn,
+#view-match #btn-submit-jd {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  width: 100% !important;
+  min-height: 40px !important;
+  padding: 10px 18px !important;
+  border-radius: 9px !important;
+  background: #059669 !important;
+  color: #ffffff !important;
+  font-size: 13.5px !important;
+  font-weight: 600 !important;
+  font-family: inherit !important;
+  border: 1px solid #059669 !important;
+  cursor: pointer !important;
+  box-shadow: 0 2px 6px rgba(5, 150, 105, 0.2) !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+#view-match #cv-jd-upload-form > button:hover,
+#view-match .cv-jd-submit-btn:hover,
+#view-match #btn-submit-jd:hover {
+  background: #047857 !important;
+  border-color: #047857 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3) !important;
+}
+
+#view-match #cv-jd-upload-form > button:active,
+#view-match .cv-jd-submit-btn:active,
+#view-match #btn-submit-jd:active {
+  transform: translateY(0) !important;
+}
+
+#view-match #cv-jd-upload-form > button:disabled,
+#view-match .cv-jd-submit-btn:disabled,
+#view-match #btn-submit-jd:disabled {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
 }
 
 /* CV selection area */

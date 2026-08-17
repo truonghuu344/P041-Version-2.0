@@ -155,6 +155,7 @@ async def test_cv_agent_calls_structured_llm_and_rejects_hallucinated_skill(monk
             google_genai_api_key="test-key",
             model_name="gemini-3.5-flash",
             cv_parser_mode="local",
+            cv_structured_parse_llm_enabled=True,
             llm_timeout_seconds=20,
             llm_max_retries=0,
         ),

@@ -13,7 +13,6 @@ from src.agents.state import GapAnalysisState
 from src.agents.tools.career_tools import (
     TECH_SKILLS,
     build_gap_evidence,
-    cv_evidence_sentences,
     deterministic_cv_suggestions,
     deterministic_gap_career_plan,
     extract_known_terms,
@@ -157,24 +156,16 @@ RÀNG BUỘC LIÊM CHÍNH:
 - Project status luôn là recommended_not_completed; bullet template phải bắt đầu bằng 'Sau khi hoàn thành:'.
 - Chỉ đề xuất nội dung liên quan trực tiếp tới kỹ năng/yêu cầu trong JD.
 - Với chứng chỉ, luôn nhắc người dùng kiểm tra thông tin hiện hành trên trang nhà cung cấp."""
-    candidate_sentences = [
-        item["original_text"]
-        for item in fallback.get("suggestions", [])
-        if item.get("original_text")
-    ]
-    if not candidate_sentences:
-        candidate_sentences = [
-            s
-            for s in cv_evidence_sentences(state["cv_raw_text"])
-            if not is_cv_contact_or_location_line(s) and mentioned_skills(s, evidence["hard_skills_matching"])
-        ][:3]
-
-    user_prompt = f"""Vị trí: {state["jd_title"]}
-Kỹ năng đã đáp ứng: {", ".join(evidence["hard_skills_matching"][:6]) or "Chưa rõ"}
-Kỹ năng còn thiếu: {", ".join(evidence["hard_skills_missing"][:5]) or "Không"}
-Khoảng trống kỹ năng mềm: {", ".join(evidence.get("soft_skills_gap", [])[:3]) or "Không"}
-Các câu kinh nghiệm cần tối ưu trong CV (trích nguyên văn):
-{chr(10).join(f"- {s}" for s in candidate_sentences)}
+    # Gemini is a copy editor here, not a scoring or extraction engine. Send
+    # only deterministic, verified evidence instead of full CV/JD text.
+    user_prompt = f"""Job title: {state["jd_title"]}
+Verified matching skills: {evidence["hard_skills_matching"]}
+Partial skills: {evidence.get("hard_skills_partial", [])}
+Missing skills: {evidence["hard_skills_missing"]}
+Soft-skill gaps: {evidence["soft_skills_gap"]}
+Verified requirement-evidence matrix: {evidence.get("requirement_evidence", [])}
+Match score (immutable): {evidence["match_score"]}
+Confidence score: {evidence.get("confidence_score", 0)}
 """
     try:
         llm = ChatGoogleGenerativeAI(

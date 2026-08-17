@@ -144,7 +144,7 @@ export default function DashboardView() {
           <div className="home-hero-copy" data-reveal="fade-up">
             <div className="home-hero-badge">
               <Sparkles size={14} />
-              <span>Nền tảng AI Career Copilot thế hệ mới</span>
+              <span>Nền tảng Career Assistant thế hệ mới</span>
             </div>
 
             <h1 id="home-title" className="home-hero-title">

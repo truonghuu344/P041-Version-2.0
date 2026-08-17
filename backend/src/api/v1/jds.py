@@ -1,3 +1,5 @@
+import hashlib
+import re
 import uuid
 from pathlib import Path
 
@@ -125,6 +127,38 @@ async def _extract_jd_text(filename: str, content: bytes, content_type: str = ""
         raise ValueError("File TXT phải sử dụng bảng mã UTF-8.") from exc
 
 
+def _content_hash(value: str | bytes) -> str:
+    """Stable digest used to avoid re-processing an unchanged JD."""
+    if isinstance(value, str):
+        value = re.sub(r"\s+", " ", value).strip().encode("utf-8")
+    return hashlib.sha256(value).hexdigest()
+
+
+async def _find_duplicate_private_jd(
+    db: AsyncSession,
+    *,
+    user_id: str,
+    source_file_hash: str | None = None,
+    requirements_hash: str | None = None,
+) -> JobDescription | None:
+    """Return an owned private JD created from identical source content."""
+    rows = (
+        await db.scalars(
+            select(JobDescription).where(
+                JobDescription.created_by_user_id == user_id,
+                JobDescription.is_system.is_(False),
+            )
+        )
+    ).all()
+    for jd in rows:
+        metadata = dict(jd.normalized_json or {})
+        if source_file_hash and metadata.get("source_file_hash") == source_file_hash:
+            return jd
+        if requirements_hash and metadata.get("requirements_content_hash") == requirements_hash:
+            return jd
+    return None
+
+
 async def _save_private_jd(
     *,
     db: AsyncSession,
@@ -134,12 +168,25 @@ async def _save_private_jd(
     location: str,
     requirements_text: str,
     file_path: str | None = None,
+    source_file_hash: str | None = None,
 ) -> JobDescription:
+    requirements_hash = _content_hash(requirements_text)
+    duplicate = await _find_duplicate_private_jd(
+        db,
+        user_id=current_user.id,
+        source_file_hash=source_file_hash,
+        requirements_hash=requirements_hash,
+    )
+    if duplicate is not None:
+        return duplicate
     normalized = parse_job_description(
         title=title,
         requirements_text=requirements_text,
         metadata={"company": company, "location": location},
     )
+    normalized["requirements_content_hash"] = requirements_hash
+    if source_file_hash:
+        normalized["source_file_hash"] = source_file_hash
     new_jd = JobDescription(
         title=title,
         company=company or "Cá nhân / Công ty ngoài",
@@ -309,6 +356,17 @@ async def upload_jd(
     except FileSecurityError as exc:
         raise pipeline_error_from_message(str(exc), "UPLOAD_003", status_code=400) from exc
 
+    # Avoid a second MinerU request when the same source file was already
+    # uploaded by this user. The content digest, not the filename, is used.
+    source_file_hash = _content_hash(content)
+    duplicate = await _find_duplicate_private_jd(
+        db,
+        user_id=current_user.id,
+        source_file_hash=source_file_hash,
+    )
+    if duplicate is not None:
+        return duplicate
+
     try:
         requirements_text = await _extract_jd_text(filename, content, file.content_type or "")
     except ValueError as exc:
@@ -345,6 +403,7 @@ async def upload_jd(
             location=location.strip(),
             requirements_text=requirements_text,
             file_path=stored_file_path,
+            source_file_hash=source_file_hash,
         )
     except ObjectStorageError as exc:
         raise PipelineError("STORAGE_001", "Không thể lưu file JD. Vui lòng thử lại sau.", status_code=503) from exc
