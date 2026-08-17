@@ -19,6 +19,14 @@ export default function MatchView() {
   const [matchId, setMatchId] = React.useState<string | null>(null);
 
   React.useEffect(() => {
+    const syncGates = () => {
+      (window as any).updateLoginGates?.();
+      (window as any).updateP1UI?.();
+    };
+
+    syncGates();
+    document.addEventListener('auth:changed', syncGates);
+
     const handleOpenEval = () => {
       const id = (window as any).latestMatchId || localStorage.getItem('latest_match_id');
       if (id) {
@@ -34,6 +42,7 @@ export default function MatchView() {
     btn?.addEventListener('click', handleOpenEval);
 
     return () => {
+      document.removeEventListener('auth:changed', syncGates);
       btn?.removeEventListener('click', handleOpenEval);
     };
   }, []);
@@ -78,7 +87,7 @@ export default function MatchView() {
               </div>
 
               <div id="p1-cv-input-area">
-                <div id="p1-cv-login-gate" className="p1-login-gate" style={{ display: 'none' }}>
+                <div id="p1-cv-login-gate" className="p1-login-gate is-hidden" hidden style={{ display: 'none' }}>
                   <span>Đăng nhập để dùng CV đã lưu.</span>
                   <button id="p1-cv-login-btn" type="button" className="p1-login-btn">
                     Đăng nhập
@@ -221,7 +230,7 @@ export default function MatchView() {
                 </div>
 
                 <div id="p1-job-upload-panel" hidden>
-                  <div id="p1-jd-login-gate" className="p1-login-gate" style={{ display: 'none' }}>
+                  <div id="p1-jd-login-gate" className="p1-login-gate is-hidden" hidden style={{ display: 'none' }}>
                     <span>Đăng nhập để lưu JD riêng.</span>
                     <button id="p1-jd-login-btn" type="button" className="p1-login-btn">
                       Đăng nhập

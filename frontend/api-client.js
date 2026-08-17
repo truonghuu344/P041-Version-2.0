@@ -45,13 +45,23 @@ export class ApiClient {
   }
 
   static setUser(user) {
-    localStorage.setItem('user_info', JSON.stringify(user));
+    if (user) {
+      localStorage.setItem('user_info', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('user_info');
+    }
+    if (typeof document !== 'undefined') {
+      document.dispatchEvent(new CustomEvent('auth:changed', { detail: { user } }));
+    }
   }
 
   static async logout() {
     await this.request('/auth/logout', { method: 'POST' }).catch(() => undefined);
     localStorage.removeItem('access_token');
     localStorage.removeItem('user_info');
+    if (typeof document !== 'undefined') {
+      document.dispatchEvent(new CustomEvent('auth:changed', { detail: { user: null } }));
+    }
   }
 
   static async request(endpoint, options = {}) {

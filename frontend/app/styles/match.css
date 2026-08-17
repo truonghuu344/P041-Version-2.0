@@ -564,18 +564,35 @@
 
 #view-match .p1-job-card-radio {
   position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 18px;
-  height: 18px;
-  border: 2px solid #d1d5db;
+  top: 10px;
+  right: 10px;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 2px solid #cbd5e1;
   border-radius: 50%;
-  background: #fff;
+  background: #ffffff;
+  cursor: pointer;
+  z-index: 3;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+}
+
+#view-match .p1-job-card-radio:hover {
+  border-color: #006d44 !important;
+  background-color: #f0fdf4 !important;
+  transform: scale(1.15);
+  box-shadow: 0 0 0 4px rgba(0, 109, 68, 0.15) !important;
 }
 
 #view-match .p1-job-card.is-selected .p1-job-card-radio {
-  border-color: #006d44;
-  background: radial-gradient(circle at center, #006d44 0 5px, #fff 5px 100%);
+  border-color: #006d44 !important;
+  background: radial-gradient(circle at center, #006d44 0 5.5px, #ffffff 5.5px 100%) !important;
+  box-shadow: 0 0 0 3px rgba(0, 109, 68, 0.18) !important;
 }
 
 #view-match .p1-job-card-head {
@@ -757,7 +774,7 @@
 
 /* ── Login Gates for CV & JD ── */
 #view-match .p1-login-gate {
-  display: flex !important;
+  display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
@@ -766,6 +783,15 @@
   border-radius: 12px !important;
   background: linear-gradient(135deg, #f0fdf4 0%, #f8fafc 100%) !important;
   margin-bottom: 12px;
+}
+
+#view-match .p1-login-gate[hidden],
+#view-match .p1-login-gate.is-hidden,
+#view-match #p1-cv-login-gate[hidden],
+#view-match #p1-cv-login-gate.is-hidden,
+#view-match #p1-jd-login-gate[hidden],
+#view-match #p1-jd-login-gate.is-hidden {
+  display: none !important;
 }
 
 #view-match .p1-login-gate span {

@@ -34,13 +34,23 @@ class ApiClient {
   }
 
   static setUser(user) {
-    localStorage.setItem('user_info', JSON.stringify(user));
+    if (user) {
+      localStorage.setItem('user_info', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('user_info');
+    }
+    if (typeof document !== 'undefined') {
+      document.dispatchEvent(new CustomEvent('auth:changed', { detail: { user } }));
+    }
   }
 
   static async logout() {
     await this.request('/auth/logout', { method: 'POST' }).catch(() => undefined);
     localStorage.removeItem('access_token');
     localStorage.removeItem('user_info');
+    if (typeof document !== 'undefined') {
+      document.dispatchEvent(new CustomEvent('auth:changed', { detail: { user: null } }));
+    }
   }
 
   static async request(endpoint, options = {}) {
@@ -1280,6 +1290,8 @@ function startAppLogic() {
       loadSpaceshipCVList();
       loadCVAgentStatus();
     } else if (targetViewName === 'match') {
+      window.updateLoginGates?.();
+      window.updateP1UI?.();
       loadSpaceshipCVList();
       loadCVJDOptions();
     } else if (targetViewName === 'gap') {
@@ -1683,6 +1695,10 @@ function startAppLogic() {
     }
     const previousValue = preferredJdId || cvAnalysisJdSelect.value;
     try {
+      const jdGate = document.getElementById('p1-jd-login-gate');
+      if (jdGate) jdGate.style.display = 'none';
+      const jdSec = document.getElementById('p1-jd-select-section');
+      if (jdSec) jdSec.style.display = 'block';
       const [jds, catalogResult] = await Promise.all([
         ApiClient.listJDs(),
         ApiClient.searchJobs('', '', 100).catch(() => ({ jobs: [] })),
@@ -1835,8 +1851,9 @@ function startAppLogic() {
       const meta = [job.location, job.remote_type, job.job_level].filter(Boolean);
       const salary = formatJobSalary(job.salary_range);
       const description = String(job.description || '').replace(/\s+/g, ' ').trim();
-      return `<article class="p1-job-card" data-target-job="${escapeHtml(String(job.source_id))}" tabindex="0" role="button" aria-label="Chọn công việc ${escapeHtml(job.title || '')}">
-        <span class="p1-job-card-radio" aria-hidden="true"></span>
+      const isSelected = selectedCatalogJobSourceId ? String(job.source_id) === String(selectedCatalogJobSourceId) : false;
+      return `<article class="p1-job-card${isSelected ? ' is-selected' : ''}" data-target-job="${escapeHtml(String(job.source_id))}" tabindex="0" role="button" aria-label="Xem chi tiết ${escapeHtml(job.title || '')}">
+        <button type="button" class="p1-job-card-radio" data-action="select-job" aria-label="Chọn công việc ${escapeHtml(job.title || '')}" title="Chọn công việc này"></button>
         <div class="p1-job-card-head"><h4>${escapeHtml(job.title || 'Vị trí chưa đặt tên')}</h4>${job.company ? `<p>${escapeHtml(job.company)}</p>` : ''}</div>
         ${meta.length ? `<div class="p1-job-meta">${meta.map(item => `<span>${escapeHtml(item)}</span>`).join('')}</div>` : ''}
         ${salary ? `<div class="p1-job-salary">${escapeHtml(salary)}</div>` : ''}
@@ -1846,14 +1863,22 @@ function startAppLogic() {
     }).join('');
   }
 
+  let selectedCatalogJobSourceId = null;
+
   async function chooseTargetCatalogJob(sourceId) {
     if (!sourceId || !cvAnalysisJdSelect) return;
+    selectedCatalogJobSourceId = String(sourceId);
     const selected = targetJobCatalog.find(job => String(job.source_id) === String(sourceId));
     try {
       cvAnalysisJdSelect.disabled = true;
       const selectedJD = await ApiClient.selectCatalogJD(sourceId);
       await loadCVJDOptions(selectedJD.id);
-      document.querySelectorAll('[data-target-job]').forEach(card => card.classList.toggle('is-selected', card.dataset.targetJob === String(sourceId)));
+      document.querySelectorAll('[data-target-job]').forEach(card => {
+        const isThis = card.dataset.targetJob === String(sourceId);
+        card.classList.toggle('is-selected', isThis);
+        card.setAttribute('aria-pressed', String(isThis));
+      });
+      window.updateP1UI?.();
       showToast(`Đã chọn ${selected?.title || 'công việc mục tiêu'}.`, 'success');
     } catch (err) {
       showToast(`Không thể chọn công việc: ${err.message}`, 'error');
@@ -2061,17 +2086,32 @@ function startAppLogic() {
   });
 
   document.getElementById('p1-job-grid')?.addEventListener('click', event => {
-    const sourceId = event.target.closest('[data-target-job]')?.dataset.targetJob;
-    if (sourceId) {
-      // If clicking the job card, show the modal instead of selecting immediately
+    const radioBtn = event.target.closest('.p1-job-card-radio, [data-action="select-job"]');
+    const card = event.target.closest('[data-target-job]');
+    const sourceId = card?.dataset.targetJob;
+    if (!sourceId) return;
+
+    if (radioBtn) {
+      // Khi nhấn vào nút tròn radio: Chọn công việc (hiện màu xanh đã chọn), không xem chi tiết
+      event.preventDefault();
+      event.stopPropagation();
+      chooseTargetCatalogJob(sourceId);
+    } else {
+      // Khi nhấn vào title hoặc phần thân thẻ card: Xem chi tiết trong modal
       openJobPreviewModal(sourceId);
     }
   });
   document.getElementById('p1-job-grid')?.addEventListener('keydown', event => {
     if (!['Enter', ' '].includes(event.key)) return;
-    const sourceId = event.target.closest('[data-target-job]')?.dataset.targetJob;
-    if (sourceId) { 
-      event.preventDefault(); 
+    const radioBtn = event.target.closest('.p1-job-card-radio, [data-action="select-job"]');
+    const card = event.target.closest('[data-target-job]');
+    const sourceId = card?.dataset.targetJob;
+    if (!sourceId) return;
+
+    event.preventDefault();
+    if (radioBtn) {
+      chooseTargetCatalogJob(sourceId);
+    } else {
       openJobPreviewModal(sourceId);
     }
   });
@@ -2468,6 +2508,10 @@ function startAppLogic() {
 
     const previousValue = preferredCvId || cvAnalysisCvSelect.value;
     try {
+      const cvGate = document.getElementById('p1-cv-login-gate');
+      if (cvGate) cvGate.style.display = 'none';
+      const cvSec = document.getElementById('p1-cv-select-section');
+      if (cvSec) cvSec.style.display = 'block';
       loadedCVs = await ApiClient.listCVs();
       if (cvAnalysisCvSelect) {
         cvAnalysisCvSelect.disabled = false;
@@ -6736,6 +6780,11 @@ TÊN CÔNG TY:
         document.getElementById('btn-login')?.addEventListener('click', openAuthModal);
       }
     }
+    if (typeof window !== 'undefined') {
+      window.updateLoginGates?.();
+      window.updateP1UI?.();
+      document.dispatchEvent(new CustomEvent('auth:changed', { detail: { user } }));
+    }
   }
 
   /* ============================================================
@@ -8586,6 +8635,7 @@ if (document.readyState === 'loading') {
 
   // ── Main UI update ──
   function updateP1UI() {
+    updateLoginGates();
     const cvOk = hasCVSelected();
     const jdOk = hasJDSelected();
 
@@ -8671,11 +8721,32 @@ if (document.readyState === 'loading') {
   // ── Auth-aware login gate ──
   function updateLoginGates() {
     const isLoggedIn = typeof ApiClient !== 'undefined' && ApiClient.isAuthenticated && ApiClient.isAuthenticated();
-    if (cvLoginGate) cvLoginGate.style.display = isLoggedIn ? 'none' : 'flex';
-    if (cvSelectSec) cvSelectSec.style.display = isLoggedIn ? 'block' : 'none';
-    if (jdLoginGate) jdLoginGate.style.display = isLoggedIn ? 'none' : 'flex';
-    if (jdSelectSec) jdSelectSec.style.display = isLoggedIn ? 'block' : 'none';
+    const currentCvGate = document.getElementById('p1-cv-login-gate');
+    const currentCvSelect = document.getElementById('p1-cv-select-section');
+    const currentJdGate = document.getElementById('p1-jd-login-gate');
+    const currentJdSelect = document.getElementById('p1-jd-select-section');
+    if (currentCvGate) {
+      currentCvGate.hidden = isLoggedIn;
+      currentCvGate.classList.toggle('is-hidden', isLoggedIn);
+      currentCvGate.style.setProperty('display', isLoggedIn ? 'none' : 'flex', 'important');
+    }
+    if (currentCvSelect) {
+      currentCvSelect.hidden = !isLoggedIn;
+      currentCvSelect.classList.toggle('is-hidden', !isLoggedIn);
+      currentCvSelect.style.setProperty('display', isLoggedIn ? 'block' : 'none', 'important');
+    }
+    if (currentJdGate) {
+      currentJdGate.hidden = isLoggedIn;
+      currentJdGate.classList.toggle('is-hidden', isLoggedIn);
+      currentJdGate.style.setProperty('display', isLoggedIn ? 'none' : 'flex', 'important');
+    }
+    if (currentJdSelect) {
+      currentJdSelect.hidden = !isLoggedIn;
+      currentJdSelect.classList.toggle('is-hidden', !isLoggedIn);
+      currentJdSelect.style.setProperty('display', isLoggedIn ? 'block' : 'none', 'important');
+    }
   }
+  window.updateLoginGates = updateLoginGates;
 
   // ── Login gate buttons ──
   document.getElementById('p1-cv-login-btn')?.addEventListener('click', () => {
