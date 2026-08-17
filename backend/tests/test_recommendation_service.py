@@ -75,9 +75,9 @@ async def test_recommend_jobs_full_orchestration_flow():
     assert len(top_jobs) == 2
     assert top_jobs[0].rank == 1
     assert top_jobs[0].job_id == "job_01"
-    assert top_jobs[0].display_fit_score == 0.0
-    assert top_jobs[0].fit_label == "Chua danh gia CV-JD"
-    assert top_jobs[0].match_id == "RETRIEVAL_job_01"
+    assert top_jobs[0].display_fit_score > 0.0
+    assert top_jobs[0].fit_label != "Chua danh gia CV-JD"
+    assert top_jobs[0].match_id == "PREVIEW_job_01"
 
     # Verify db.add was called for run and top recommendations
     assert mock_db.add.call_count >= 1

@@ -8,7 +8,8 @@ Executes the complete, reproducible Top Jobs recommendation pipeline:
    - If filtered jobs <= candidate_k (default 30): use all filtered jobs.
    - Else: run BM25 and Semantic retrievers, then merge via Weighted RRF (top candidate_k).
 5. For each candidate:
-   - Reuse a completed Match when present; otherwise return a retrieval-only job.
+   - Reuse a completed Match when present; otherwise run the deterministic
+     CV–JD evidence evaluation used for the Top-10 preview.
    - Calculate rubric Fit Score with dynamic active-weight normalization.
    - Apply the Mandatory Requirement Gate (capping display score at 49 when coverage < 50%).
    - Calculate Evidence Confidence (high / medium / low).
@@ -61,6 +62,7 @@ from src.services.job_recommendations.explanation import generate_deterministic_
 # pyrefly: ignore [missing-import]
 from src.services.job_recommendations.final_ranking import (
     RankedTopJob,
+    get_fit_label,
     persist_top_recommendations,
     rank_top_jobs,
 )
@@ -73,6 +75,9 @@ from src.services.job_recommendations.mandatory_gate import apply_mandatory_gate
 
 # pyrefly: ignore [missing-import]
 from src.services.job_recommendations.match_reuse import find_existing_match
+
+# pyrefly: ignore [missing-import]
+from src.services.cv_jd_matching import build_cv_jd_evidence
 
 # pyrefly: ignore [missing-import]
 from src.services.job_recommendations.rrf import weighted_rrf
@@ -247,7 +252,7 @@ class TopJobRecommendationService:
         candidate_retrieval: RankedJob,
         job_catalog_map: Mapping[str, dict[str, Any]],
     ) -> dict[str, Any]:
-        """Reuse a completed Match or return an unscored retrieval-only job."""
+        """Reuse a completed Match or evaluate the job for the Top-10 preview."""
         jd_id = candidate_retrieval.jd_snapshot_id
         existing_match = await find_existing_match(
             db,
@@ -257,9 +262,49 @@ class TopJobRecommendationService:
             rubric_version=CURRENT_RUBRIC_VERSION,
         )
         if existing_match is None:
-            # Top Jobs is retrieval-only until the user explicitly creates a
-            # CV-JD Match. Do not create embeddings, a MatchRun, or evidence.
+            # A Top-10 result must be ranked by CV–JD fit, not merely retrieval
+            # relevance.  Keep this preview evaluation ephemeral: a full MatchRun
+            # is still created only when the candidate explicitly asks for the
+            # detailed CV–JD analysis.
             job_data = job_catalog_map.get(jd_id) or {}
+            requirements_text = "\n".join(
+                part
+                for part in (
+                    str(job_data.get("description") or "").strip(),
+                    "Kỹ năng yêu cầu: " + ", ".join(map(str, job_data.get("skills") or [])),
+                )
+                if part
+            )
+            evidence = build_cv_jd_evidence(
+                cv_text=cv_snapshot.raw_text,
+                parsed_cv=dict(cv_snapshot.profile_json or {}),
+                jd_title=str(job_data.get("title") or "Job"),
+                jd_requirements=requirements_text,
+                jd_parsed={"skills": list(job_data.get("skills") or [])},
+            )
+            coverage = float(evidence.get("must_have_coverage") or 0.0)
+            raw_score = float(evidence.get("match_score") or 0.0)
+            gate_res = apply_mandatory_gate(
+                raw_score,
+                must_have_coverage=coverage,
+                threshold=self.settings.job_recommend_must_have_threshold,
+                score_cap=self.settings.job_recommend_score_cap,
+            )
+            requirements = evidence.get("requirements") or {}
+            matched_reqs = requirements.get("matched") or []
+            missing_reqs = requirements.get("missing") or []
+            mandatory_total = sum(
+                1 for item in [*matched_reqs, *missing_reqs]
+                if isinstance(item, Mapping) and item.get("mandatory")
+            )
+            mandatory_matched = sum(
+                1 for item in matched_reqs
+                if isinstance(item, Mapping) and item.get("mandatory")
+            )
+            conf_res = calculate_evidence_confidence(evidence)
+            exp_res = generate_deterministic_explanations(evidence, lang="vi")
+            top_strengths = exp_res.top_strengths or list(evidence.get("strengths") or [])[:4]
+            top_gaps = exp_res.top_gaps or list(evidence.get("risks") or [])[:4]
             return {
                 "job_id": str(job_data.get("source_id") or jd_id),
                 "jd_snapshot_id": jd_id,
@@ -267,23 +312,33 @@ class TopJobRecommendationService:
                 "company": job_data.get("company"),
                 "location": job_data.get("location"),
                 "work_mode": job_data.get("work_mode") or job_data.get("remote_type"),
-                "display_fit_score": 0.0,
-                "raw_fit_score": 0.0,
-                "required_skills_coverage": 0.0,
-                "mandatory_requirements_matched": 0,
-                "total_mandatory_requirements": 0,
-                "supported_requirements_count": 0,
+                "display_fit_score": gate_res.display_score,
+                "raw_fit_score": raw_score,
+                "required_skills_coverage": coverage,
+                "mandatory_requirements_matched": mandatory_matched,
+                "total_mandatory_requirements": mandatory_total,
+                "supported_requirements_count": conf_res.verified_count,
                 "rrf_rank": candidate_retrieval.rank,
-                "evidence_confidence": "not_evaluated",
-                "confidence_score": 0.0,
-                "mandatory_requirement_failed": False,
-                "match_id": f"RETRIEVAL_{jd_id}",
-                "score_breakdown": [],
-                "top_strengths": [],
-                "top_gaps": [],
-                "mandatory_gate_json": {},
-                "explanation_json": {"evaluation_status": "RETRIEVAL_ONLY"},
-                "fit_label": "Chua danh gia CV-JD",
+                "evidence_confidence": conf_res.confidence_level,
+                "confidence_score": conf_res.confidence_score,
+                "mandatory_requirement_failed": gate_res.failed,
+                "match_id": f"PREVIEW_{jd_id}",
+                "score_breakdown": list(evidence.get("criteria") or []),
+                "top_strengths": top_strengths[:4],
+                "top_gaps": top_gaps[:4],
+                "mandatory_gate_json": {
+                    **gate_res.gate_json,
+                    "matched_requirements": mandatory_matched,
+                    "total_requirements": mandatory_total,
+                },
+                "explanation_json": {
+                    **exp_res.explanation_json,
+                    "evaluation_status": "PREVIEW_EVALUATED",
+                    "top_strengths": top_strengths[:4],
+                    "top_gaps": top_gaps[:4],
+                    "score_breakdown": list(evidence.get("criteria") or []),
+                },
+                "fit_label": get_fit_label(gate_res.display_score),
             }
         job_data = job_catalog_map.get(jd_id) or {"source_id": jd_id, "title": "Vị trí tuyển dụng"}
 

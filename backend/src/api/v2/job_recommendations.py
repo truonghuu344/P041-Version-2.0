@@ -76,6 +76,9 @@ def _top_jobs_cache_key(*, user_id: str, cv_snapshot_id: str, request: JobRecomm
     ]
     payload = {
         "feature": "top_jobs",
+        # Preview evaluations were added after retrieval-only recommendations.
+        # Keep old cached runs from suppressing scores and evidence in the UI.
+        "evaluation_mode": "preview_evidence_v1",
         "cache_version": get_settings().top_jobs_cache_version,
         "user_id": user_id,
         "cv_snapshot_id": cv_snapshot_id,
@@ -112,17 +115,26 @@ def _build_item_from_model(rec: JobRecommendation) -> JobRecommendationItem:
     """Map a JobRecommendation database row to the public JobRecommendationItem schema."""
     exp = dict(rec.explanation_json or {})
     retrieval_only = exp.get("evaluation_status") == "RETRIEVAL_ONLY"
+    catalog_job = next(
+        (
+            job for job in load_enterprise_job_catalog()
+            if str(job.get("source_id") or job.get("id") or "") == str(rec.job_id)
+        ),
+        {},
+    )
     strengths = [s.get("message_vi") or s.get("code") for s in exp.get("strengths", []) if isinstance(s, dict)]
     gaps = [g.get("message_vi") or g.get("code") for g in exp.get("gaps", []) if isinstance(g, dict)]
+    strengths = strengths or list(exp.get("top_strengths") or [])
+    gaps = gaps or list(exp.get("top_gaps") or [])
     mandatory_gate = dict(rec.mandatory_gate_json or {})
 
     return JobRecommendationItem(
         rank=rec.rank,
         job_id=rec.job_id,
         title=f"Vị trí {rec.job_id}",
-        company=None,
-        location=None,
-        work_mode=None,
+        company=catalog_job.get("company"),
+        location=catalog_job.get("location"),
+        work_mode=catalog_job.get("work_mode") or catalog_job.get("remote_type"),
         display_fit_score=rec.display_fit_score,
         raw_fit_score=rec.raw_fit_score,
         fit_label="Chua danh gia CV-JD" if retrieval_only else get_fit_label(rec.display_fit_score),
@@ -131,10 +143,10 @@ def _build_item_from_model(rec: JobRecommendation) -> JobRecommendationItem:
         required_skills_coverage=float(mandatory_gate.get("coverage") or 0.0),
         mandatory_requirements_matched=int(mandatory_gate.get("matched_requirements") or 0),
         total_mandatory_requirements=int(mandatory_gate.get("total_requirements") or 0),
-        score_breakdown=[],
+        score_breakdown=list(exp.get("score_breakdown") or []),
         top_strengths=strengths[:4],
         top_gaps=gaps[:4],
-        match_id=rec.match_id or (f"RETRIEVAL_{rec.job_id}" if retrieval_only else f"MATCH_{rec.job_id}"),
+        match_id=rec.match_id or (f"RETRIEVAL_{rec.job_id}" if retrieval_only else f"PREVIEW_{rec.job_id}"),
     )
 
 
