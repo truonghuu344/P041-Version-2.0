@@ -66,13 +66,39 @@ def _records(lines: list[str]) -> list[dict[str, str]]:
     return [{"title": line[:120], "organization": "", "period": "", "description": line, "evidence_quote": line} for line in lines[:4]]
 
 
+def _repair_fragmented_vietnamese(value: str) -> str:
+    """Join OCR-split Vietnamese/mojibake character fragments without touching words."""
+    value = re.sub(r"(?<=[A-Za-z])\s+(?=[ÅÆĂá])", "", value)
+    value = re.sub(r"(?<=[©¡¯°»™])\s+(?=[a-zá])", "", value)
+    return re.sub(r"\s+", " ", value).strip()
+
+
+def _is_name_candidate(line: str) -> bool:
+    normalized = line.casefold().strip(" :|#-")
+    excluded = {
+        "soft skills", "technical skills", "skills", "interests", "summary", "profile",
+        "objective", "education", "experience", "work history", "projects", "languages",
+        "teamwork", "teamwork & collaboration", "learning new things",
+    }
+    return (
+        normalized not in excluded
+        and 2 <= len(line.split()) <= 8
+        and not re.search(r"[@\d&]", line)
+        and all(char.isalpha() or char in " '-©¡¯°»™Ă" for char in line)
+    )
+
+
 def parse_cv_locally(raw_text: str) -> dict[str, Any]:
     lines, sections = _lines(raw_text), _sections(_lines(raw_text))
     hard, soft = extract_known_terms(raw_text, TECH_SKILLS), extract_known_terms(raw_text, SOFT_SKILLS)
     email = re.search(r"[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}", raw_text)
     phone = re.search(r"(?<!\d)(?:\+?84|0)[\s.()-]*\d(?:[\s.()-]*\d){7,9}(?!\d)", raw_text)
-    name = next((line for line in lines[:12] if 2 <= len(line.split()) <= 6 and all(char.isalpha() or char in " '-" for char in line)), "")
-    personal = {"full_name": name, "email": email.group(0) if email else "", "phone": phone.group(0).strip() if phone else "", "location": ""}
+    name = next((_repair_fragmented_vietnamese(line) for line in lines if _is_name_candidate(line)), "")
+    location = next(
+        (_repair_fragmented_vietnamese(line) for line in lines if re.search(r"\b(?:tp\.?|thành phố|tỉnh|quận|phường|xã)\b", line, re.IGNORECASE)),
+        "",
+    )
+    personal = {"full_name": name, "email": email.group(0) if email else "", "phone": phone.group(0).strip() if phone else "", "location": location}
     result: dict[str, Any] = {"personal_info": personal, "summary": " ".join(sections["summary"][:3] or lines[:3])[:500], "hard_skills": hard, "soft_skills": soft, "skills": list(dict.fromkeys([*hard, *soft])), "parser_mode": "local"}
     for section in ("education", "experience", "projects", "certifications", "languages", "awards", "publications", "volunteer", "other"):
         result[section] = _records(sections[section])
@@ -92,5 +118,15 @@ async def parse_cv_to_structured_json(raw_text: str, *, use_llm: bool | Literal[
         resolved, reasons, policy = (get_settings().cv_parser_mode == "gemini" if use_llm is None else use_llm), ["configuration"], "configured"
     parsed = await cv_parser_agent.run(text, use_llm=resolved)
     parsed.setdefault("agent_metadata", {}).update({"llm_policy": policy, "llm_decision_reasons": reasons})
+    if use_llm == "auto" and resolved and not parsed["agent_metadata"].get("llm_called"):
+        # Auto mode asked for enrichment but safely retained deterministic local
+        # output (for example, when no provider credential is configured).
+        parsed["parser_mode"] = "local_fallback"
     parsed["normalized_v1"] = normalize_structured_cv(text, parsed)
     return parsed
+
+
+async def parse_cv(file_bytes: bytes, filename: str, content_type: str = "") -> dict[str, Any]:
+    """Backward-compatible upload parser used by the workflow compatibility API."""
+    raw_text = await extract_text_from_document(file_bytes, filename, content_type)
+    return await parse_cv_to_structured_json(raw_text)
