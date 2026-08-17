@@ -105,6 +105,7 @@ class Settings(BaseSettings):
     # LLM may only draft explanatory guidance after deterministic scoring.
     # Keep it opt-in to make cost and data sharing explicit.
     match_explanation_llm_enabled: bool = False
+    resume_optimization_llm_enabled: bool = False
 
     @property
     def google_genai_api_key(self) -> str:

@@ -13,6 +13,7 @@ from src.agents.state import GapAnalysisState
 from src.agents.tools.career_tools import (
     TECH_SKILLS,
     build_gap_evidence,
+    cv_evidence_sentences,
     deterministic_cv_suggestions,
     deterministic_gap_career_plan,
     extract_known_terms,
@@ -156,23 +157,29 @@ RÀNG BUỘC LIÊM CHÍNH:
 - Project status luôn là recommended_not_completed; bullet template phải bắt đầu bằng 'Sau khi hoàn thành:'.
 - Chỉ đề xuất nội dung liên quan trực tiếp tới kỹ năng/yêu cầu trong JD.
 - Với chứng chỉ, luôn nhắc người dùng kiểm tra thông tin hiện hành trên trang nhà cung cấp."""
-    user_prompt = f"""CV:
-{state["cv_raw_text"]}
+    candidate_sentences = [
+        item["original_text"]
+        for item in fallback.get("suggestions", [])
+        if item.get("original_text")
+    ]
+    if not candidate_sentences:
+        candidate_sentences = [
+            s
+            for s in cv_evidence_sentences(state["cv_raw_text"])
+            if not is_cv_contact_or_location_line(s) and mentioned_skills(s, evidence["hard_skills_matching"])
+        ][:3]
 
-JD title: {state["jd_title"]}
-JD requirements: {state["jd_requirements"]}
-Verified matching skills: {evidence["hard_skills_matching"]}
-Partial skills: {evidence.get("hard_skills_partial", [])}
-Missing skills: {evidence["hard_skills_missing"]}
-Soft-skill gaps: {evidence["soft_skills_gap"]}
-Verified requirement-evidence matrix: {evidence.get("requirement_evidence", [])}
-Match score (immutable): {evidence["match_score"]}
-Confidence score: {evidence.get("confidence_score", 0)}
+    user_prompt = f"""Vị trí: {state["jd_title"]}
+Kỹ năng đã đáp ứng: {", ".join(evidence["hard_skills_matching"][:6]) or "Chưa rõ"}
+Kỹ năng còn thiếu: {", ".join(evidence["hard_skills_missing"][:5]) or "Không"}
+Khoảng trống kỹ năng mềm: {", ".join(evidence.get("soft_skills_gap", [])[:3]) or "Không"}
+Các câu kinh nghiệm cần tối ưu trong CV (trích nguyên văn):
+{chr(10).join(f"- {s}" for s in candidate_sentences)}
 """
     try:
         llm = ChatGoogleGenerativeAI(
             model=settings.model_name,
-            temperature=1.0,
+            temperature=0.2,
             api_key=settings.google_genai_api_key,
             request_timeout=settings.llm_timeout_seconds,
             retries=settings.llm_max_retries,
@@ -252,11 +259,10 @@ async def enforce_gap_integrity(state: GapAnalysisState) -> dict[str, Any]:
 
     fallback_plan = deterministic_gap_career_plan(evidence, state["jd_title"])
     draft = state.get("draft_result", {})
-    missing_lookup = {skill.casefold(): skill for skill in evidence["hard_skills_missing"]}
-    jd_lookup = {skill.casefold(): skill for skill in evidence["jd_skills"]}
+    missing_lookup = {skill.casefold(): skill for skill in evidence.get("hard_skills_missing", [])}
     valid_gap_lookup = {
         **missing_lookup,
-        **{skill.casefold(): skill for skill in evidence["soft_skills_gap"]},
+        **{skill.casefold(): skill for skill in evidence.get("soft_skills_gap", [])},
     }
 
     priority_actions = []
@@ -292,15 +298,17 @@ async def enforce_gap_integrity(state: GapAnalysisState) -> dict[str, Any]:
                 "practice": str(item.get("practice", "")).strip(),
             }
         )
+        if len(learning_recommendations) == 5:
+            break
 
     certification_recommendations = []
     for item in draft.get("certification_recommendations", []):
         if not isinstance(item, dict):
             continue
         related = [
-            jd_lookup[str(skill).casefold()]
+            missing_lookup[skill.casefold()]
             for skill in item.get("related_skills", [])
-            if str(skill).casefold() in jd_lookup
+            if str(skill).strip().casefold() in missing_lookup
         ]
         if not related:
             continue
@@ -309,9 +317,14 @@ async def enforce_gap_integrity(state: GapAnalysisState) -> dict[str, Any]:
                 "name": str(item.get("name", "")).strip(),
                 "provider": str(item.get("provider", "")).strip(),
                 "related_skills": related,
-                "level": str(item.get("level", "")).strip(),
+                "level": str(item.get("level", "Nền tảng")).strip(),
                 "reason": str(item.get("reason", "")).strip(),
-                "verification_note": "Kiểm tra điều kiện, lệ phí và phiên bản trên trang chính thức trước khi đăng ký.",
+                "verification_note": str(
+                    item.get(
+                        "verification_note",
+                        "Kiểm tra thông tin lệ phí, điều kiện tiên quyết và phiên bản hiện hành trên trang chính thức.",
+                    )
+                ).strip(),
             }
         )
         if len(certification_recommendations) == 3:
@@ -322,13 +335,15 @@ async def enforce_gap_integrity(state: GapAnalysisState) -> dict[str, Any]:
         if not isinstance(item, dict):
             continue
         skills = [
-            jd_lookup[str(skill).casefold()] for skill in item.get("skills", []) if str(skill).casefold() in jd_lookup
+            missing_lookup[skill.casefold()]
+            for skill in item.get("skills", [])
+            if str(skill).strip().casefold() in missing_lookup
         ]
-        if not skills or (missing_lookup and not any(skill.casefold() in missing_lookup for skill in skills)):
+        if not skills:
             continue
         bullet = str(item.get("cv_bullet_template", "")).strip()
-        if not bullet.casefold().startswith("sau khi hoàn thành:"):
-            bullet = f"Sau khi hoàn thành: {bullet}"
+        if not bullet.startswith("Sau khi hoàn thành:"):
+            bullet = f"Sau khi hoàn thành: {bullet}".strip()
         project_recommendations.append(
             {
                 "title": str(item.get("title", "")).strip(),
@@ -363,6 +378,7 @@ async def enforce_gap_integrity(state: GapAnalysisState) -> dict[str, Any]:
 
     # These matching fields are copied exclusively from the deterministic evidence
     # pipeline.  Never read them from the LLM draft.
+    score_val = float(evidence.get("match_score", 0.0) or 0.0)
     result = {
         "pipeline_version": evidence.get("pipeline_version", "1.0"),
         "trace_id": evidence.get("trace_id", ""),
@@ -370,10 +386,10 @@ async def enforce_gap_integrity(state: GapAnalysisState) -> dict[str, Any]:
         "candidate_id": evidence.get("candidate_id", ""),
         "document_id": evidence.get("document_id", ""),
         "status": evidence.get("status", "COMPLETED"),
-        "match_score": evidence["match_score"],
-        "final_score": evidence.get("final_score", evidence["match_score"]),
+        "match_score": score_val,
+        "final_score": float(evidence.get("final_score", score_val) or score_val),
         "rating": evidence.get("rating", "POOR"),
-        "mandatory_requirement_failed": evidence.get("mandatory_requirement_failed", False),
+        "mandatory_requirement_failed": bool(evidence.get("mandatory_requirement_failed", False)),
         "criteria": evidence.get("criteria", []),
         "requirements": evidence.get("requirements", {}),
         "evidence": evidence.get("evidence", []),
@@ -384,31 +400,31 @@ async def enforce_gap_integrity(state: GapAnalysisState) -> dict[str, Any]:
         "processing_trace": evidence.get("processing_trace", []),
         "structured_cv": evidence.get("structured_cv", {}),
         "structured_jd": evidence.get("structured_jd", evidence.get("jd_parsed", {})),
-        "raw_match_score": evidence.get("raw_match_score", evidence["match_score"]),
+        "raw_match_score": float(evidence.get("raw_match_score", score_val) or score_val),
         "match_level": evidence.get("match_level", "partial_match"),
-        "confidence_score": evidence.get("confidence_score", 0.0),
+        "confidence_score": float(evidence.get("confidence_score", 0.0) or 0.0),
         "confidence_level": evidence.get("confidence_level", "low"),
-        "must_have_coverage": evidence.get("must_have_coverage", 0.0),
+        "must_have_coverage": float(evidence.get("must_have_coverage", 0.0) or 0.0),
         "must_have_gate": evidence.get("must_have_gate", {}),
-        "hard_skills_matching": evidence["hard_skills_matching"],
+        "hard_skills_matching": evidence.get("hard_skills_matching", []),
         "hard_skills_partial": evidence.get("hard_skills_partial", []),
-        "hard_skills_missing": evidence["hard_skills_missing"],
-        "soft_skills_gap": evidence["soft_skills_gap"],
+        "hard_skills_missing": evidence.get("hard_skills_missing", []),
+        "soft_skills_gap": evidence.get("soft_skills_gap", []),
         "unknown_requirements": evidence.get("unknown_requirements", []),
         "requirement_evidence": evidence.get("requirement_evidence", []),
         "jd_parsed": evidence.get("jd_parsed", {}),
         "strengths": evidence.get("strengths", []),
         "risks": evidence.get("risks", []),
         "suggestions": accepted,
-        "executive_summary": fallback_plan["executive_summary"],
-        "priority_actions": priority_actions or fallback_plan["priority_actions"],
-        "learning_recommendations": learning_recommendations or fallback_plan["learning_recommendations"],
+        "executive_summary": fallback_plan.get("executive_summary", ""),
+        "priority_actions": priority_actions or fallback_plan.get("priority_actions", []),
+        "learning_recommendations": learning_recommendations or fallback_plan.get("learning_recommendations", []),
         "certification_recommendations": (
-            certification_recommendations or fallback_plan["certification_recommendations"]
+            certification_recommendations or fallback_plan.get("certification_recommendations", [])
         ),
-        "project_recommendations": project_recommendations or fallback_plan["project_recommendations"],
-        "cv_section_recommendations": cv_section_recommendations or fallback_plan["cv_section_recommendations"],
-        "score_breakdown": evidence["score_breakdown"],
+        "project_recommendations": project_recommendations or fallback_plan.get("project_recommendations", []),
+        "cv_section_recommendations": cv_section_recommendations or fallback_plan.get("cv_section_recommendations", []),
+        "score_breakdown": evidence.get("score_breakdown", {}),
         "integrity_guardrail": "passed",
         "explanation_provider": state.get("explanation_provider", "deterministic"),
         "llm_decision_reason": state.get("llm_decision_reason", "deterministic_result_is_sufficient"),

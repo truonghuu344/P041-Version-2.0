@@ -6,6 +6,7 @@ import math
 import re
 import unicodedata
 from collections import Counter, defaultdict
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from time import perf_counter
@@ -368,6 +369,9 @@ class BM25Service:
         return results[:top_k]
 
 
+_EMBEDDING_CACHE: dict[str, dict[int, float]] = {}
+
+
 class EmbeddingService:
     """Deterministic local vector model; model name/version is persisted in the result."""
 
@@ -376,6 +380,9 @@ class EmbeddingService:
         self.name = "local-hashing-embedding-v1"
 
     def embed(self, text: str) -> dict[int, float]:
+        cache_key = f"{self.name}:{self.dimensions}:{hashlib.sha256((text or '').encode('utf-8')).hexdigest()}"
+        if cache_key in _EMBEDDING_CACHE:
+            return _EMBEDDING_CACHE[cache_key]
         features: Counter[int] = Counter()
         normalized = f" {fold(text)} "
         for token in tokenize(normalized):
@@ -387,7 +394,12 @@ class EmbeddingService:
             digest = int(hashlib.blake2b(trigram.encode(), digest_size=8).hexdigest(), 16)
             features[digest % self.dimensions] += 0.15
         norm = math.sqrt(sum(value * value for value in features.values())) or 1.0
-        return {key: value / norm for key, value in features.items()}
+        result = {key: value / norm for key, value in features.items()}
+        _EMBEDDING_CACHE[cache_key] = result
+        return result
+
+    def embed_batch(self, texts: Sequence[str]) -> list[dict[int, float]]:
+        return [self.embed(text) for text in texts]
 
     @staticmethod
     def cosine(left: dict[int, float], right: dict[int, float]) -> float:
@@ -397,7 +409,7 @@ class EmbeddingService:
 
 
 class GeminiEmbeddingService(EmbeddingService):
-    """Real semantic embedding provider used in production when an API key exists."""
+    """Real semantic embedding provider with batching, in-memory caching and fallback."""
 
     def __init__(self, *, api_key: str, model: str, dimensions: int) -> None:
         from google import genai
@@ -406,28 +418,80 @@ class GeminiEmbeddingService(EmbeddingService):
         self.name = model
         self._client = genai.Client(api_key=api_key)
 
-    def embed(self, text: str) -> dict[int, float]:
+    def embed_batch(self, texts: Sequence[str]) -> list[dict[int, float]]:
         from google.genai import types
 
-        response = self._client.models.embed_content(
-            model=self.name,
-            contents=text,
-            config=types.EmbedContentConfig(output_dimensionality=self.dimensions),
-        )
-        values = list(response.embeddings[0].values)
-        if len(values) != self.dimensions:
-            raise ValueError(f"Embedding dimension {len(values)} != {self.dimensions}.")
-        return {index: float(value) for index, value in enumerate(values) if value}
+        if not texts:
+            return []
+
+        results: list[dict[int, float] | None] = [None] * len(texts)
+        missing_indices: list[int] = []
+        missing_texts: list[str] = []
+
+        for index, text in enumerate(texts):
+            clean_text = str(text or "").strip()
+            cache_key = f"{self.name}:{self.dimensions}:{hashlib.sha256(clean_text.encode('utf-8')).hexdigest()}"
+            if cache_key in _EMBEDDING_CACHE:
+                results[index] = _EMBEDDING_CACHE[cache_key]
+            else:
+                missing_indices.append(index)
+                missing_texts.append(clean_text or " ")
+
+        if missing_texts:
+            try:
+                batch_size = 50
+                for batch_start in range(0, len(missing_texts), batch_size):
+                    batch_slice = missing_texts[batch_start : batch_start + batch_size]
+                    idx_slice = missing_indices[batch_start : batch_start + batch_size]
+
+                    response = self._client.models.embed_content(
+                        model=self.name,
+                        contents=batch_slice,
+                        config=types.EmbedContentConfig(output_dimensionality=self.dimensions),
+                    )
+                    for i, emb in enumerate(response.embeddings):
+                        vals = list(emb.values)
+                        if len(vals) != self.dimensions:
+                            raise ValueError(f"Embedding dimension {len(vals)} != {self.dimensions}.")
+                        vector = {v_idx: float(val) for v_idx, val in enumerate(vals) if val}
+                        original_idx = idx_slice[i]
+                        text_key = (
+                            f"{self.name}:{self.dimensions}:"
+                            f"{hashlib.sha256(missing_texts[batch_start + i].encode('utf-8')).hexdigest()}"
+                        )
+                        _EMBEDDING_CACHE[text_key] = vector
+                        results[original_idx] = vector
+            except Exception as exc:
+                logger.warning(
+                    "Gemini batch embedding error (quota/rate-limit); falling back to deterministic hashing: %s",
+                    exc,
+                )
+                fallback_embedder = EmbeddingService(self.dimensions)
+                for i, original_idx in enumerate(missing_indices):
+                    if results[original_idx] is None:
+                        fallback_vec = fallback_embedder.embed(missing_texts[i])
+                        results[original_idx] = fallback_vec
+
+        return [res if res is not None else {} for res in results]
+
+    def embed(self, text: str) -> dict[int, float]:
+        return self.embed_batch([text])[0]
 
 
 class VectorSearchService:
     def __init__(self, chunks: list[dict[str, Any]], embedder: EmbeddingService) -> None:
         self.chunks = chunks
         self.embedder = embedder
-        self.vectors = [embedder.embed(chunk["normalized_text"] or chunk["text"]) for chunk in chunks]
+        texts = [chunk["normalized_text"] or chunk["text"] for chunk in chunks]
+        self.vectors = embedder.embed_batch(texts)
 
     def search(self, query: str, allowed: set[str], top_k: int, min_score: float) -> list[dict[str, Any]]:
         vector = self.embedder.embed(query)
+        return self.search_with_vector(vector, allowed, top_k, min_score)
+
+    def search_with_vector(
+        self, vector: dict[int, float], allowed: set[str], top_k: int, min_score: float
+    ) -> list[dict[str, Any]]:
         results = []
         for index, (chunk, candidate) in enumerate(zip(self.chunks, self.vectors, strict=True)):
             if chunk["chunk_type"] not in allowed:
@@ -495,7 +559,23 @@ class RetrievalService:
             self.embedding = EmbeddingService(config.embedding_dimensions)
             self.vector = VectorSearchService(chunks, self.embedding)
 
-    def retrieve(self, requirement: dict[str, Any]) -> dict[str, Any]:
+    def prefetch_queries(self, requirements: list[dict[str, Any]]) -> dict[str, dict[int, float]]:
+        """Batch embed all requirement queries in a single API call."""
+        queries: list[str] = []
+        req_ids: list[str] = []
+        for requirement in requirements:
+            if requirement.get("requirement_type") in {"JD_REQUIRED_SKILL", "JD_PREFERRED_SKILL"}:
+                semantic_query = str(requirement.get("normalized_value") or requirement.get("text") or "")
+            else:
+                semantic_query = str(requirement.get("text") or requirement.get("normalized_value") or "")
+            queries.append(semantic_query)
+            req_ids.append(requirement["requirement_id"])
+        vectors = self.embedding.embed_batch(queries)
+        return dict(zip(req_ids, vectors, strict=True))
+
+    def retrieve(
+        self, requirement: dict[str, Any], precomputed_vector: dict[int, float] | None = None
+    ) -> dict[str, Any]:
         allowed = ALLOWED_CHUNK_TYPES.get(
             requirement["requirement_type"], set(ALLOWED_CHUNK_TYPES["JD_OTHER_REQUIREMENT"])
         )
@@ -510,12 +590,20 @@ class RetrievalService:
         else:
             semantic_query = str(requirement.get("text") or requirement.get("normalized_value") or "")
             bm25_query = semantic_query
-        semantic = self.vector.search(
-            semantic_query,
-            allowed,
-            self.config.semantic_top_k,
-            self.config.semantic_min_score,
-        )
+        if precomputed_vector is not None:
+            semantic = self.vector.search_with_vector(
+                precomputed_vector,
+                allowed,
+                self.config.semantic_top_k,
+                self.config.semantic_min_score,
+            )
+        else:
+            semantic = self.vector.search(
+                semantic_query,
+                allowed,
+                self.config.semantic_top_k,
+                self.config.semantic_min_score,
+            )
         bm25 = self.bm25.search(bm25_query, allowed, self.config.bm25_top_k)
         hybrid = HybridFusionService.rrf(bm25, semantic, k=self.config.rrf_k, top_k=self.config.hybrid_top_k)
         return {
@@ -902,12 +990,15 @@ def run_cv_jd_pipeline(
     evaluator = EvaluationService(chunks, parsed_cv, config.extraction_min_confidence)
     trace("INDEXING")
 
+    query_vectors = retrieval_service.prefetch_queries(requirements)
+
     retrieval_results = []
     evidence_all = []
     evaluated = []
     trace("RETRIEVING")
     for requirement in requirements:
-        retrieval = retrieval_service.retrieve(requirement)
+        req_id = requirement.get("requirement_id")
+        retrieval = retrieval_service.retrieve(requirement, precomputed_vector=query_vectors.get(req_id))
         evidence = evidence_service.select(requirement, retrieval)
         retrieval_results.append(retrieval)
         evidence_all.extend(evidence)
