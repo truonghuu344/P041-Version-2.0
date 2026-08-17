@@ -236,11 +236,6 @@ export default function MatchView() {
                       Đăng nhập
                     </button>
                   </div>
-                  <div id="p1-jd-select-section" hidden>
-                    <select id="cv-analysis-jd-select">
-                      <option value="">Chọn JD đã lưu</option>
-                    </select>
-                  </div>
                   <form id="cv-jd-upload-form" className="cv-jd-upload-form">
                     <input id="p1-jd-title-field" hidden />
                     <label className="match-upload cv-jd-upload-dropzone" id="cv-jd-dropzone">

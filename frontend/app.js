@@ -1293,6 +1293,10 @@ function startAppLogic() {
       window.updateLoginGates?.();
       window.updateP1UI?.();
       loadSpaceshipCVList();
+      // The job cards use targetJobCatalog, which is populated by this call.
+      // Without it, entering Match before selecting a job leaves the catalog
+      // empty and renders the misleading "no suitable jobs" state.
+      void loadCVJDOptions();
     } else if (targetViewName === 'gap') {
       populatePageGapOptions();
       if (typeof renderGapDetailFromCurrentMatch === 'function') {
@@ -1550,6 +1554,18 @@ function startAppLogic() {
     }
   }
 
+  async function loadTargetJobCatalog() {
+    try {
+      const result = await ApiClient.searchJobs('', '', 100);
+      targetJobCatalog = result?.jobs || [];
+    } catch (err) {
+      targetJobCatalog = [];
+      console.error('Unable to load the Match job catalog:', err);
+    }
+    renderTargetJobDiscovery();
+    return targetJobCatalog;
+  }
+
   async function waitForMatchResult(matchId, { timeoutMs = 120000, intervalMs = 1200 } = {}) {
     const startedAt = Date.now();
     let latest = null;
@@ -1687,7 +1703,10 @@ function startAppLogic() {
   }
 
   async function loadCVJDOptions(preferredJdId = '') {
-    if (!cvAnalysisJdSelect) return;
+    if (!cvAnalysisJdSelect) {
+      await loadTargetJobCatalog();
+      return;
+    }
     if (!ApiClient.isAuthenticated()) {
       cvAnalysisJdSelect.innerHTML = '<option value="">Vui lòng đăng nhập để chọn JD</option>';
       cvAnalysisJdSelect.disabled = true;
@@ -6192,8 +6211,10 @@ TÊN CÔNG TY:
   let currentArchiveFilter = 'all';
 
   async function loadMissionArchive() {
-    const container = document.getElementById('archive-timeline-container');
-    if (!container) return;
+    const legacyContainer = document.getElementById('archive-timeline-container');
+    const container = legacyContainer || document.createElement('div');
+    const historyTable = document.getElementById('history-table-body');
+    if (!legacyContainer && !historyTable) return;
     if (!ApiClient.isAuthenticated()) {
       container.innerHTML = `<div class="empty-manifest"><p>⚠️ Vui lòng đăng nhập để xem lịch sử nhiệm vụ của bạn</p></div>`;
       return;
@@ -6217,6 +6238,7 @@ TÊN CÔNG TY:
       archiveDataCache = { cvs: cvs || [], analyses: analyses || [], interviews: interviews || [], jdMap, cvMap, acceptedOptimizations: new Map(optimizationRows) };
 
       renderMissionArchiveCards();
+      renderHistoryDashboard();
     } catch (err) {
       container.innerHTML = `<div class="empty-manifest"><p style="color:#ef4444;">Không thể tải lịch sử nhiệm vụ: ${escapeHtml(err.message)}</p></div>`;
     }
@@ -6343,6 +6365,171 @@ TÊN CÔNG TY:
     }
 
     container.innerHTML = items.map(item => item.html).join('');
+  }
+
+  // The React HistoryView uses a table/dashboard rather than the legacy
+  // archive timeline. Keep both renderers fed from the same API responses.
+  let historyPage = 1;
+  let historyPageSize = 10;
+  let historyMetric = 'match';
+  let historyUiBound = false;
+
+  function getHistoryActivities() {
+    const { analyses = [], interviews = [], acceptedOptimizations = new Map(), cvMap = new Map(), jdMap = new Map() } = archiveDataCache;
+    const activities = [];
+    analyses.forEach(analysis => {
+      const cvTitle = cvMap.get(analysis.cv_id) || 'CV hồ sơ';
+      const jdTitle = jdMap.get(analysis.jd_id) || 'Vị trí mục tiêu';
+      activities.push({
+        id: analysis.id, type: 'match', status: String(analysis.status || 'COMPLETED').toLowerCase(),
+        cvTitle, jdTitle, score: Number(analysis.match_score || 0), date: analysis.created_at,
+        analysis,
+      });
+      const acceptedCount = (acceptedOptimizations.get(analysis.id) || []).length;
+      if (acceptedCount) {
+        activities.push({
+          id: `optimized:${analysis.id}`, analysisId: analysis.id, type: 'optimized', status: 'completed',
+          cvTitle, jdTitle, score: Number(analysis.match_score || 0), date: analysis.created_at,
+          acceptedCount, analysis,
+        });
+      }
+    });
+    interviews.forEach(session => activities.push({
+      id: session.id, type: 'interview', status: String(session.status || 'inprogress').toLowerCase(),
+      cvTitle: cvMap.get(session.cv_id) || 'CV hồ sơ', jdTitle: jdMap.get(session.jd_id) || 'Vị trí phỏng vấn',
+      score: session.total_score == null ? null : Number(session.total_score), date: session.completed_at || session.created_at,
+      session,
+    }));
+    return activities.filter(item => item.date).sort((a, b) => new Date(b.date) - new Date(a.date));
+  }
+
+  function historyTypeLabel(type) {
+    return ({ match: 'Match CV & JD', optimized: 'Tối ưu CV', interview: 'Phỏng vấn STAR' })[type] || type;
+  }
+
+  function historyStatusLabel(status) {
+    if (status === 'completed') return 'Hoàn thành';
+    if (status === 'failed') return 'Lỗi';
+    return 'Đang thực hiện';
+  }
+
+  function renderHistoryCharts(activities) {
+    const series = activities.filter(item => item.type === historyMetric && item.score != null)
+      .sort((a, b) => new Date(a.date) - new Date(b.date)).slice(-8);
+    const chart = document.getElementById('history-progress-chart-container');
+    if (chart) {
+      if (!series.length) {
+        chart.innerHTML = '<div class="chart-placeholder-loading">Chưa có điểm số để hiển thị.</div>';
+      } else {
+        const points = series.map((item, index) => {
+          const x = series.length === 1 ? 150 : 12 + (index * 276 / (series.length - 1));
+          const y = 92 - Math.max(0, Math.min(100, item.score)) * 0.72;
+          return `${x.toFixed(1)},${y.toFixed(1)}`;
+        }).join(' ');
+        chart.innerHTML = `<svg viewBox="0 0 300 112" role="img" aria-label="Biểu đồ tiến độ">
+          <line x1="10" y1="92" x2="290" y2="92" stroke="currentColor" opacity=".18" />
+          <polyline points="${points}" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+          ${series.map((item, index) => { const [x, y] = points.split(' ')[index].split(','); return `<circle cx="${x}" cy="${y}" r="4" fill="#10b981"><title>${item.score.toFixed(1)} điểm</title></circle>`; }).join('')}
+        </svg>`;
+      }
+    }
+    const donut = document.getElementById('history-donut-chart-container');
+    if (donut) {
+      const counts = ['match', 'optimized', 'interview'].map(type => activities.filter(item => item.type === type).length);
+      const total = counts.reduce((sum, value) => sum + value, 0);
+      if (!total) donut.innerHTML = '<div class="chart-placeholder-loading">Chưa có hoạt động.</div>';
+      else {
+        const matchEnd = counts[0] / total * 100;
+        const optimizeEnd = matchEnd + counts[1] / total * 100;
+        donut.innerHTML = `<div class="history-donut" style="width:132px;height:132px;border-radius:50%;margin:8px auto;background:conic-gradient(#2563eb 0 ${matchEnd}%, #8b5cf6 ${matchEnd}% ${optimizeEnd}%, #10b981 ${optimizeEnd}% 100%);display:grid;place-items:center"><span style="width:88px;height:88px;border-radius:50%;background:white;display:grid;place-items:center;font-weight:700">${total}</span></div><p style="text-align:center;margin:8px 0 0">${counts[0]} Match · ${counts[1]} tối ưu · ${counts[2]} phỏng vấn</p>`;
+      }
+    }
+  }
+
+  function renderHistoryDashboard() {
+    const tableBody = document.getElementById('history-table-body');
+    if (!tableBody) return;
+    const activities = getHistoryActivities();
+    const bestMatch = activities.filter(item => item.type === 'match').reduce((best, item) => Math.max(best, item.score || 0), 0);
+    [['archive-match-count', activities.filter(item => item.type === 'match').length], ['archive-optimized-count', activities.filter(item => item.type === 'optimized').length], ['archive-interview-count', activities.filter(item => item.type === 'interview').length], ['archive-best-match', `${bestMatch.toFixed(1)}%`]].forEach(([id, value]) => {
+      const element = document.getElementById(id); if (element) element.textContent = String(value);
+    });
+    renderHistoryCharts(activities);
+    const query = String(document.getElementById('history-search-input')?.value || '').trim().toLocaleLowerCase('vi');
+    const type = document.getElementById('filter-activity-type')?.value || 'all';
+    const range = document.getElementById('filter-time-range')?.value || 'all';
+    const status = document.getElementById('filter-status')?.value || 'all';
+    const sort = document.getElementById('history-sort-by')?.value || 'newest';
+    const now = Date.now();
+    const rangeDays = { '7days': 7, '30days': 30, '3months': 90 }[range];
+    const filtered = activities.filter(item => {
+      const haystack = `${item.cvTitle} ${item.jdTitle} ${historyTypeLabel(item.type)}`.toLocaleLowerCase('vi');
+      return (!query || haystack.includes(query)) && (type === 'all' || item.type === type)
+        && (status === 'all' || item.status === status)
+        && (!rangeDays || now - new Date(item.date).getTime() <= rangeDays * 86400000);
+    });
+    filtered.sort((a, b) => sort === 'oldest' ? new Date(a.date) - new Date(b.date) : sort === 'match_high' ? (b.score || -1) - (a.score || -1) : sort === 'match_low' ? (a.score || 101) - (b.score || 101) : new Date(b.date) - new Date(a.date));
+    const totalPages = Math.max(1, Math.ceil(filtered.length / historyPageSize));
+    historyPage = Math.min(historyPage, totalPages);
+    const pageItems = filtered.slice((historyPage - 1) * historyPageSize, historyPage * historyPageSize);
+    const empty = document.getElementById('history-empty-state');
+    if (empty) empty.hidden = Boolean(pageItems.length);
+    if (empty && !pageItems.length) empty.textContent = query || type !== 'all' || range !== 'all' || status !== 'all' ? 'Không tìm thấy hoạt động phù hợp bộ lọc.' : 'Chưa có lịch sử. Hãy thực hiện Match CV với JD hoặc luyện phỏng vấn.';
+    tableBody.innerHTML = pageItems.map(item => `<tr data-history-id="${escapeHtml(item.id)}"><td>${escapeHtml(historyTypeLabel(item.type))}</td><td>${escapeHtml(item.cvTitle)}</td><td>${escapeHtml(item.jdTitle)}</td><td>${item.score == null ? '—' : `${item.score.toFixed(1)}${item.type === 'match' ? '%' : '/100'}`}</td><td><span class="badge ${item.status === 'completed' ? 'badge-ok' : item.status === 'failed' ? 'badge-warn' : ''}">${escapeHtml(historyStatusLabel(item.status))}</span></td><td>${formatFullDateTimeVi(item.date)}</td><td><button type="button" class="archive-btn-view" data-history-open="${escapeHtml(item.id)}">Xem chi tiết</button></td></tr>`).join('');
+    const mobile = document.getElementById('history-mobile-list');
+    if (mobile) mobile.innerHTML = pageItems.map(item => `<article class="archive-card" data-history-id="${escapeHtml(item.id)}"><strong>${escapeHtml(historyTypeLabel(item.type))}</strong><h3>${escapeHtml(item.jdTitle)}</h3><p>${escapeHtml(item.cvTitle)} · ${item.score == null ? 'Đang thực hiện' : item.score.toFixed(1)}</p><button type="button" class="archive-btn-view" data-history-open="${escapeHtml(item.id)}">Xem chi tiết</button></article>`).join('');
+    const count = document.getElementById('archive-result-count'); if (count) count.textContent = `${filtered.length} kết quả`;
+    const info = document.getElementById('pagination-info'); if (info) info.textContent = filtered.length ? `Hiển thị ${(historyPage - 1) * historyPageSize + 1}–${Math.min(historyPage * historyPageSize, filtered.length)} / ${filtered.length} kết quả` : '0 kết quả';
+    const pages = document.getElementById('pagination-pages'); if (pages) pages.innerHTML = Array.from({ length: totalPages }, (_, index) => `<button type="button" class="pagination-btn ${historyPage === index + 1 ? 'active' : ''}" data-history-page="${index + 1}">${index + 1}</button>`).join('');
+    const prev = document.getElementById('pagination-prev-btn'); if (prev) prev.disabled = historyPage <= 1;
+    const next = document.getElementById('pagination-next-btn'); if (next) next.disabled = historyPage >= totalPages;
+    bindHistoryDashboard();
+  }
+
+  function openHistoryDrawer(id) {
+    const item = getHistoryActivities().find(activity => activity.id === id);
+    if (!item) return;
+    const drawer = document.getElementById('history-detail-drawer'); const overlay = document.getElementById('history-drawer-overlay');
+    if (!drawer) return;
+    document.getElementById('drawer-activity-badge').textContent = historyTypeLabel(item.type);
+    document.getElementById('drawer-item-title').textContent = item.jdTitle;
+    document.getElementById('drawer-body-content').innerHTML = `<p><strong>CV:</strong> ${escapeHtml(item.cvTitle)}</p><p><strong>Trạng thái:</strong> ${escapeHtml(historyStatusLabel(item.status))}</p><p><strong>Kết quả:</strong> ${item.score == null ? 'Chưa có điểm' : item.score.toFixed(1)}</p><p><strong>Thời gian:</strong> ${formatFullDateTimeVi(item.date)}</p>`;
+    document.getElementById('drawer-footer-actions').innerHTML = `<button type="button" class="archive-btn-view" data-history-report="${escapeHtml(item.id)}">Mở báo cáo đầy đủ</button>`;
+    drawer.classList.add('is-open'); drawer.setAttribute('aria-hidden', 'false'); overlay?.classList.add('is-open'); overlay?.setAttribute('aria-hidden', 'false'); drawer.focus();
+  }
+
+  function closeHistoryDrawer() { const drawer = document.getElementById('history-detail-drawer'); const overlay = document.getElementById('history-drawer-overlay'); drawer?.classList.remove('is-open'); drawer?.setAttribute('aria-hidden', 'true'); overlay?.classList.remove('is-open'); overlay?.setAttribute('aria-hidden', 'true'); }
+
+  function bindHistoryDashboard() {
+    if (historyUiBound) return; historyUiBound = true;
+    ['history-search-input', 'filter-activity-type', 'filter-time-range', 'filter-status', 'history-sort-by'].forEach(id => document.getElementById(id)?.addEventListener(id === 'history-search-input' ? 'input' : 'change', () => { historyPage = 1; renderHistoryDashboard(); }));
+    document.getElementById('pagination-size-select')?.addEventListener('change', event => { historyPageSize = Number(event.target.value) || 10; historyPage = 1; renderHistoryDashboard(); });
+    document.getElementById('pagination-prev-btn')?.addEventListener('click', () => { historyPage--; renderHistoryDashboard(); }); document.getElementById('pagination-next-btn')?.addEventListener('click', () => { historyPage++; renderHistoryDashboard(); });
+    document.getElementById('pagination-pages')?.addEventListener('click', event => { const page = Number(event.target.closest('[data-history-page]')?.dataset.historyPage); if (page) { historyPage = page; renderHistoryDashboard(); } });
+    document.getElementById('history-data-table')?.addEventListener('click', event => { const id = event.target.closest('[data-history-open]')?.dataset.historyOpen; if (id) openHistoryDrawer(id); }); document.getElementById('history-mobile-list')?.addEventListener('click', event => { const id = event.target.closest('[data-history-open]')?.dataset.historyOpen; if (id) openHistoryDrawer(id); });
+    document.getElementById('btn-close-history-drawer')?.addEventListener('click', closeHistoryDrawer); document.getElementById('history-drawer-overlay')?.addEventListener('click', closeHistoryDrawer);
+    document.getElementById('drawer-footer-actions')?.addEventListener('click', async event => {
+      const id = event.target.closest('[data-history-report]')?.dataset.historyReport;
+      const item = getHistoryActivities().find(activity => activity.id === id);
+      if (!item) return;
+      const body = document.getElementById('drawer-body-content');
+      if (!body) return;
+      if (item.type === 'interview') {
+        body.innerHTML = '<p>Đang tải báo cáo STAR…</p>';
+        try {
+          const report = await ApiClient.getInterviewReport(item.id);
+          body.innerHTML = `<p><strong>Điểm tổng:</strong> ${Number(report.total_score || 0).toFixed(1)} / 100</p><h4>Điểm mạnh</h4><ul>${(report.strengths || []).map(value => `<li>${escapeHtml(value)}</li>`).join('') || '<li>Chưa có dữ liệu</li>'}</ul><h4>Cần cải thiện</h4><ul>${(report.improvements || []).map(value => `<li>${escapeHtml(value)}</li>`).join('') || '<li>Chưa có dữ liệu</li>'}</ul><h4>Khuyến nghị</h4><ul>${(report.recommendations || []).map(value => `<li>${escapeHtml(value)}</li>`).join('') || '<li>Chưa có dữ liệu</li>'}</ul>`;
+        } catch (err) { body.innerHTML = `<p>Không thể tải báo cáo: ${escapeHtml(err.message)}</p>`; }
+      } else {
+        const analysis = item.analysis;
+        const matched = analysis.hard_skills_matching || [];
+        const missing = analysis.hard_skills_missing || [];
+        const actions = analysis.priority_actions || [];
+        body.innerHTML = `<p><strong>Điểm Match:</strong> ${Number(analysis.match_score || 0).toFixed(1)}%</p><h4>Kỹ năng phù hợp</h4><p>${matched.map(escapeHtml).join(', ') || 'Chưa có dữ liệu'}</p><h4>Kỹ năng cần bổ sung</h4><p>${missing.map(escapeHtml).join(', ') || 'Chưa có dữ liệu'}</p><h4>Ưu tiên tiếp theo</h4><ul>${actions.map(action => `<li>${escapeHtml(typeof action === 'string' ? action : (action.action || action.gap || ''))}</li>`).join('') || '<li>Chưa có khuyến nghị</li>'}</ul>`;
+      }
+      document.getElementById('drawer-footer-actions').innerHTML = '';
+    });
+    document.querySelectorAll('.metric-switch-btn').forEach(button => button.addEventListener('click', () => { historyMetric = button.dataset.metric || 'match'; document.querySelectorAll('.metric-switch-btn').forEach(item => item.classList.toggle('active', item === button)); renderHistoryDashboard(); }));
   }
 
   // Filter Buttons Handler
