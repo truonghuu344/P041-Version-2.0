@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React from 'react';
+import React, { useState } from 'react';
 import {
   FileCheck,
   Mic,
@@ -17,23 +17,58 @@ import {
   CheckCircle2,
   AlertCircle,
   HelpCircle,
+  ArrowUpRight,
+  BarChart3,
+  CalendarDays,
+  Download,
+  FileBarChart,
+  Gauge,
+  Lightbulb,
+  Trophy,
 } from 'lucide-react';
 
 export default function HistoryView() {
+  const [activePage, setActivePage] = useState<'history' | 'reports'>('history');
+
   return (
     <section className="app-view buddy-landing" id="view-history">
       <main className="history-workspace">
-        {/* 1. Header */}
         <header className="history-heading">
-          <div>
+          <div className="history-heading-copy">
+            <span className="history-eyebrow">Hành trình sự nghiệp</span>
             <h2 className="history-title">Lịch sử &amp; Báo cáo</h2>
             <p className="history-subtitle">
               Theo dõi kết quả CV, mức độ phù hợp công việc và quá trình luyện phỏng vấn.
             </p>
           </div>
+          <div className="history-heading-actions">
+            <button type="button" className="history-export-btn" aria-label="Xuất báo cáo PDF">
+              <Download size={16} /> Xuất báo cáo
+            </button>
+            <div className="history-period-chip"><CalendarDays size={15} /> Cập nhật hôm nay</div>
+          </div>
         </header>
 
-        {/* 2. KPI Summary (4 Compact Cards) */}
+        <nav className="history-page-tabs" aria-label="Chuyển trang lịch sử và báo cáo">
+          <button
+            type="button"
+            className={`history-page-tab ${activePage === 'history' ? 'is-active' : ''}`}
+            aria-selected={activePage === 'history'}
+            onClick={() => setActivePage('history')}
+          >
+            <Clock size={16} /> Lịch sử hoạt động
+          </button>
+          <button
+            type="button"
+            className={`history-page-tab ${activePage === 'reports' ? 'is-active' : ''}`}
+            aria-selected={activePage === 'reports'}
+            onClick={() => setActivePage('reports')}
+          >
+            <BarChart3 size={16} /> Báo cáo tiến độ
+          </button>
+        </nav>
+
+        <div hidden={activePage !== 'history'}>
         <section className="history-kpi-row" aria-label="Tổng quan số liệu">
           <article className="history-kpi-card is-match">
             <span className="history-kpi-icon">
@@ -262,6 +297,48 @@ export default function HistoryView() {
               </select>
             </div>
           </footer>
+        </section>
+        </div>
+
+        <section className="career-report-page" hidden={activePage !== 'reports'} aria-label="Báo cáo tiến độ">
+          <div className="report-hero-card">
+            <div>
+              <span className="report-overline">BÁO CÁO CÁ NHÂN · 30 NGÀY GẦN NHẤT</span>
+              <h3>Hồ sơ của bạn đang đi đúng hướng</h3>
+              <p>Tiếp tục ưu tiên kỹ năng còn thiếu để cải thiện cơ hội được mời phỏng vấn.</p>
+            </div>
+            <div className="report-score-orb" aria-label="Điểm sẵn sàng 72 trên 100"><strong>72</strong><span>/100</span><small>Sẵn sàng ứng tuyển</small></div>
+          </div>
+
+          <div className="report-stat-grid">
+            <article className="report-stat-card"><span className="report-stat-icon teal"><Gauge size={20} /></span><div><span>Match trung bình</span><strong id="report-average-match">—</strong><small>Từ các JD đã phân tích</small></div></article>
+            <article className="report-stat-card"><span className="report-stat-icon purple"><Trophy size={20} /></span><div><span>Điểm mạnh nổi bật</span><strong id="report-top-skill">Đang cập nhật</strong><small>Kỹ năng xuất hiện thường xuyên</small></div></article>
+            <article className="report-stat-card"><span className="report-stat-icon amber"><FileBarChart size={20} /></span><div><span>Báo cáo hoàn thành</span><strong id="report-completed-count">0</strong><small>Có thể xem lại bất cứ lúc nào</small></div></article>
+          </div>
+
+          <div className="report-content-grid">
+            <article className="report-panel report-trend-panel">
+              <div className="report-panel-heading"><div><span className="report-label">XU HƯỚNG</span><h4>Điểm match theo thời gian</h4></div><span className="report-growth"><ArrowUpRight size={14} /> Đang theo dõi</span></div>
+              <div className="report-chart" id="report-trend-chart" aria-label="Biểu đồ điểm match theo thời gian">
+                <div className="report-chart-line"><i /><i /><i /><i /><i /><i /></div>
+                <div className="report-chart-axis"><span>Tuần 1</span><span>Tuần 2</span><span>Tuần 3</span><span>Hôm nay</span></div>
+              </div>
+              <p className="report-panel-note">Dữ liệu được tổng hợp từ các lần so khớp CV và JD của bạn.</p>
+            </article>
+            <article className="report-panel report-action-panel">
+              <div className="report-panel-heading"><div><span className="report-label">ƯU TIÊN TIẾP THEO</span><h4>3 việc giúp tăng cơ hội</h4></div><Lightbulb size={20} className="report-lightbulb" /></div>
+              <ol className="report-actions-list" id="report-priority-actions">
+                <li><span>01</span><div><strong>Hoàn thiện hồ sơ CV</strong><p>Thêm các kết quả có thể đo lường vào phần kinh nghiệm.</p></div></li>
+                <li><span>02</span><div><strong>Luyện một phiên phỏng vấn</strong><p>Thực hành trả lời theo cấu trúc STAR cho vị trí mục tiêu.</p></div></li>
+                <li><span>03</span><div><strong>So khớp với một JD mới</strong><p>Đo khoảng cách kỹ năng trước khi ứng tuyển.</p></div></li>
+              </ol>
+            </article>
+          </div>
+
+          <article className="report-panel report-recent-panel">
+            <div className="report-panel-heading"><div><span className="report-label">BÁO CÁO GẦN ĐÂY</span><h4>Khám phá lại kết quả phân tích</h4></div><button type="button" className="report-link-btn" onClick={() => setActivePage('history')}>Xem lịch sử <ArrowUpRight size={15} /></button></div>
+            <div id="report-recent-list" className="report-recent-list"><p>Những báo cáo mới nhất của bạn sẽ hiển thị tại đây.</p></div>
+          </article>
         </section>
 
         {/* 7. Right-Side Detail Drawer */}
