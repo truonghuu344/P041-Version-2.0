@@ -56,3 +56,4 @@ class JobRecommendationRunResponse(BaseModel):
     run_id: str = Field(min_length=1, max_length=36)
     status: Literal["PENDING", "RUNNING", "COMPLETED", "FAILED"]
     items: list[JobRecommendationItem] = Field(default_factory=list)
+    cache_hit: bool = False

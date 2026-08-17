@@ -160,9 +160,10 @@ class TopJobRecommendationService:
         user_id: str,
         cv_snapshot_id: str,
         request: JobRecommendationRequest,
+        cache_trace_id: str | None = None,
     ) -> JobRecommendationRun:
         """Initialize a tracked recommendation run record."""
-        trace_id = f"TRACE_REC_{uuid.uuid4().hex[:12].upper()}"
+        trace_id = cache_trace_id or f"TRACE_REC_{uuid.uuid4().hex[:12].upper()}"
         run = JobRecommendationRun(
             id=uuid.uuid4().hex,
             user_id=user_id,
@@ -357,13 +358,20 @@ class TopJobRecommendationService:
         user_id: str,
         request: JobRecommendationRequest,
         catalog: Sequence[dict[str, Any]] | None = None,
+        cache_trace_id: str | None = None,
     ) -> tuple[str, list[RankedTopJob]]:
         """Full Top Jobs recommendation flow returning run ID and Top-10 ranked recommendations."""
         # 1. Load and authorize CV snapshot
         cv_snapshot = await self.load_cv_snapshot(db, user_id, request.cv_snapshot_id)
 
         # 2. Initialize tracking Run
-        run = await self.create_run(db, user_id=user_id, cv_snapshot_id=cv_snapshot.id, request=request)
+        run = await self.create_run(
+            db,
+            user_id=user_id,
+            cv_snapshot_id=cv_snapshot.id,
+            request=request,
+            cache_trace_id=cache_trace_id,
+        )
 
         try:
             # 3. Load catalog & apply metadata filters

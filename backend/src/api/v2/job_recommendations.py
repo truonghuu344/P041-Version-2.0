@@ -13,6 +13,8 @@ Strict security checks:
 
 from __future__ import annotations
 
+import hashlib
+import json
 import logging
 from datetime import datetime
 from typing import Any
@@ -21,6 +23,9 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+# pyrefly: ignore [missing-import]
+from src.config import get_settings
 
 # pyrefly: ignore [missing-import]
 from src.core.security import get_current_user
@@ -49,10 +54,35 @@ from src.services.job_recommendations.service import (
 
 # pyrefly: ignore [missing-import]
 from src.services.pipeline_context import get_or_create_cv_snapshot
+from src.services.job_catalog import load_enterprise_job_catalog
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/job-recommendations", tags=["Job Recommendations (v2)"])
+
+
+def _top_jobs_cache_key(*, user_id: str, cv_snapshot_id: str, request: JobRecommendationRequest, catalog: list[dict[str, Any]]) -> str:
+    """Fingerprint only reusable inputs; never include CV raw text or PII."""
+    catalog_revision = [
+        {
+            "id": str(job.get("source_id") or ""),
+            "title": str(job.get("title") or ""),
+            "skills": list(job.get("skills") or []),
+            "description": str(job.get("description") or ""),
+            "location": str(job.get("location") or ""),
+            "work_mode": str(job.get("work_mode") or job.get("remote_type") or ""),
+        }
+        for job in catalog
+    ]
+    payload = {
+        "feature": "top_jobs",
+        "cache_version": get_settings().top_jobs_cache_version,
+        "user_id": user_id,
+        "cv_snapshot_id": cv_snapshot_id,
+        "filters": request.model_dump(mode="json", exclude={"cv_snapshot_id"}),
+        "catalog": catalog_revision,
+    }
+    return hashlib.sha256(json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
 
 
 class JobRecommendationHistoryItem(BaseModel):
@@ -162,6 +192,39 @@ async def create_job_recommendations(
                 )
 
     resolved_request = request.model_copy(update={"cv_snapshot_id": cv_snapshot.id})
+    catalog = list(load_enterprise_job_catalog())
+    cache_key = _top_jobs_cache_key(
+        user_id=current_user.id,
+        cv_snapshot_id=cv_snapshot.id,
+        request=resolved_request,
+        catalog=catalog,
+    )
+
+    # A cached run is valid only for the same immutable CV snapshot, filters,
+    # catalog revision and cache version encoded in the fingerprint.
+    if get_settings().top_jobs_cache_enabled:
+        cached_run = await db.scalar(
+            select(JobRecommendationRun).where(
+                JobRecommendationRun.user_id == current_user.id,
+                JobRecommendationRun.cv_snapshot_id == cv_snapshot.id,
+                JobRecommendationRun.trace_id == cache_key,
+                JobRecommendationRun.status == "COMPLETED",
+            ).order_by(JobRecommendationRun.completed_at.desc()).limit(1)
+        )
+        if cached_run is not None:
+            recs = (
+                await db.scalars(
+                    select(JobRecommendation)
+                    .where(JobRecommendation.run_id == cached_run.id)
+                    .order_by(JobRecommendation.rank.asc())
+                )
+            ).all()
+            return JobRecommendationRunResponse(
+                run_id=cached_run.id,
+                status="COMPLETED",
+                items=[_build_item_from_model(rec) for rec in recs],
+                cache_hit=True,
+            )
 
     # 2. Idempotency Check
     if idempotency_key:
@@ -187,6 +250,7 @@ async def create_job_recommendations(
                 run_id=existing_run.id,
                 status="COMPLETED",
                 items=items,
+                cache_hit=True,
             )
 
     # 3. Execute Recommendation Service
@@ -195,6 +259,8 @@ async def create_job_recommendations(
             db,
             user_id=current_user.id,
             request=resolved_request,
+            catalog=catalog,
+            cache_trace_id=cache_key if get_settings().top_jobs_cache_enabled else None,
         )
     except ValueError as exc:
         raise HTTPException(
@@ -237,6 +303,7 @@ async def create_job_recommendations(
         run_id=run_id,
         status="COMPLETED",
         items=items,
+        cache_hit=False,
     )
 
 

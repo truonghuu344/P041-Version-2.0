@@ -137,6 +137,10 @@ class Settings(BaseSettings):
     job_recommend_vector_weight: float = Field(default=1.0, ge=0.0, le=10.0)
     job_recommend_must_have_threshold: float = Field(default=0.50, ge=0.0, le=1.0)
     job_recommend_score_cap: float = Field(default=49.0, ge=0.0, le=100.0)
+    # Reuse a completed Top Jobs run only when its immutable CV snapshot,
+    # filters, catalog revision and retrieval configuration still match.
+    top_jobs_cache_enabled: bool = True
+    top_jobs_cache_version: str = "v1"
 
     # CV-JD Matching v1 (Requirement -> BM25/Vector -> RRF -> Evidence -> Rubric)
     cv_jd_embedding_provider: Literal["auto", "gemini", "hashing"] = "hashing"

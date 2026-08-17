@@ -156,6 +156,12 @@ async def init_db() -> None:
                     "ON cv_analyses (user_id, cv_snapshot_id, jd_snapshot_id, pipeline_version, created_at DESC)"
                 )
             )
+            await conn.execute(
+                text(
+                    "CREATE INDEX IF NOT EXISTS ix_job_recommendation_runs_cache "
+                    "ON job_recommendation_runs (user_id, cv_snapshot_id, trace_id, status, completed_at DESC)"
+                )
+            )
         logger.info("Database tables initialized successfully.")
 
         # Seed the system administrator. Production deployments should provide
