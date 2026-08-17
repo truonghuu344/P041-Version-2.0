@@ -3152,6 +3152,8 @@ TÊN CÔNG TY:
   const jobJourney = document.getElementById('top-jobs-journey');
   const jobFiltersGroup = document.querySelector('#view-find-jobs .filter-dropdowns-group');
   const jobResultsHeader = document.querySelector('#view-find-jobs .top-jobs-results-header');
+  const jobRecommendedTab = document.getElementById('job-results-tab-recommended');
+  const jobCatalogTab = document.getElementById('job-results-tab-catalog');
   let activeJobSearchCV = '';
   let jobSearchPage = 1;
   const JOBS_PER_PAGE = 9;
@@ -3160,6 +3162,16 @@ TÊN CÔNG TY:
   let jobSearchUiState = 'idle';
   let jobProcessingModalVisible = false;
   let jobProcessingCloseTimer = null;
+
+  function setJobResultsView(mode) {
+    const isCatalog = mode === 'catalog';
+    [jobRecommendedTab, jobCatalogTab].forEach(tab => {
+      if (!tab) return;
+      const active = tab === (isCatalog ? jobCatalogTab : jobRecommendedTab);
+      tab.classList.toggle('is-active', active);
+      tab.setAttribute('aria-selected', String(active));
+    });
+  }
 
   async function populateJobLocationFilter() {
     const locationSelect = document.getElementById('job-filter-location');
@@ -4257,6 +4269,7 @@ TÊN CÔNG TY:
 
   async function loadJobSearchResults({ cvId = activeJobSearchCV, shouldGuide = false } = {}) {
     if (!jobSearchResults) return;
+    setJobResultsView('recommended');
     jobResultsHeader?.classList.remove('is-complete');
     jobSearchResults.classList.remove('is-ready');
     const roleFilter = document.getElementById('job-filter-role')?.value || undefined;
@@ -4397,6 +4410,46 @@ TÊN CÔNG TY:
     }
   }
 
+  async function loadJobCatalogResults() {
+    if (!jobSearchResults) return;
+    clearJobSearchProgress();
+    jobSearchUiState = 'completed';
+    jobSearchPage = 1;
+    jobSearchResults.classList.remove('is-ready');
+    jobSearchResults.innerHTML = renderJobSkeleton();
+    setJobResultsView('catalog');
+    if (jobResultsSummary) jobResultsSummary.textContent = 'Khám phá việc làm';
+    if (jobResultsMode) jobResultsMode.textContent = 'Danh sách vị trí';
+
+    try {
+      const response = await ApiClient.searchJobs('', '', 100);
+      const role = String(document.getElementById('job-filter-role')?.value || '').toLowerCase();
+      const location = String(document.getElementById('job-filter-location')?.value || '').toLowerCase();
+      const workMode = String(document.getElementById('job-filter-work-mode')?.value || '').toLowerCase();
+      visibleJobResults = (response?.jobs || response?.items || []).filter(job => {
+        const haystack = `${job.title || ''} ${job.domain || ''} ${job.location || ''} ${job.work_mode || job.remote_type || ''}`.toLowerCase();
+        return (!role || haystack.includes(role))
+          && (!location || haystack.includes(location))
+          && (!workMode || haystack.includes(workMode));
+      }).map(job => ({ ...job, match_id: job.match_id || `RETRIEVAL_${job.source_id || job.job_id}` }));
+
+      if (!visibleJobResults.length) {
+        jobSearchResults.innerHTML = renderEmptyState();
+        if (jobResultsSummary) jobResultsSummary.textContent = 'Chưa có JD phù hợp bộ lọc';
+        return;
+      }
+      jobSearchResults.innerHTML = visibleJobResults.map((job, index) => renderJobCatalogCard(job, index)).join('');
+      jobSearchResults.classList.add('is-ready');
+      if (jobResultsSummary) jobResultsSummary.textContent = `${visibleJobResults.length} vị trí đang tuyển`;
+      if (jobResultsMode) jobResultsMode.textContent = 'Danh sách JD';
+      renderJobPagination();
+    } catch (error) {
+      jobSearchResults.innerHTML = renderErrorState(error.message || 'Không thể tải danh sách JD mẫu.');
+      if (jobResultsSummary) jobResultsSummary.textContent = 'Không thể tải việc làm';
+      if (jobResultsMode) jobResultsMode.textContent = 'Thử lại';
+    }
+  }
+
   async function initializeJobSearchView() {
     await loadJobSearchCVOptions();
     void populateJobLocationFilter();
@@ -4412,6 +4465,15 @@ TÊN CÔNG TY:
     }
     setJobJourneyStage('filters');
     requestAnimationFrame(() => jobFiltersGroup?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+  });
+
+  jobRecommendedTab?.addEventListener('click', () => {
+    setJobResultsView('recommended');
+    loadJobSearchResults({ cvId: jobSearchCVSelect?.value });
+  });
+
+  jobCatalogTab?.addEventListener('click', () => {
+    loadJobCatalogResults();
   });
 
   document.getElementById('top-jobs-cv-trigger')?.addEventListener('click', (e) => {
@@ -4759,6 +4821,12 @@ TÊN CÔNG TY:
       } else {
         document.getElementById('find-jobs-cv-upload-input')?.click();
       }
+      return;
+    }
+
+    const browseCatalogBtn = event.target.closest('#btn-browse-job-catalog');
+    if (browseCatalogBtn) {
+      loadJobCatalogResults();
       return;
     }
 
