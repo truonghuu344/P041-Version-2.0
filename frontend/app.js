@@ -2300,7 +2300,7 @@ function startAppLogic() {
       : '<p class="cv-result-empty">Không có câu nào cần viết lại hoặc câu trong CV đã đạt chuẩn ATS tối ưu.</p>');
     if (btnOptimizeCvAI) {
       btnOptimizeCvAI.disabled = !analysis.id || (analysis.integrity_guardrail || 'passed') !== 'passed';
-      btnOptimizeCvAI.innerHTML = '<span aria-hidden="true">✦</span> Tối ưu & tải CV';
+      btnOptimizeCvAI.innerHTML = '<span aria-hidden="true">✦</span> Tối ưu';
     }
     if (cvAiOptimizationStatus) {
       cvAiOptimizationStatus.hidden = true;
@@ -2787,7 +2787,7 @@ function startAppLogic() {
     }
 
     btnOptimizeCvAI.disabled = true;
-    btnOptimizeCvAI.innerHTML = '<span aria-hidden="true">✦</span> AI đang tối ưu & tạo PDF...';
+    btnOptimizeCvAI.innerHTML = '<span aria-hidden="true">✦</span> AI đang tối ưu...';
     if (cvAiOptimizationStatus) {
       cvAiOptimizationStatus.hidden = false;
       cvAiOptimizationStatus.textContent = 'AI đang tạo đề xuất, lập evidence map và kiểm tra từng claim...';
@@ -2834,14 +2834,14 @@ function startAppLogic() {
       const removedCount = Array.isArray(result.fact_check?.removed_claims) ? result.fact_check.removed_claims.length : 0;
       analysis.optimizationApplied = true;
       btnOptimizeCvAI.disabled = false;
-      btnOptimizeCvAI.innerHTML = '<span aria-hidden="true">↻</span> Tối ưu & tải lại';
+      btnOptimizeCvAI.innerHTML = '<span aria-hidden="true">↻</span> Tối ưu lại';
       if (cvAiOptimizationStatus) {
         cvAiOptimizationStatus.textContent = `Đã áp dụng ${changeCount} thay đổi có bằng chứng${removedCount ? ` và loại ${removedCount} claim không hợp lệ` : ''}; bản CV tối ưu đã được tải xuống. CV gốc vẫn được giữ nguyên.`;
       }
       showToast('Đã tối ưu và tải xuống bản CV mới. CV gốc không bị thay đổi.', 'success');
     } catch (err) {
       btnOptimizeCvAI.disabled = false;
-      btnOptimizeCvAI.innerHTML = '<span aria-hidden="true">✦</span> Thử tối ưu & tải lại';
+      btnOptimizeCvAI.innerHTML = '<span aria-hidden="true">✦</span> Thử tối ưu lại';
       if (cvAiOptimizationStatus) {
         cvAiOptimizationStatus.textContent = `Chưa thể hoàn tất tối ưu: ${err.message}`;
       }

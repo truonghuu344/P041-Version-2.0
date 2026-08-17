@@ -394,7 +394,7 @@ export default function MatchView() {
                     className="gap-result-optimize-button"
                     type="button"
                   >
-                    <Sparkles size={16} /> Tối ưu &amp; tải CV
+                    <Sparkles size={16} /> Tối ưu
                   </button>
                   <button id="btn-compare-multi-position" type="button">
                     Match với Job khác

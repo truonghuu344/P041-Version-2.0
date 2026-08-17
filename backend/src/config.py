@@ -164,6 +164,7 @@ class Settings(BaseSettings):
     # this cache version match. Bump the version after changing prompt logic.
     gap_analysis_cache_enabled: bool = True
     gap_analysis_cache_version: str = "v1"
+    resume_optimization_llm_enabled: bool = False
 
     @property
     def google_genai_api_key(self) -> str:

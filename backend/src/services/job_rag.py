@@ -98,7 +98,20 @@ class GeminiEmbeddingProvider:
             raise JobRAGUnavailableError("Không thể tạo Gemini embedding.") from exc
 
     async def embed_documents(self, texts: Sequence[str]) -> list[list[float]]:
-        return list(await asyncio.gather(*(self._embed(f"title: market job | text: {item}") for item in texts)))
+        from google.genai import types
+
+        if not texts:
+            return []
+        formatted = [f"title: market job | text: {item}" for item in texts]
+        try:
+            response = await self._client.aio.models.embed_content(
+                model=self.name,
+                contents=formatted,
+                config=types.EmbedContentConfig(output_dimensionality=self.vector_size),
+            )
+            return [list(emb.values) for emb in response.embeddings]
+        except Exception as exc:
+            raise JobRAGUnavailableError("Không thể tạo Gemini embedding.") from exc
 
     async def embed_query(self, text_value: str) -> list[float]:
         return await self._embed(f"task: search result | query: {text_value}")
