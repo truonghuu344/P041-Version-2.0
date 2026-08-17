@@ -182,7 +182,7 @@ export class ApiClient {
   }
 
   // --- CV APIs ---
-  static async uploadCV(file, title = '', useLLM = true) {
+  static async uploadCV(file, title = '', useLLM = false) {
     const formData = new FormData();
     formData.append('file', file);
     if (title) formData.append('title', title);
@@ -245,7 +245,7 @@ export class ApiClient {
     return await this.request('/cvs/agent/status');
   }
 
-  static async reanalyzeCV(cvId, useLLM = true) {
+  static async reanalyzeCV(cvId, useLLM = false) {
     const formData = new FormData();
     formData.append('use_llm', String(Boolean(useLLM)));
     return await this.request(`/cvs/${cvId}/analyze`, { method: 'POST', body: formData });
@@ -315,10 +315,10 @@ export class ApiClient {
   }
 
   // --- Gap Analysis APIs ---
-  static async runGapAnalysis(cvId, jdId) {
+  static async runGapAnalysis(cvId, jdId, forceRefresh = false) {
     return await this.request('/analysis/gap-analysis', {
       method: 'POST',
-      body: JSON.stringify({ cv_id: cvId, jd_id: jdId }),
+      body: JSON.stringify({ cv_id: cvId, jd_id: jdId, force_refresh: Boolean(forceRefresh) }),
     });
   }
 
