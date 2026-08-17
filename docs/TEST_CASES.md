@@ -7,7 +7,7 @@ Các test tự động không gọi Gemini, OpenWeather hoặc WeatherAPI thật
 
 ```powershell
 PYTHONPATH=backend pytest backend/tests -q -p no:cacheprovider
-ruff check src tests
+ruff check backend/src backend/tests
 cd frontend
 npm run build
 ```

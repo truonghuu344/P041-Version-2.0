@@ -1,5 +1,6 @@
 import logging
 import os
+import urllib.parse
 from collections.abc import AsyncGenerator
 
 from sqlalchemy import text
@@ -12,12 +13,43 @@ from src.config import get_settings
 logger = logging.getLogger(__name__)
 settings = get_settings()
 
-db_url = settings.database_url
 
-if db_url.startswith("postgresql://"):
-    db_url = db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
-elif db_url.startswith("sqlite://"):
-    db_url = db_url.replace("sqlite://", "sqlite+aiosqlite://", 1)
+def normalize_database_url(url: str) -> str:
+    """Normalize DATABASE_URL for SQLAlchemy async drivers (asyncpg, aiosqlite).
+
+    - Converts sync driver prefixes to async variants.
+    - Maps libpq's `sslmode` to asyncpg's `ssl`.
+    - Strips parameters unsupported by asyncpg.connect (e.g. `channel_binding`,
+      `gssencmode`, `target_session_attrs`).
+    """
+    if url.startswith("postgresql://"):
+        url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    elif url.startswith("sqlite://"):
+        url = url.replace("sqlite://", "sqlite+aiosqlite://", 1)
+
+    if url.startswith("postgresql+asyncpg://"):
+        parsed = urllib.parse.urlparse(url)
+        if parsed.query:
+            query_params = urllib.parse.parse_qs(parsed.query, keep_blank_values=True)
+            # asyncpg accepts `ssl` query parameter (e.g. ssl=require), not `sslmode`
+            if "sslmode" in query_params:
+                sslmode_val = query_params.pop("sslmode")[0]
+                if "ssl" not in query_params:
+                    query_params["ssl"] = [sslmode_val]
+            # Strip libpq-specific parameters unsupported by asyncpg
+            for unsupported in ("channel_binding", "gssencmode", "target_session_attrs"):
+                query_params.pop(unsupported, None)
+
+            new_query = urllib.parse.urlencode(
+                [(k, v) for k, values in query_params.items() for v in values]
+            )
+            parsed = parsed._replace(query=new_query)
+            url = urllib.parse.urlunparse(parsed)
+
+    return url
+
+
+db_url = normalize_database_url(settings.database_url)
 
 # Sử dụng NullPool khi chạy test để không giữ connection trong pool
 engine_kwargs = {
@@ -39,8 +71,10 @@ AsyncSessionLocal = async_sessionmaker(
     autoflush=False,
 )
 
+
 class Base(DeclarativeBase):
     pass
+
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """Dependency cung cấp AsyncSession cho FastAPI routes."""
@@ -52,6 +86,7 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
         raise
     finally:
         await session.close()
+
 
 async def init_db() -> None:
     """Tự động khởi tạo cấu trúc bảng trong Database & seed tài khoản Admin."""
@@ -78,12 +113,14 @@ async def init_db() -> None:
                         "ADD COLUMN IF NOT EXISTS is_published BOOLEAN NOT NULL DEFAULT FALSE"
                     )
                 )
+                await conn.execute(text("ALTER TABLE job_descriptions ADD COLUMN IF NOT EXISTS file_path VARCHAR(500)"))
                 await conn.execute(
                     text("UPDATE job_descriptions SET is_published = TRUE WHERE is_system = TRUE")
                 )
                 await conn.execute(text("ALTER TABLE cv_chunks ADD COLUMN IF NOT EXISTS embedding_model VARCHAR(255)"))
                 await conn.execute(text("ALTER TABLE cv_chunks ADD COLUMN IF NOT EXISTS embedding_json JSON"))
                 for statement in (
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url VARCHAR(500)",
                     "ALTER TABLE cv_analyses ADD COLUMN IF NOT EXISTS cv_snapshot_id VARCHAR(36)",
                     "ALTER TABLE cv_analyses ADD COLUMN IF NOT EXISTS jd_snapshot_id VARCHAR(36)",
                     "ALTER TABLE cv_analyses ADD COLUMN IF NOT EXISTS pipeline_version VARCHAR(40) NOT NULL DEFAULT '1.0'",

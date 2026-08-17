@@ -5,11 +5,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.core.email_identity import canonicalize_email, find_user_by_email
 from src.core.security import get_password_hash, require_role
 from src.db.database import get_db
-from src.db.models import AIAuditLog, User
+from src.db.models import AIAuditLog, JobApplication, JobDescription, User
 from src.models.schemas import (
     AdminAILogListOut,
     AdminAILogOut,
     AdminAILogStatsOut,
+    AdminJobOut,
     UserOut,
     UserRegister,
     UserUpdate,
@@ -37,6 +38,69 @@ async def list_all_users(
     stmt = select(User).order_by(User.created_at.desc())
     result = await db.execute(stmt)
     return result.scalars().all()
+
+
+@router.get("/jobs", response_model=list[AdminJobOut])
+async def list_enterprise_jobs(
+    db: AsyncSession = Depends(get_db),
+    admin_user: User = Depends(require_role(["admin"])),
+) -> list[AdminJobOut]:
+    """Admin overview of every recruiter posting, including the owning employer."""
+    del admin_user
+    rows = await db.execute(
+        select(JobDescription, User, func.count(JobApplication.id))
+        .join(User, User.id == JobDescription.created_by_user_id)
+        .outerjoin(JobApplication, JobApplication.jd_id == JobDescription.id)
+        .where(JobDescription.is_system.is_(False), User.role == "enterprise")
+        .group_by(JobDescription.id, User.id)
+        .order_by(JobDescription.created_at.desc())
+    )
+    return [
+        AdminJobOut(
+            id=jd.id,
+            title=jd.title,
+            company=jd.company,
+            location=jd.location,
+            is_published=jd.is_published,
+            created_at=jd.created_at,
+            enterprise_id=enterprise.id,
+            enterprise_name=enterprise.full_name,
+            enterprise_email=enterprise.email,
+            application_count=application_count,
+        )
+        for jd, enterprise, application_count in rows.all()
+    ]
+
+
+@router.patch("/jobs/{jd_id}/publication", response_model=AdminJobOut)
+async def set_job_publication(
+    jd_id: str,
+    is_published: bool,
+    db: AsyncSession = Depends(get_db),
+    admin_user: User = Depends(require_role(["admin"])),
+) -> AdminJobOut:
+    """Moderate a recruiter posting without changing its owner or content."""
+    del admin_user
+    row = await db.execute(
+        select(JobDescription, User, func.count(JobApplication.id))
+        .join(User, User.id == JobDescription.created_by_user_id)
+        .outerjoin(JobApplication, JobApplication.jd_id == JobDescription.id)
+        .where(JobDescription.id == jd_id, JobDescription.is_system.is_(False), User.role == "enterprise")
+        .group_by(JobDescription.id, User.id)
+    )
+    item = row.first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Khong tim thay tin tuyen dung doanh nghiep.")
+    jd, enterprise, application_count = item
+    jd.is_published = is_published
+    await db.commit()
+    await db.refresh(jd)
+    return AdminJobOut(
+        id=jd.id, title=jd.title, company=jd.company, location=jd.location,
+        is_published=jd.is_published, created_at=jd.created_at,
+        enterprise_id=enterprise.id, enterprise_name=enterprise.full_name,
+        enterprise_email=enterprise.email, application_count=application_count,
+    )
 
 
 @router.get("/ai-logs/stats", response_model=AdminAILogStatsOut)

@@ -131,8 +131,9 @@ Cloudflare R2 là storage chính thức của dự án khi deploy. R2 Free hiệ
 4. Object key chuẩn:
 
 ```text
-users/{user_id}/cvs/{cv_id}/original/{upload_id}.pdf
-users/{user_id}/cv-variants/{variant_id}/render/{revision}.pdf
+cvs/{user_id}/{upload_id}.pdf
+jds/{user_id}/{upload_id}.pdf
+cv-variants/{user_id}/{variant_id}-r{revision}.pdf
 users/{user_id}/interviews/{session_id}/audio/{turn_id}.webm
 ```
 
@@ -524,8 +525,8 @@ NEXT_PUBLIC_GOOGLE_OAUTH_CLIENT_ID=<same-client-id>
 ### Phase A — chuẩn bị repository
 
 - [ ] Kiểm tra `main` build/test xanh local.
-- [ ] Thêm storage abstraction; `local` cho dev, Cloudflare R2 private bucket cho deploy.
-- [ ] Tạo R2 bucket/API token, set lifecycle audio 30 ngày, kiểm thử ownership + presigned URL + delete cascade.
+- [x] Thêm storage abstraction; `local` cho dev, Cloudflare R2 private bucket cho deploy.
+- [ ] Tạo R2 bucket/API token, set lifecycle audio 30 ngày và kiểm thử với credentials production.
 - [ ] Thêm migration runner versioned và `/health` DB-safe.
 - [ ] Thêm `.github/workflows/ci.yml`, `e2e.yml`, `production-smoke.yml`.
 - [ ] Bật branch protection required checks.

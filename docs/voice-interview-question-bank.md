@@ -15,7 +15,7 @@ Nghiên cứu và chọn stack cho pipeline phỏng vấn voice real-time:
 | Thành phần | Công nghệ | Lý do chọn |
 |---|---|---|
 | **STT** (Speech-to-Text) | Deepgram Nova-3 | Streaming WebSocket, hỗ trợ tiếng Việt, interim results, VAD |
-| **LLM** (Conversation) | Gemini Flash (primary) + GPT-4o-mini (fallback) | Gemini nhanh + hỗ trợ `response_mime_type="application/json"`; GPT fallback khi Gemini lỗi |
+| **LLM** (Conversation) | Gemini 3.5 Flash (primary) + Gemini 2.0 Flash (fallback) | Cả team dùng chung Gemini API key; `response_mime_type="application/json"` |
 | **TTS** (Text-to-Speech) | gTTS (Google Translate TTS) | Miễn phí, hỗ trợ tiếng Việt tốt, ổn định |
 
 ### Thiết kế luồng phỏng vấn

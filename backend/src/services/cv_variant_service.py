@@ -33,6 +33,7 @@ from src.db.models import (
 from src.models.cv_variant_schemas import CVVariantCreate
 from src.services.cv_blocks import apply_cv_block_patches
 from src.services.cv_jd_matching import build_cv_jd_evidence
+from src.services.object_storage import delete_async, put_bytes_async
 from src.services.pdf_export import build_cv_pdf
 from src.services.pipeline_context import PIPELINE_VERSION, get_or_create_cv_snapshot, get_or_create_jd_snapshot
 from src.services.resume_optimization_service import optimize_resume_for_jd, validate_resume_change
@@ -585,12 +586,15 @@ async def publish_variant(db: AsyncSession, variant: CVVariant, *, trace_id: str
     asset_dir = (asset_root / variant.user_id).resolve()
     if asset_root not in asset_dir.parents and asset_dir != asset_root:
         raise ValueError("INVALID_ASSET_PATH")
-    asset_dir.mkdir(parents=True, exist_ok=True)
     asset_path = asset_dir / f"{variant.id}-r{variant.revision_no}.pdf"
-    asset_path.write_bytes(pdf_bytes)
+    variant.rendered_uri = await put_bytes_async(
+        content=pdf_bytes,
+        key=f"cv-variants/{variant.user_id}/{variant.id}-r{variant.revision_no}.pdf",
+        content_type="application/pdf",
+        local_path=asset_path,
+    )
     checksum = hashlib.sha256(pdf_bytes).hexdigest()
     variant.status = "PUBLISHED"
-    variant.rendered_uri = str(asset_path)
     variant.rendered_checksum = checksum
     variant.published_at = datetime.now(UTC)
     variant.trace_id = trace_id
@@ -613,8 +617,11 @@ async def publish_variant(db: AsyncSession, variant: CVVariant, *, trace_id: str
     }, pdf_bytes
 
 
-def remove_variant_asset(variant: CVVariant) -> None:
+async def remove_variant_asset(variant: CVVariant) -> None:
     if not variant.rendered_uri:
+        return
+    if variant.rendered_uri.startswith("r2://"):
+        await delete_async(variant.rendered_uri)
         return
     path = Path(variant.rendered_uri).resolve()
     root = _asset_root().resolve()

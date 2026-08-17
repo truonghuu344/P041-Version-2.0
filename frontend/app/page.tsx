@@ -20,6 +20,10 @@ import CounselorView from '../components/counselor/CounselorView';
 import EnterpriseView from '../components/enterprise/EnterpriseView';
 import AdminView from '../components/admin/AdminView';
 import JobRecommendationModal from '../components/candidate/JobRecommendationModal';
+import NotificationBell from '../components/notifications/NotificationBell';
+import NotificationsView from '../components/notifications/NotificationsView';
+
+
 
 export default function Page() {
   // DOM ownership is delegated to child views. These identifiers document the
@@ -39,6 +43,28 @@ export default function Page() {
     // The legacy controller needs the complete client-rendered DOM before it binds events.
     // @ts-expect-error dynamically imported non-module script
     void import('../app.js');
+
+    const bindEnterpriseNav = () => {
+      const handleEnterpriseNav = (id: string, tab: string) => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.onclick = (e) => {
+            e.preventDefault();
+            if (window.switchView) window.switchView('enterprise');
+            window.dispatchEvent(new CustomEvent('navigate-enterprise', { detail: tab }));
+          };
+        }
+      };
+
+      handleEnterpriseNav('nav-enterprise', 'dashboard');
+      handleEnterpriseNav('nav-enterprise-jobs', 'jobs');
+      handleEnterpriseNav('nav-enterprise-candidates', 'candidates');
+      handleEnterpriseNav('nav-enterprise-reports', 'reports');
+      handleEnterpriseNav('btn-enterprise-create-job', 'create-job');
+    };
+
+    bindEnterpriseNav();
+    setTimeout(bindEnterpriseNav, 300);
   }, [isMounted]);
 
   const selectCVTemplate = (templateName: CVTemplateName) => {
@@ -48,6 +74,28 @@ export default function Page() {
     window.requestAnimationFrame(() =>
       manualForm?.scrollIntoView({ behavior: 'smooth', block: 'center' }),
     );
+  };
+
+  const handleTogglePassword = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.nativeEvent.stopImmediatePropagation();
+    const btn = e.currentTarget;
+    const wrap = btn.closest('.password-input-wrap');
+    if (!wrap) return;
+    const input = wrap.querySelector('input');
+    if (!input) return;
+    const isNowVisible = input.type === 'password';
+    input.type = isNowVisible ? 'text' : 'password';
+    wrap.classList.toggle('is-visible', isNowVisible);
+    const showIcon = btn.querySelector('.eye-icon-show') as HTMLElement | null;
+    const hideIcon = btn.querySelector('.eye-icon-hide') as HTMLElement | null;
+    if (showIcon && hideIcon) {
+      showIcon.style.display = isNowVisible ? 'none' : 'block';
+      hideIcon.style.display = isNowVisible ? 'block' : 'none';
+    }
+    btn.setAttribute('aria-label', isNowVisible ? 'Ẩn mật khẩu' : 'Hiện mật khẩu');
+    input.focus();
   };
 
   // This application is DOM-driven and browser extensions can add attributes such as
@@ -83,7 +131,7 @@ export default function Page() {
             <a href="#" className="nav-link" id="nav-cv">
               <span className="nav-text">Tối ưu CV</span>
             </a>
-            <a href="#" className="nav-link" id="nav-history" hidden>
+            <a href="#" className="nav-link" id="nav-history">
               <span className="nav-text">Lịch sử &amp; Báo cáo</span>
             </a>
             <a href="#" className="nav-link role-only-link" id="nav-counselor" hidden>
@@ -92,11 +140,17 @@ export default function Page() {
             <a href="#" className="nav-link role-only-link" id="nav-counselor-reports" hidden>
               <span className="nav-text">Báo cáo</span>
             </a>
-            <a href="#" className="nav-link role-only-link" id="nav-enterprise" hidden>
-              <span className="nav-text">Dashboard</span>
+            <a href="#" className="nav-link role-only-link" id="nav-enterprise" aria-label="Dashboard Tuyển Dụng" hidden>
+              <span className="nav-text">Dashboard Tuyển Dụng</span>
             </a>
-            <a href="#" className="nav-link role-only-link" id="nav-enterprise-applications" hidden>
-              <span className="nav-text">Hồ sơ ứng tuyển</span>
+            <a href="#" className="nav-link role-only-link" id="nav-enterprise-jobs" hidden>
+              <span className="nav-text">Tin tuyển dụng</span>
+            </a>
+            <a href="#" className="nav-link role-only-link" id="nav-enterprise-candidates" aria-label="Hồ sơ ứng tuyển" hidden>
+              <span className="nav-text">Ứng viên</span>
+            </a>
+            <a href="#" className="nav-link role-only-link" id="nav-enterprise-reports" hidden>
+              <span className="nav-text">Báo cáo</span>
             </a>
             <a href="#" className="nav-link admin-only-link" id="nav-admin" hidden>
               <span className="nav-text">Quản trị hệ thống</span>
@@ -104,6 +158,12 @@ export default function Page() {
           </nav>
 
           <div className="header-utilities">
+            <button className="btn-primary role-only-link" id="btn-enterprise-create-job" style={{ marginRight: '16px' }} hidden>
+              + Đăng tin
+            </button>
+            <div id="header-notification-container" style={{ marginRight: '8px', display: 'flex', alignItems: 'center' }}>
+              <NotificationBell />
+            </div>
             <div id="auth-container">
               <button className="btn-login" id="btn-login">
                 Đăng nhập
@@ -181,6 +241,7 @@ export default function Page() {
         <EnterpriseView />
         <AdminView />
         <UpgradeView />
+        <NotificationsView />
       </main>
 
       <JobRecommendationModal />
@@ -268,12 +329,12 @@ export default function Page() {
             <div className="auth-welcome-mark" aria-hidden="true">
               <span>✦</span>
             </div>
-            <p className="auth-eyebrow">CV ASSISTANT</p>
+            <p className="auth-eyebrow">CAREER ASSISTANT</p>
             <h2 className="modal-title" id="auth-title">
               Chào mừng trở lại
             </h2>
             <p className="modal-sub" id="auth-sub">
-              Đăng nhập để tiếp tục hành trình chinh phục công việc phù hợp.
+              Đăng nhập và tiếp tục hành trình của bạn
             </p>
           </div>
           {/* Google Sign-in / Register Option */}
@@ -287,6 +348,9 @@ export default function Page() {
               <span className="google-auth-loading">Đang tải nút Google…</span>
             </div>
             <p className="google-auth-help" id="google-auth-help" hidden></p>
+            <p className="google-auth-note">
+              Google chỉ dùng cho tài khoản Sinh viên. Cố vấn và Doanh nghiệp vui lòng đăng ký bằng Email.
+            </p>
             <div className="auth-divider">
               <span>hoặc dùng Email</span>
             </div>
@@ -346,22 +410,95 @@ export default function Page() {
               />
             </div>
             <div className="form-group">
-              <label className="form-label">Mật khẩu</label>
-              <input
-                type="password"
-                id="input-password"
-                className="form-input"
-                placeholder="••••••••"
-                required
-              />
+              <label className="form-label" htmlFor="input-password">
+                Mật khẩu
+              </label>
+              <div className="password-input-wrap">
+                <input
+                  type="password"
+                  id="input-password"
+                  className="form-input"
+                  placeholder="Tối thiểu 6 ký tự"
+                  required
+                  minLength={6}
+                  autoComplete="current-password"
+                />
+                <button
+                  type="button"
+                  className="btn-toggle-password"
+                  onClick={handleTogglePassword}
+                  aria-label="Hiện mật khẩu"
+                  tabIndex={-1}
+                >
+                  <svg
+                    className="eye-icon-show"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                  <svg
+                    className="eye-icon-hide"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    style={{ display: 'none' }}
+                  >
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                    <line x1="1" y1="1" x2="23" y2="23" />
+                  </svg>
+                </button>
+              </div>
             </div>
+            <p id="auth-form-feedback" className="auth-form-feedback" role="alert" aria-live="polite" hidden />
             <button type="submit" className="btn-submit" id="btn-submit">
-              <span id="btn-submit-label">Đăng nhập</span>
+              <span className="btn-submit-text" id="btn-submit-label">
+                Đăng nhập
+              </span>
+              <span className="btn-submit-spinner" aria-hidden="true" />
             </button>
           </form>
           <button type="button" id="btn-forgot-password" className="auth-forgot-password">
             Quên mật khẩu?
           </button>
+          <div
+            className="register-prompt"
+            id="auth-switch-prompt"
+            style={{
+              textAlign: 'center',
+              fontSize: '13px',
+              color: 'var(--text-muted)',
+              marginTop: '14px',
+            }}
+          >
+            <span id="auth-switch-text">Chưa có tài khoản? </span>
+            <button
+              type="button"
+              id="auth-switch-btn"
+              className="register-link"
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '0 4px',
+                fontSize: '13px',
+              }}
+            >
+              Đăng ký ngay
+            </button>
+          </div>
         </div>
       </div>
 
@@ -372,22 +509,26 @@ export default function Page() {
         aria-modal="true"
         aria-labelledby="password-reset-title"
       >
-        <div className="modal-card password-reset-card">
+        <div className="modal-card auth-modal-card password-reset-card">
           <button type="button" className="modal-close" id="password-reset-close" aria-label="Đóng">
             &times;
           </button>
-          <form className="login-form" id="password-reset-form">
+          <form className="login-form" id="password-reset-form" noValidate>
             {/* STEP 1: EMAIL */}
             <div id="reset-step-1">
               <div className="modal-header">
+                <div className="auth-welcome-mark" aria-hidden="true">
+                  <span>✦</span>
+                </div>
+                <p className="auth-eyebrow">CAREER ASSISTANT</p>
                 <h2 className="modal-title" id="password-reset-title">
                   Quên mật khẩu
                 </h2>
-                <p className="modal-sub">Nhập email của bạn để nhận mã OTP.</p>
+                <p className="modal-sub">Nhập email đã đăng ký để nhận mã xác thực OTP.</p>
               </div>
               <div className="form-group">
                 <label className="form-label" htmlFor="reset-email">
-                  Email
+                  Địa chỉ Email
                 </label>
                 <input
                   type="email"
@@ -398,24 +539,23 @@ export default function Page() {
                 />
               </div>
               <button type="submit" className="btn-submit" id="btn-reset-step-1">
-                Tiếp tục
+                Gửi mã xác thực
               </button>
-              <button
-                type="button"
-                id="btn-password-reset-back"
-                className="auth-forgot-password"
-                style={{ marginTop: '10px' }}
-              >
-                Quay lại đăng nhập
+              <button type="button" id="btn-password-reset-back" className="auth-forgot-password">
+                ← Quay lại đăng nhập
               </button>
             </div>
 
             {/* STEP 2: OTP */}
             <div id="reset-step-2" hidden>
               <div className="modal-header">
-                <h2 className="modal-title">Xác thực OTP</h2>
+                <div className="auth-welcome-mark" aria-hidden="true">
+                  <span>✉</span>
+                </div>
+                <p className="auth-eyebrow">CAREER ASSISTANT</p>
+                <h2 className="modal-title">Xác thực mã OTP</h2>
                 <p className="modal-sub" id="reset-step-2-sub">
-                  Mã 6 số đã được gửi đến email của bạn.
+                  Mã OTP 6 chữ số đã được gửi đến email của bạn.
                 </p>
               </div>
               <div className="form-group">
@@ -427,66 +567,133 @@ export default function Page() {
                   pattern="[0-9]{6}"
                   maxLength={6}
                   placeholder="------"
-                  style={{
-                    textAlign: 'center',
-                    fontSize: '1.5rem',
-                    letterSpacing: '0.5em',
-                    fontWeight: 'bold',
-                  }}
+                  autoComplete="one-time-code"
                 />
               </div>
-              <p
-                className="auth-reset-timer"
-                id="password-reset-timer"
-                style={{
-                  color: 'var(--primary-color)',
-                  fontSize: '0.9rem',
-                  marginBottom: '15px',
-                  textAlign: 'center',
-                }}
-              ></p>
+              <p className="auth-reset-timer" id="password-reset-timer"></p>
               <button type="submit" className="btn-submit" id="btn-reset-step-2">
-                Xác thực
+                Xác thực mã OTP
               </button>
-              <button
-                type="button"
-                id="btn-password-reset-back-2"
-                className="auth-forgot-password"
-                style={{ marginTop: '10px' }}
-              >
-                Nhập lại email
+              <button type="button" id="btn-password-reset-back-2" className="auth-forgot-password">
+                ← Nhập lại email
               </button>
             </div>
 
             {/* STEP 3: NEW PASSWORD */}
             <div id="reset-step-3" hidden>
               <div className="modal-header">
+                <div className="auth-welcome-mark" aria-hidden="true">
+                  <span>✦</span>
+                </div>
+                <p className="auth-eyebrow">CAREER ASSISTANT</p>
                 <h2 className="modal-title">Tạo mật khẩu mới</h2>
-                <p className="modal-sub">Mật khẩu của bạn phải có tối thiểu 8 ký tự.</p>
+                <p className="modal-sub">Mật khẩu mới phải có tối thiểu 8 ký tự.</p>
               </div>
               <div className="form-group">
                 <label className="form-label" htmlFor="reset-new-password">
                   Mật khẩu mới
                 </label>
-                <input
-                  type="password"
-                  id="reset-new-password"
-                  className="form-input"
-                  minLength={8}
-                  placeholder="Ít nhất 8 ký tự"
-                />
+                <div className="password-input-wrap">
+                  <input
+                    type="password"
+                    id="reset-new-password"
+                    name="new_password"
+                    className="form-input"
+                    minLength={8}
+                    placeholder="Tối thiểu 8 ký tự"
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="btn-toggle-password"
+                    onClick={handleTogglePassword}
+                    aria-label="Hiện mật khẩu"
+                    tabIndex={-1}
+                  >
+                    <svg
+                      className="eye-icon-show"
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                    <svg
+                      className="eye-icon-hide"
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      style={{ display: 'none' }}
+                    >
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                      <line x1="1" y1="1" x2="23" y2="23" />
+                    </svg>
+                  </button>
+                </div>
               </div>
               <div className="form-group">
                 <label className="form-label" htmlFor="reset-confirm-password">
                   Xác nhận mật khẩu mới
                 </label>
-                <input
-                  type="password"
-                  id="reset-confirm-password"
-                  className="form-input"
-                  minLength={8}
-                  placeholder="Nhập lại mật khẩu"
-                />
+                <div className="password-input-wrap">
+                  <input
+                    type="password"
+                    id="reset-confirm-password"
+                    name="confirm_password"
+                    className="form-input"
+                    minLength={8}
+                    placeholder="Nhập lại mật khẩu mới"
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="btn-toggle-password"
+                    onClick={handleTogglePassword}
+                    aria-label="Hiện mật khẩu"
+                    tabIndex={-1}
+                  >
+                    <svg
+                      className="eye-icon-show"
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                    <svg
+                      className="eye-icon-hide"
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      style={{ display: 'none' }}
+                    >
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                      <line x1="1" y1="1" x2="23" y2="23" />
+                    </svg>
+                  </button>
+                </div>
               </div>
               <button type="submit" className="btn-submit" id="btn-reset-step-3">
                 Cập nhật mật khẩu

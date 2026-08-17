@@ -4,8 +4,9 @@ import hmac
 import logging
 import secrets
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, UploadFile, status
 from google.auth.exceptions import GoogleAuthError
 from google.auth.transport.requests import Request as GoogleRequest
 from google.oauth2 import id_token
@@ -20,8 +21,10 @@ from src.db.database import get_db
 from src.db.models import PasswordResetOTP, User
 from src.models.schemas import (
     GoogleAuthRequest,
+    PasswordChangeRequest,
     PasswordResetConfirm,
     PasswordResetRequest,
+    ProfileUpdateRequest,
     Token,
     UserLogin,
     UserOut,
@@ -84,7 +87,7 @@ async def register_user(
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email này đã được đăng ký trong hệ thống",
+            detail="Email này đã được đăng ký trong hệ thống. Vui lòng đăng nhập hoặc sử dụng email khác.",
         )
 
     # Khởi tạo user mới
@@ -102,7 +105,7 @@ async def register_user(
         await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email này đã được đăng ký trong hệ thống",
+            detail="Email này đã được đăng ký trong hệ thống. Vui lòng đăng nhập hoặc sử dụng email khác.",
         ) from exc
     except SQLAlchemyError as exc:
         await db.rollback()
@@ -253,12 +256,17 @@ async def login_with_google(
 
     email = canonicalize_email(token_info["email"])
     user = await _find_user_by_email(db, email)
+    google_picture = token_info.get("picture") or None
     if not user:
         user = User(
             email=email,
             hashed_password=get_password_hash(secrets.token_urlsafe(32)),
             full_name=(token_info.get("name") or email.split("@", 1)[0])[:255],
-            role=payload.role,
+            # Google does not provide a trustworthy application role. New Google
+            # accounts are always students; counselor and enterprise accounts
+            # must be provisioned through the email registration flow.
+            role="student",
+            avatar_url=google_picture,
         )
         db.add(user)
         try:
@@ -269,6 +277,12 @@ async def login_with_google(
             user = await _find_user_by_email(db, email)
             if not user:
                 raise HTTPException(status_code=409, detail="Không thể liên kết tài khoản Google.") from exc
+    else:
+        # Đồng bộ avatar Google nếu user chưa có avatar tùy chỉnh
+        if not user.avatar_url and google_picture:
+            user.avatar_url = google_picture
+            await db.commit()
+            await db.refresh(user)
 
     access_token = create_access_token(data={"sub": user.id, "email": user.email, "role": user.role})
     _set_auth_cookie(response, request, access_token)
@@ -291,4 +305,134 @@ async def logout_user(request: Request) -> Response:
 @router.get("/me", response_model=UserOut)
 async def get_me(current_user: User = Depends(get_current_user)) -> UserOut:
     """Lấy thông tin tài khoản hiện tại."""
+    return current_user
+
+
+@router.put("/me", response_model=UserOut)
+async def update_profile(
+    payload: ProfileUpdateRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> UserOut:
+    """Cập nhật thông tin tài khoản (Họ và tên, Mật khẩu mới)."""
+    if payload.full_name is not None and payload.full_name.strip():
+        current_user.full_name = payload.full_name.strip()
+
+    if payload.new_password:
+        if not payload.current_password or not verify_password(payload.current_password, current_user.hashed_password):
+            raise HTTPException(status_code=400, detail="Mật khẩu hiện tại không chính xác.")
+        current_user.hashed_password = get_password_hash(payload.new_password)
+
+    try:
+        await db.commit()
+        await db.refresh(current_user)
+    except SQLAlchemyError as exc:
+        await db.rollback()
+        logger.exception("User profile update failed")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Không thể lưu thông tin hồ sơ. Vui lòng thử lại sau.",
+        ) from exc
+
+    return current_user
+
+
+@router.post("/change-password")
+async def change_password(
+    payload: PasswordChangeRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, str]:
+    """Đổi mật khẩu người dùng đang đăng nhập."""
+    if not verify_password(payload.current_password, current_user.hashed_password):
+        raise HTTPException(status_code=400, detail="Mật khẩu hiện tại không chính xác.")
+
+    current_user.hashed_password = get_password_hash(payload.new_password)
+    try:
+        await db.commit()
+    except SQLAlchemyError as exc:
+        await db.rollback()
+        logger.exception("Password change failed")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Không thể cập nhật mật khẩu. Vui lòng thử lại sau.",
+        ) from exc
+
+    return {"message": "Đổi mật khẩu thành công."}
+
+
+_AVATAR_DIR = Path("data/avatars")
+_ALLOWED_AVATAR_TYPES = {"image/jpeg", "image/png", "image/webp"}
+_MAX_AVATAR_BYTES = 2 * 1024 * 1024  # 2 MB
+
+
+@router.post("/me/avatar", response_model=UserOut)
+async def upload_avatar(
+    file: UploadFile,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> UserOut:
+    """Upload hoặc thay đổi avatar của người dùng."""
+    if file.content_type not in _ALLOWED_AVATAR_TYPES:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Chỉ chấp nhận ảnh JPEG, PNG hoặc WebP.",
+        )
+    content = await file.read()
+    if len(content) > _MAX_AVATAR_BYTES:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail="Ảnh avatar không được vượt quá 2 MB.",
+        )
+
+    ext_map = {"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp"}
+    ext = ext_map.get(file.content_type, ".jpg")
+    _AVATAR_DIR.mkdir(parents=True, exist_ok=True)
+
+    # Xóa avatar cũ nếu là file local
+    if current_user.avatar_url and current_user.avatar_url.startswith("/api/v1/avatars/"):
+        old_path = _AVATAR_DIR / current_user.avatar_url.split("/")[-1]
+        old_path.unlink(missing_ok=True)
+
+    filename = f"{current_user.id}{ext}"
+    file_path = _AVATAR_DIR / filename
+    file_path.write_bytes(content)
+
+    current_user.avatar_url = f"/api/v1/avatars/{filename}"
+    try:
+        await db.commit()
+        await db.refresh(current_user)
+    except SQLAlchemyError as exc:
+        await db.rollback()
+        logger.exception("Avatar upload failed")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Không thể lưu avatar. Vui lòng thử lại sau.",
+        ) from exc
+
+    return current_user
+
+
+@router.delete("/me/avatar", response_model=UserOut)
+async def delete_avatar(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> UserOut:
+    """Xóa avatar hiện tại, trở về icon mặc định."""
+    if current_user.avatar_url and current_user.avatar_url.startswith("/api/v1/avatars/"):
+        old_path = _AVATAR_DIR / current_user.avatar_url.split("/")[-1]
+        old_path.unlink(missing_ok=True)
+
+    current_user.avatar_url = None
+    try:
+        await db.commit()
+        await db.refresh(current_user)
+    except SQLAlchemyError as exc:
+        await db.rollback()
+        logger.exception("Avatar delete failed")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Không thể xóa avatar. Vui lòng thử lại sau.",
+        ) from exc
+
     return current_user

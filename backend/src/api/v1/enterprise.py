@@ -6,10 +6,20 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.security import require_role
 from src.db.database import get_db
-from src.db.models import CV, CVAnalysis, JobApplication, JobDescription, User
-from src.models.schemas import CVOut, JDOut, JobApplicationCreate, JobApplicationDecision, JobApplicationOut
+from src.db.models import CV, ApplicationFeedback, CVAnalysis, JobApplication, JobDescription, User
+from src.models.schemas import (
+    ApplicationFeedbackCreate,
+    ApplicationFeedbackOut,
+    CVOut,
+    JDOut,
+    JobApplicationCreate,
+    JobApplicationDecision,
+    JobApplicationOut,
+)
+from src.services.notification_service import NotificationService
 
 router = APIRouter(prefix="/enterprise", tags=["Enterprise Recruitment"])
+
 
 
 def _application_out(
@@ -122,6 +132,18 @@ async def share_cv_with_enterprise(
         db.add(application)
     await db.commit()
     await db.refresh(application)
+
+    await NotificationService.trigger_application_submitted(
+        db=db,
+        application_id=application.id,
+        job_id=jd.id,
+        job_title=jd.title,
+        company_name=jd.company or "Doanh nghiệp tuyển dụng",
+        student_id=student.id,
+        student_name=student.full_name or student.email,
+        enterprise_user_id=jd.created_by_user_id,
+    )
+
     return _application_out(application, jd, student)
 
 
@@ -205,8 +227,64 @@ async def decide_application(
     if not row:
         raise HTTPException(status_code=404, detail="Không tìm thấy hồ sơ ứng tuyển thuộc doanh nghiệp.")
     application, jd, candidate = row
+    previous_status = application.status
     application.status = payload.status
     application.decided_at = datetime.now(UTC) if payload.status != "submitted" else None
     await db.commit()
     await db.refresh(application)
+
+    if previous_status != payload.status:
+        await NotificationService.trigger_application_decision(
+            db=db,
+            application_id=application.id,
+            job_id=jd.id,
+            job_title=jd.title,
+            company_name=jd.company or "Doanh nghiệp tuyển dụng",
+            student_id=candidate.id,
+            enterprise_user_id=enterprise.id,
+            decision="accepted" if payload.status in ("shortlisted", "interview", "accepted", "hired") else "rejected",
+            next_stage="Phỏng vấn chuyên môn" if payload.status in ("shortlisted", "interview") else None,
+        )
+
     return _application_out(application, jd, candidate)
+
+
+@router.post("/applications/{application_id}/feedback", response_model=ApplicationFeedbackOut)
+async def submit_application_feedback(
+    application_id: str,
+    payload: ApplicationFeedbackCreate,
+    db: AsyncSession = Depends(get_db),
+    student: User = Depends(require_role(["student"])),
+) -> ApplicationFeedbackOut:
+    """Allow a candidate to rate a completed recruitment process once."""
+    application = await db.scalar(
+        select(JobApplication).where(
+            JobApplication.id == application_id,
+            JobApplication.student_id == student.id,
+        )
+    )
+    if not application:
+        raise HTTPException(status_code=404, detail="Khong tim thay ho so ung tuyen.")
+    if application.status not in {"hired", "rejected"}:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Chi co the danh gia sau khi quy trinh tuyen dung da ket thuc.",
+        )
+
+    feedback = await db.scalar(
+        select(ApplicationFeedback).where(ApplicationFeedback.application_id == application_id)
+    )
+    if feedback:
+        feedback.rating = payload.rating
+        feedback.comment = payload.comment
+    else:
+        feedback = ApplicationFeedback(
+            application_id=application.id,
+            user_id=student.id,
+            rating=payload.rating,
+            comment=payload.comment,
+        )
+        db.add(feedback)
+    await db.commit()
+    await db.refresh(feedback)
+    return feedback

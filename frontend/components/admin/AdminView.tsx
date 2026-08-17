@@ -58,6 +58,12 @@ export default function AdminView(props: any) {
                 </span>
                 <span className="admin-stat-lbl">Doanh Nghiệp & Mentor</span>
               </div>
+              <div className="admin-stat-card">
+                <span className="admin-stat-num glow-cyan" id="admin-stat-jobs">
+                  0
+                </span>
+                <span className="admin-stat-lbl">Tin tuyển dụng</span>
+              </div>
             </div>
 
             <div className="admin-section-tabs" role="tablist" aria-label="Khu vực quản trị">
@@ -73,6 +79,16 @@ export default function AdminView(props: any) {
               </button>
               <button
                 type="button"
+                id="admin-tab-jobs"
+                className="admin-section-tab"
+                role="tab"
+                aria-selected="false"
+                aria-controls="admin-jobs-panel"
+              >
+                Tin tuyển dụng
+              </button>
+              <button
+                type="button"
                 id="admin-tab-ai-logs"
                 className="admin-section-tab"
                 role="tab"
@@ -81,6 +97,42 @@ export default function AdminView(props: any) {
               >
                 ✦ AI Logs
               </button>
+            </div>
+
+            <div id="admin-jobs-panel" role="tabpanel" aria-labelledby="admin-tab-jobs" hidden>
+              <div className="admin-toolbar">
+                <div className="admin-search-wrap">
+                  <input
+                    type="search"
+                    id="admin-job-search"
+                    className="form-input"
+                    placeholder="Tìm vị trí, công ty hoặc nhà tuyển dụng..."
+                  />
+                </div>
+                <button type="button" id="btn-refresh-admin-jobs" className="btn-outline">
+                  Làm mới
+                </button>
+              </div>
+              <div className="admin-table-wrap">
+                <table className="admin-users-table">
+                  <thead>
+                    <tr>
+                      <th>Vị trí / Công ty</th>
+                      <th>Nhà tuyển dụng</th>
+                      <th>Ứng tuyển</th>
+                      <th>Trạng thái</th>
+                      <th>Thao tác</th>
+                    </tr>
+                  </thead>
+                  <tbody id="admin-jobs-tbody">
+                    <tr>
+                      <td colSpan={5} style={{ textAlign: 'center', padding: '30px' }}>
+                        Chọn tab để tải tin tuyển dụng.
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             <div id="admin-users-panel" role="tabpanel" aria-labelledby="admin-tab-users">

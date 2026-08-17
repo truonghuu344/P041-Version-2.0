@@ -36,6 +36,9 @@ Thumbs.db
 postgres_data/
 data/raw/
 data/generated/
+data/uploads/
+backend/data/generated/
+backend/data/uploads/
 
 # Chroma DB (using PostgreSQL instead)
 chroma_db/
@@ -84,3 +87,9 @@ note.txt
 
 # Local demo guide (personal, do not commit)
 setup_demo.md
+
+# graphify
+docs/graphify-out/
+graphify-out/
+
+run_local.md

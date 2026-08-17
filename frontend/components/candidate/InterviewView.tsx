@@ -12,6 +12,7 @@ import {
   Sparkles,
   Star,
   Target,
+  Upload,
   Volume2,
 } from 'lucide-react';
 
@@ -47,9 +48,25 @@ export default function InterviewView() {
                   <span>
                     <FileText size={15} /> CV của bạn
                   </span>
-                  <select id="page-interview-select-cv">
-                    <option value="">Chọn CV đã lưu</option>
-                  </select>
+                  <div className="interview-cv-row">
+                    <select id="page-interview-select-cv">
+                      <option value="">Chọn CV đã lưu</option>
+                    </select>
+                    <button
+                      type="button"
+                      id="page-interview-upload-cv-btn"
+                      className="interview-upload-cv-btn"
+                      title="Tải lên CV mới"
+                    >
+                      <Upload size={15} />
+                    </button>
+                    <input
+                      type="file"
+                      id="page-interview-upload-cv-input"
+                      accept=".pdf,.doc,.docx"
+                      hidden
+                    />
+                  </div>
                 </label>
                 <label className="interview-field interview-field-wide">
                   <span>
@@ -98,7 +115,7 @@ export default function InterviewView() {
                   <span>
                     <Mic size={16} />
                   </span>
-                  Bạn trả lời tự nhiên bằng giọng nói.
+                  Bạn trả lời bằng giọng nói hoặc nhập text.
                 </li>
                 <li>
                   <span>
@@ -157,7 +174,7 @@ export default function InterviewView() {
             <form id="page-interview-answer-form" className="interview-answer-form">
               <input
                 id="page-interview-answer-input"
-                placeholder="Hoặc nhập câu trả lời theo cấu trúc STAR…"
+                placeholder="Không có mic? Nhập câu trả lời tại đây…"
               />
               <button type="submit" className="interview-send-button">
                 <Send size={17} />

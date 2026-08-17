@@ -1,5 +1,36 @@
 # 🤖 Career Assistant X (CV Assistant)
 
+
+## Gate 2 API query examples
+
+```bash
+# Verify backend health
+curl http://localhost:8000/health
+
+# Create a student
+curl -X POST http://localhost:8000/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"student@example.com","password":"StrongPass123!","full_name":"Demo Student","role":"student"}'
+
+# Sign in, then use the returned token in protected requests
+curl -X POST http://localhost:8000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"student@example.com","password":"StrongPass123!"}'
+
+# Confirm the configured AI provider
+curl http://localhost:8000/api/v1/assistant/status
+
+# Ask Nova using a real access token
+curl -X POST http://localhost:8000/api/v1/assistant/chat \
+  -H "Authorization: Bearer <access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{"message":"Suggest evidence-based CV improvements for a Backend graduate.","current_page":"dashboard"}'
+```
+
+For the system component/data-flow diagram and current Gate 2 evidence, see
+[docs/architecture_diagram.md](docs/architecture_diagram.md) and
+[eval/MANUAL_TEST_EVIDENCE.md](eval/MANUAL_TEST_EVIDENCE.md).
+
 Trợ lý nghề nghiệp AI cho sinh viên năm 3–4/mới ra trường — phân tích CV theo JD (Gap Analysis, không bịa/thổi phồng kinh nghiệm), phỏng vấn thử theo Rubric STAR, và chatbot AI **Nova** hỗ trợ định hướng nghề nghiệp. Dự án capstone **VinUni AI20K Build Phase**, nhóm **WinTop**.
 
 ## 🌐 Demo

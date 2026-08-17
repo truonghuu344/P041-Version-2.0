@@ -236,9 +236,20 @@ class MarketJobRAGService:
                 parts.append("Kỹ năng ứng viên: " + ", ".join(map(str, skills)))
             parts.extend((str(parsed_cv.get("summary") or ""), cv_text[:3_000] if not skills and not parsed_cv.get("summary") else ""))
         retrieval_query = "\n".join(part for part in parts if part).strip()
-        if not retrieval_query:
-            raise JobRAGUnavailableError("Không có truy vấn ngữ nghĩa để tìm kiếm.")
-        candidates = await self._semantic_candidates(await self._get_embedder().embed_query(retrieval_query), min(100, max(20, limit * 4)))
+        embedder = self._get_embedder()
+        try:
+            query_vector = await embedder.embed_query(retrieval_query)
+        except Exception as exc:
+            if not isinstance(embedder, HashingEmbeddingProvider):
+                logger.warning(
+                    "Configured embedding provider failed in search_jobs; falling back to hashing: %s",
+                    exc,
+                )
+                self._embedder = HashingEmbeddingProvider(self.settings.vector_dimensions)
+                query_vector = await self._embedder.embed_query(retrieval_query)
+            else:
+                raise
+        candidates = await self._semantic_candidates(query_vector, min(100, max(20, limit * 4)))
         catalog = {str(job["source_id"]): job for job in load_enterprise_job_catalog()}
         terms = _search_text(query).split()
         ranked: list[dict[str, Any]] = []

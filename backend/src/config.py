@@ -1,13 +1,17 @@
 from functools import lru_cache
+from pathlib import Path
 from typing import Literal
+from urllib.parse import quote
 
-from pydantic import Field
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=".env",
+        # Resolve from the repository root so `uvicorn src.main:app` works
+        # when launched inside `backend/` as well as from the project root.
+        env_file=Path(__file__).resolve().parents[2] / ".env",
         env_file_encoding="utf-8",
         extra="ignore",
     )
@@ -37,6 +41,16 @@ class Settings(BaseSettings):
     clamav_port: int = Field(default=3310, ge=1, le=65535)
     clamav_timeout_seconds: float = Field(default=5, ge=1, le=60)
 
+    # Object storage. R2 exposes an S3-compatible private API; objects are
+    # served through authenticated application endpoints rather than public URLs.
+    storage_provider: Literal["local", "r2"] = "local"
+    s3_endpoint_url: str = ""
+    s3_bucket: str = ""
+    s3_region: str = "auto"
+    s3_access_key_id: str = ""
+    s3_secret_access_key: str = ""
+    file_url_ttl_seconds: int = Field(default=300, ge=60, le=3600)
+
     # Email / password reset OTP. Use a Gmail App Password, never an account password.
     smtp_host: str = "smtp.gmail.com"
     smtp_port: int = Field(default=587, ge=1, le=65535)
@@ -59,14 +73,31 @@ class Settings(BaseSettings):
     cv_parser_mode: Literal["local", "gemini"] = "gemini"
     weather_api_key: str = ""
 
-    # Voice Interview (Pipeline 3): Deepgram STT + Gemini Flash LLM + Edge TTS
+    # Voice Interview (Pipeline 3): Deepgram STT + Gemini LLM + gTTS
     deepgram_api_key: str = ""
     openai_api_key: str = ""
     voice_llm_model: str = "gemini-3.5-flash"
+    voice_llm_fallback_model: str = "gemini-2.0-flash"
 
     # Database
-    database_url: str = "postgresql+asyncpg://postgres:postgrespassword@localhost:5432/career_assistant_db"
+    # `DATABASE_URL` is preferred for hosted databases. For the local Docker
+    # stack, derive it from POSTGRES_* so the API never silently falls back to
+    # a hard-coded `postgres` account.
+    database_url: str = ""
+    postgres_user: str = "career_assistant"
+    postgres_password: str = ""
+    postgres_db: str = "career_assistant"
     database_echo: bool = False
+
+    @model_validator(mode="after")
+    def resolve_database_url(self) -> "Settings":
+        if not self.database_url:
+            password = quote(self.postgres_password, safe="")
+            self.database_url = (
+                f"postgresql+asyncpg://{quote(self.postgres_user, safe='')}:{password}"
+                f"@localhost:5432/{quote(self.postgres_db, safe='')}"
+            )
+        return self
 
     # pgvector / Market JD RAG
     vector_search_enabled: bool = False

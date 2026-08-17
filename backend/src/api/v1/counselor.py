@@ -338,6 +338,17 @@ async def create_feedback(
     db.add(feedback)
     await db.commit()
     await db.refresh(feedback)
+
+    from src.services.notification_service import NotificationService
+    await NotificationService.trigger_advisor_feedback(
+        db=db,
+        advisor_id=counselor.id,
+        advisor_name=counselor.full_name or counselor.email,
+        student_id=student_id,
+        cv_title="hồ sơ phỏng vấn STAR" if payload.interview_report_id else "CV",
+        cv_id=payload.interview_report_id or student_id,
+    )
+
     return CounselorFeedbackOut.model_validate(feedback)
 
 
