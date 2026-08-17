@@ -1293,9 +1293,11 @@ function startAppLogic() {
       window.updateLoginGates?.();
       window.updateP1UI?.();
       loadSpaceshipCVList();
-      loadCVJDOptions();
     } else if (targetViewName === 'gap') {
-      renderGapDetailFromCurrentMatch();
+      populatePageGapOptions();
+      if (typeof renderGapDetailFromCurrentMatch === 'function') {
+        renderGapDetailFromCurrentMatch();
+      }
     } else if (targetViewName === 'find-jobs') {
       initializeJobSearchView();
     } else if (targetViewName === 'jobs') {
@@ -3961,11 +3963,6 @@ TÊN CÔNG TY:
               <div class="top-job-fit-score ${isMandatoryFailed ? 'is-mandatory-failed' : ''}">${isRetrievalOnly ? '—' : `${displayScore}%`}</div>
               <div class="top-job-fit-badge ${isMandatoryFailed ? 'is-mandatory-failed' : ''}">${escapeHtml(fitLabel)}</div>
             `}
-            ${!isCatalog && confLevel === 'low' ? `
-              <span class="top-job-confidence-badge is-low" title="Độ tin cậy thấp">
-                <span class="icon-warn" aria-hidden="true">⚠</span> Độ tin cậy thấp
-              </span>
-            ` : ''}
           </div>
         </div>
 
@@ -3999,6 +3996,15 @@ TÊN CÔNG TY:
   let cachedCVList = [];
   let activeCvTabFilter = 'all';
   let cvFilterSearchQuery = '';
+
+    function formatFullDateTimeVi(dateStr) {
+    if (!dateStr) return 'Gần đây';
+    const date = new Date(dateStr);
+    if (Number.isNaN(date.getTime())) return 'Gần đây';
+    const d = date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const t = date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false });
+    return `${t} · ${d}`;
+  }
 
   function getCVStatusInfo(cv) {
     if (!cv) return { type: 'none', label: 'Chưa chọn', format: '' };
@@ -4034,7 +4040,7 @@ TÊN CÔNG TY:
     titleEl.textContent = selectedCV.title || selectedCV.file_name || 'CV Hồ sơ';
     if (metaEl) {
       const dateStr = selectedCV.updated_at || selectedCV.created_at;
-      const formattedDate = dateStr ? new Date(dateStr).toLocaleDateString('vi-VN') : 'Gần đây';
+      const formattedDate = dateStr ? formatFullDateTimeVi(dateStr) : 'Gần đây';
       metaEl.innerHTML = `<span class="cv-meta-inline"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-svg-icon"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Cập nhật: ${escapeHtml(formattedDate)}</span>${selectedCV.match_count > 0 ? ` · <span class="cv-meta-match">${selectedCV.match_count} lần khớp</span>` : ''}`;
     }
   }
@@ -4092,7 +4098,7 @@ TÊN CÔNG TY:
   function renderCVOptionHTML(cv, isSelected) {
     const { type, label, format } = getCVStatusInfo(cv);
     const dateStr = cv.updated_at || cv.created_at;
-    const dateFormatted = dateStr ? new Date(dateStr).toLocaleDateString('vi-VN') : 'Gần đây';
+    const dateFormatted = dateStr ? formatFullDateTimeVi(dateStr) : 'Gần đây';
     const isPdf = format === 'PDF';
     const isDocx = format === 'DOCX';
     const formatClass = isPdf ? 'is-pdf' : (isDocx ? 'is-docx' : 'is-cv');
@@ -4678,20 +4684,19 @@ TÊN CÔNG TY:
     if (titleEl) titleEl.textContent = fullJob.title || 'Backend Engineer';
     if (compEl) compEl.textContent = drawerMeta || 'Thông tin công việc';
 
-    // Confidence Level in Drawer
-    const confRaw = String(fullJob.evidence_confidence || fullJob.confidence || '').toLowerCase();
-    let confLevel = (isCatalog || isRetrievalOnly) ? 'Chưa đánh giá' : 'Cao';
-    let confCls = (isCatalog || isRetrievalOnly) ? 'is-medium' : 'is-high';
-    if (confRaw.includes('low') || confRaw.includes('thấp') || confRaw === 'very_low') {
-      confLevel = 'Thấp — cần bổ sung CV';
-      confCls = 'is-low';
-    } else if (confRaw.includes('medium') || confRaw.includes('trung bình') || confRaw.includes('vừa')) {
-      confLevel = 'Trung bình';
-      confCls = 'is-medium';
-    }
+    // Status Badge in Hero Card
     if (confBadge) {
-      confBadge.className = `job-drawer-confidence-badge ${confCls}`;
-      confBadge.innerHTML = `Độ tin cậy: <strong>${escapeHtml(confLevel)}</strong>`;
+      if (isCatalog || isRetrievalOnly) {
+        confBadge.style.display = 'none';
+      } else if (isMandatoryFailed) {
+        confBadge.style.display = 'inline-flex';
+        confBadge.className = 'job-drawer-confidence-badge is-low';
+        confBadge.innerHTML = `<span class="icon-warn" style="margin-right:4px;">⚠</span> Cần bổ sung kỹ năng`;
+      } else {
+        confBadge.style.display = 'inline-flex';
+        confBadge.className = 'job-drawer-confidence-badge is-high';
+        confBadge.innerHTML = `✓ Đạt yêu cầu cốt lõi`;
+      }
     }
 
     // Mandatory Alert Box in Drawer
@@ -4701,8 +4706,8 @@ TÊN CÔNG TY:
         drawerMandatoryAlert.innerHTML = `
           <span class="icon-warn" aria-hidden="true">⚠</span>
           <div class="mandatory-alert-content">
-            <strong>Thiếu yêu cầu bắt buộc</strong>
-            <p>Hồ sơ chưa đáp ứng đủ các yêu cầu bắt buộc của vị trí này. Điểm hiển thị được giới hạn tối đa 49%.</p>
+            <strong>Chưa đáp ứng đủ yêu cầu bắt buộc</strong>
+            <p>Hồ sơ còn thiếu một số kỹ năng cốt lõi của vị trí này (điểm hiển thị giới hạn tối đa 49%). Bạn hãy bấm <strong>"Tối ưu CV theo JD này"</strong> để được hướng dẫn bổ sung vào CV nhé!</p>
           </div>
         `;
         drawerMandatoryAlert.hidden = false;
@@ -4970,6 +4975,19 @@ TÊN CÔNG TY:
   });
 
   // Drawer Footer Actions
+  document.getElementById('btn-drawer-optimize-cv')?.addEventListener('click', () => {
+    if (activeJobSearchCV) {
+      window.sessionStorage.setItem('career-preselected-cv-id', activeJobSearchCV);
+    }
+    if (activeDrawerJob) {
+      const jdId = activeDrawerJob.job_id || activeDrawerJob.source_id || '';
+      if (jdId) window.sessionStorage.setItem('career-preselected-jd-id', jdId);
+    }
+    closeJobDrawer();
+    switchView('cv');
+    showToast('Đã chuyển sang trang Tối ưu CV!', 'success');
+  });
+
   document.getElementById('btn-drawer-full-match')?.addEventListener('click', () => {
     if (activeJobSearchCV) {
       window.sessionStorage.setItem('career-preselected-cv-id', activeJobSearchCV);
@@ -5448,6 +5466,11 @@ TÊN CÔNG TY:
       if (preselectedCvId && [...pageSelectGapCv.options].some(option => option.value === preselectedCvId)) {
         pageSelectGapCv.value = preselectedCvId;
         window.sessionStorage.removeItem('career-preselected-cv-id');
+      }
+      const preselectedJdId = window.sessionStorage.getItem('career-preselected-jd-id');
+      if (preselectedJdId && [...pageSelectGapJd.options].some(option => option.value === preselectedJdId)) {
+        pageSelectGapJd.value = preselectedJdId;
+        window.sessionStorage.removeItem('career-preselected-jd-id');
       }
       enhanceGapSelect(pageSelectGapCv);
       enhanceGapSelect(pageSelectGapJd);
@@ -6234,7 +6257,7 @@ TÊN CÔNG TY:
             <div class="archive-card" data-type="match">
               <div class="archive-card-header">
                 <span class="archive-tag tag-cv">CV ĐÃ MATCH VỚI JD</span>
-                <span class="archive-time">${new Date(analysis.created_at).toLocaleDateString('vi-VN')}</span>
+                <span class="archive-time">${analysis.created_at ? formatFullDateTimeVi(analysis.created_at) : "Gần đây"}</span>
               </div>
               <h3 class="archive-card-title">${escapeHtml(cvTitle)}</h3>
               <p class="archive-card-sub">So khớp với <strong>${escapeHtml(jdTitle)}</strong> • Điểm phù hợp ${score}%</p>
@@ -6264,7 +6287,7 @@ TÊN CÔNG TY:
               <span class="archive-source">${escapeHtml(cvSource)} · Đã áp dụng đề xuất AI</span>
               <div class="archive-card-header">
                 <span class="archive-tag tag-optimized">CV ĐÃ TỐI ƯU</span>
-                <span class="archive-time">${new Date(analysis.created_at).toLocaleDateString('vi-VN')}</span>
+                <span class="archive-time">${analysis.created_at ? formatFullDateTimeVi(analysis.created_at) : "Gần đây"}</span>
               </div>
               <h3 class="archive-card-title">${escapeHtml(cvTitle)}</h3>
               <p class="archive-card-sub">Đã áp dụng ${acceptedCount} đề xuất tối ưu cho <strong>${escapeHtml(jdTitle)}</strong>.</p>
@@ -6292,7 +6315,7 @@ TÊN CÔNG TY:
             <div class="archive-card" data-type="interview">
               <div class="archive-card-header">
                 <span class="archive-tag tag-interview">🎙️ PHỎNG VẤN STAR</span>
-                <span class="archive-time">${new Date(session.created_at).toLocaleDateString('vi-VN')}</span>
+                <span class="archive-time">${session.created_at ? formatFullDateTimeVi(session.created_at) : "Gần đây"}</span>
               </div>
               <h3 class="archive-card-title">${escapeHtml(jdTitle)}</h3>
               <p class="archive-card-sub">Rubric STAR Score • Tiến độ ${session.current_question_index}/${session.total_questions} câu hỏi</p>

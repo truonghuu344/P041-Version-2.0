@@ -4,13 +4,43 @@ import React from 'react';
 import { X } from 'lucide-react';
 
 export default function JobRecommendationModal() {
+  const handleClose = () => {
+    const drawer = document.getElementById('job-recommendation-drawer');
+    if (drawer) {
+      drawer.classList.remove('is-open');
+      drawer.setAttribute('aria-hidden', 'true');
+    }
+    document.body.classList.remove('job-drawer-open');
+  };
+
+  const handleOptimize = () => {
+    handleClose();
+    if (typeof window !== 'undefined' && (window as any).switchView) {
+      (window as any).switchView('cv');
+    }
+  };
+
+  const handleFullMatch = () => {
+    handleClose();
+    if (typeof window !== 'undefined' && (window as any).switchView) {
+      (window as any).switchView('match');
+    }
+  };
+
+  const handleInterview = () => {
+    handleClose();
+    if (typeof window !== 'undefined' && (window as any).switchView) {
+      (window as any).switchView('interview');
+    }
+  };
+
   return (
     <div
       id="job-recommendation-drawer"
       className="job-recommendation-drawer job-modal-overlay"
       aria-hidden="true"
     >
-      <div className="job-drawer-backdrop" id="job-drawer-backdrop" />
+      <div className="job-drawer-backdrop" id="job-drawer-backdrop" onClick={handleClose} />
       <aside
         className="job-drawer-panel job-modal-panel"
         role="dialog"
@@ -33,7 +63,7 @@ export default function JobRecommendationModal() {
           <button
             type="button"
             className="job-drawer-close"
-            id="job-drawer-close-btn"
+            id="job-drawer-close-btn" onClick={handleClose}
             aria-label="Đóng chi tiết"
           >
             <X size={20} />
@@ -69,7 +99,7 @@ export default function JobRecommendationModal() {
                 </span>
               </div>
               <div className="job-drawer-confidence-badge is-high" id="job-drawer-confidence-badge">
-                Độ tin cậy: <strong>Cao</strong>
+                ✓ Đạt yêu cầu cốt lõi
               </div>
             </div>
           </div>
@@ -80,10 +110,9 @@ export default function JobRecommendationModal() {
               ⚠
             </span>
             <div className="mandatory-alert-content">
-              <strong>Thiếu yêu cầu bắt buộc</strong>
+              <strong>Chưa đáp ứng đủ yêu cầu bắt buộc</strong>
               <p id="job-drawer-mandatory-detail">
-                Hồ sơ chưa đáp ứng đủ tiêu chí bắt buộc của vị trí này. Điểm hiển thị được giới hạn
-                tối đa 49%.
+                Hồ sơ còn thiếu một số kỹ năng cốt lõi của vị trí này (điểm hiển thị giới hạn tối đa 49%). Bạn hãy bấm "Tối ưu CV theo JD này" để được hướng dẫn bổ sung vào CV nhé!
               </p>
             </div>
           </div>
@@ -240,21 +269,28 @@ export default function JobRecommendationModal() {
             <button
               type="button"
               className="btn-drawer-action btn-modal-close"
-              id="job-drawer-cancel-btn"
+              id="job-drawer-cancel-btn" onClick={handleClose}
             >
               Đóng
             </button>
             <button
               type="button"
+              className="btn-drawer-action btn-optimize-cv"
+              id="btn-drawer-optimize-cv" onClick={handleOptimize}
+            >
+              Tối ưu CV theo JD này
+            </button>
+            <button
+              type="button"
               className="btn-drawer-action btn-full-match"
-              id="btn-drawer-full-match"
+              id="btn-drawer-full-match" onClick={handleFullMatch}
             >
               So khớp chi tiết với CV này
             </button>
             <button
               type="button"
               className="btn-drawer-action btn-mock-interview"
-              id="btn-drawer-mock-interview"
+              id="btn-drawer-mock-interview" onClick={handleInterview}
             >
               Luyện phỏng vấn vị trí này
             </button>
