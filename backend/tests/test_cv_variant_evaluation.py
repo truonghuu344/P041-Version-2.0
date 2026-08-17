@@ -1,10 +1,7 @@
 from __future__ import annotations
 
 import json
-from io import BytesIO
 from pathlib import Path
-
-from pypdf import PdfReader
 
 from src.services.cv_variant_service import validate_claim_contract
 from src.services.pdf_export import build_cv_pdf
@@ -63,8 +60,8 @@ def test_render_success_rate_is_at_least_95_percent():
                 accepted_suggestions=[],
                 template_name=templates[index % len(templates)],
             )
-            reader = PdfReader(BytesIO(pdf))
-            successes += bool(pdf.startswith(b"%PDF") and 1 <= len(reader.pages) <= 2)
+            page_count = pdf.count(b"/Type /Page")
+            successes += bool(pdf.startswith(b"%PDF") and 1 <= page_count <= 2)
         except Exception:
             pass
     assert successes / len(cases) >= 0.95

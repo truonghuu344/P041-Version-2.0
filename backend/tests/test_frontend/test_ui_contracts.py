@@ -90,7 +90,7 @@ def test_gap_modal_shows_compact_user_facing_result_and_ai_action():
     assert 'class="cv-optimization-accept"' not in APP_JS
     assert "Từ chối</button>" not in APP_JS
     assert "Chấp nhận</button>" not in APP_JS
-    assert "Tối ưu & tải lại" in APP_JS
+    assert "Tối ưu lại" in APP_JS
     assert "CV gốc vẫn được giữ nguyên" in APP_JS
 
 

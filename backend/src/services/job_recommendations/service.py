@@ -8,7 +8,8 @@ Executes the complete, reproducible Top Jobs recommendation pipeline:
    - If filtered jobs <= candidate_k (default 30): use all filtered jobs.
    - Else: run BM25 and Semantic retrievers, then merge via Weighted RRF (top candidate_k).
 5. For each candidate:
-   - Check and reuse existing Match results; run matching pipeline only when needed.
+   - Reuse a completed Match when present; otherwise run the deterministic
+     CV–JD evidence evaluation used for the Top-10 preview.
    - Calculate rubric Fit Score with dynamic active-weight normalization.
    - Apply the Mandatory Requirement Gate (capping display score at 49 when coverage < 50%).
    - Calculate Evidence Confidence (high / medium / low).
@@ -40,7 +41,7 @@ from src.schemas.job_recommendation import (
 )
 
 # pyrefly: ignore [missing-import]
-from src.services.cv_jd_pipeline import PipelineConfig, run_cv_jd_pipeline
+from src.services.cv_jd_matching import build_cv_jd_evidence
 
 # pyrefly: ignore [missing-import]
 from src.services.cv_retrieval import build_cv_retrieval_text
@@ -63,6 +64,7 @@ from src.services.job_recommendations.explanation import generate_deterministic_
 # pyrefly: ignore [missing-import]
 from src.services.job_recommendations.final_ranking import (
     RankedTopJob,
+    get_fit_label,
     persist_top_recommendations,
     rank_top_jobs,
 )
@@ -74,7 +76,7 @@ from src.services.job_recommendations.fit_score import calculate_fit_score
 from src.services.job_recommendations.mandatory_gate import apply_mandatory_gate
 
 # pyrefly: ignore [missing-import]
-from src.services.job_recommendations.match_reuse import get_or_run_match
+from src.services.job_recommendations.match_reuse import find_existing_match
 
 # pyrefly: ignore [missing-import]
 from src.services.job_recommendations.rrf import weighted_rrf
@@ -162,9 +164,10 @@ class TopJobRecommendationService:
         user_id: str,
         cv_snapshot_id: str,
         request: JobRecommendationRequest,
+        cache_trace_id: str | None = None,
     ) -> JobRecommendationRun:
         """Initialize a tracked recommendation run record."""
-        trace_id = f"TRACE_REC_{uuid.uuid4().hex[:12].upper()}"
+        trace_id = cache_trace_id or f"TRACE_REC_{uuid.uuid4().hex[:12].upper()}"
         run = JobRecommendationRun(
             id=uuid.uuid4().hex,
             user_id=user_id,
@@ -217,11 +220,18 @@ class TopJobRecommendationService:
             k=self.settings.job_recommend_bm25_k,
         )
 
-        semantic_retriever = SemanticRetriever(settings=self.settings)
-        vector_results = await semantic_retriever.retrieve(
-            cv_retrieval_text,
-            k=self.settings.job_recommend_vector_k,
-        )
+        try:
+            semantic_retriever = SemanticRetriever(settings=self.settings)
+            vector_results = await semantic_retriever.retrieve(
+                cv_retrieval_text,
+                k=self.settings.job_recommend_vector_k,
+            )
+        except Exception as exc:
+            logger.warning(
+                "Semantic retrieval failed during candidate retrieval; falling back to BM25 only: %s",
+                exc,
+            )
+            vector_results = []
 
         fused_candidates = weighted_rrf(
             bm25_results,
@@ -241,52 +251,97 @@ class TopJobRecommendationService:
         candidate_retrieval: RankedJob,
         job_catalog_map: Mapping[str, dict[str, Any]],
     ) -> dict[str, Any]:
-        """Evaluate a single candidate using reuse-aware match, fit score, gate, and explanation."""
+        """Reuse a completed Match or evaluate the job for the Top-10 preview."""
         jd_id = candidate_retrieval.jd_snapshot_id
-        job_data = job_catalog_map.get(jd_id) or {"source_id": jd_id, "title": "Vị trí tuyển dụng"}
-
-        # Define inline pipeline runner for fresh matches
-        async def _run_fresh_match(
-            _db: AsyncSession,
-            *,
-            cv_snapshot_id: str,
-            jd_snapshot_id: str,
-            **_kwargs: Any,
-        ) -> dict[str, Any]:
-            requirements = _extract_job_requirements(job_data)
-            pipeline_cfg = PipelineConfig(
-                bm25_top_k=self.settings.cv_jd_bm25_top_k,
-                semantic_top_k=self.settings.cv_jd_semantic_top_k,
-                semantic_min_score=self.settings.cv_jd_semantic_min_score,
-                rrf_k=self.settings.cv_jd_rrf_k,
-                hybrid_top_k=self.settings.cv_jd_hybrid_top_k,
-                max_evidence_per_requirement=self.settings.cv_jd_evidence_max_per_requirement,
-                score_decimal_places=self.settings.cv_jd_score_decimal_places,
-                embedding_provider=self.settings.cv_jd_embedding_provider,
-                embedding_model=self.settings.cv_jd_embedding_model,
-                embedding_api_key=self.settings.google_genai_api_key,
-                embedding_dimensions=self.settings.cv_jd_embedding_dimensions,
-                rating_poor_max=self.settings.cv_jd_rating_poor_max,
-                rating_average_max=self.settings.cv_jd_rating_average_max,
-                rating_good_max=self.settings.cv_jd_rating_good_max,
-                extraction_min_confidence=self.settings.cv_jd_extraction_min_confidence,
-            )
-            return run_cv_jd_pipeline(
-                cv_text=cv_snapshot.raw_text or "",
-                parsed_cv=cv_snapshot.profile_json or {},
-                job_id=jd_id,
-                requirements=requirements,
-                config=pipeline_cfg,
-            )
-
-        match_result = await get_or_run_match(
+        existing_match = await find_existing_match(
             db,
             cv_snapshot_id=cv_snapshot.id,
             jd_snapshot_id=jd_id,
             pipeline_version=CURRENT_PIPELINE_VERSION,
             rubric_version=CURRENT_RUBRIC_VERSION,
-            run_pipeline=_run_fresh_match,
         )
+        if existing_match is None:
+            # A Top-10 result must be ranked by CV–JD fit, not merely retrieval
+            # relevance.  Keep this preview evaluation ephemeral: a full MatchRun
+            # is still created only when the candidate explicitly asks for the
+            # detailed CV–JD analysis.
+            job_data = job_catalog_map.get(jd_id) or {}
+            requirements_text = "\n".join(
+                part
+                for part in (
+                    str(job_data.get("description") or "").strip(),
+                    "Kỹ năng yêu cầu: " + ", ".join(map(str, job_data.get("skills") or [])),
+                )
+                if part
+            )
+            evidence = build_cv_jd_evidence(
+                cv_text=cv_snapshot.raw_text,
+                parsed_cv=dict(cv_snapshot.profile_json or {}),
+                jd_title=str(job_data.get("title") or "Job"),
+                jd_requirements=requirements_text,
+                jd_parsed={"skills": list(job_data.get("skills") or [])},
+            )
+            coverage = float(evidence.get("must_have_coverage") or 0.0)
+            raw_score = float(evidence.get("match_score") or 0.0)
+            gate_res = apply_mandatory_gate(
+                raw_score,
+                must_have_coverage=coverage,
+                threshold=self.settings.job_recommend_must_have_threshold,
+                score_cap=self.settings.job_recommend_score_cap,
+            )
+            requirements = evidence.get("requirements") or {}
+            matched_reqs = requirements.get("matched") or []
+            missing_reqs = requirements.get("missing") or []
+            mandatory_total = sum(
+                1 for item in [*matched_reqs, *missing_reqs]
+                if isinstance(item, Mapping) and item.get("mandatory")
+            )
+            mandatory_matched = sum(
+                1 for item in matched_reqs
+                if isinstance(item, Mapping) and item.get("mandatory")
+            )
+            conf_res = calculate_evidence_confidence(evidence)
+            exp_res = generate_deterministic_explanations(evidence, lang="vi")
+            top_strengths = exp_res.top_strengths or list(evidence.get("strengths") or [])[:4]
+            top_gaps = exp_res.top_gaps or list(evidence.get("risks") or [])[:4]
+            return {
+                "job_id": str(job_data.get("source_id") or jd_id),
+                "jd_snapshot_id": jd_id,
+                "title": str(job_data.get("title") or "Job"),
+                "company": job_data.get("company"),
+                "location": job_data.get("location"),
+                "work_mode": job_data.get("work_mode") or job_data.get("remote_type"),
+                "display_fit_score": gate_res.display_score,
+                "raw_fit_score": raw_score,
+                "required_skills_coverage": coverage,
+                "mandatory_requirements_matched": mandatory_matched,
+                "total_mandatory_requirements": mandatory_total,
+                "supported_requirements_count": conf_res.verified_count,
+                "rrf_rank": candidate_retrieval.rank,
+                "evidence_confidence": conf_res.confidence_level,
+                "confidence_score": conf_res.confidence_score,
+                "mandatory_requirement_failed": gate_res.failed,
+                "match_id": f"PREVIEW_{jd_id}",
+                "score_breakdown": list(evidence.get("criteria") or []),
+                "top_strengths": top_strengths[:4],
+                "top_gaps": top_gaps[:4],
+                "mandatory_gate_json": {
+                    **gate_res.gate_json,
+                    "matched_requirements": mandatory_matched,
+                    "total_requirements": mandatory_total,
+                },
+                "explanation_json": {
+                    **exp_res.explanation_json,
+                    "evaluation_status": "PREVIEW_EVALUATED",
+                    "top_strengths": top_strengths[:4],
+                    "top_gaps": top_gaps[:4],
+                    "score_breakdown": list(evidence.get("criteria") or []),
+                },
+                "fit_label": get_fit_label(gate_res.display_score),
+            }
+        job_data = job_catalog_map.get(jd_id) or {"source_id": jd_id, "title": "Vị trí tuyển dụng"}
+
+        match_result = existing_match
 
         # 1. Rubric Fit Score
         criteria = match_result.result_json.get("criteria", [])
@@ -330,7 +385,7 @@ class TopJobRecommendationService:
             "evidence_confidence": conf_res.confidence_level,
             "confidence_score": conf_res.confidence_score,
             "mandatory_requirement_failed": gate_res.failed,
-            "match_id": match_result.match_id,
+            "match_id": match_result.id,
             "score_breakdown": [
                 {
                     "criterion_id": b.criterion_id,
@@ -357,13 +412,20 @@ class TopJobRecommendationService:
         user_id: str,
         request: JobRecommendationRequest,
         catalog: Sequence[dict[str, Any]] | None = None,
+        cache_trace_id: str | None = None,
     ) -> tuple[str, list[RankedTopJob]]:
         """Full Top Jobs recommendation flow returning run ID and Top-10 ranked recommendations."""
         # 1. Load and authorize CV snapshot
         cv_snapshot = await self.load_cv_snapshot(db, user_id, request.cv_snapshot_id)
 
         # 2. Initialize tracking Run
-        run = await self.create_run(db, user_id=user_id, cv_snapshot_id=cv_snapshot.id, request=request)
+        run = await self.create_run(
+            db,
+            user_id=user_id,
+            cv_snapshot_id=cv_snapshot.id,
+            request=request,
+            cache_trace_id=cache_trace_id,
+        )
 
         try:
             # 3. Load catalog & apply metadata filters

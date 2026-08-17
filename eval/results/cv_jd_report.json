@@ -14,7 +14,7 @@
       "passed": true,
       "match_score": 100.0,
       "match_level": "high_match",
-      "confidence_score": 0.81,
+      "confidence_score": 0.8,
       "assertions": {
         "matching_recall": 1.0,
         "missing_recall": 1.0,
@@ -35,7 +35,7 @@
       "passed": true,
       "match_score": 83.3,
       "match_level": "application_ready",
-      "confidence_score": 0.66,
+      "confidence_score": 0.65,
       "assertions": {
         "matching_recall": 1.0,
         "missing_recall": 1.0,
@@ -245,7 +245,7 @@
       "passed": true,
       "match_score": 100.0,
       "match_level": "high_match",
-      "confidence_score": 0.6,
+      "confidence_score": 0.59,
       "assertions": {
         "matching_recall": 1.0,
         "missing_recall": 1.0,

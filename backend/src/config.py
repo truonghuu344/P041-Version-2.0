@@ -70,7 +70,26 @@ class Settings(BaseSettings):
     llm_temperature: float = Field(default=1.0, ge=0.0, le=2.0)
     llm_timeout_seconds: float = Field(default=45, ge=5, le=120)
     llm_max_retries: int = Field(default=1, ge=0, le=3)
-    cv_parser_mode: Literal["local", "gemini"] = "gemini"
+    # Local-first: parsing uses deterministic extraction by default. A cloud
+    # structured parse is an explicit, deployment-wide opt-in only.
+    cv_parser_mode: Literal["local", "gemini"] = "local"
+    cv_structured_parse_llm_enabled: bool = False
+    # MinerU sends source documents to an external Agent API, so retain
+    # Tesseract as the privacy-first default for CV/JD data.
+    ocr_provider: Literal["mineru"] = "mineru"
+    mineru_agent_base_url: str = "https://mineru.net/api/v1/agent"
+    # Precision API token from MinerU Console. When present, it is preferred
+    # over the public Agent API and enables the VLM parser.
+    mineru_api_token: str = ""
+    mineru_precision_base_url: str = "https://mineru.net/api/v4"
+    mineru_model_version: Literal["pipeline", "vlm"] = "vlm"
+    mineru_language: str = "en"
+    mineru_enable_table: bool = True
+    mineru_enable_formula: bool = False
+    mineru_max_file_size_mb: int = Field(default=10, ge=1, le=200)
+    mineru_timeout_seconds: float = Field(default=30, ge=5, le=120)
+    mineru_poll_interval_seconds: float = Field(default=2, ge=0.5, le=10)
+    mineru_poll_timeout_seconds: float = Field(default=120, ge=10, le=300)
     weather_api_key: str = ""
 
     # Voice Interview (Pipeline 3): Deepgram STT + Gemini LLM + gTTS
@@ -101,11 +120,12 @@ class Settings(BaseSettings):
 
     # pgvector / Market JD RAG
     vector_search_enabled: bool = False
-    vector_embedding_provider: Literal["auto", "gemini", "hashing"] = "auto"
+    # Do not select a paid embedding API merely because a Gemini key exists.
+    vector_embedding_provider: Literal["auto", "gemini", "hashing"] = "hashing"
     vector_embedding_model: str = "gemini-embedding-2"
     vector_dimensions: int = Field(default=768, ge=128, le=3072)
-    vector_sync_on_startup: bool = True
-    vector_auto_sync: bool = True
+    vector_sync_on_startup: bool = False
+    vector_auto_sync: bool = False
 
     # Top Jobs recommendation (BM25 + vector + weighted RRF + eligibility gate)
     job_recommend_bm25_k: int = Field(default=30, ge=1, le=200)
@@ -117,9 +137,13 @@ class Settings(BaseSettings):
     job_recommend_vector_weight: float = Field(default=1.0, ge=0.0, le=10.0)
     job_recommend_must_have_threshold: float = Field(default=0.50, ge=0.0, le=1.0)
     job_recommend_score_cap: float = Field(default=49.0, ge=0.0, le=100.0)
+    # Reuse a completed Top Jobs run only when its immutable CV snapshot,
+    # filters, catalog revision and retrieval configuration still match.
+    top_jobs_cache_enabled: bool = True
+    top_jobs_cache_version: str = "v1"
 
     # CV-JD Matching v1 (Requirement -> BM25/Vector -> RRF -> Evidence -> Rubric)
-    cv_jd_embedding_provider: Literal["auto", "gemini", "hashing"] = "auto"
+    cv_jd_embedding_provider: Literal["auto", "gemini", "hashing"] = "hashing"
     cv_jd_embedding_model: str = "gemini-embedding-2"
     cv_jd_embedding_dimensions: int = Field(default=768, ge=128, le=3072)
     cv_jd_bm25_top_k: int = Field(default=20, ge=1, le=100)
@@ -136,6 +160,11 @@ class Settings(BaseSettings):
     # LLM may only draft explanatory guidance after deterministic scoring.
     # Keep it opt-in to make cost and data sharing explicit.
     match_explanation_llm_enabled: bool = False
+    # Reuse a completed CV/JD analysis whenever both immutable snapshots and
+    # this cache version match. Bump the version after changing prompt logic.
+    gap_analysis_cache_enabled: bool = True
+    gap_analysis_cache_version: str = "v1"
+    resume_optimization_llm_enabled: bool = False
 
     @property
     def google_genai_api_key(self) -> str:

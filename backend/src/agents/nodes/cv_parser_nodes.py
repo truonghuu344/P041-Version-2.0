@@ -120,6 +120,18 @@ async def llm_structured_parse_node(state: CVParserAgentState) -> dict[str, Any]
             "llm_error": "CV_PARSER_MODE đang là local.",
             "trace": [*state.get("trace", []), _trace("llm_parse", "skipped", "Chế độ local được cấu hình.")],
         }
+    if not getattr(settings, "cv_structured_parse_llm_enabled", False):
+        return {
+            **base,
+            "llm_called": False,
+            "llm_succeeded": False,
+            "llm_policy_blocked": True,
+            "llm_error": "CV structured parse cloud đang tắt theo cấu hình.",
+            "trace": [
+                *state.get("trace", []),
+                _trace("llm_parse", "skipped", "Local-first deployment không gửi toàn bộ CV đến Gemini."),
+            ],
+        }
     if not settings.google_genai_api_key:
         return {
             **base,
@@ -303,7 +315,11 @@ async def finalize_cv_node(state: CVParserAgentState) -> dict[str, Any]:
         "parse_quality": 5,
     }
     ats_score = float(sum(components.values()))
-    fallback_used = bool(state.get("llm_requested") and not state.get("llm_succeeded", False))
+    fallback_used = bool(
+        state.get("llm_requested")
+        and not state.get("llm_succeeded", False)
+        and not state.get("llm_policy_blocked", False)
+    )
     elapsed_ms = round((time.perf_counter() - state.get("started_at", time.perf_counter())) * 1000)
     result = {
         **verified,
@@ -321,6 +337,7 @@ async def finalize_cv_node(state: CVParserAgentState) -> dict[str, Any]:
             "llm_called": state.get("llm_called", False),
             "llm_succeeded": state.get("llm_succeeded", False),
             "llm_error": state.get("llm_error", ""),
+            "llm_policy_blocked": state.get("llm_policy_blocked", False),
             "fallback_used": fallback_used,
             "latency_ms": elapsed_ms,
             "trace": [*state.get("trace", []), _trace("finalize", "passed", "Kết quả sẵn sàng cho HITL review.")],
@@ -329,7 +346,7 @@ async def finalize_cv_node(state: CVParserAgentState) -> dict[str, Any]:
             "gemini_agent"
             if state.get("llm_succeeded")
             else "local_fallback"
-            if state.get("llm_requested")
+            if state.get("llm_requested") and not state.get("llm_policy_blocked", False)
             else "local"
         ),
     }

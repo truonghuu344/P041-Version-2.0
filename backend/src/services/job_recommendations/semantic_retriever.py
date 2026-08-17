@@ -193,7 +193,21 @@ class SemanticRetriever:
             return []
 
         embedder = self._get_embedder()
-        query_vector = await embedder.embed_query(cv_text)
+        try:
+            query_vector = await embedder.embed_query(cv_text)
+        except Exception as exc:
+            # Fallback to hashing embedding if Gemini/API is rate-limited (429) or unavailable
+            from src.services.job_rag import HashingEmbeddingProvider
+
+            if not isinstance(embedder, HashingEmbeddingProvider):
+                logger.warning(
+                    "Configured embedding provider failed; falling back to hashing embedder: %s",
+                    exc,
+                )
+                self._embedder = HashingEmbeddingProvider(self._settings.vector_dimensions)
+                query_vector = await self._embedder.embed_query(cv_text)
+            else:
+                raise
 
         factory = self._resolve_session_factory()
         async with factory() as session:

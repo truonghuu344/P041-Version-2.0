@@ -42,6 +42,17 @@ services:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-career_assistant}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-career_assistant}
       CORS_ORIGINS: http://localhost:3000,http://localhost:3001,http://localhost:55215,http://localhost:57409,http://localhost:62879,http://192.168.2.21:3001
       VECTOR_SEARCH_ENABLED: "true"
+      # Local-first defaults. Override them only after deliberately accepting
+      # the cost of a cloud provider.
+      VECTOR_EMBEDDING_PROVIDER: ${VECTOR_EMBEDDING_PROVIDER:-hashing}
+      CV_JD_EMBEDDING_PROVIDER: ${CV_JD_EMBEDDING_PROVIDER:-hashing}
+      VECTOR_SYNC_ON_STARTUP: ${VECTOR_SYNC_ON_STARTUP:-false}
+      VECTOR_AUTO_SYNC: ${VECTOR_AUTO_SYNC:-false}
+      CV_PARSER_MODE: ${CV_PARSER_MODE:-local}
+      CV_STRUCTURED_PARSE_LLM_ENABLED: ${CV_STRUCTURED_PARSE_LLM_ENABLED:-false}
+      MATCH_EXPLANATION_LLM_ENABLED: ${MATCH_EXPLANATION_LLM_ENABLED:-false}
+      GAP_ANALYSIS_CACHE_ENABLED: ${GAP_ANALYSIS_CACHE_ENABLED:-true}
+      GAP_ANALYSIS_CACHE_VERSION: ${GAP_ANALYSIS_CACHE_VERSION:-v1}
       MALWARE_SCAN_MODE: required
       CLAMAV_HOST: clamav
       CLAMAV_PORT: 3310

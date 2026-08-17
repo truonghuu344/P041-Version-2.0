@@ -33,6 +33,7 @@ from src.services.cv_parser import extract_text_from_document, parse_cv_to_struc
 from src.services.file_security import FileSecurityError, scan_uploaded_file
 from src.services.object_storage import ObjectStorageError, delete_async, put_bytes_async
 from src.services.pdf_export import apply_accepted_rewrites, build_cv_pdf
+from src.services.pipeline_context import get_or_create_cv_snapshot
 
 router = APIRouter(prefix="/cvs", tags=["CV Management"])
 logger = logging.getLogger(__name__)
@@ -116,7 +117,7 @@ def _cv_template_sample() -> dict:
 async def upload_cv(
     file: UploadFile = File(...),
     title: str = Form(default=""),
-    use_llm: bool = Form(default=True),
+    use_llm: bool = Form(default=False),
     parse_mode: Literal["configured", "auto"] = Form(default="configured"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -198,6 +199,11 @@ async def upload_cv(
         )
     )
     try:
+        # Create the immutable, parsed version at upload time. Top Jobs and
+        # later CV/JD workflows therefore reuse this profile rather than
+        # parsing the original file again.
+        await db.flush()
+        await get_or_create_cv_snapshot(db, new_cv)
         await db.commit()
     except Exception as exc:
         await db.rollback()
@@ -551,7 +557,7 @@ async def get_cv_agent_status(
 @router.post("/{cv_id}/analyze", response_model=CVOut)
 async def reanalyze_cv(
     cv_id: str,
-    use_llm: bool = Form(default=True),
+    use_llm: bool = Form(default=False),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> CVOut:

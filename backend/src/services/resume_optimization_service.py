@@ -341,18 +341,29 @@ async def optimize_resume_for_jd(
     warnings = _as_strings(analysis.get("warnings"))
     settings = get_settings()
 
-    if settings.google_genai_api_key:
+    if (
+        getattr(settings, "resume_optimization_llm_enabled", False)
+        and settings.google_genai_api_key
+    ):
+        matched_skills = _as_strings(analysis.get("hard_skills_matching"))
+        # Only select candidate blocks (max 5) that mention matching skills and are not contact lines
+        candidate_blocks = [
+            b
+            for b in cv_blocks
+            if b.get("text")
+            and mentioned_skills(b["text"], matched_skills)
+            and not is_cv_contact_or_location_line(b["text"])
+        ][:5]
+        if not candidate_blocks:
+            candidate_blocks = cv_blocks[:3]
+
         context = {
             "target_job_title": jd_title,
             "output_language": language,
-            "job_description": jd_text,
-            "confirmed_user_facts": [],
-            "cv_blocks": cv_blocks,
+            "target_skills": matched_skills[:8],
+            "cv_blocks": candidate_blocks,
             "optimization_mode": optimization_mode,
-            "verified_matching_skills": analysis.get("hard_skills_matching", []),
-            "partial_matches": analysis.get("hard_skills_partial", []),
-            "missing_requirements": analysis.get("hard_skills_missing", []),
-            "requirement_evidence": analysis.get("requirement_evidence", []),
+            "missing_skills": _as_strings(analysis.get("hard_skills_missing"))[:5],
         }
         try:
             llm = ChatGoogleGenerativeAI(

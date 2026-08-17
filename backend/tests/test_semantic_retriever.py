@@ -78,3 +78,26 @@ def test_ranked_job_has_no_fit_score_fields():
     job = RankedJob(jd_snapshot_id="test-1", rank=1, score=0.85)
     assert not hasattr(job, "raw_fit_score")
     assert not hasattr(job, "display_fit_score")
+
+
+@pytest.mark.asyncio
+async def test_retrieve_falls_back_to_hashing_when_provider_fails():
+    """When the primary embedder throws (e.g. 429 quota exhausted), it falls back to hashing."""
+    from src.services.job_rag import JobRAGUnavailableError
+    from tests.conftest import TestingSessionLocal
+
+    class FailingEmbedder:
+        name = "gemini-failing"
+        vector_size = 768
+
+        async def embed_query(self, text: str) -> list[float]:
+            raise JobRAGUnavailableError("Gemini quota 429 exhausted")
+
+    retriever = SemanticRetriever(
+        embedder=FailingEmbedder(),
+        session_factory=TestingSessionLocal,
+    )
+    # Should not raise; falls back to HashingEmbeddingProvider internally
+    results = await retriever.retrieve("Senior Python Developer FastAPI", k=5)
+    assert isinstance(results, list)
+

@@ -64,6 +64,31 @@ async def test_gap_analysis_persists_result_and_returns_history(client, monkeypa
 
 
 @pytest.mark.asyncio
+async def test_gap_analysis_reuses_matching_snapshots_without_rerunning_pipeline(client, monkeypatch):
+    _user, headers = await register_and_login(client, email="gap-cache@example.com")
+    cv = await insert_cv(email="gap-cache@example.com")
+    jd = await insert_jd(is_system=True)
+    calls = {"count": 0}
+
+    async def fake_analysis(**_kwargs):
+        calls["count"] += 1
+        return GAP_RESULT
+
+    monkeypatch.setattr("src.api.v1.analysis.perform_cv_jd_gap_analysis", fake_analysis)
+    first = await client.post(
+        "/api/v1/analysis/gap-analysis", headers=headers, json={"cv_id": cv.id, "jd_id": jd.id}
+    )
+    second = await client.post(
+        "/api/v1/analysis/gap-analysis", headers=headers, json={"cv_id": cv.id, "jd_id": jd.id}
+    )
+
+    assert first.status_code == second.status_code == 201
+    assert calls["count"] == 1
+    assert second.json()["id"] == first.json()["id"]
+    assert second.json()["cache_hit"] is True
+
+
+@pytest.mark.asyncio
 async def test_gap_analysis_rejects_foreign_cv_and_private_jd(client, monkeypatch):
     await register_and_login(client, email="gap-owner@example.com")
     _other, other_headers = await register_and_login(client, email="gap-other@example.com")

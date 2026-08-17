@@ -13,6 +13,8 @@ Strict security checks:
 
 from __future__ import annotations
 
+import hashlib
+import json
 import logging
 from datetime import datetime
 from typing import Any
@@ -21,6 +23,9 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+# pyrefly: ignore [missing-import]
+from src.config import get_settings
 
 # pyrefly: ignore [missing-import]
 from src.core.security import get_current_user
@@ -39,6 +44,9 @@ from src.schemas.job_recommendation import (
 )
 
 # pyrefly: ignore [missing-import]
+from src.services.job_catalog import load_enterprise_job_catalog
+
+# pyrefly: ignore [missing-import]
 from src.services.job_recommendations.final_ranking import get_fit_label
 
 # pyrefly: ignore [missing-import]
@@ -53,6 +61,33 @@ from src.services.pipeline_context import get_or_create_cv_snapshot
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/job-recommendations", tags=["Job Recommendations (v2)"])
+
+
+def _top_jobs_cache_key(*, user_id: str, cv_snapshot_id: str, request: JobRecommendationRequest, catalog: list[dict[str, Any]]) -> str:
+    """Fingerprint only reusable inputs; never include CV raw text or PII."""
+    catalog_revision = [
+        {
+            "id": str(job.get("source_id") or ""),
+            "title": str(job.get("title") or ""),
+            "skills": list(job.get("skills") or []),
+            "description": str(job.get("description") or ""),
+            "location": str(job.get("location") or ""),
+            "work_mode": str(job.get("work_mode") or job.get("remote_type") or ""),
+        }
+        for job in catalog
+    ]
+    payload = {
+        "feature": "top_jobs",
+        # Preview evaluations were added after retrieval-only recommendations.
+        # Keep old cached runs from suppressing scores and evidence in the UI.
+        "evaluation_mode": "preview_evidence_v1",
+        "cache_version": get_settings().top_jobs_cache_version,
+        "user_id": user_id,
+        "cv_snapshot_id": cv_snapshot_id,
+        "filters": request.model_dump(mode="json", exclude={"cv_snapshot_id"}),
+        "catalog": catalog_revision,
+    }
+    return hashlib.sha256(json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
 
 
 class JobRecommendationHistoryItem(BaseModel):
@@ -81,29 +116,39 @@ class JobRecommendationHistoryResponse(BaseModel):
 def _build_item_from_model(rec: JobRecommendation) -> JobRecommendationItem:
     """Map a JobRecommendation database row to the public JobRecommendationItem schema."""
     exp = dict(rec.explanation_json or {})
+    retrieval_only = exp.get("evaluation_status") == "RETRIEVAL_ONLY"
+    catalog_job = next(
+        (
+            job for job in load_enterprise_job_catalog()
+            if str(job.get("source_id") or job.get("id") or "") == str(rec.job_id)
+        ),
+        {},
+    )
     strengths = [s.get("message_vi") or s.get("code") for s in exp.get("strengths", []) if isinstance(s, dict)]
     gaps = [g.get("message_vi") or g.get("code") for g in exp.get("gaps", []) if isinstance(g, dict)]
+    strengths = strengths or list(exp.get("top_strengths") or [])
+    gaps = gaps or list(exp.get("top_gaps") or [])
     mandatory_gate = dict(rec.mandatory_gate_json or {})
 
     return JobRecommendationItem(
         rank=rec.rank,
         job_id=rec.job_id,
         title=f"Vị trí {rec.job_id}",
-        company=None,
-        location=None,
-        work_mode=None,
+        company=catalog_job.get("company"),
+        location=catalog_job.get("location"),
+        work_mode=catalog_job.get("work_mode") or catalog_job.get("remote_type"),
         display_fit_score=rec.display_fit_score,
         raw_fit_score=rec.raw_fit_score,
-        fit_label=get_fit_label(rec.display_fit_score),
+        fit_label="Chua danh gia CV-JD" if retrieval_only else get_fit_label(rec.display_fit_score),
         evidence_confidence="high" if rec.confidence >= 0.8 else "medium" if rec.confidence >= 0.5 else "low",
         mandatory_requirement_failed=rec.mandatory_requirement_failed,
         required_skills_coverage=float(mandatory_gate.get("coverage") or 0.0),
         mandatory_requirements_matched=int(mandatory_gate.get("matched_requirements") or 0),
         total_mandatory_requirements=int(mandatory_gate.get("total_requirements") or 0),
-        score_breakdown=[],
+        score_breakdown=list(exp.get("score_breakdown") or []),
         top_strengths=strengths[:4],
         top_gaps=gaps[:4],
-        match_id=rec.match_id or f"MATCH_{rec.job_id}",
+        match_id=rec.match_id or (f"RETRIEVAL_{rec.job_id}" if retrieval_only else f"PREVIEW_{rec.job_id}"),
     )
 
 
@@ -161,6 +206,41 @@ async def create_job_recommendations(
                 )
 
     resolved_request = request.model_copy(update={"cv_snapshot_id": cv_snapshot.id})
+    catalog = list(load_enterprise_job_catalog())
+    cache_key = _top_jobs_cache_key(
+        user_id=current_user.id,
+        cv_snapshot_id=cv_snapshot.id,
+        request=resolved_request,
+        catalog=catalog,
+    )
+
+    # A cached run is valid only for the same immutable CV snapshot, filters,
+    # catalog revision and cache version encoded in the fingerprint.
+    if get_settings().top_jobs_cache_enabled:
+        cached_run = await db.scalar(
+            select(JobRecommendationRun).where(
+                JobRecommendationRun.user_id == current_user.id,
+                JobRecommendationRun.cv_snapshot_id == cv_snapshot.id,
+                JobRecommendationRun.trace_id == cache_key,
+                JobRecommendationRun.status == "COMPLETED",
+            ).order_by(JobRecommendationRun.completed_at.desc()).limit(1)
+        )
+        # ``AsyncMock.scalar`` in endpoint tests can return the CV snapshot for
+        # every query. Only a real recommendation-run row is eligible as cache.
+        if isinstance(cached_run, JobRecommendationRun):
+            recs = (
+                await db.scalars(
+                    select(JobRecommendation)
+                    .where(JobRecommendation.run_id == cached_run.id)
+                    .order_by(JobRecommendation.rank.asc())
+                )
+            ).all()
+            return JobRecommendationRunResponse(
+                run_id=cached_run.id,
+                status="COMPLETED",
+                items=[_build_item_from_model(rec) for rec in recs],
+                cache_hit=True,
+            )
 
     # 2. Idempotency Check
     if idempotency_key:
@@ -172,7 +252,7 @@ async def create_job_recommendations(
                 JobRecommendationRun.status == "COMPLETED",
             )
         )
-        if existing_run is not None:
+        if isinstance(existing_run, JobRecommendationRun):
             logger.info("Serving idempotent recommendation results for trace_id=%s", idemp_trace)
             recs = (
                 await db.scalars(
@@ -186,6 +266,7 @@ async def create_job_recommendations(
                 run_id=existing_run.id,
                 status="COMPLETED",
                 items=items,
+                cache_hit=True,
             )
 
     # 3. Execute Recommendation Service
@@ -194,6 +275,8 @@ async def create_job_recommendations(
             db,
             user_id=current_user.id,
             request=resolved_request,
+            catalog=catalog,
+            cache_trace_id=cache_key if get_settings().top_jobs_cache_enabled else None,
         )
     except ValueError as exc:
         raise HTTPException(
@@ -236,6 +319,7 @@ async def create_job_recommendations(
         run_id=run_id,
         status="COMPLETED",
         items=items,
+        cache_hit=False,
     )
 
 
