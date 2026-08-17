@@ -3809,10 +3809,15 @@ TÊN CÔNG TY:
     );
 
     // FE chỉ dùng item.display_fit_score đúng contract
-    const isRetrievalOnly = String(job.match_id || '').startsWith('RETRIEVAL_');
+    // Catalog mode has no CV comparison, so it must not be presented as a
+    // personalized recommendation or matched evidence.
+    const isCatalog = job.catalog_mode === true;
+    const isRetrievalOnly = !isCatalog && String(job.match_id || '').startsWith('RETRIEVAL_');
     const displayScore = Math.round(Number(job.display_fit_score ?? 0));
 
-    const fitLabel = isRetrievalOnly
+    const fitLabel = isCatalog
+      ? 'Đang tuyển'
+      : isRetrievalOnly
       ? 'Gợi ý phù hợp'
       : isMandatoryFailed
         ? 'Thiếu yêu cầu bắt buộc'
@@ -3854,17 +3859,21 @@ TÊN CÔNG TY:
     };
 
     // Extract highlight skill tags (strengths or skills)
-    const highlightTagsList = rawStrengths.length > 0
-      ? rawStrengths.slice(0, 3).map(st => compactEvidenceLabel(st, 'strength'))
-      : (Array.isArray(job.skills) && job.skills.length > 0 ? job.skills.slice(0, 3) : ['FastAPI', 'PostgreSQL', 'Python']);
+    const highlightTagsList = isCatalog
+      ? (Array.isArray(job.skills) ? job.skills.slice(0, 3) : [])
+      : rawStrengths.length > 0
+        ? rawStrengths.slice(0, 3).map(st => compactEvidenceLabel(st, 'strength'))
+        : (Array.isArray(job.skills) ? job.skills.slice(0, 3) : []);
 
     const skillsTagsHtml = highlightTagsList.map(skill => 
-      `<span class="top-job-tag"><span class="tag-icon">✓</span> ${escapeHtml(skill)}</span>`
+      `<span class="top-job-tag ${isCatalog ? 'is-required-skill' : ''}">${isCatalog ? '' : '<span class="tag-icon">✓</span>'} ${escapeHtml(skill)}</span>`
     ).join('');
 
     // Summary line if available
     let summaryLineText = '';
-    if (isRetrievalOnly) {
+    if (isCatalog) {
+      summaryLineText = 'Chưa đối chiếu với CV của bạn';
+    } else if (isRetrievalOnly) {
       summaryLineText = 'Dựa trên hồ sơ và tiêu chí bạn đã chọn; chưa có phân tích chi tiết';
     } else if (job.summary_evidence_line) {
       summaryLineText = job.summary_evidence_line;
@@ -3897,9 +3906,11 @@ TÊN CÔNG TY:
             ${jobMetaHtml ? `<div class="top-job-company-row">${jobMetaHtml}</div>` : ''}
           </div>
           <div class="top-job-score-block">
-            <div class="top-job-fit-score ${isMandatoryFailed ? 'is-mandatory-failed' : ''}">${isRetrievalOnly ? '—' : `${displayScore}%`}</div>
-            <div class="top-job-fit-badge ${isMandatoryFailed ? 'is-mandatory-failed' : ''}">${escapeHtml(fitLabel)}</div>
-            ${confLevel === 'low' ? `
+            ${isCatalog ? `<div class="top-job-catalog-badge">${escapeHtml(fitLabel)}</div>` : `
+              <div class="top-job-fit-score ${isMandatoryFailed ? 'is-mandatory-failed' : ''}">${isRetrievalOnly ? '—' : `${displayScore}%`}</div>
+              <div class="top-job-fit-badge ${isMandatoryFailed ? 'is-mandatory-failed' : ''}">${escapeHtml(fitLabel)}</div>
+            `}
+            ${!isCatalog && confLevel === 'low' ? `
               <span class="top-job-confidence-badge is-low" title="Độ tin cậy thấp">
                 <span class="icon-warn" aria-hidden="true">⚠</span> Độ tin cậy thấp
               </span>
@@ -4475,7 +4486,7 @@ TÊN CÔNG TY:
         return (!role || haystack.includes(role))
           && (!location || haystack.includes(location))
           && (!workMode || haystack.includes(workMode));
-      }).map(job => ({ ...job, match_id: job.match_id || `RETRIEVAL_${job.source_id || job.job_id}` }));
+      }).map(job => ({ ...job, catalog_mode: true }));
 
       if (!visibleJobResults.length) {
         jobSearchResults.innerHTML = renderEmptyState();
@@ -4587,9 +4598,12 @@ TÊN CÔNG TY:
       (job.mandatory_gate && job.mandatory_gate.failed)
     );
 
-    const isRetrievalOnly = String(job.match_id || '').startsWith('RETRIEVAL_');
+    const isCatalog = job.catalog_mode === true;
+    const isRetrievalOnly = !isCatalog && String(job.match_id || '').startsWith('RETRIEVAL_');
     const displayScore = Math.round(Number(job.display_fit_score ?? fullJob.display_fit_score ?? fullJob.overall_score ?? 84));
-    const fitLabel = isMandatoryFailed
+    const fitLabel = isCatalog
+      ? 'Chưa đối chiếu CV'
+      : isMandatoryFailed
       ? 'Thiếu yêu cầu bắt buộc'
       : (isRetrievalOnly ? 'Chưa đánh giá CV–JD' : (job.fit_label || fullJob.fit_label || (displayScore >= 80 ? 'Phù hợp cao' : displayScore >= 50 ? 'Phù hợp' : 'Cần cải thiện')));
 
@@ -4597,7 +4611,7 @@ TÊN CÔNG TY:
     const scoreLabelEl = document.getElementById('job-drawer-score-label');
     const heroCardEl = document.getElementById('job-drawer-hero-card') || drawer.querySelector('.job-drawer-hero-card');
 
-    if (scorePctEl) scorePctEl.textContent = isRetrievalOnly ? '—' : `${displayScore}%`;
+    if (scorePctEl) scorePctEl.textContent = (isCatalog || isRetrievalOnly) ? '—' : `${displayScore}%`;
     if (scoreLabelEl) scoreLabelEl.textContent = fitLabel;
     if (heroCardEl) {
       heroCardEl.classList.toggle('is-mandatory-failed', isMandatoryFailed);
@@ -4613,8 +4627,8 @@ TÊN CÔNG TY:
 
     // Confidence Level in Drawer
     const confRaw = String(fullJob.evidence_confidence || fullJob.confidence || '').toLowerCase();
-    let confLevel = isRetrievalOnly ? 'Chưa đánh giá' : 'Cao';
-    let confCls = isRetrievalOnly ? 'is-medium' : 'is-high';
+    let confLevel = (isCatalog || isRetrievalOnly) ? 'Chưa đánh giá' : 'Cao';
+    let confCls = (isCatalog || isRetrievalOnly) ? 'is-medium' : 'is-high';
     if (confRaw.includes('low') || confRaw.includes('thấp') || confRaw === 'very_low') {
       confLevel = 'Thấp — cần bổ sung CV';
       confCls = 'is-low';
@@ -4717,7 +4731,7 @@ TÊN CÔNG TY:
       if (bar) bar.style.width = `${pct}%`;
     };
 
-    if (isRetrievalOnly) {
+    if (isCatalog || isRetrievalOnly) {
       [mustHaveEl, expEl, eduEl, niceEl, domainEl].forEach((el) => {
         if (!el) return;
         el.textContent = '—';
@@ -4748,7 +4762,7 @@ TÊN CÔNG TY:
     // Strengths
     const strengths = Array.isArray(fullJob.top_strengths) ? fullJob.top_strengths.slice(0, 5) : [];
     if (strengthsList) {
-      strengthsList.innerHTML = isRetrievalOnly
+      strengthsList.innerHTML = (isCatalog || isRetrievalOnly)
         ? '<div class="job-drawer-evidence-empty">Chưa chạy đánh giá CV–JD nên chưa có evidence.</div>'
         : strengths.length
         ? strengths.map(st => {

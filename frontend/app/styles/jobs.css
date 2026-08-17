@@ -1233,6 +1233,17 @@
   white-space: nowrap;
 }
 
+#view-find-jobs .top-job-catalog-badge {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-secondary, #5d716a);
+  background: var(--surface-muted, #f4f7f5);
+  border: 1px solid var(--border-soft, #dbe5df);
+  padding: 3px 9px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
 .top-job-fit-badge.is-mandatory-failed {
   background: #fef2f2;
   color: #dc2626;
@@ -3001,6 +3012,12 @@ body.job-drawer-open #view-find-jobs.app-view.active {
   font-size: 10px;
   font-weight: 900;
   color: #10b981;
+}
+
+#view-find-jobs .top-job-tag.is-required-skill {
+  color: #475569;
+  background: #f8fafc;
+  border-color: #e2e8f0;
 }
 
 #view-find-jobs .top-job-card-footer {
