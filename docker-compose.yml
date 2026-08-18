@@ -1,19 +1,79 @@
-version: "3.8"
-
 services:
-  backend:
-    build:
-      context: .
-      dockerfile: Dockerfile
+  db:
+    container_name: db
+    image: pgvector/pgvector:pg16
     ports:
-      - "8000:8000"
-    env_file:
-      - .env
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-career_assistant}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-career_assistant}
     volumes:
-      - ./data:/app/data
-    restart: unless-stopped
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  clamav:
+    container_name: clamav
+    image: clamav/clamav:1.4
+    volumes:
+      - clamav_data:/var/lib/clamav
+    healthcheck:
+      test: ["CMD", "clamdcheck.sh"]
       interval: 30s
       timeout: 10s
+      start_period: 90s
+      retries: 5
+    restart: unless-stopped
+
+  backend:
+    container_name: backend
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    env_file:
+      - .env
+    environment:
+      APP_ENV: production
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-career_assistant}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-career_assistant}
+      CORS_ORIGINS: http://localhost:3000,http://localhost:3001,http://localhost:55215,http://localhost:57409,http://localhost:62879,http://192.168.2.21:3001
+      VECTOR_SEARCH_ENABLED: "true"
+      # Local-first defaults. Override them only after deliberately accepting
+      # the cost of a cloud provider.
+      VECTOR_EMBEDDING_PROVIDER: ${VECTOR_EMBEDDING_PROVIDER:-hashing}
+      CV_JD_EMBEDDING_PROVIDER: ${CV_JD_EMBEDDING_PROVIDER:-hashing}
+      VECTOR_SYNC_ON_STARTUP: ${VECTOR_SYNC_ON_STARTUP:-false}
+      VECTOR_AUTO_SYNC: ${VECTOR_AUTO_SYNC:-false}
+      CV_PARSER_MODE: ${CV_PARSER_MODE:-local}
+      CV_STRUCTURED_PARSE_LLM_ENABLED: ${CV_STRUCTURED_PARSE_LLM_ENABLED:-false}
+      MATCH_EXPLANATION_LLM_ENABLED: ${MATCH_EXPLANATION_LLM_ENABLED:-false}
+      GAP_ANALYSIS_CACHE_ENABLED: ${GAP_ANALYSIS_CACHE_ENABLED:-true}
+      GAP_ANALYSIS_CACHE_VERSION: ${GAP_ANALYSIS_CACHE_VERSION:-v1}
+      MALWARE_SCAN_MODE: required
+      CLAMAV_HOST: clamav
+      CLAMAV_PORT: 3310
+    volumes:
+      - app_uploads:/app/data/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+      clamav:
+        condition: service_healthy
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/ready')"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
       retries: 3
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  clamav_data:
+  app_uploads:

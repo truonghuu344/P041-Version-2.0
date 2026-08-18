@@ -16,6 +16,8 @@ env/
 .env
 .env.local
 .env.production
+.env.development
+.env*.local
 
 # IDE
 .vscode/
@@ -28,25 +30,39 @@ env/
 .DS_Store
 Thumbs.db
 
-# Data (never commit large data)
-data/
+# Data
 *.db
 *.sqlite3
+postgres_data/
+data/raw/
+data/generated/
+data/uploads/
+backend/data/generated/
+backend/data/uploads/
+
+# Chroma DB (using PostgreSQL instead)
+chroma_db/
+qdrant_storage/
 
 # Logs
 logs/
 *.log
+.ai-log/codex-state.json
 
-# Test coverage
+# Test coverage & Temp
 htmlcov/
 .coverage
 coverage.xml
+.pytest_cache/
+.pytest_tmp/
+
 
 # Docker
 docker-compose.override.yml
 
 # Node (frontend)
 node_modules/
+*.tsbuildinfo
 .next/
 out/
 .nuxt/
@@ -57,9 +73,26 @@ out/
 
 # AI logs — tracked structure, ignored content
 .ai-log/*.jsonl
+.ai-log/codex-state.json
 .ai-log/archive/
+.vercel
 
 .claude
+.codex
+.cursor
+.gemini
+
+# Note
+note.txt
+
+# Local demo guide (personal, do not commit)
+setup_demo.md
+
+# graphify
+docs/graphify-out/
+graphify-out/
+
+run_local.md
 
 # Personal Claude Code work journal — local only, not part of BTC's AI-usage logging
 scripts/claude_memory_hook.py

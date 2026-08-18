@@ -1,0 +1,160 @@
+/* Shared Candidate workspace frame and lightweight task guidance. */
+:root {
+  --candidate-content-width: 1320px;
+  --candidate-gutter: 32px;
+}
+
+#view-match .match-workspace,
+#view-interview .interview-shell,
+#view-history .history-workspace,
+#view-cv .spaceship-vessel,
+#view-gap .page-container,
+#view-profile .page-container,
+#view-find-jobs .jobs-shell,
+#view-find-jobs .jobs-workspace {
+  box-sizing: border-box;
+  width: min(var(--candidate-content-width), 100%) !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding-left: var(--candidate-gutter) !important;
+  padding-right: var(--candidate-gutter) !important;
+}
+
+/* A compact map of the task: clear enough for a first visit, quiet enough for repeat use. */
+.candidate-flow-guide {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 22px;
+  padding: 13px 15px;
+  border: 1px solid var(--border, #dbe5df);
+  border-radius: 14px;
+  background: var(--card, #fff);
+  color: var(--text-primary, #17322b);
+}
+
+.candidate-flow-guide-copy {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  margin-right: auto;
+}
+
+.candidate-flow-guide-icon {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  place-items: center;
+  border-radius: 9px;
+  background: var(--primary-soft, #e7f4ed);
+  color: var(--primary, #147a5a);
+  font-size: 14px;
+  font-weight: 850;
+}
+
+.candidate-flow-guide-title {
+  display: block;
+  font-size: 12px;
+  font-weight: 850;
+}
+.candidate-flow-guide-subtitle {
+  display: block;
+  margin-top: 2px;
+  color: var(--text-secondary, #5d716a);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.candidate-flow-guide-steps {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.candidate-flow-guide-steps li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-secondary, #5d716a);
+  font-size: 11px;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.candidate-flow-guide-steps li::before {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--primary-soft, #e7f4ed);
+  color: var(--primary, #147a5a);
+  content: attr(data-step);
+  font-size: 9px;
+  font-weight: 850;
+}
+
+.candidate-flow-guide-steps li + li::after {
+  width: 14px;
+  height: 1px;
+  margin-left: -1px;
+  order: -1;
+  background: var(--border, #dbe5df);
+  content: '';
+}
+
+.candidate-flow-guide button {
+  min-height: 34px;
+  flex: 0 0 auto;
+  border: 1px solid var(--primary, #147a5a);
+  border-radius: 8px;
+  padding: 0 11px;
+  background: var(--primary-soft, #e7f4ed);
+  color: var(--primary, #147a5a);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.candidate-flow-guide button:hover {
+  background: var(--primary, #147a5a);
+  color: #fff;
+}
+
+@media (max-width: 920px) {
+  .candidate-flow-guide {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .candidate-flow-guide-steps {
+    order: 3;
+    width: 100%;
+    overflow-x: auto;
+    padding-top: 2px;
+  }
+}
+
+@media (max-width: 640px) {
+  :root {
+    --candidate-gutter: 16px;
+  }
+  .candidate-flow-guide {
+    margin-bottom: 18px;
+    padding: 12px;
+  }
+  .candidate-flow-guide-subtitle {
+    white-space: normal;
+  }
+  .candidate-flow-guide-steps li {
+    font-size: 10px;
+  }
+  .candidate-flow-guide button {
+    min-height: 32px;
+  }
+}

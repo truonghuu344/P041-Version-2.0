@@ -1,0 +1,10 @@
+{
+  "extends": ["next/core-web-vitals", "next/typescript"],
+  "overrides": [
+    {
+      "files": ["*.js"],
+      "env": { "browser": true },
+      "rules": { "no-undef": "error" }
+    }
+  ]
+}

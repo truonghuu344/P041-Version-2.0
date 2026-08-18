@@ -1,0 +1,121 @@
+{
+  "generated_at": "2026-08-16T15:45:32.887461+00:00",
+  "dataset": "frozen synthetic bilingual fixtures",
+  "sample_count": 10,
+  "assertion_count": 50,
+  "passed_assertions": 50,
+  "accuracy_percent": 100.0,
+  "limitations": "Synthetic fixtures validate regressions only; a labeled real-CV set is required for a production accuracy claim.",
+  "cases": [
+    {
+      "id": "cv01",
+      "checks": {
+        "name": true,
+        "email": true,
+        "phone": true,
+        "skills": true,
+        "sections": true
+      },
+      "passed": true
+    },
+    {
+      "id": "cv02",
+      "checks": {
+        "name": true,
+        "email": true,
+        "phone": true,
+        "skills": true,
+        "sections": true
+      },
+      "passed": true
+    },
+    {
+      "id": "cv03",
+      "checks": {
+        "name": true,
+        "email": true,
+        "phone": true,
+        "skills": true,
+        "sections": true
+      },
+      "passed": true
+    },
+    {
+      "id": "cv04",
+      "checks": {
+        "name": true,
+        "email": true,
+        "phone": true,
+        "skills": true,
+        "sections": true
+      },
+      "passed": true
+    },
+    {
+      "id": "cv05",
+      "checks": {
+        "name": true,
+        "email": true,
+        "phone": true,
+        "skills": true,
+        "sections": true
+      },
+      "passed": true
+    },
+    {
+      "id": "cv06",
+      "checks": {
+        "name": true,
+        "email": true,
+        "phone": true,
+        "skills": true,
+        "sections": true
+      },
+      "passed": true
+    },
+    {
+      "id": "cv07",
+      "checks": {
+        "name": true,
+        "email": true,
+        "phone": true,
+        "skills": true,
+        "sections": true
+      },
+      "passed": true
+    },
+    {
+      "id": "cv08",
+      "checks": {
+        "name": true,
+        "email": true,
+        "phone": true,
+        "skills": true,
+        "sections": true
+      },
+      "passed": true
+    },
+    {
+      "id": "cv09",
+      "checks": {
+        "name": true,
+        "email": true,
+        "phone": true,
+        "skills": true,
+        "sections": true
+      },
+      "passed": true
+    },
+    {
+      "id": "cv10",
+      "checks": {
+        "name": true,
+        "email": true,
+        "phone": true,
+        "skills": true,
+        "sections": true
+      },
+      "passed": true
+    }
+  ]
+}

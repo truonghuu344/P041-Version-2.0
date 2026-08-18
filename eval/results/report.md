@@ -2,7 +2,6 @@
 
 > Báo cáo đánh giá chất lượng sản phẩm theo tiêu chí BTC.
 
----
 
 ## 1. Metrics
 

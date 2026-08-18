@@ -9,18 +9,20 @@ After a successful submit, the live log is rotated:
 
 If the POST fails, the pending file is restored so nothing is lost.
 """
+
 import json
 import os
 import shutil
 import sys
 import time
-import urllib.request
 import urllib.error
+import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
 try:
     from dotenv import load_dotenv
+
     load_dotenv()
 except ImportError:
     pass
@@ -69,7 +71,7 @@ def _restore_pending(pending: Path) -> None:
 
 def main():
     if not SERVER_URL:
-        print("[ai-log] AI_LOG_SERVER not set — skipping submission.", file=sys.stderr)
+        print("[ai-log] AI_LOG_SERVER not set; skipping submission.", file=sys.stderr)
         sys.exit(0)
 
     if not LOG_FILE.exists() or LOG_FILE.stat().st_size == 0:
@@ -120,11 +122,11 @@ def main():
 
     try:
         with urllib.request.urlopen(req, timeout=10) as resp:
-            print(f"[ai-log] Submitted {len(entries)} entries → {resp.status}", file=sys.stderr)
+            print(f"[ai-log] Submitted {len(entries)} entries -> {resp.status}", file=sys.stderr)
     except urllib.error.URLError as e:
         # Failure: restore the whole pending (including leftover) for next push.
         _restore_pending(pending)
-        print(f"[ai-log] Submit failed: {e} — logs kept locally.", file=sys.stderr)
+        print(f"[ai-log] Submit failed: {e}; logs kept locally.", file=sys.stderr)
         sys.exit(0)  # Don't block push on server error
 
     # Success: archive the submitted batch, then handle any leftover.
