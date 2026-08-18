@@ -5,8 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cd \"${CLAUDE_PROJECT_DIR:-.}\" && bash scripts/_pyrun.sh scripts/log_hook.py --tool=claude || true",
-            "shell": "bash"
+            "command": "python scripts/log_hook.py --tool=claude"
           }
         ]
       }
@@ -17,8 +16,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cd \"${CLAUDE_PROJECT_DIR:-.}\" && bash scripts/_pyrun.sh scripts/log_hook.py --tool=claude || true",
-            "shell": "bash"
+            "command": "python scripts/log_hook.py --tool=claude"
           }
         ]
       }
@@ -28,8 +26,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cd \"${CLAUDE_PROJECT_DIR:-.}\" && bash scripts/_pyrun.sh scripts/log_hook.py --tool=claude || true",
-            "shell": "bash"
+            "command": "python scripts/log_hook.py --tool=claude"
           }
         ]
       }
