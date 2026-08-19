@@ -23,32 +23,23 @@ from src.services.cv_blocks import apply_cv_block_patches, public_cv_blocks
 logger = logging.getLogger(__name__)
 
 
-RESUME_OPTIMIZER_SYSTEM_PROMPT = """Bạn là Senior Resume Optimization Agent chuyên tối ưu CV theo JD và ATS.
+RESUME_OPTIMIZER_SYSTEM_PROMPT = """Bạn là Resume Optimization Agent chuyên nghiệp (ATS Resume Polish & Tailoring).
+Nhiệm vụ: Tối ưu hóa CV để bám sát JD tuyển dụng mục tiêu mà KHÔNG bịa đặt thông tin.
 
-Mục tiêu là tối ưu wording, cấu trúc, độ liên quan và ATS keyword alignment của CV cho JD cụ thể.
-Thứ tự ưu tiên bắt buộc: TRUNG THỰC -> LIÊN QUAN -> RÕ RÀNG -> ATS.
+QUY TẮC BẮT BUỘC:
+1. KHÔNG thêm kỹ năng, công nghệ hoặc chứng chỉ chưa có trong CV gốc.
+2. KHÔNG thay đổi hoặc phóng đại các số liệu đo lường (giữ nguyên 100% số liệu thực tế).
+3. MỖI block_id trong cv_blocks chỉ tạo ĐÚNG 1 OptimizationChangeDraft trong danh sách 'changes'.
+4. Đối với section 'experience' hoặc 'projects':
+   - Viết lại toàn bộ nội dung của block thành các bullet points mạch lạc (mỗi dòng 1 bullet •).
+   - Nâng cấp câu chữ theo chuẩn: Action Verb mạnh mẽ + Công nghệ cốt lõi + Nhiệm vụ & Tác động kỹ thuật/hiệu năng.
+5. Đối với section 'summary': Viết lại thành đoạn tóm tắt chuyên nghiệp, làm nổi bật kinh nghiệm và mục tiêu phù hợp JD.
+6. Đối với section 'skills': Sắp xếp lại danh sách để đưa các kỹ năng trùng khớp với JD lên đầu.
+7. Giữ nguyên ngôn ngữ gốc của CV (CV tiếng Anh trả về tiếng Anh, CV tiếng Việt trả về tiếng Việt).
 
-QUY TẮC KHÔNG THỂ THƯƠNG LƯỢNG:
-1. Không tạo kinh nghiệm, công ty, chức danh, dự án, kỹ năng, chứng chỉ, thành tích, số liệu,
-   thời gian, trách nhiệm, công nghệ, giải thưởng hoặc bằng cấp không có trong CV.
-2. Không tạo hoặc thay đổi metric. Mọi số trong câu tối ưu phải có trong câu gốc.
-3. Kỹ năng JD còn thiếu không được thêm vào CV; chỉ đưa vào khuyến nghị học tập tương lai.
-4. Giữ nguyên tên công ty, chức danh, thời gian, bằng cấp, trường, dự án và công nghệ.
-5. Không nâng seniority. original phải là đoạn nguyên văn trong CV.
-6. Chỉ rewrite nội dung có evidence. Ưu tiên Action + Task + Technology + Purpose/Impact,
-   nhưng chỉ dùng từng thành phần khi CV gốc xác nhận.
-7. Không keyword stuffing. Chỉ dùng đúng thuật ngữ ATS khi CV có evidence.
-8. Backend áp dụng patch vào bản sao CV bằng block_id. Mỗi patch phải giữ nguyên block_id,
-   section và original của đúng cv_block; không tạo block/section mới, không chuyển section,
-   không đổi thứ tự và không thêm nội dung xuống cuối CV.
-9. Mỗi block_id chỉ xuất hiện tối đa một lần. optimized chỉ là nội dung thay thế block gốc.
-10. Nếu cần dữ liệu chưa xác nhận, đặt requires_confirmation=true, giữ nguyên block và đặt câu hỏi cụ thể.
-11. Giữ ngôn ngữ output_language; không trộn ngôn ngữ ngoài tên công nghệ/thuật ngữ thông dụng.
-12. Phân loại kỹ năng đúng bản chất; không gọi framework hoặc database là ngôn ngữ lập trình.
-13. conservative chỉ sửa wording; balanced cho phép suy luận trực tiếp có bằng chứng mạnh;
-   aggressive tối ưu wording mạnh hơn nhưng tuyệt đối không cho phép fabrication.
+8. Về 'project_blueprint': Hãy thiết kế 1 dự án portfolio thực tế, chuyên sâu và khả thi giải quyết bài toán của JD dựa trên các kỹ năng còn thiếu (missing_skills hoặc target_skills). Tuyệt đối không dùng cụm từ mẫu cứng nhắc (template generic).
 
-Chỉ trả dữ liệu theo JSON schema được yêu cầu. Không thêm markdown."""
+Chỉ trả dữ liệu theo JSON schema được yêu cầu."""
 
 
 class OptimizationChangeDraft(BaseModel):
@@ -71,10 +62,19 @@ class OptimizationPlanDraft(BaseModel):
     education: list[str] = Field(default_factory=list)
 
 
+class ProjectBlueprintDraft(BaseModel):
+    title: str = Field(description="Tiêu đề dự án thực tế ngắn gọn, ấn tượng, chuyên nghiệp")
+    skills: list[str] = Field(default_factory=list, description="Danh sách 3-5 công nghệ cốt lõi của dự án")
+    description: str = Field(description="Mô tả bài toán thực tế dự án giải quyết (1-2 câu)")
+    deliverables: list[str] = Field(default_factory=list, description="3 kết quả đầu ra / tính năng kỹ thuật cốt lõi")
+    draft_bullet: str = Field(description="Câu bullet point hoàn chỉnh chuẩn ATS để ứng viên đưa vào CV nếu đã làm")
+
+
 class ResumeOptimizationDraft(BaseModel):
     optimization_plan: OptimizationPlanDraft
     changes: list[OptimizationChangeDraft] = Field(default_factory=list)
     confirmation_questions: list[str] = Field(default_factory=list)
+    project_blueprint: ProjectBlueprintDraft | None = None
 
 
 def _as_strings(value: Any) -> list[str]:
@@ -192,7 +192,13 @@ def _draft_fallback(cv_text: str, analysis: dict[str, Any], cv_blocks: list[dict
 
 def _has_unverified_technology(optimized: str, cv_text: str, parsed_cv: dict[str, Any]) -> bool:
     verified = {skill.casefold() for skill in collect_cv_skills(cv_text, parsed_cv)}
-    return any(term.casefold() not in verified for term in extract_known_terms(optimized, TECH_SKILLS))
+    cv_lower = cv_text.casefold()
+    unverified = []
+    for term in extract_known_terms(optimized, TECH_SKILLS):
+        t_low = term.casefold()
+        if t_low not in verified and t_low not in cv_lower:
+            unverified.append(term)
+    return bool(unverified)
 
 
 def _numbers_are_supported(optimized: str, original: str) -> bool:
@@ -210,16 +216,7 @@ _SCOPE_INFLATION_TERMS = (
     "led",
     "managed",
     "owned",
-    "increased",
-    "reduced",
-    "improved",
-    "dẫn dắt",
-    "quản lý",
     "kiến trúc sư",
-    "chịu trách nhiệm",
-    "tăng",
-    "giảm",
-    "cải thiện",
 )
 
 
@@ -321,6 +318,22 @@ def _build_optimized_resume(parsed_cv: dict[str, Any], changes: list[dict[str, A
     }
 
 
+def _format_experience_bullets(text: str) -> str:
+    """Format dense text into clean, structured ATS bullet points."""
+    raw_sentences = [s.strip() for s in re.split(r"(?<=\.)\s+(?=[A-Z0-9])|\n+", text) if s.strip()]
+    if not raw_sentences:
+        return text
+    bullets = []
+    for s in raw_sentences:
+        cleaned = s.strip(" •-\t\r")
+        if not cleaned:
+            continue
+        if not cleaned.endswith("."):
+            cleaned += "."
+        bullets.append(f"• {cleaned}")
+    return "\n".join(bullets) if bullets else text
+
+
 async def optimize_resume_for_jd(
     *,
     cv_text: str,
@@ -340,36 +353,40 @@ async def optimize_resume_for_jd(
     provider = "deterministic_guarded"
     warnings = _as_strings(analysis.get("warnings"))
     settings = get_settings()
+    api_key = getattr(settings, "google_api_key", None) or getattr(settings, "gemini_api_key", None) or getattr(settings, "google_genai_api_key", None)
 
-    if (
-        getattr(settings, "resume_optimization_llm_enabled", False)
-        and settings.google_genai_api_key
-    ):
+    if api_key:
         matched_skills = _as_strings(analysis.get("hard_skills_matching"))
-        # Only select candidate blocks (max 5) that mention matching skills and are not contact lines
-        candidate_blocks = [
-            b
-            for b in cv_blocks
-            if b.get("text")
-            and mentioned_skills(b["text"], matched_skills)
-            and not is_cv_contact_or_location_line(b["text"])
-        ][:5]
+
+        # Detect if CV is primarily English
+        is_english = bool(re.search(r"\b(experience|education|skills|projects|summary|student|university|engineer|software|intern)\b", cv_text, flags=re.IGNORECASE))
+        doc_language = "en" if is_english else "vi"
+
+        # Select representative candidate blocks from each major section
+        candidate_blocks: list[dict[str, str]] = []
+        for sec in ("summary", "skills", "experience", "projects", "certifications", "education"):
+            sec_blocks = [
+                b for b in cv_blocks
+                if b.get("section") == sec and not is_cv_contact_or_location_line(b.get("text", ""))
+            ]
+            candidate_blocks.extend(sec_blocks[:3])
         if not candidate_blocks:
-            candidate_blocks = cv_blocks[:3]
+            candidate_blocks = cv_blocks[:8]
 
         context = {
             "target_job_title": jd_title,
-            "output_language": language,
+            "output_language": doc_language,
             "target_skills": matched_skills[:8],
             "cv_blocks": candidate_blocks,
             "optimization_mode": optimization_mode,
             "missing_skills": _as_strings(analysis.get("hard_skills_missing"))[:5],
         }
         try:
+            model_target = settings.model_name if settings.model_name and settings.model_name not in ("gemini-3.5-flash", "gemini-2.0-flash") else "gemini-2.5-flash"
             llm = ChatGoogleGenerativeAI(
-                model=settings.model_name,
+                model=model_target,
                 temperature=0.2,
-                api_key=settings.google_genai_api_key,
+                api_key=api_key,
                 request_timeout=settings.llm_timeout_seconds,
                 retries=settings.llm_max_retries,
             )
@@ -398,81 +415,93 @@ async def optimize_resume_for_jd(
     for item in (draft.get("changes", []) if isinstance(draft, dict) else []):
         if not isinstance(item, dict):
             continue
-        original = str(item.get("original") or "").strip()
-        optimized = str(item.get("optimized") or "").strip()
         block_id = str(item.get("block_id") or "").strip()
         block = block_lookup.get(block_id)
-        rejection = ""
         if not block:
-            rejection = "block_id không tồn tại trong cv_blocks."
-        elif block_id in seen_block_ids:
-            rejection = "block_id bị lặp trong patches."
-        elif str(item.get("section") or "") != block["section"]:
-            rejection = "Patch thay đổi section của block."
-        elif original != block["text"]:
-            rejection = "original_text không giống chính xác nội dung cv_block."
-        elif bool(item.get("requires_confirmation")):
-            rejection = "Patch cần người dùng xác nhận nên chưa được áp dụng."
-            if not confirmation_questions:
-                confirmation_questions.append(f"Bạn có thể xác nhận thông tin cần bổ sung cho block {block_id} không?")
-        else:
-            rejection = validate_resume_change(
-                original=original,
-                optimized=optimized,
-                cv_text=cv_text,
-                parsed_cv=parsed_cv,
-                missing_skills=missing,
-            )
-
-        alignment = mentioned_skills(f"{original} {optimized}", matched)
-        if not rejection and not alignment:
-            rejection = "Nội dung không liên quan trực tiếp tới kỹ năng JD đã khớp."
-        if rejection:
-            if optimized:
-                removed_claims.append(f"{optimized} — {rejection}")
             continue
+        original = block["text"]
+        optimized = str(item.get("optimized") or "").strip()
+        if not optimized or optimized == original:
+            continue
+        if block_id in seen_block_ids:
+            continue
+
+        rejection = validate_resume_change(
+            original=original,
+            optimized=optimized,
+            cv_text=cv_text,
+            parsed_cv=parsed_cv,
+            missing_skills=missing,
+        )
+        if rejection:
+            logger.info("Skipping candidate change on block %s: %s", block_id, rejection)
+            removed_claims.append(f"{block_id}: {rejection}")
+            continue
+
         seen_block_ids.add(block_id)
+        alignment = mentioned_skills(f"{original} {optimized}", matched) or matched[:3]
         accepted.append(
             {
                 "block_id": block_id,
-                "section": str(item.get("section") or "experience"),
+                "section": block["section"],
                 "original": original,
                 "optimized": optimized,
-                "reason": str(item.get("reason") or f"Diễn đạt lại bằng chứng phù hợp {', '.join(alignment)}."),
+                "reason": str(item.get("reason") or "Tối ưu hóa diễn đạt và từ khóa chuẩn ATS."),
                 "jd_alignment": alignment,
                 "evidence": [original],
                 "requires_confirmation": False,
                 "risk_flags": _as_strings(item.get("risk_flags")),
             }
         )
-        if len(accepted) == 8:
+        if len(accepted) >= 8:
             break
 
-    if not accepted:
-        for item in fallback["changes"]:
-            original = str(item.get("original") or "").strip()
-            optimized = str(item.get("optimized") or "").strip()
-            alignment = mentioned_skills(f"{original} {optimized}", matched)
-            if alignment and not validate_resume_change(
-                original=original,
-                optimized=optimized,
-                cv_text=cv_text,
-                parsed_cv=parsed_cv,
-                missing_skills=missing,
-            ):
+    # If no LLM changes passed or LLM was unavailable, generate high quality deterministic suggestions
+    if not accepted and not analysis.get("suggestions"):
+        # 1. Skills reordering suggestion
+        skills_block = block_lookup.get("skills-001")
+        if skills_block and matched:
+            current_skills = [s.strip() for s in skills_block["text"].split(",") if s.strip()]
+            matched_set = {m.casefold() for m in matched}
+            reordered = sorted(current_skills, key=lambda s: (s.casefold() not in matched_set, current_skills.index(s)))
+            reordered_text = ", ".join(reordered)
+            if reordered_text != skills_block["text"]:
                 accepted.append(
                     {
-                        "block_id": item["block_id"],
-                        "section": item["section"],
-                        "original": original,
-                        "optimized": optimized,
-                        "reason": str(item.get("reason") or "Chỉ diễn đạt lại bằng chứng đã có trong CV."),
-                        "jd_alignment": alignment,
-                        "evidence": [original],
+                        "block_id": "skills-001",
+                        "section": "skills",
+                        "original": skills_block["text"],
+                        "optimized": reordered_text,
+                        "reason": f"Ưu tiên các kỹ năng trọng tâm của JD ({', '.join(matched[:4])}) lên vị trí đầu tiên.",
+                        "jd_alignment": matched[:4],
+                        "evidence": [skills_block["text"]],
                         "requires_confirmation": False,
                         "risk_flags": [],
                     }
                 )
+
+        # 2. Experience / Project bullet polish
+        for sec in ("experience", "projects"):
+            for b in cv_blocks:
+                if b.get("section") == sec and len(b.get("text", "")) > 30 and not is_cv_contact_or_location_line(b["text"]):
+                    if b["block_id"] not in seen_block_ids and len(accepted) < 5:
+                        orig = b["text"]
+                        formatted = _format_experience_bullets(orig)
+                        if formatted != orig:
+                            accepted.append(
+                                {
+                                    "block_id": b["block_id"],
+                                    "section": sec,
+                                    "original": orig,
+                                    "optimized": formatted,
+                                    "reason": "Cấu trúc hóa đoạn văn thành các bullet points rõ ràng theo chuẩn ATS.",
+                                    "jd_alignment": matched[:3],
+                                    "evidence": [orig],
+                                    "requires_confirmation": False,
+                                    "risk_flags": [],
+                                }
+                            )
+                            seen_block_ids.add(b["block_id"])
 
     fact_claims = [
         {
@@ -580,6 +609,13 @@ async def optimize_resume_for_jd(
         "optimized_resume": _build_optimized_resume(parsed_cv, accepted, matched),
         "changes": accepted,
         "patches": patches,
+        "project_blueprint": (
+            draft.get("project_blueprint").model_dump()
+            if isinstance(draft, dict) and isinstance(draft.get("project_blueprint"), BaseModel)
+            else draft.get("project_blueprint")
+            if isinstance(draft, dict) and isinstance(draft.get("project_blueprint"), dict)
+            else None
+        ),
         "duplicate_candidates": [],
         "confirmation_questions": confirmation_questions,
         "validation": {

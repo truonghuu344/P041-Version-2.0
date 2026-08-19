@@ -27,6 +27,18 @@ export interface VariantSuggestion {
   validator_status: string;
 }
 
+export interface VariantGapAnalysis {
+  missing_skills: string[];
+  missing_sections: string[];
+  blueprint: {
+    title: string;
+    skills: string[];
+    description: string;
+    deliverables: string[];
+    draft_bullet: string;
+  };
+}
+
 export interface VariantContent {
   personal_info: Record<string, string>;
   summary: string;
@@ -39,6 +51,7 @@ export interface VariantContent {
   _suggestions?: VariantSuggestion[];
   _confirmed_claims?: string[];
   _match_scores?: { before: number; after_preview: number };
+  _gap_analysis?: VariantGapAnalysis;
   _source_confirmed?: boolean;
 }
 
@@ -73,6 +86,8 @@ export interface CVVariant {
   rendered_checksum: string | null;
   revision_no: number;
   trace_id: string;
+  created_at?: string;
+  updated_at?: string;
   revisions: Array<{
     revision_no: number;
     editor_type: string;
@@ -175,6 +190,30 @@ export const cvVariantsApi = {
 
   publish(id: string): Promise<{ checksum: string; download_url: string; status: 'PUBLISHED' }> {
     return requestJson(`/api/v2/cv-variants/${encodeURIComponent(id)}/publish`, { method: 'POST' });
+  },
+
+  async createCustomJd(payload: {
+    title: string;
+    company?: string;
+    requirements_text: string;
+  }): Promise<JDSummary> {
+    const result = await requestJson<{ id: string; title: string; company?: string | null }>(
+      '/api/v1/jds/custom',
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          title: payload.title,
+          company: payload.company || '',
+          location: '',
+          requirements_text: payload.requirements_text,
+        }),
+      },
+    );
+    return {
+      id: result.id,
+      title: result.title,
+      company: result.company,
+    };
   },
 
   async pdf(id: string, preview = false): Promise<Blob> {

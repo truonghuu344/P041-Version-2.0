@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import copy
 import uuid
+from datetime import UTC, datetime
+from typing import Any
 
 from fastapi import APIRouter, Depends, Header, Query, Request, Response, status
 from fastapi.responses import StreamingResponse
@@ -61,8 +63,28 @@ async def _owned_variant(db: AsyncSession, variant_id: str, user_id: str, reques
     return variant
 
 
+def _iso_utc(dt: Any) -> str | None:
+    if not dt:
+        return None
+    if isinstance(dt, datetime):
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=UTC)
+        return dt.isoformat()
+    s = str(dt).strip()
+    if not s.endswith("Z") and "+" not in s:
+        s = s.replace(" ", "T") + "Z"
+    return s
+
+
 async def _serialize(db: AsyncSession, variant: CVVariant, *, include_history: bool = True) -> dict:
     template = await db.get(CVTemplate, variant.template_id)
+    template_data = {
+        "id": template.id if template else variant.template_id,
+        "name": template.name if template else "classic",
+        "version": template.version if template else 1,
+        "schema": template.schema_json if template else {},
+        "renderer_config": template.renderer_config if template else {},
+    }
     claims = list(
         (
             await db.scalars(
@@ -89,13 +111,7 @@ async def _serialize(db: AsyncSession, variant: CVVariant, *, include_history: b
         "source_cv_snapshot_id": variant.source_cv_snapshot_id,
         "target_jd_snapshot_id": variant.target_jd_snapshot_id,
         "match_id": variant.match_id,
-        "template": {
-            "id": template.id,
-            "name": template.name,
-            "version": template.version,
-            "schema": template.schema_json,
-            "renderer_config": template.renderer_config,
-        },
+        "template": template_data,
         "mode": variant.mode,
         "title": variant.title,
         "content": variant.content_json,
@@ -107,10 +123,10 @@ async def _serialize(db: AsyncSession, variant: CVVariant, *, include_history: b
         "rendered_checksum": variant.rendered_checksum,
         "trace_id": variant.trace_id,
         "revision_no": variant.revision_no,
-        "published_at": variant.published_at,
-        "retention_until": variant.retention_until,
-        "created_at": variant.created_at,
-        "updated_at": variant.updated_at,
+        "published_at": _iso_utc(variant.published_at),
+        "retention_until": _iso_utc(variant.retention_until),
+        "created_at": _iso_utc(variant.created_at),
+        "updated_at": _iso_utc(variant.updated_at),
         "claims": [
             {
                 "id": item.id,
@@ -173,6 +189,7 @@ async def create_cv_variant(
             trace_id=trace_id,
             idempotency_key=idempotency_key,
         )
+        await db.commit()
     except LookupError as exc:
         code = str(exc)
         _error(code, "Không tìm thấy CV/JD hợp lệ hoặc bạn không có quyền truy cập.", request, 404)
@@ -258,8 +275,23 @@ async def decide_cv_variant_suggestion(
     if not suggestion:
         _error("CV_SUGGESTION_NOT_FOUND", "Không tìm thấy đề xuất tối ưu.", request, 404)
     if payload.decision == "reject":
+        if suggestion.get("decision") in {"accept", "edit"} and suggestion.get("original"):
+            patched, applied, _ = apply_cv_block_patches(
+                content,
+                [
+                    {
+                        "block_id": suggestion.get("block_id"),
+                        "section": suggestion.get("section"),
+                        "original_text": suggestion.get("final_text") or suggestion.get("proposed") or "",
+                        "optimized_text": suggestion.get("original"),
+                    }
+                ],
+            )
+            if applied:
+                content = patched
         suggestion["decision"] = "reject"
         suggestion["validator_status"] = "REJECTED_BY_USER"
+        content["_suggestions"] = suggestions
     else:
         final_text = (payload.final_text or suggestion.get("proposed") or "").strip()
         if not final_text:

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { FileText, Home, Mic, Target, Upload, UserRound } from 'lucide-react';
+import { FileText, Home, Mic, Sparkles, Target, Upload, UserRound } from 'lucide-react';
 
 type CVTemplateName = 'modern' | 'classic' | 'elegant' | 'compact' | 'creative';
 
@@ -22,6 +22,7 @@ import AdminView from '../components/admin/AdminView';
 import JobRecommendationModal from '../components/candidate/JobRecommendationModal';
 import NotificationBell from '../components/notifications/NotificationBell';
 import NotificationsView from '../components/notifications/NotificationsView';
+import { MiniCVSheet } from '../components/candidate/TemplatePreviewCard';
 
 
 
@@ -33,6 +34,7 @@ export default function Page() {
   const [isMounted, setIsMounted] = useState(false);
   const [isTemplateGalleryOpen, setIsTemplateGalleryOpen] = useState(false);
   const [selectedCVTemplate, setSelectedCVTemplate] = useState<CVTemplateName | null>(null);
+  const [templateFilter, setTemplateFilter] = useState<'all' | 'ats' | 'tech' | 'creative' | 'compact' | 'business'>('all');
 
   useEffect(() => {
     setIsMounted(true);
@@ -263,54 +265,149 @@ export default function Page() {
           >
             ×
           </button>
-          <div className="modal-header">
+          <div className="cv-template-gallery-header">
             <h2 id="cv-template-gallery-title" className="modal-title">
-              Chọn mẫu CV
+              <Sparkles size={22} style={{ color: '#0d9488' }} /> Chọn <span>Mẫu CV Chuyên Nghiệp</span>
             </h2>
             <p className="modal-sub">
-              Chọn bố cục trước, sau đó chỉ điền thông tin có thật của bạn.
+              Tất cả mẫu đều chuẩn ATS, tương thích với hệ thống quét tự động. Hãy chọn mẫu phù hợp nhất với ngành nghề của bạn.
             </p>
           </div>
+
+          <div className="template-category-tabs" role="tablist" aria-label="Bộ lọc mẫu CV">
+            {[
+              { id: 'all', label: 'Tất cả mẫu' },
+              { id: 'ats', label: '🎯 Chuẩn Harvard ATS' },
+              { id: 'tech', label: '💻 Công nghệ & IT' },
+              { id: 'creative', label: '🎨 Sáng tạo & UI/UX' },
+              { id: 'compact', label: '⚡ 1 Trang Tinh gọn' },
+              { id: 'business', label: '📊 Finance & Quản trị' },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                className={`template-tab-btn${templateFilter === tab.id ? ' active' : ''}`}
+                onClick={() => setTemplateFilter(tab.id as typeof templateFilter)}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
           <div className="template-gallery-grid">
-            <article className="template-preview template-preview-classic">
-              <span className="template-card-badge">ATS 100% TIÊU CHUẨN</span>
-              <h3>Classic ATS</h3>
-              <p>Chuẩn Harvard 1 cột, đơn giản và đạt điểm quét cao nhất với mọi hệ thống ATS.</p>
-              <div className="template-preview-actions">
-                <button type="button" onClick={() => selectCVTemplate('classic')}>
-                  Dùng mẫu này
-                </button>
-                <a className="template-download-btn" href="/api/v1/cvs/templates/classic">
-                  Tải PDF mẫu
-                </a>
-              </div>
-            </article>
-            <article className="template-preview template-preview-modern">
-              <span className="template-card-badge highlight">PHỔ BIẾN NHẤT</span>
-              <h3>Modern Tech</h3>
-              <p>Bố cục 2 cột hiện đại, sidebar chuyên nghiệp dành cho Developer &amp; Data.</p>
-              <div className="template-preview-actions">
-                <button type="button" onClick={() => selectCVTemplate('modern')}>
-                  Dùng mẫu này
-                </button>
-                <a className="template-download-btn" href="/api/v1/cvs/templates/modern">
-                  Tải PDF mẫu
-                </a>
-              </div>
-            </article>
-            <article className="template-preview template-preview-creative">
-              <span className="template-card-badge creative">DARK CREATIVE</span>
-              <h3>Creative Dark</h3>
-              <p>Header tối màu cá tính, timeline đồ họa cho UI/UX &amp; Creative Tech.</p>
-              <div className="template-preview-actions">
-                <button type="button" onClick={() => selectCVTemplate('creative')}>
-                  Dùng mẫu này
-                </button>
-                <a className="template-download-btn" href="/api/v1/cvs/templates/creative">
-                  Tải PDF mẫu
-                </a>
-              </div>
-            </article>
+            {(templateFilter === 'all' || templateFilter === 'ats') && (
+              <article className="template-preview template-preview-classic" data-selected={selectedCVTemplate === 'classic'}>
+                <div className="template-preview-viewport" onClick={() => selectCVTemplate('classic')}>
+                  <span className="template-card-badge badge-ats">ATS 100% TIÊU CHUẨN</span>
+                  <MiniCVSheet templateId="classic" />
+                </div>
+                <div className="template-card-info">
+                  <div>
+                    <h3>Classic ATS</h3>
+                    <div className="template-card-role"><Sparkles size={13} /> Mọi ngành nghề, IT, Quản lý, Tài chính</div>
+                    <p>Chuẩn Harvard 1 cột, đơn giản và đạt điểm quét cao nhất với mọi hệ thống ATS.</p>
+                  </div>
+                  <div className="template-preview-actions">
+                    <button type="button" className="template-select-btn" onClick={() => selectCVTemplate('classic')}>
+                      {selectedCVTemplate === 'classic' ? 'Đang chọn' : 'Dùng mẫu này'}
+                    </button>
+                    <a className="template-download-btn" href="/api/v1/cvs/templates/classic" target="_blank" rel="noopener noreferrer">
+                      Tải PDF mẫu
+                    </a>
+                  </div>
+                </div>
+              </article>
+            )}
+
+            {(templateFilter === 'all' || templateFilter === 'tech') && (
+              <article className="template-preview template-preview-modern" data-selected={selectedCVTemplate === 'modern'}>
+                <div className="template-preview-viewport" onClick={() => selectCVTemplate('modern')}>
+                  <span className="template-card-badge badge-popular">PHỔ BIẾN NHẤT</span>
+                  <MiniCVSheet templateId="modern" />
+                </div>
+                <div className="template-card-info">
+                  <div>
+                    <h3>Modern Tech</h3>
+                    <div className="template-card-role"><Sparkles size={13} /> Developer, Data, AI, DevOps</div>
+                    <p>Bố cục 2 cột hiện đại, sidebar chuyên nghiệp dành cho Developer &amp; Data.</p>
+                  </div>
+                  <div className="template-preview-actions">
+                    <button type="button" className="template-select-btn" onClick={() => selectCVTemplate('modern')}>
+                      {selectedCVTemplate === 'modern' ? 'Đang chọn' : 'Dùng mẫu này'}
+                    </button>
+                    <a className="template-download-btn" href="/api/v1/cvs/templates/modern" target="_blank" rel="noopener noreferrer">
+                      Tải PDF mẫu
+                    </a>
+                  </div>
+                </div>
+              </article>
+            )}
+
+            {(templateFilter === 'all' || templateFilter === 'creative') && (
+              <article className="template-preview template-preview-creative" data-selected={selectedCVTemplate === 'creative'}>
+                <div className="template-preview-viewport" onClick={() => selectCVTemplate('creative')}>
+                  <span className="template-card-badge badge-creative">DARK CREATIVE</span>
+                  <MiniCVSheet templateId="creative" />
+                </div>
+                <div className="template-card-info">
+                  <div>
+                    <h3>Creative Dark</h3>
+                    <div className="template-card-role"><Sparkles size={13} /> UI/UX, Product, Creative Tech</div>
+                    <p>Header tối màu cá tính, timeline đồ họa cho UI/UX &amp; Creative Tech.</p>
+                  </div>
+                  <div className="template-preview-actions">
+                    <button type="button" className="template-select-btn" onClick={() => selectCVTemplate('creative')}>
+                      {selectedCVTemplate === 'creative' ? 'Đang chọn' : 'Dùng mẫu này'}
+                    </button>
+                    <a className="template-download-btn" href="/api/v1/cvs/templates/creative" target="_blank" rel="noopener noreferrer">
+                      Tải PDF mẫu
+                    </a>
+                  </div>
+                </div>
+              </article>
+            )}
+
+            {(templateFilter === 'all' || templateFilter === 'compact') && (
+              <article className="template-preview template-preview-compact" data-selected={selectedCVTemplate === 'compact'}>
+                <div className="template-preview-viewport" onClick={() => selectCVTemplate('compact')}>
+                  <span className="template-card-badge badge-compact">1 TRANG TINH GỌN</span>
+                  <MiniCVSheet templateId="compact" />
+                </div>
+                <div className="template-card-info">
+                  <div>
+                    <h3>Minimalist Compact</h3>
+                    <div className="template-card-role"><Sparkles size={13} /> Senior, Tech Lead, Manager</div>
+                    <p>Tối ưu hóa mật độ thông tin gói gọn trong 1 trang duy nhất, căn chỉnh lề sắc nét.</p>
+                  </div>
+                  <div className="template-preview-actions">
+                    <button type="button" className="template-select-btn" onClick={() => selectCVTemplate('compact')}>
+                      {selectedCVTemplate === 'compact' ? 'Đang chọn' : 'Dùng mẫu này'}
+                    </button>
+                  </div>
+                </div>
+              </article>
+            )}
+
+            {(templateFilter === 'all' || templateFilter === 'business') && (
+              <article className="template-preview template-preview-elegant" data-selected={selectedCVTemplate === 'elegant'}>
+                <div className="template-preview-viewport" onClick={() => selectCVTemplate('elegant')}>
+                  <span className="template-card-badge badge-elegant">SANG TRỌNG</span>
+                  <MiniCVSheet templateId="elegant" />
+                </div>
+                <div className="template-card-info">
+                  <div>
+                    <h3>Elegant Executive</h3>
+                    <div className="template-card-role"><Sparkles size={13} /> Finance, Banking, BA, Legal</div>
+                    <p>Phong cách trang nhã với phân cách tinh tế, đường viền thanh lịch và phân cấp rõ ràng.</p>
+                  </div>
+                  <div className="template-preview-actions">
+                    <button type="button" className="template-select-btn" onClick={() => selectCVTemplate('elegant')}>
+                      {selectedCVTemplate === 'elegant' ? 'Đang chọn' : 'Dùng mẫu này'}
+                    </button>
+                  </div>
+                </div>
+              </article>
+            )}
           </div>
         </div>
       </div>
