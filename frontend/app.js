@@ -1731,13 +1731,22 @@ function startAppLogic() {
           .filter(jd => jd.normalized_json?.source === 'data/jds' && jd.normalized_json?.source_id)
           .map(jd => [String(jd.normalized_json.source_id), jd]),
       );
-      const savedJDs = (jds || []).filter(jd => jd.normalized_json?.source !== 'data/jds');
+      // Deduplicate saved JDs by normalized title + company
+      const uniqueSavedJDs = [];
+      const seenSavedKeys = new Set();
+      for (const jd of (jds || []).filter(jd => jd.normalized_json?.source !== 'data/jds')) {
+        const key = `${(jd.title || '').trim().toLowerCase()}___${(jd.company || '').trim().toLowerCase()}`;
+        if (!seenSavedKeys.has(key)) {
+          seenSavedKeys.add(key);
+          uniqueSavedJDs.push(jd);
+        }
+      }
       const catalogOptions = catalogJobs.map(job => {
         const storedJD = storedCatalogBySource.get(String(job.source_id));
         const value = storedJD?.id || `catalog:${job.source_id}`;
         return `<option value="${escapeHtml(value)}">${escapeHtml(job.title)} · ${escapeHtml(job.company || 'Doanh nghiệp')}</option>`;
       });
-      const savedOptions = savedJDs.map(jd => `<option value="${escapeHtml(jd.id)}">${escapeHtml(jd.title)} · ${escapeHtml(jd.company || 'Chưa ghi công ty')}</option>`);
+      const savedOptions = uniqueSavedJDs.map(jd => `<option value="${escapeHtml(jd.id)}">${escapeHtml(jd.title)} · ${escapeHtml(jd.company || 'Chưa ghi công ty')}</option>`);
       cvAnalysisJdSelect.disabled = false;
       cvAnalysisJdSelect.innerHTML = [
         '<option value="">Chọn một JD để phân tích CV</option>',
@@ -1893,6 +1902,8 @@ function startAppLogic() {
     try {
       cvAnalysisJdSelect.disabled = true;
       const selectedJD = await ApiClient.selectCatalogJD(sourceId);
+      localStorage.setItem('latest_matched_jd_id', selectedJD.id);
+      sessionStorage.setItem('career-preselected-jd-id', selectedJD.id);
       await loadCVJDOptions(selectedJD.id);
       document.querySelectorAll('[data-target-job]').forEach(card => {
         const isThis = card.dataset.targetJob === String(sourceId);
@@ -1912,6 +1923,9 @@ function startAppLogic() {
     if (!cvAnalysisJdSelect) return;
     const value = cvAnalysisJdSelect.value;
     if (!value.startsWith('catalog:')) {
+      if (value) {
+        localStorage.setItem('latest_matched_jd_id', value);
+      }
       updateCVJDSelectionHint();
       return;
     }
@@ -1924,6 +1938,8 @@ function startAppLogic() {
     }
     try {
       const selectedJD = await ApiClient.selectCatalogJD(sourceId);
+      localStorage.setItem('latest_matched_jd_id', selectedJD.id);
+      sessionStorage.setItem('career-preselected-jd-id', selectedJD.id);
       await loadCVJDOptions(selectedJD.id);
       showToast('✅ Đã chọn JD doanh nghiệp từ data/jds.', 'success');
     } catch (err) {
