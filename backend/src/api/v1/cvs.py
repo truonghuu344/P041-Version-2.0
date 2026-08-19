@@ -79,6 +79,66 @@ def _manual_cv_raw_text(payload: ManualCVCreate) -> str:
     return "\n".join(lines)
 
 
+def _is_job_description_document(filename: str, raw_text: str) -> bool:
+    """Phát hiện tài liệu tải lên là Bản mô tả công việc (JD) thay vì CV ứng viên."""
+    fn_lower = filename.lower().strip()
+    if (
+        fn_lower.startswith("jd_")
+        or fn_lower.startswith("jd-")
+        or "job_description" in fn_lower
+        or "job-description" in fn_lower
+    ):
+        return True
+
+    text_lower = raw_text.lower()
+    jd_indicators = [
+        "mô tả công việc",
+        "yêu cầu công việc",
+        "yêu cầu ứng viên",
+        "quyền lợi được hưởng",
+        "mức lương:",
+        "chế độ đãi ngộ",
+        "địa điểm làm việc:",
+        "thời gian làm việc:",
+        "hồ sơ bao gồm:",
+        "job description",
+        "responsibilities:",
+        "job requirements",
+        "what you will do",
+        "what we offer",
+        "benefits & perks",
+        "about the company",
+        "we are hiring",
+        "tuyển dụng vị trí",
+    ]
+    cv_indicators = [
+        "họ và tên",
+        "ngày sinh",
+        "mục tiêu nghề nghiệp",
+        "kinh nghiệm làm việc",
+        "học vấn",
+        "quá trình học tập",
+        "người tham chiếu",
+        "thông tin cá nhân",
+        "curriculum vitae",
+        "resume",
+        "education",
+        "work experience",
+        "personal summary",
+    ]
+
+    jd_matches = sum(1 for phrase in jd_indicators if phrase in text_lower)
+    cv_matches = sum(1 for phrase in cv_indicators if phrase in text_lower)
+
+    if jd_matches >= 3 and jd_matches > cv_matches:
+        return True
+
+    if any(phrase in text_lower[:500] for phrase in ["tuyển dụng vị trí", "we are looking for", "job description", "mô tả công việc"]) and cv_matches <= 1:
+        return True
+
+    return False
+
+
 CV_TEMPLATE_DOWNLOADS = {
     "modern": ("cv-template-modern.pdf", "Mẫu CV Modern Tech - Hai Cột"),
     "classic": ("cv-template-classic-ats.pdf", "Mẫu CV Harvard ATS - Một Cột"),
@@ -152,6 +212,13 @@ async def upload_cv(
         raise PipelineError(
             "PARSER_002",
             "Không thể trích xuất văn bản từ file upload. Vui lòng kiểm tra lại nội dung file.",
+            status_code=400,
+        )
+
+    if _is_job_description_document(filename, raw_text):
+        raise PipelineError(
+            "CLASSIFIER_001",
+            "⚠️ File tải lên có vẻ là Bản mô tả công việc (JD) chứ không phải CV ứng viên. Vui lòng tải vào ô 'Upload JD'.",
             status_code=400,
         )
 

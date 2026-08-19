@@ -66,7 +66,7 @@ class Settings(BaseSettings):
     # tên biến môi trường chuẩn của SDK Google/LangChain.
     gemini_api_key: str = ""
     google_api_key: str = ""
-    model_name: str = "gemini-3.5-flash"
+    model_name: str = "gemini-2.5-flash"
     llm_temperature: float = Field(default=1.0, ge=0.0, le=2.0)
     llm_timeout_seconds: float = Field(default=45, ge=5, le=120)
     llm_max_retries: int = Field(default=1, ge=0, le=3)
@@ -95,8 +95,8 @@ class Settings(BaseSettings):
     # Voice Interview (Pipeline 3): Deepgram STT + Gemini LLM + gTTS
     deepgram_api_key: str = ""
     openai_api_key: str = ""
-    voice_llm_model: str = "gemini-3.5-flash"
-    voice_llm_fallback_model: str = "gemini-2.0-flash"
+    voice_llm_model: str = "gemini-2.5-flash"
+    voice_llm_fallback_model: str = "gemini-2.5-flash"
 
     # Database
     # `DATABASE_URL` is preferred for hosted databases. For the local Docker
