@@ -1,10 +1,12 @@
+import hashlib
+import json
 import logging
 import os
 import uuid
 from io import BytesIO
 from pathlib import Path
 from time import perf_counter
-from typing import Literal
+from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from fastapi.responses import StreamingResponse
@@ -39,6 +41,11 @@ router = APIRouter(prefix="/cvs", tags=["CV Management"])
 logger = logging.getLogger(__name__)
 
 UPLOAD_DIR = "./data/uploads"
+
+
+def _fingerprint(value: Any) -> str:
+    encoded = json.dumps(value, ensure_ascii=False, sort_keys=True, default=str).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
 
 
 async def _remove_uploaded_file(saved_filepath: str | None) -> None:
@@ -245,6 +252,40 @@ async def upload_cv(
 
     cv_title = title.strip() if title.strip() else file.filename
 
+    # Kiểm tra xem user đã có bản ghi CV này chưa để tránh lưu trùng lặp
+    existing_cv_stmt = (
+        select(CV)
+        .where(
+            CV.user_id == current_user.id,
+            (CV.raw_text == raw_text) | ((CV.title == cv_title) & (CV.raw_text == raw_text)),
+        )
+        .order_by(CV.updated_at.desc(), CV.created_at.desc())
+    )
+    existing_cv = (await db.scalars(existing_cv_stmt)).first()
+
+    if existing_cv:
+        existing_cv.title = cv_title
+        existing_cv.parsed_json = parsed_json
+        existing_cv.file_path = saved_filepath
+        db.add(
+            UsageEvent(
+                user_id=current_user.id,
+                event_name="cv_parse_reuse",
+                duration_ms=round((perf_counter() - started_at) * 1000),
+                metadata_json={
+                    "use_llm": bool(parsed_json.get("agent_metadata", {}).get("llm_called")),
+                    "llm_policy": parse_mode,
+                    "file_type": file_ext,
+                    "reused_cv_id": existing_cv.id,
+                },
+            )
+        )
+        await db.flush()
+        await get_or_create_cv_snapshot(db, existing_cv)
+        await db.commit()
+        await db.refresh(existing_cv)
+        return existing_cv
+
     new_cv = CV(
         user_id=current_user.id,
         title=cv_title,
@@ -293,35 +334,57 @@ async def list_user_cvs(
     current_user: User = Depends(get_current_user),
 ) -> list[CVOut]:
     """Danh sách tất cả CV của người dùng hiện tại kèm trạng thái (CV gốc, Đã Match, Đã tối ưu) và sắp xếp theo lần sử dụng gần nhất."""
-    stmt = select(CV).where(CV.user_id == current_user.id)
+    stmt = select(CV).where(CV.user_id == current_user.id).order_by(CV.updated_at.desc(), CV.created_at.desc())
     result = await db.execute(stmt)
-    cvs = list(result.scalars().all())
-    if not cvs:
+    all_cvs = list(result.scalars().all())
+    if not all_cvs:
         return []
 
-    cv_ids = [cv.id for cv in cvs]
+    # Nhóm các bản ghi CV trùng lặp (cùng raw_text hoặc cùng title + raw_text)
+    # Giữ lại bản ghi chính (primary cv - mới nhất) và gom id của các bản trùng để ánh xạ match/analysis
+    unique_cvs: list[CV] = []
+    seen_fingerprints: dict[str, str] = {}  # fingerprint -> primary_cv_id
+    dup_to_primary: dict[str, str] = {}     # cv_id -> primary_cv_id
 
-    # 1. Lấy tất cả CVAnalysis của user
+    for cv in all_cvs:
+        text_normalized = (cv.raw_text or "").strip()
+        if text_normalized:
+            fp = _fingerprint({"title": (cv.title or "").strip().lower(), "text": text_normalized})
+        else:
+            fp = _fingerprint({"title": (cv.title or "").strip().lower(), "id": cv.id})
+
+        if fp not in seen_fingerprints:
+            seen_fingerprints[fp] = cv.id
+            dup_to_primary[cv.id] = cv.id
+            unique_cvs.append(cv)
+        else:
+            dup_to_primary[cv.id] = seen_fingerprints[fp]
+
+    cvs = unique_cvs
+    cv_ids = [cv.id for cv in cvs]
+    all_cv_ids = list(dup_to_primary.keys())
+
+    # 1. Lấy tất cả CVAnalysis của user (cho toàn bộ các cv_id kể cả bản trùng)
     analyses_stmt = select(CVAnalysis).where(
         CVAnalysis.user_id == current_user.id,
-        CVAnalysis.cv_id.in_(cv_ids),
+        CVAnalysis.cv_id.in_(all_cv_ids),
     )
     analyses = (await db.scalars(analyses_stmt)).all()
 
     # 2. Lấy tất cả MatchRun của user
     matches_stmt = select(MatchRun).where(
         MatchRun.user_id == current_user.id,
-        MatchRun.cv_id.in_(cv_ids),
+        MatchRun.cv_id.in_(all_cv_ids),
     )
     matches = (await db.scalars(matches_stmt)).all()
 
     # 3. Lấy snapshots và variants của user
     snapshots_stmt = select(CVSnapshot).where(
         CVSnapshot.user_id == current_user.id,
-        CVSnapshot.cv_id.in_(cv_ids),
+        CVSnapshot.cv_id.in_(all_cv_ids),
     )
     snapshots = (await db.scalars(snapshots_stmt)).all()
-    snap_id_to_cv_id = {s.id: s.cv_id for s in snapshots}
+    snap_id_to_cv_id = {s.id: dup_to_primary.get(s.cv_id, s.cv_id) for s in snapshots}
     snap_ids = list(snap_id_to_cv_id.keys())
 
     variants_by_cv_id: dict[str, list] = {cid: [] for cid in cv_ids}
@@ -333,8 +396,8 @@ async def list_user_cvs(
         variants = (await db.scalars(variants_stmt)).all()
         for var in variants:
             cid = snap_id_to_cv_id.get(var.source_cv_snapshot_id)
-            if cid:
-                variants_by_cv_id.setdefault(cid, []).append(var)
+            if cid and cid in variants_by_cv_id:
+                variants_by_cv_id[cid].append(var)
 
     # 4. Lấy JobRecommendationRun của user
     rec_runs_by_cv_id: dict[str, list] = {cid: [] for cid in cv_ids}
@@ -346,17 +409,21 @@ async def list_user_cvs(
         rec_runs = (await db.scalars(rec_stmt)).all()
         for r in rec_runs:
             cid = snap_id_to_cv_id.get(r.cv_snapshot_id)
-            if cid:
-                rec_runs_by_cv_id.setdefault(cid, []).append(r)
+            if cid and cid in rec_runs_by_cv_id:
+                rec_runs_by_cv_id[cid].append(r)
 
-    # Nhóm analyses và matches theo cv_id
+    # Nhóm analyses và matches theo primary cv_id
     analyses_by_cv_id: dict[str, list] = {cid: [] for cid in cv_ids}
     for a in analyses:
-        analyses_by_cv_id.setdefault(a.cv_id, []).append(a)
+        primary_id = dup_to_primary.get(a.cv_id, a.cv_id)
+        if primary_id in analyses_by_cv_id:
+            analyses_by_cv_id[primary_id].append(a)
 
     matches_by_cv_id: dict[str, list] = {cid: [] for cid in cv_ids}
     for m in matches:
-        matches_by_cv_id.setdefault(m.cv_id, []).append(m)
+        primary_id = dup_to_primary.get(m.cv_id, m.cv_id)
+        if primary_id in matches_by_cv_id:
+            matches_by_cv_id[primary_id].append(m)
 
     enriched_cvs: list[CVOut] = []
     for cv in cvs:

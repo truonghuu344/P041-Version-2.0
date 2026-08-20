@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react';
-import { PencilLine, Plus, Search, Sparkles, Upload } from 'lucide-react';
+import { PencilLine, Plus, Search, Sparkles, Trash2, Upload } from 'lucide-react';
 
 import CVVariantWizard from './CVVariantWizard';
 
@@ -167,6 +167,71 @@ export default function CVView({ selectedCVTemplate, setIsTemplateGalleryOpen }:
           </form>
         </div>
         <CVVariantWizard />
+
+        {/* Modal Xem Chi Tiết CV */}
+        <div
+          id="career-cv-detail-modal"
+          className="cv-modal-overlay career-cv-detail-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="career-cv-detail-title"
+          style={{ display: 'none' }}
+        >
+          <div className="cv-modal-card career-cv-detail-modal-card">
+            <button
+              type="button"
+              className="cv-modal-close"
+              id="career-cv-detail-close-btn"
+              aria-label="Đóng"
+            >
+              &times;
+            </button>
+            <div className="cv-modal-header career-cv-detail-modal-header">
+              <div className="career-cv-detail-header-left">
+                <span className="cv-detail-badge" id="career-cv-detail-badge">
+                  CV Gốc
+                </span>
+                <h3 id="career-cv-detail-title">Chi tiết CV</h3>
+                <p id="career-cv-detail-meta" className="career-cv-detail-meta">
+                  Cập nhật: --/--/----
+                </p>
+              </div>
+            </div>
+            <div className="cv-modal-body career-cv-detail-modal-body" id="career-cv-detail-content" />
+            <div className="cv-modal-footer career-cv-detail-modal-footer">
+              <button
+                type="button"
+                className="cv-btn-delete-item"
+                id="career-cv-detail-delete-btn"
+              >
+                <Trash2 size={15} /> Xóa CV
+              </button>
+              <div className="career-cv-detail-footer-right">
+                <button
+                  type="button"
+                  className="cv-modal-cancel"
+                  id="career-cv-detail-cancel-btn"
+                >
+                  Đóng
+                </button>
+                <button
+                  type="button"
+                  className="cv-modal-find-jobs"
+                  id="career-cv-detail-find-jobs-btn"
+                >
+                  Việc phù hợp
+                </button>
+                <button
+                  type="button"
+                  className="cv-modal-select"
+                  id="career-cv-detail-match-btn"
+                >
+                  Match với Job
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   );

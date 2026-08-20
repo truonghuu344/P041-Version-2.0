@@ -1800,7 +1800,16 @@ function startAppLogic() {
   function renderCareerPortfolioCVs(cvs, query = '') {
     if (!careerCVTableBody) return;
     const normalizedQuery = String(query).trim().toLocaleLowerCase('vi');
-    const ordered = [...(cvs || [])].sort((a, b) => new Date(b.updated_at || b.created_at || 0) - new Date(a.updated_at || a.created_at || 0));
+    const seen = new Set();
+    const unique = [];
+    for (const cv of (cvs || [])) {
+      const key = cv.id || `${cv.title}-${cv.created_at}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        unique.push(cv);
+      }
+    }
+    const ordered = unique.sort((a, b) => new Date(b.updated_at || b.created_at || 0) - new Date(a.updated_at || a.created_at || 0));
     const matching = normalizedQuery ? ordered.filter(cv => `${cv.title || ''} ${cv.file_name || ''}`.toLocaleLowerCase('vi').includes(normalizedQuery)) : ordered;
     const rowMarkup = (cv, index) => {
       const title = escapeHtml(cv.title || cv.file_name || 'CV chưa đặt tên');
@@ -1813,7 +1822,7 @@ function startAppLogic() {
         <td><div class="career-skill-list">${skills.length ? skills.map(skill => `<span>${escapeHtml(skill)}</span>`).join('') : '<span>Chưa trích xuất</span>'}</div></td>
         <td><span class="career-table-status cv-status-badge is-${statusType}">${escapeHtml(statusLabel)}</span></td>
         <td class="career-table-actions-cell">
-          <button type="button" class="btn-table-action" data-career-open-index="${index}">Mở</button>
+          <button type="button" class="btn-table-action btn-table-open" data-career-open-id="${escapeHtml(cv.id)}" data-career-open-index="${index}" title="Xem chi tiết CV">Mở</button>
           <button type="button" class="btn-table-action" data-career-match-id="${escapeHtml(cv.id)}">Match với Job</button>
           <button type="button" class="btn-table-action btn-table-find-jobs" data-career-find-jobs-id="${escapeHtml(cv.id)}">Việc phù hợp</button>
         </td>
@@ -2909,6 +2918,168 @@ function startAppLogic() {
     document.getElementById(id)?.addEventListener('change', event => uploadCareerPortfolioCV(event.target.files?.[0]));
   });
 
+  let currentDetailCvId = null;
+
+  function openCareerCVDetailModal(cv) {
+    if (!cv) return;
+    currentDetailCvId = cv.id;
+    const modal = document.getElementById('career-cv-detail-modal');
+    const titleEl = document.getElementById('career-cv-detail-title');
+    const metaEl = document.getElementById('career-cv-detail-meta');
+    const badgeEl = document.getElementById('career-cv-detail-badge');
+    const contentEl = document.getElementById('career-cv-detail-content');
+    if (!modal || !contentEl) return;
+
+    const parsed = cv.parsed_json || {};
+    const personal = parsed.personal_info || {};
+    const hardSkills = Array.isArray(parsed.hard_skills) ? parsed.hard_skills : (Array.isArray(parsed.skills) ? parsed.skills : []);
+    const softSkills = Array.isArray(parsed.soft_skills) ? parsed.soft_skills : [];
+    const statusType = cv.status_type || (cv.is_optimized ? 'optimized' : (cv.match_count > 0 ? 'matched' : 'raw'));
+    const statusLabel = cv.status_label || (statusType === 'optimized' ? 'Đã tối ưu' : (statusType === 'matched' ? 'Đã Match' : 'CV gốc'));
+    const updatedDate = cv.updated_at || cv.created_at;
+    const dateFormatted = updatedDate ? new Date(updatedDate).toLocaleDateString('vi-VN') : 'Gần đây';
+
+    if (titleEl) titleEl.textContent = cv.title || cv.file_name || 'CV Hồ sơ';
+    if (metaEl) metaEl.textContent = `File: ${cv.file_name || 'CV đã lưu'} · Cập nhật: ${dateFormatted}`;
+    if (badgeEl) {
+      badgeEl.className = `cv-status-badge is-${statusType}`;
+      badgeEl.textContent = statusLabel;
+    }
+
+    const personalItems = [
+      personal.full_name && `<span><strong>Họ và tên:</strong> ${escapeHtml(personal.full_name)}</span>`,
+      personal.email && `<span><strong>Email:</strong> ${escapeHtml(personal.email)}</span>`,
+      personal.phone && `<span><strong>SĐT:</strong> ${escapeHtml(personal.phone)}</span>`,
+      personal.location && `<span><strong>Địa điểm:</strong> ${escapeHtml(personal.location)}</span>`,
+    ].filter(Boolean);
+
+    const recordGroups = [
+      { label: 'Kinh nghiệm làm việc', items: parsed.experience },
+      { label: 'Học vấn', items: parsed.education },
+      { label: 'Dự án nổi bật', items: parsed.projects },
+      { label: 'Chứng chỉ & Thành tích', items: parsed.certifications },
+    ].filter(group => Array.isArray(group.items) && group.items.length > 0);
+
+    contentEl.innerHTML = `
+      <article class="cv-detail-view-article">
+        ${personalItems.length ? `
+          <section class="cv-detail-section cv-detail-personal">
+            <h5>📌 Thông tin liên hệ</h5>
+            <div class="cv-detail-contact-grid">${personalItems.join('')}</div>
+          </section>
+        ` : ''}
+
+        ${parsed.summary ? `
+          <section class="cv-detail-section cv-detail-summary">
+            <h5>💼 Tóm tắt hồ sơ</h5>
+            <p>${escapeHtml(parsed.summary)}</p>
+          </section>
+        ` : ''}
+
+        ${(hardSkills.length || softSkills.length) ? `
+          <section class="cv-detail-section cv-detail-skills">
+            <h5>⚡ Kỹ năng</h5>
+            <div class="cv-detail-skill-tags">
+              ${hardSkills.map(s => `<span class="skill-tag-hard">${escapeHtml(s)}</span>`).join('')}
+              ${softSkills.map(s => `<span class="skill-tag-soft">${escapeHtml(s)}</span>`).join('')}
+            </div>
+          </section>
+        ` : ''}
+
+        ${recordGroups.map(group => `
+          <section class="cv-detail-section cv-detail-records">
+            <h5>${escapeHtml(group.label)}</h5>
+            <div class="cv-detail-record-list">
+              ${group.items.map(item => {
+                const title = typeof item === 'string' ? item : (item.title || item.role || item.position || item.school || item.degree || item.name || '');
+                const sub = typeof item === 'object' ? (item.company || item.institution || item.organization || '') : '';
+                const period = typeof item === 'object' ? (item.period || item.time || item.duration || item.date || '') : '';
+                const desc = typeof item === 'object' ? (item.description || item.details || item.summary || '') : '';
+                return `
+                  <div class="cv-detail-record-item">
+                    <div class="record-item-head">
+                      <strong>${escapeHtml(title || 'Mục hồ sơ')}</strong>
+                      ${sub ? `<em>${escapeHtml(sub)}</em>` : ''}
+                      ${period ? `<span class="record-period">${escapeHtml(period)}</span>` : ''}
+                    </div>
+                    ${desc && desc !== title ? `<p class="record-item-desc">${escapeHtml(desc)}</p>` : ''}
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </section>
+        `).join('')}
+
+        ${(!personalItems.length && !parsed.summary && !hardSkills.length && !recordGroups.length) ? `
+          <div class="cv-detail-empty">
+            <p>Hồ sơ đã được lưu trữ an toàn. Trích xuất text:</p>
+            <pre class="cv-detail-raw-text">${escapeHtml((cv.raw_text || '').slice(0, 1000))}</pre>
+          </div>
+        ` : ''}
+      </article>
+    `;
+
+    modal.style.display = 'flex';
+    document.body.classList.add('career-cv-detail-modal-open');
+  }
+
+  function closeCareerCVDetailModal() {
+    const modal = document.getElementById('career-cv-detail-modal');
+    if (modal) modal.style.display = 'none';
+    document.body.classList.remove('career-cv-detail-modal-open');
+  }
+
+  document.getElementById('career-cv-detail-close-btn')?.addEventListener('click', closeCareerCVDetailModal);
+  document.getElementById('career-cv-detail-cancel-btn')?.addEventListener('click', closeCareerCVDetailModal);
+  document.getElementById('career-cv-detail-modal')?.addEventListener('click', event => {
+    if (event.target === document.getElementById('career-cv-detail-modal')) closeCareerCVDetailModal();
+  });
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && document.getElementById('career-cv-detail-modal')?.style.display === 'flex') {
+      closeCareerCVDetailModal();
+    }
+  });
+
+  document.getElementById('career-cv-detail-match-btn')?.addEventListener('click', () => {
+    if (!currentDetailCvId) return;
+    window.sessionStorage.setItem('career-preselected-cv-id', currentDetailCvId);
+    closeCareerCVDetailModal();
+    switchView('match');
+  });
+
+  document.getElementById('career-cv-detail-find-jobs-btn')?.addEventListener('click', async () => {
+    if (!currentDetailCvId) return;
+    const cvId = currentDetailCvId;
+    closeCareerCVDetailModal();
+    switchView('find-jobs');
+    activeJobSearchCV = cvId;
+    await loadJobSearchCVOptions(cvId);
+    await loadJobSearchResults({ cvId, shouldGuide: true });
+  });
+
+  document.getElementById('career-cv-detail-delete-btn')?.addEventListener('click', async () => {
+    if (!currentDetailCvId) return;
+    const cv = loadedCVs.find(item => item.id === currentDetailCvId);
+    if (!cv) return;
+
+    const confirmed = await showDeleteConfirm({
+      title: 'Xác Nhận Xóa CV',
+      description: `Bạn có chắc chắn muốn xóa CV <strong style="color:#111;">"${escapeHtml(cv.title || 'CV Hồ sơ')}"</strong>?`,
+      confirmLabel: 'Xóa CV',
+      warning: '⚠️ File CV và toàn bộ kết quả phân tích liên quan sẽ bị xóa vĩnh viễn.',
+    });
+    if (!confirmed) return;
+
+    try {
+      await ApiClient.deleteCV(cv.id);
+      closeCareerCVDetailModal();
+      await loadSpaceshipCVList();
+      showToast(`🗑️ Đã xóa CV ${cv.title || 'CV Hồ sơ'}`, 'success');
+    } catch (err) {
+      showToast(`❌ Không thể xóa CV: ${err.message}`, 'error');
+    }
+  });
+
   document.getElementById('career-portfolio-workspace')?.addEventListener('click', async event => {
     const findJobsButton = event.target.closest('[data-career-find-jobs-id]');
     if (findJobsButton) {
@@ -2928,10 +3099,14 @@ function startAppLogic() {
       switchView('match');
       return;
     }
-    const openButton = event.target.closest('[data-career-open-index], [data-career-cv-index]');
+    const openButton = event.target.closest('[data-career-open-id], [data-career-open-index], [data-career-cv-index]');
     if (!openButton) return;
+    const cvId = openButton.dataset.careerOpenId;
     const index = Number(openButton.dataset.careerOpenIndex ?? openButton.dataset.careerCvIndex);
-    if (loadedCVs[index]) inspectCVDetail(loadedCVs[index]);
+    const cv = (cvId ? loadedCVs.find(c => String(c.id) === String(cvId)) : null) || loadedCVs[index];
+    if (cv) {
+      openCareerCVDetailModal(cv);
+    }
   });
 
   document.getElementById('btn-compare-multi-position')?.addEventListener('click', async () => {
