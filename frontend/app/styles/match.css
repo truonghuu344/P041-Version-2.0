@@ -289,6 +289,12 @@
   stroke: currentColor;
 }
 
+/* The Match flow uses only the CTA loading state; never show the legacy
+   multi-step preparation card, including one injected by an older bundle. */
+#view-match .ai-operation-progress {
+  display: none !important;
+}
+
 #view-match .match-ready button:hover:not(:disabled) {
   background: #005a38 !important;
   border-color: #005a38 !important;

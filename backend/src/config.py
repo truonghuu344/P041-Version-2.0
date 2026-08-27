@@ -99,6 +99,9 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
     voice_llm_model: str = "gemini-2.5-flash"
     voice_llm_fallback_model: str = "gemini-2.5-flash"
+    # Final STAR scores are deterministic; LLM wording is opt-in so the
+    # report is always available immediately after a voice session.
+    interview_report_llm_enabled: bool = False
 
     # Database
     # `DATABASE_URL` is preferred for hosted databases. For the local Docker

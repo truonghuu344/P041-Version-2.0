@@ -6023,7 +6023,7 @@ TÊN CÔNG TY:
           } else if (res.is_last_question) {
             appendPageMessage('interviewer', res.question_text);
             showToast('Hoàn thành phỏng vấn! Đang tải báo cáo STAR...', 'success');
-            setTimeout(() => loadPageSTARReport(pageSessionId), 1200);
+            loadPageSTARReport(pageSessionId);
           } else {
             appendPageMessage('interviewer', res.question_text);
             if (pageProgressText) pageProgressText.textContent = `Câu hỏi ${res.question_index + 1} / 5`;
@@ -6162,7 +6162,7 @@ TÊN CÔNG TY:
         }
         { const eb = document.querySelector('.interview-end-session'); if (eb) eb.disabled = true; }
         showToast('Hoàn thành phỏng vấn! Đang tải báo cáo STAR...', 'success');
-        setTimeout(() => loadPageSTARReport(pageSessionId), 1200);
+        loadPageSTARReport(pageSessionId);
         break;
 
       case 'error':
@@ -6295,13 +6295,30 @@ TÊN CÔNG TY:
     if (voiceTimerInterval) { clearInterval(voiceTimerInterval); voiceTimerInterval = null; }
   }
 
+  async function getInterviewReportWhenReady(sessionId, maxWaitMs = 15000) {
+    const deadline = Date.now() + maxWaitMs;
+    let delayMs = 250;
+    let lastError = null;
+    while (Date.now() < deadline) {
+      try {
+        return await ApiClient.getInterviewReport(sessionId);
+      } catch (err) {
+        lastError = err;
+        if (![404, 409].includes(err?.status)) throw err;
+        await new Promise(resolve => window.setTimeout(resolve, delayMs));
+        delayMs = Math.min(1000, delayMs + 150);
+      }
+    }
+    throw lastError || new Error('Báo cáo phỏng vấn chưa sẵn sàng.');
+  }
+
   async function loadPageSTARReport(sessionId) {
     try {
-      const report = await ApiClient.getInterviewReport(sessionId);
+      const report = await getInterviewReportWhenReady(sessionId);
       if (pageReportSec) pageReportSec.style.display = 'block';
 
       const totalScoreEl = document.getElementById('page-report-total-score');
-      if (totalScoreEl) totalScoreEl.textContent = `${report.total_score.toFixed(1)} / 100`;
+      if (totalScoreEl) totalScoreEl.textContent = `${Number(report.total_score || 0).toFixed(1)} / 100`;
       // This is the live "Phòng phỏng vấn" full-page flow (view-interview / page-*
       // elements) — distinct from the older interview-*/report-* modal flow below.
       // It previously never notified the dashboard at all, which is why the STAR
@@ -8487,12 +8504,12 @@ TÊN CÔNG TY:
 
   async function loadSTARReport(sessionId) {
     try {
-      const report = await ApiClient.getInterviewReport(sessionId);
+      const report = await getInterviewReportWhenReady(sessionId);
       if (chatSec) chatSec.style.display = 'none';
       if (reportSec) reportSec.style.display = 'block';
 
       const totalScoreEl = document.getElementById('report-total-score');
-      if (totalScoreEl) totalScoreEl.textContent = `${report.total_score.toFixed(1)} / 100`;
+      if (totalScoreEl) totalScoreEl.textContent = `${Number(report.total_score || 0).toFixed(1)} / 100`;
       // Update the dashboard gauge immediately with the score we already have
       // from this report response, instead of relying solely on a re-fetch of
       // the interviews list (which can race with the backend write of total_score).

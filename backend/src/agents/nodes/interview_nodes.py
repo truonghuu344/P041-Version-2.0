@@ -205,7 +205,7 @@ def _fallback_report(history: list[dict[str, Any]]) -> dict[str, Any]:
 async def generate_report_node(state: InterviewAgentState) -> dict[str, Any]:
     fallback = _fallback_report(state["qa_history"])
     settings = get_settings()
-    if not settings.google_genai_api_key:
+    if not getattr(settings, "interview_report_llm_enabled", False) or not settings.google_genai_api_key:
         return {"final_report": fallback}
     prompt = """Bạn là Interview Report Agent. Tổng hợp lịch sử hỏi đáp và điểm đã chấm thành báo cáo STAR.
 Không thay đổi điểm thành phần đã có và không bịa nhận xét. Trả về JSON gồm total_score, star_scores, strengths, improvements, recommendations."""
