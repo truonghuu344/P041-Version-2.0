@@ -46,6 +46,7 @@ class GapAnalysisAgent:
         jd_requirements: str,
         jd_parsed_json: dict[str, Any] | None = None,
         rubric: dict[str, Any] | None = None,
+        allow_llm: bool | None = None,
     ) -> dict[str, Any]:
         state = await self.graph.ainvoke(
             {
@@ -55,6 +56,7 @@ class GapAnalysisAgent:
                 "jd_requirements": jd_requirements,
                 "jd_parsed_json": jd_parsed_json or {},
                 "rubric": rubric or {},
+                "allow_llm": allow_llm,
             }
         )
         if state.get("error"):

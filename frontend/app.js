@@ -1566,7 +1566,7 @@ function startAppLogic() {
     return targetJobCatalog;
   }
 
-  async function waitForMatchResult(matchId, { timeoutMs = 120000, intervalMs = 1200 } = {}) {
+  async function waitForMatchResult(matchId, { timeoutMs = 4800, intervalMs = 250 } = {}) {
     const startedAt = Date.now();
     let latest = null;
     while (Date.now() - startedAt < timeoutMs) {
@@ -1588,12 +1588,14 @@ function startAppLogic() {
         FINALIZING: 'Đang hoàn thiện',
       }[currentStep] || 'Đang phân tích';
 
+      // Keep the progress lightweight and inside the CTA. The previous
+      // multi-step preparation card was noisy and suggested an extra phase.
       const matchButton = document.getElementById('p1-analyze-btn');
       if (matchButton) {
         matchButton.classList.add('is-loading');
         matchButton.disabled = true;
-        matchButton.innerHTML = `<svg class="spin-loader" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg><span>${escapeHtml(stepText)} ${progress}%</span>`;
-        // Contract requirement: matchButton.textContent = `Đang phân tích ${progress}%`;
+        const matchButtonText = matchButton.querySelector('span');
+        if (matchButtonText) matchButtonText.textContent = `${stepText} ${progress}%`;
       }
       const hint = document.getElementById('p1-cta-hint');
       if (hint) {
@@ -2443,12 +2445,8 @@ function startAppLogic() {
       }
 
       const submitButton = document.getElementById('btn-page-do-upload');
-      const progress = beginOperationProgress(submitButton, {
-        id: 'cv-upload-operation-progress',
-        title: 'Đang chuẩn bị hồ sơ của bạn',
-        steps: ['Tải file an toàn', 'Đọc/OCR nội dung CV', 'Chuẩn hóa hồ sơ local', 'Đối chiếu evidence với JD'],
-      });
-      const stageTimer = window.setTimeout(() => progress.advance(1, 'Máy chủ đang đọc nội dung CV; file scan có thể mất thêm thời gian.'), 650);
+      // Remove any card left by an older client bundle during hot reload.
+      document.getElementById('cv-upload-operation-progress')?.remove();
       try {
         if (submitButton) submitButton.disabled = true;
         let uploadedCV = null;
@@ -2460,15 +2458,13 @@ function startAppLogic() {
           );
           selectedCvId = uploadedCV.id;
           await loadSpaceshipCVList(selectedCvId);
-          progress.advance(2, 'Đã có dữ liệu CV; đang kiểm chứng kỹ năng và kinh nghiệm.');
         } else {
           setAgentProgress('extract');
-          progress.advance(2, 'Đang dùng hồ sơ CV đã lưu và kiểm chứng dữ liệu.');
         }
         setAgentProgress('guardrail');
-        progress.advance(3, 'Đang đối chiếu CV với JD và tạo evidence có thể kiểm tra.');
         const match = await ApiClient.startMatch(selectedCvId, selectedJdId);
-        const analysis = await waitForMatchResult(match.match_id);
+        const analysis = match.result || await waitForMatchResult(match.match_id);
+        if (match.analysis_id && !analysis.id) analysis.id = match.analysis_id;
         analysis.match_id = analysis.match_id || match.match_id;
         setAgentProgress('match');
         renderInlineCVAnalysis(analysis, selectedCvId, selectedJdId);
@@ -2476,7 +2472,6 @@ function startAppLogic() {
         localStorage.setItem('latest_match_id', match.match_id);
         refreshDashboardOverview();
         setAgentProgress('save');
-        progress.complete('Hoàn tất. Điểm và evidence đã được lưu để dùng lại trong các luồng sau.');
         const llmCalled = Boolean(uploadedCV?.parsed_json?.agent_metadata?.llm_called);
         showToast(
           llmCalled ? '✅ Đã phân tích CV–JD với hỗ trợ AI khi cần.' : '✅ Đã phân tích nhanh CV–JD và lưu CV vào Kho CV.',
@@ -2492,7 +2487,6 @@ function startAppLogic() {
         showToast(`❌ Không thể phân tích CV: ${err.message}`, 'error');
       } finally {
         if (submitButton) submitButton.disabled = false;
-        window.clearTimeout(stageTimer);
         window.setTimeout(() => setAgentProgress(''), 800);
       }
     });

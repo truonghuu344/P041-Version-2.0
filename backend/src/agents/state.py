@@ -35,6 +35,8 @@ class GapAnalysisState(TypedDict, total=False):
     jd_requirements: str
     jd_parsed_json: dict[str, Any]
     rubric: dict[str, Any]
+    # Match flow can explicitly force the latency-safe deterministic path.
+    allow_llm: bool | None
     evidence: dict[str, Any]
     draft_result: dict[str, Any]
     explanation_provider: str

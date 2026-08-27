@@ -34,6 +34,8 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 10080
     api_rate_limit_per_minute: int = Field(default=120, ge=10, le=10_000)
     max_request_body_mb: int = Field(default=22, ge=1, le=100)
+    # Hard budget for the interactive deterministic Match request.
+    match_timeout_seconds: float = Field(default=4.5, ge=1.0, le=5.0)
     document_max_file_size_mb: int = Field(default=20, ge=1, le=100)
     document_max_pages: int = Field(default=20, ge=1, le=100)
     malware_scan_mode: Literal["auto", "required", "disabled"] = "auto"

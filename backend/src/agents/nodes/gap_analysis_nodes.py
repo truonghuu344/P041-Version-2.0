@@ -123,8 +123,11 @@ async def draft_gap_analysis(state: GapAnalysisState) -> dict[str, Any]:
     }
     settings = get_settings()
     needs_llm, decision_reason = _match_explanation_needs_llm(evidence)
+    configured_llm_enabled = getattr(settings, "match_explanation_llm_enabled", False)
+    allow_llm = state.get("allow_llm")
+    llm_enabled = configured_llm_enabled if allow_llm is None else bool(allow_llm)
     if (
-        not getattr(settings, "match_explanation_llm_enabled", False)
+        not llm_enabled
         or not getattr(settings, "google_genai_api_key", "")
         or not needs_llm
     ):

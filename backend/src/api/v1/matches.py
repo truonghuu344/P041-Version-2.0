@@ -1,15 +1,17 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 import uuid
 from datetime import UTC, datetime
 from typing import Any
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Query, status
+from fastapi import APIRouter, Depends, Query, status
 from pydantic import BaseModel, model_validator
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from src.config import get_settings
 from src.core.errors import PipelineError
 from src.core.security import get_current_user
 from src.db.database import AsyncSessionLocal, get_db
@@ -92,6 +94,10 @@ async def _process_match(
                 jd_requirements=jd.requirements_text,
                 jd_parsed_json={**(jd.normalized_json or {}), "job_id": jd.id},
                 rubric=rubric_config,
+                # The interactive Match CTA has a strict latency budget. The
+                # deterministic scorer already returns the score and evidence;
+                # Gemini wording is optional and belongs to a later action.
+                allow_llm=False,
             )
             result["match_id"] = match_id
             match.status = "FINALIZING"
@@ -151,10 +157,26 @@ async def _process_match(
             logger.exception("Background CV-JD match failed match_id=%s", match_id)
 
 
+async def _fail_timed_out_match(
+    match_id: str,
+    session_factory: async_sessionmaker[AsyncSession],
+) -> None:
+    """Mark a request that exceeded the interactive latency budget."""
+    async with session_factory() as db:
+        match = await db.get(MatchRun, match_id)
+        if not match or match.status == "COMPLETED":
+            return
+        match.status = "FAILED"
+        match.current_step = "FAILED"
+        match.error_code = "MATCH_TIMEOUT"
+        match.error_message = "Phân tích vượt quá 4,5 giây. Vui lòng thử lại."
+        match.completed_at = datetime.now(UTC)
+        await db.commit()
+
+
 @router.post("", response_model=MatchJobResponse, status_code=status.HTTP_202_ACCEPTED)
 async def start_match(
     payload: MatchCreateRequest,
-    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> MatchJobResponse:
@@ -186,6 +208,37 @@ async def start_match(
         raise PipelineError("MATCH_001", "CV hoặc JD không tồn tại.", status_code=404)
     if payload.rubric_id != "RUBRIC_DEFAULT_V1" and await db.get(RubricDefinition, payload.rubric_id) is None:
         raise PipelineError("RUBRIC_001", "Rubric không tồn tại hoặc chưa được cấu hình.", status_code=422)
+    cv_snapshot = await get_or_create_cv_snapshot(db, cv)
+    jd_snapshot = await get_or_create_jd_snapshot(db, jd)
+
+    # Exact immutable snapshots are safe to reuse. Returning the original
+    # MatchRun also preserves the evidence/criteria rows used by the V2 modal.
+    cached_match = await db.scalar(
+        select(MatchRun)
+        .where(
+            MatchRun.user_id == current_user.id,
+            MatchRun.cv_snapshot_id == cv_snapshot.id,
+            MatchRun.jd_snapshot_id == jd_snapshot.id,
+            MatchRun.pipeline_version == PIPELINE_VERSION,
+            MatchRun.rubric_id == payload.rubric_id,
+            MatchRun.status == "COMPLETED",
+        )
+        .order_by(MatchRun.completed_at.desc())
+        .limit(1)
+    )
+    if cached_match:
+        await db.commit()
+        return MatchJobResponse(
+            match_id=cached_match.id,
+            status=cached_match.status,
+            current_step=cached_match.current_step,
+            progress_percent=100,
+            analysis_id=cached_match.analysis_id,
+            final_score=cached_match.final_score,
+            rating=cached_match.rating,
+            result=cached_match.result_json,
+        )
+
     match = MatchRun(
         id=f"MATCH_{uuid.uuid4().hex.upper()[:12]}",
         user_id=current_user.id,
@@ -197,8 +250,6 @@ async def start_match(
         pipeline_version=PIPELINE_VERSION,
     )
     db.add(match)
-    cv_snapshot = await get_or_create_cv_snapshot(db, cv)
-    jd_snapshot = await get_or_create_jd_snapshot(db, jd)
     match.cv_snapshot_id = cv_snapshot.id
     match.jd_snapshot_id = jd_snapshot.id
     await db.commit()
@@ -209,12 +260,39 @@ async def start_match(
         autocommit=False,
         autoflush=False,
     )
-    background_tasks.add_task(_process_match, match.id, current_user.id, cv.id, jd.id, session_factory)
+    # Release the request session before opening the worker session. This is
+    # important for SQLite's single-connection test/runtime mode and also
+    # keeps the lifecycle identical to the old background worker.
+    match_id = match.id
+    await db.close()
+
+    # Complete the latency-safe deterministic match before responding. This
+    # removes the old 1.2s polling round-trip and lets the client render the
+    # result immediately. The endpoint remains 202 for API compatibility.
+    try:
+        await asyncio.wait_for(
+            _process_match(match_id, current_user.id, cv.id, jd.id, session_factory),
+            timeout=get_settings().match_timeout_seconds,
+        )
+    except asyncio.TimeoutError:
+        await _fail_timed_out_match(match_id, session_factory)
+    match = await db.get(MatchRun, match_id)
+    if not match:
+        raise PipelineError("MATCH_001", "Match không tồn tại.", status_code=404)
     return MatchJobResponse(
         match_id=match.id,
         status=match.status,
         current_step=match.current_step,
         progress_percent=MATCH_PROGRESS.get(match.current_step, 0),
+        analysis_id=match.analysis_id,
+        final_score=match.final_score,
+        rating=match.rating,
+        error=(
+            {"code": match.error_code, "message": match.error_message, "retryable": False}
+            if match.error_code
+            else None
+        ),
+        result=match.result_json if match.status == "COMPLETED" else None,
     )
 
 
