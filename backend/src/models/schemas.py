@@ -47,6 +47,7 @@ class PasswordResetConfirm(BaseModel):
 
 class GoogleAuthRequest(BaseModel):
     credential: str = Field(..., min_length=20, description="Google Identity Services ID token")
+    role: str = Field(default="student", description="Role requested for sign in / registration")
 
 
 class UserOut(BaseModel):

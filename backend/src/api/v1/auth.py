@@ -236,7 +236,8 @@ async def login_with_google(
     db: AsyncSession = Depends(get_db),
 ) -> Token:
     """Xác minh Google Identity Services ID token ở backend rồi phát JWT nội bộ."""
-    if not settings.google_oauth_client_id:
+    client_id = settings.google_oauth_client_id.strip() if settings.google_oauth_client_id else ""
+    if not client_id:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Google OAuth chưa được cấu hình trên máy chủ.",
@@ -246,9 +247,11 @@ async def login_with_google(
             id_token.verify_oauth2_token,
             payload.credential,
             GoogleRequest(),
-            settings.google_oauth_client_id,
+            client_id,
+            clock_skew_in_seconds=60,
         )
     except (GoogleAuthError, ValueError) as exc:
+        logger.warning("Google ID token verification failed: %s", exc)
         raise HTTPException(status_code=401, detail="Google ID token không hợp lệ hoặc đã hết hạn.") from exc
 
     if not token_info.get("email_verified") or not token_info.get("email"):
