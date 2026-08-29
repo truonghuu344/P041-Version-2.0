@@ -56,6 +56,13 @@ services:
       MALWARE_SCAN_MODE: required
       CLAMAV_HOST: clamav
       CLAMAV_PORT: 3310
+      LANGCHAIN_TRACING_V2: ${LANGCHAIN_TRACING_V2:-true}
+      LANGSMITH_TRACING: ${LANGSMITH_TRACING:-true}
+      LANGCHAIN_API_KEY: ${LANGCHAIN_API_KEY:-}
+      LANGSMITH_API_KEY: ${LANGSMITH_API_KEY:-}
+      LANGCHAIN_PROJECT: ${LANGCHAIN_PROJECT:-ai20k-agent}
+      LANGSMITH_PROJECT: ${LANGSMITH_PROJECT:-ai20k-agent}
+      LANGSMITH_ENDPOINT: ${LANGSMITH_ENDPOINT:-https://api.smith.langchain.com}
     volumes:
       - app_uploads:/app/data/uploads
     depends_on:

@@ -103,6 +103,16 @@ class Settings(BaseSettings):
     # report is always available immediately after a voice session.
     interview_report_llm_enabled: bool = False
 
+    # LangSmith / LangChain Observability & Tracing
+    langchain_tracing_v2: bool = False
+    langchain_api_key: str = ""
+    langchain_project: str = "ai20k-agent"
+    langchain_endpoint: str = "https://api.smith.langchain.com"
+    langsmith_tracing: bool = False
+    langsmith_api_key: str = ""
+    langsmith_project: str = "ai20k-agent"
+    langsmith_endpoint: str = "https://api.smith.langchain.com"
+
     # Database
     # `DATABASE_URL` is preferred for hosted databases. For the local Docker
     # stack, derive it from POSTGRES_* so the API never silently falls back to
@@ -121,6 +131,26 @@ class Settings(BaseSettings):
                 f"postgresql+asyncpg://{quote(self.postgres_user, safe='')}:{password}"
                 f"@localhost:5432/{quote(self.postgres_db, safe='')}"
             )
+        return self
+
+    @model_validator(mode="after")
+    def sync_langsmith_environ(self) -> "Settings":
+        tracing_enabled = self.langchain_tracing_v2 or self.langsmith_tracing
+        api_key = self.langsmith_api_key or self.langchain_api_key
+        project = self.langsmith_project or self.langchain_project or "ai20k-agent"
+        endpoint = self.langsmith_endpoint or self.langchain_endpoint or "https://api.smith.langchain.com"
+
+        if tracing_enabled and api_key:
+            import os
+
+            os.environ["LANGCHAIN_TRACING_V2"] = "true"
+            os.environ["LANGSMITH_TRACING"] = "true"
+            os.environ["LANGCHAIN_API_KEY"] = api_key
+            os.environ["LANGSMITH_API_KEY"] = api_key
+            os.environ["LANGCHAIN_PROJECT"] = project
+            os.environ["LANGSMITH_PROJECT"] = project
+            os.environ["LANGCHAIN_ENDPOINT"] = endpoint
+            os.environ["LANGSMITH_ENDPOINT"] = endpoint
         return self
 
     # pgvector / Market JD RAG

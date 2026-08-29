@@ -6054,7 +6054,16 @@ TÊN CÔNG TY:
       showToast('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.', 'error');
       return;
     }
-    const backendHost = (window.__CAREER_API_BASE_URL__ || '').match(/^https?:\/\/([^/]+)/)?.[1] || 'localhost:8000';
+    let backendHost = (window.__CAREER_WS_HOST__ || window.__CAREER_API_BASE_URL__ || '').match(/^https?:\/\/([^/]+)/)?.[1];
+    if (!backendHost) {
+      if (window.__CAREER_WS_HOST__) {
+        backendHost = window.__CAREER_WS_HOST__.replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+      } else if (typeof location !== 'undefined' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+        backendHost = 'p041-version-2-0.onrender.com';
+      } else {
+        backendHost = 'localhost:8000';
+      }
+    }
     const wsProto = location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${wsProto}//${backendHost}/api/v1/ws/interview/${sessionId}?token=${encodeURIComponent(token)}`;
 

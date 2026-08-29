@@ -32,6 +32,9 @@ from src.services.job_rag import sync_market_jobs_safely
 async def lifespan(app: FastAPI):
     settings = get_settings()
     print(f"Starting {settings.app_name} in {settings.app_env} mode...")
+    if settings.langchain_tracing_v2 or settings.langsmith_tracing:
+        project_name = settings.langsmith_project or settings.langchain_project or "ai20k-agent"
+        print(f"LangSmith Tracing active for project: {project_name}")
     # Tự động tạo bảng DB khi startup
     await init_db()
     rag_sync_task = None
