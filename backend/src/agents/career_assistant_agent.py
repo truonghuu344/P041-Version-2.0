@@ -5,7 +5,8 @@ import logging
 import re
 import time
 import unicodedata
-from typing import Any, AsyncGenerator
+from collections.abc import AsyncGenerator
+from typing import Any
 
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -522,7 +523,7 @@ async def _respond_with_gemini(state: CareerAssistantState) -> dict[str, Any]:
         response_text = _content_to_text(answer.content)
         if not response_text:
             raise ValueError("Gemini trả về nội dung rỗng")
-        
+
         # Save cache
         _set_cached_response(cache_key, {"response": response_text})
         return {**base_result, "response": response_text, "llm_succeeded": True}

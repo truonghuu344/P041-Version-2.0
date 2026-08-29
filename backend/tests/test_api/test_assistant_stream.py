@@ -1,4 +1,5 @@
 import json
+
 import pytest
 
 from tests.helpers import register_and_login

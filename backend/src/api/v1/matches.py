@@ -274,7 +274,7 @@ async def start_match(
             _process_match(match_id, current_user.id, cv.id, jd.id, session_factory),
             timeout=get_settings().match_timeout_seconds,
         )
-    except asyncio.TimeoutError:
+    except TimeoutError:
         await _fail_timed_out_match(match_id, session_factory)
     match = await db.get(MatchRun, match_id)
     if not match:
