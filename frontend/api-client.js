@@ -448,6 +448,92 @@ export class ApiClient {
     return await this.requestAssistant('/assistant/chat', options);
   }
 
+  static async chatWithAssistantStream(
+    message,
+    history = [],
+    currentPage = 'dashboard',
+    conversationId = null,
+    operation = null,
+    { onChunk, onMetadata, onDone, onError } = {}
+  ) {
+    const token = this.getToken();
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const endpoint = '/assistant/chat/stream';
+    const requestUrl = /^https?:\/\//i.test(endpoint) ? endpoint : `${API_BASE_URL}${endpoint}`;
+
+    try {
+      const response = await fetch(requestUrl, {
+        method: 'POST',
+        headers,
+        credentials: 'include',
+        body: JSON.stringify({
+          message,
+          history,
+          current_page: currentPage,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || null,
+          conversation_id: conversationId,
+          operation,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const err = new Error(errorData.detail || `Lỗi HTTP ${response.status}`);
+        err.status = response.status;
+        if (onError) onError(err);
+        throw err;
+      }
+
+      if (!response.body) {
+        throw new Error('ReadableStream not supported');
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder('utf-8');
+      let buffer = '';
+      let accumulatedText = '';
+      let doneResult = null;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (trimmed.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(trimmed.slice(6));
+              if (data.type === 'metadata' && onMetadata) {
+                onMetadata(data);
+              } else if (data.type === 'chunk') {
+                accumulatedText += data.content || '';
+                if (onChunk) onChunk(data.content || '', accumulatedText);
+              } else if (data.type === 'done') {
+                doneResult = data;
+                if (onDone) onDone(data);
+              }
+            } catch (_e) {}
+          }
+        }
+      }
+
+      return doneResult || {
+        response: accumulatedText,
+        llm_succeeded: true,
+        conversation_id: conversationId,
+        suggested_actions: [],
+      };
+    } catch (err) {
+      if (onError) onError(err);
+      throw err;
+    }
+  }
+
   static async listAssistantConversations() {
     return await this.requestAssistant('/assistant/conversations');
   }

@@ -157,6 +157,21 @@ import { escapeHtml, showToast } from './utils.js';
       }
     }
 
+    function appendActionList(message, actions = []) {
+      if (!actions || !actions.length) return;
+      const actionList = document.createElement('div');
+      actionList.className = 'ai-chat-actions';
+      actions.forEach(action => {
+        if (!ALL_VIEWS.includes(action.page)) return;
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.dataset.assistantTarget = action.page;
+        button.textContent = action.label;
+        actionList.appendChild(button);
+      });
+      message.appendChild(actionList);
+    }
+
     function appendChatMessage(role, text, actions = []) {
       const message = document.createElement('div');
       message.className = `ai-chat-message ${role}`;
@@ -168,17 +183,7 @@ import { escapeHtml, showToast } from './utils.js';
       message.append(name, paragraph);
 
       if (role === 'assistant' && actions.length) {
-        const actionList = document.createElement('div');
-        actionList.className = 'ai-chat-actions';
-        actions.forEach(action => {
-          if (!ALL_VIEWS.includes(action.page)) return;
-          const button = document.createElement('button');
-          button.type = 'button';
-          button.dataset.assistantTarget = action.page;
-          button.textContent = action.label;
-          actionList.appendChild(button);
-        });
-        message.appendChild(actionList);
+        appendActionList(message, actions);
       }
       messagesElement.appendChild(message);
       messagesElement.scrollTop = messagesElement.scrollHeight;
@@ -266,26 +271,72 @@ import { escapeHtml, showToast } from './utils.js';
         return;
       }
 
-      const previousHistory = conversationHistory.slice(-10);
+      const previousHistory = conversationHistory.slice(-6);
       appendChatMessage('user', text);
       conversationHistory.push({ role: 'user', content: text });
       input.value = '';
       input.style.height = 'auto';
       if (sendButton) sendButton.disabled = true;
       const typing = appendTypingIndicator();
+
+      let streamMessageElement = null;
+      let streamParagraph = null;
+      let hasReceivedFirstChunk = false;
+
+      const onChunk = (chunk, accumulated) => {
+        if (!hasReceivedFirstChunk) {
+          hasReceivedFirstChunk = true;
+          typing.remove();
+          streamMessageElement = document.createElement('div');
+          streamMessageElement.className = 'ai-chat-message assistant';
+          const name = document.createElement('span');
+          name.className = 'ai-chat-message-name';
+          name.textContent = 'Nova';
+          streamParagraph = document.createElement('p');
+          streamMessageElement.append(name, streamParagraph);
+          messagesElement.appendChild(streamMessageElement);
+        }
+        if (streamParagraph) {
+          streamParagraph.textContent = accumulated;
+        }
+        messagesElement.scrollTop = messagesElement.scrollHeight;
+      };
+
       try {
-        const result = await ApiClient.chatWithAssistant(
+        const result = await ApiClient.chatWithAssistantStream(
           text,
           previousHistory,
           currentViewName,
-          currentConversationId
+          currentConversationId,
+          null,
+          {
+            onChunk,
+            onMetadata: data => {
+              if (data.conversation_id) {
+                currentConversationId = data.conversation_id;
+              }
+            },
+          }
         );
-        typing.remove();
-        currentConversationId = result.conversation_id;
+
+        if (!hasReceivedFirstChunk) {
+          typing.remove();
+        }
+
+        currentConversationId = result.conversation_id || currentConversationId;
         const response = result.llm_succeeded
           ? result.response
           : getAssistantUnavailableMessage();
-        appendChatMessage('assistant', response, result.llm_succeeded ? (result.suggested_actions || []) : []);
+
+        if (streamMessageElement) {
+          if (streamParagraph) streamParagraph.textContent = response;
+          if (result.suggested_actions && result.suggested_actions.length) {
+            appendActionList(streamMessageElement, result.suggested_actions);
+          }
+        } else {
+          appendChatMessage('assistant', response, result.llm_succeeded ? (result.suggested_actions || []) : []);
+        }
+
         conversationHistory.push({ role: 'assistant', content: response });
         companion.classList.toggle('is-online', Boolean(result.llm_succeeded));
         if (statusText) {
@@ -295,9 +346,12 @@ import { escapeHtml, showToast } from './utils.js';
         }
       } catch (err) {
         typing.remove();
+        if (streamMessageElement && !streamParagraph?.textContent) {
+          streamMessageElement.remove();
+        }
         if (err.status === 401) {
           performLogout({ notify: false });
-          appendChatMessage('assistant', 'Phiên đăng nhập đã hết hạn. Bạn hãy đăng nhập lại rồi gửi câu hỏi thời tiết.');
+          appendChatMessage('assistant', 'Phiên đăng nhập đã hết hạn. Bạn hãy đăng nhập lại rồi gửi câu hỏi.');
           openAuthModal();
           return;
         }

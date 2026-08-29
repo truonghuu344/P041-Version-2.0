@@ -108,3 +108,62 @@ async def test_career_assistant_routes_weather_question_through_weather_tool(mon
     assert result["llm_succeeded"] is True
     assert "WeatherAPI.com" in result["response"]
     assert any('"temp_c": 30.0' in message.content for message in captured_messages)
+
+
+@pytest.mark.asyncio
+async def test_career_assistant_fast_greeting_routing():
+    """Kiểm tra câu chào hỏi được routing tức thì (< 5ms) mà không gọi LLM."""
+    result = await career_assistant_agent.run(
+        message="Xin chào Nova!",
+        history=[],
+        user_context={"full_name": "Test User"},
+    )
+    assert result["llm_succeeded"] is True
+    assert result["provider"] == "nova_orchestrator"
+    assert "Nova" in result["response"]
+    assert len(result["suggested_actions"]) >= 2
+
+
+@pytest.mark.asyncio
+async def test_career_assistant_astream_run(monkeypatch):
+    """Kiểm tra generator astream_run phát từng chunk token cho frontend."""
+    settings = SimpleNamespace(
+        google_genai_api_key="test-gemini-key",
+        model_name="gemini-test",
+        llm_timeout_seconds=20,
+        llm_max_retries=0,
+    )
+
+    class FakeChunk:
+        def __init__(self, content):
+            self.content = content
+
+    class FakeGeminiStream:
+        def __init__(self, **_kwargs):
+            pass
+
+        async def astream(self, _messages):
+            yield FakeChunk("Bạn ")
+            yield FakeChunk("hãy ")
+            yield FakeChunk("tối ưu ")
+            yield FakeChunk("CV nhé.")
+
+    monkeypatch.setattr("src.agents.career_assistant_agent.get_settings", lambda: settings)
+    monkeypatch.setattr("src.agents.career_assistant_agent.ChatGoogleGenerativeAI", FakeGeminiStream)
+
+    events = []
+    async for event in career_assistant_agent.astream_run(
+        message="Tư vấn nâng cao CV cho tôi",
+        history=[],
+        user_context={"full_name": "Test User", "current_page": "cv"},
+    ):
+        events.append(event)
+
+    types = [e["type"] for e in events]
+    assert "metadata" in types
+    assert "chunk" in types
+    assert "done" in types
+
+    chunks = [e["content"] for e in events if e["type"] == "chunk"]
+    assert "".join(chunks) == "Bạn hãy tối ưu CV nhé."
+

@@ -1,8 +1,10 @@
+import json
 from datetime import UTC, datetime, timedelta
 from time import perf_counter
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.encoders import jsonable_encoder
+from fastapi.responses import StreamingResponse
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -485,3 +487,148 @@ async def assistant_chat(
         user_message_id=user_message.id,
         assistant_message_id=assistant_message.id,
     )
+
+
+@router.post("/chat/stream")
+async def assistant_chat_stream(
+    payload: AssistantChatRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Endpoint streaming SSE giúp gửi token về UI ngay lập tức (TTFT < 1s)."""
+    if payload.conversation_id:
+        conversation = await _owned_conversation(db, payload.conversation_id, current_user.id)
+        sorted_messages = sorted(
+            conversation.messages,
+            key=lambda m: (m.created_at, 0 if m.role == "user" else 1),
+        )
+        history = [
+            {"role": message.role, "content": message.content}
+            for message in sorted_messages[-8:]
+        ]
+    else:
+        conversation = ChatConversation(
+            user_id=current_user.id,
+            title=_conversation_title(payload.message),
+        )
+        db.add(conversation)
+        await db.flush()
+        history = [item.model_dump() for item in payload.history[-8:]]
+
+    cv_count = await db.scalar(select(func.count(CV.id)).where(CV.user_id == current_user.id))
+    analysis_count = await db.scalar(
+        select(func.count(CVAnalysis.id)).where(CVAnalysis.user_id == current_user.id)
+    )
+    interview_count = await db.scalar(
+        select(func.count(InterviewSession.id)).where(InterviewSession.user_id == current_user.id)
+    )
+    latest_cv = await db.scalar(
+        select(CV)
+        .where(CV.user_id == current_user.id)
+        .order_by(CV.created_at.desc())
+        .limit(1)
+    )
+    orchestration_resources = await _load_orchestration_resources(db, current_user.id)
+
+    async def sse_event_generator():
+        started_at = perf_counter()
+        final_result = {}
+        conversation_id = conversation.id
+
+        try:
+            if payload.operation:
+                op_result = await _execute_confirmed_operation(
+                    payload,
+                    orchestration_resources,
+                    db,
+                    current_user,
+                )
+                final_result = op_result
+                resp_text = op_result.get("response", "")
+                yield f"data: {json.dumps({'type': 'metadata', 'suggested_actions': op_result.get('suggested_actions', []), 'conversation_id': conversation_id}, ensure_ascii=False)}\n\n"
+                yield f"data: {json.dumps({'type': 'chunk', 'content': resp_text}, ensure_ascii=False)}\n\n"
+            else:
+                user_context = {
+                    "full_name": current_user.full_name,
+                    "role": current_user.role,
+                    "current_page": payload.current_page,
+                    "timezone": payload.timezone or get_settings().app_timezone,
+                    "cv_count": cv_count or 0,
+                    "latest_cv_title": latest_cv.title if latest_cv else None,
+                    "analysis_count": analysis_count or 0,
+                    "interview_count": interview_count or 0,
+                    "_resources": orchestration_resources,
+                }
+                async for event in career_assistant_agent.astream_run(
+                    message=payload.message,
+                    history=history,
+                    user_context=user_context,
+                ):
+                    if event.get("type") == "done":
+                        final_result = event
+                    event_data = {**event, "conversation_id": conversation_id}
+                    yield f"data: {json.dumps(event_data, ensure_ascii=False)}\n\n"
+        except HTTPException as exc:
+            yield f"data: {json.dumps({'type': 'error', 'detail': exc.detail, 'status_code': exc.status_code}, ensure_ascii=False)}\n\n"
+            return
+        except Exception as exc:
+            final_result = {
+                "response": "Nova đang gặp lỗi khi xử lý yêu cầu. Vui lòng thử lại sau ít phút.",
+                "provider": "google_gemini",
+                "model": get_settings().model_name,
+                "llm_succeeded": False,
+                "suggested_actions": [],
+                "tools_used": [],
+                "error": type(exc).__name__,
+            }
+            yield f"data: {json.dumps({'type': 'chunk', 'content': final_result['response']}, ensure_ascii=False)}\n\n"
+            yield f"data: {json.dumps({'type': 'done', **final_result, 'conversation_id': conversation_id}, ensure_ascii=False)}\n\n"
+
+        latency_ms = max(0, round((perf_counter() - started_at) * 1000))
+        response_text = final_result.get("response", "Nova chưa thể trả lời lúc này.")
+        provider = final_result.get("provider", "google_gemini")
+        model = final_result.get("model", get_settings().model_name)
+        llm_succeeded = bool(final_result.get("llm_succeeded"))
+        suggested_actions = jsonable_encoder(final_result.get("suggested_actions", []))
+
+        # Save to DB asynchronously
+        message_time = datetime.now(UTC)
+        user_message = ChatMessage(
+            conversation_id=conversation_id,
+            role="user",
+            content=payload.message,
+            created_at=message_time,
+        )
+        assistant_message = ChatMessage(
+            conversation_id=conversation_id,
+            role="assistant",
+            content=response_text,
+            provider=provider,
+            model=model,
+            llm_succeeded=llm_succeeded,
+            suggested_actions_json=suggested_actions,
+            created_at=message_time + timedelta(milliseconds=5),
+        )
+        conversation.updated_at = datetime.now(UTC)
+        db.add_all(
+            [
+                user_message,
+                assistant_message,
+                AIAuditLog(
+                    user_id=current_user.id,
+                    conversation_id=conversation_id,
+                    prompt=payload.message,
+                    response=response_text,
+                    provider=provider,
+                    model=model,
+                    llm_succeeded=llm_succeeded,
+                    error_code=str(final_result.get("error") or "")[:160] or None,
+                    current_page=payload.current_page,
+                    latency_ms=latency_ms,
+                    tools_used_json=final_result.get("tools_used", []),
+                ),
+            ]
+        )
+        await db.commit()
+
+    return StreamingResponse(sse_event_generator(), media_type="text/event-stream")

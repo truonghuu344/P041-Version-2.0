@@ -3,8 +3,9 @@ from __future__ import annotations
 import json
 import logging
 import re
+import time
 import unicodedata
-from typing import Any
+from typing import Any, AsyncGenerator
 
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -16,6 +17,28 @@ from src.agents.tools.weather_tool import get_weather
 from src.config import get_settings
 
 logger = logging.getLogger(__name__)
+
+_CACHE_TTL_SECONDS = 900  # 15 phút
+_CHAT_RESPONSE_CACHE: dict[str, tuple[float, dict[str, Any]]] = {}
+
+
+def _get_cached_response(cache_key: str) -> dict[str, Any] | None:
+    cached = _CHAT_RESPONSE_CACHE.get(cache_key)
+    if not cached:
+        return None
+    timestamp, data = cached
+    if time.monotonic() - timestamp > _CACHE_TTL_SECONDS:
+        _CHAT_RESPONSE_CACHE.pop(cache_key, None)
+        return None
+    return data
+
+
+def _set_cached_response(cache_key: str, data: dict[str, Any]) -> None:
+    if len(_CHAT_RESPONSE_CACHE) > 500:
+        keys = list(_CHAT_RESPONSE_CACHE.keys())[:100]
+        for k in keys:
+            _CHAT_RESPONSE_CACHE.pop(k, None)
+    _CHAT_RESPONSE_CACHE[cache_key] = (time.monotonic(), data)
 
 _DATETIME_PATTERNS = (
     r"\b(?:mấy|bao nhiêu)\s*giờ\b",
@@ -51,6 +74,33 @@ def _plan_assistant_action(state: CareerAssistantState) -> dict[str, Any]:
 
     if _contains_any(normalized, ("system prompt", "api key", "gemini api", "khoa bi mat", "tiet lo prompt")):
         return {"intent": "security_refusal", "suggested_actions": []}
+
+    # Fast Greeting / FAQ Routing (< 5ms response time)
+    if _contains_any(normalized, ("xin chao", "chao ban", "chao nova", "hello", "hi nova", "hi ban", "alo", "hey")):
+        return {
+            "intent": "greeting",
+            "suggested_actions": [
+                {"label": "Mở CV Upload", "page": "cv"},
+                {"label": "Mở Gap Analysis", "page": "gap"},
+                {"label": "Mở Phỏng vấn STAR", "page": "interview"},
+            ],
+        }
+    if _contains_any(normalized, ("ban la ai", "gioi thieu ve ban", "nova la gi", "tro ly la gi", "ban lam duoc gi", "tinh nang cua ban")):
+        return {
+            "intent": "introduction",
+            "suggested_actions": [
+                {"label": "Mở CV Upload", "page": "cv"},
+                {"label": "Mở Thư viện Jobs", "page": "jobs"},
+            ],
+        }
+    if _contains_any(normalized, ("huong dan su dung", "cach su dung", "giup toi voi", "tro giup", "huong dan")):
+        return {
+            "intent": "help",
+            "suggested_actions": [
+                {"label": "Mở CV Upload", "page": "cv"},
+                {"label": "Mở Thư viện Jobs", "page": "jobs"},
+            ],
+        }
 
     if _contains_any(normalized, ("liet ke cv", "danh sach cv", "cac cv cua toi", "toi co nhung cv")):
         return {"intent": "list_cvs", "suggested_actions": []}
@@ -138,6 +188,47 @@ async def _respond_with_orchestration(state: CareerAssistantState) -> dict[str, 
         "tools_used": ["verified_user_database"],
         "suggested_actions": [],
     }
+
+    if intent == "greeting":
+        return {
+            **result,
+            "response": "Chào bạn! Mình là Nova — Trợ lý AI Nghề nghiệp. Mình có thể giúp bạn tối ưu CV, phân tích độ phù hợp với JD (Gap Analysis) và luyện phỏng vấn thử theo chuẩn STAR. Bạn muốn bắt đầu từ đâu?",
+            "suggested_actions": [
+                {"label": "Mở CV Upload", "page": "cv"},
+                {"label": "Mở Gap Analysis", "page": "gap"},
+                {"label": "Mở Phỏng vấn STAR", "page": "interview"},
+            ],
+        }
+
+    if intent == "introduction":
+        return {
+            **result,
+            "response": (
+                "Mình là Nova, người bạn đồng hành phát triển sự nghiệp của bạn. Mình cung cấp 3 tính năng cốt lõi:\n"
+                "1. 📄 Chuẩn hóa và tối ưu CV chuẩn ATS.\n"
+                "2. 🎯 Phân tích khoảng trống kỹ năng so với JD (Gap Analysis) kèm minh chứng rõ ràng.\n"
+                "3. 🎙️ Phòng phỏng vấn giả lập STAR chấm điểm tự động."
+            ),
+            "suggested_actions": [
+                {"label": "Mở CV Upload", "page": "cv"},
+                {"label": "Mở Thư viện Jobs", "page": "jobs"},
+            ],
+        }
+
+    if intent == "help":
+        return {
+            **result,
+            "response": (
+                "Để sử dụng hệ thống hiệu quả nhất, bạn có thể thực hiện theo quy trình sau:\n"
+                "1. Tải lên CV của bạn tại mục CV.\n"
+                "2. Chọn một vị trí tuyển dụng trong Thư viện Jobs và chạy Gap Analysis để xem độ phù hợp.\n"
+                "3. Nhận lộ trình cải thiện và vào phòng Phỏng vấn STAR để luyện tập trả lời câu hỏi chuyên môn."
+            ),
+            "suggested_actions": [
+                {"label": "Mở CV Upload", "page": "cv"},
+                {"label": "Mở Thư viện Jobs", "page": "jobs"},
+            ],
+        }
 
     if intent == "security_refusal":
         return {
@@ -296,7 +387,6 @@ async def _respond_with_current_datetime(state: CareerAssistantState) -> dict[st
         "tools_used": ["system_clock"],
         "provider": "system_clock",
         "model": "deterministic_datetime",
-        # Trường này biểu thị request assistant thành công; nhánh ngày giờ không cần gọi LLM.
         "llm_succeeded": True,
         "response": response,
     }
@@ -316,23 +406,21 @@ def _content_to_text(content: Any) -> str:
     return str(content).strip()
 
 
-async def _respond_with_gemini(state: CareerAssistantState) -> dict[str, Any]:
-    settings = get_settings()
-    base_result = {
-        "provider": "google_gemini",
-        "model": settings.model_name,
-        "llm_succeeded": False,
-    }
-    if not settings.google_genai_api_key:
-        return {
-            **base_result,
-            "response": (
-                "Mình chưa thể trò chuyện bằng AI vì máy chủ chưa cấu hình GEMINI_API_KEY. "
-                "Hãy thêm API key rồi khởi động lại backend; mình sẽ không giả lập câu trả lời LLM."
-            ),
-            "error": "missing_gemini_api_key",
-        }
+def _chunk_to_text(content: Any) -> str:
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        parts = []
+        for item in content:
+            if isinstance(item, dict) and item.get("text"):
+                parts.append(str(item["text"]))
+            elif isinstance(item, str):
+                parts.append(item)
+        return "".join(parts)
+    return str(content) if content is not None else ""
 
+
+def _build_gemini_messages(state: CareerAssistantState) -> list[Any]:
     context = state.get("user_context", {})
     system_prompt = f"""Bạn là Nova, trợ lý AI nghề nghiệp trong ứng dụng CV Assistant.
 Bạn hỗ trợ người dùng viết CV trung thực, hiểu JD, lập kế hoạch bù khoảng trống kỹ năng
@@ -370,7 +458,8 @@ QUY TẮC THỜI TIẾT:
 - Ghi ngắn gọn tên nguồn đúng theo trường source ở cuối câu trả lời."""
 
     messages: list[Any] = [SystemMessage(content=system_prompt)]
-    for item in state.get("history", [])[-10:]:
+    # Cắt gọn history 6 lượt gần nhất để tối ưu TTFT và giảm token latency
+    for item in state.get("history", [])[-6:]:
         content = str(item.get("content", "")).strip()
         if not content:
             continue
@@ -379,12 +468,47 @@ QUY TẮC THỜI TIẾT:
         else:
             messages.append(HumanMessage(content=content))
     messages.append(HumanMessage(content=state.get("message", "")))
+    return messages
+
+
+async def _respond_with_gemini(state: CareerAssistantState) -> dict[str, Any]:
+    settings = get_settings()
+    base_result = {
+        "provider": "google_gemini",
+        "model": settings.model_name,
+        "llm_succeeded": False,
+    }
+    if not settings.google_genai_api_key:
+        return {
+            **base_result,
+            "response": (
+                "Mình chưa thể trò chuyện bằng AI vì máy chủ chưa cấu hình GEMINI_API_KEY. "
+                "Hãy thêm API key rồi khởi động lại backend; mình sẽ không giả lập câu trả lời LLM."
+            ),
+            "error": "missing_gemini_api_key",
+        }
+
+    # In-memory cache lookup
+    cache_key = f"{_normalize_intent_text(state.get('message', ''))}:{state.get('user_context', {}).get('role', '')}:{state.get('user_context', {}).get('current_page', '')}"
+    cached = _get_cached_response(cache_key)
+    if cached:
+        return {
+            **base_result,
+            "response": cached.get("response", ""),
+            "provider": "in_memory_cache",
+            "model": "in_memory_cache",
+            "llm_succeeded": True,
+            "tools_used": ["in_memory_cache"],
+        }
+
+    messages = _build_gemini_messages(state)
 
     try:
         llm = ChatGoogleGenerativeAI(
             model=settings.model_name,
             api_key=settings.google_genai_api_key,
-            temperature=0.65,
+            temperature=0.6,
+            max_output_tokens=512,
             request_timeout=settings.llm_timeout_seconds,
             retries=settings.llm_max_retries,
         )
@@ -392,6 +516,9 @@ QUY TẮC THỜI TIẾT:
         response_text = _content_to_text(answer.content)
         if not response_text:
             raise ValueError("Gemini trả về nội dung rỗng")
+        
+        # Save cache
+        _set_cached_response(cache_key, {"response": response_text})
         return {**base_result, "response": response_text, "llm_succeeded": True}
     except Exception as exc:
         logger.warning("Career Assistant Agent không gọi được Gemini: %s", exc)
@@ -419,6 +546,7 @@ def _build_career_assistant_graph():
             if state.get("intent") in {
                 "security_refusal", "list_cvs", "list_jds", "prepare_gap_analysis", "prepare_interview",
                 "grounded_cv_request", "latest_analysis", "explain_analysis", "action_plan", "compare_positions",
+                "greeting", "introduction", "help",
             }
             else "respond"
         ),
@@ -451,6 +579,190 @@ class CareerAssistantAgent:
                 "resource_context": user_context.get("_resources", {}),
             }
         )
+
+    async def astream_run(
+        self,
+        message: str,
+        history: list[dict[str, str]],
+        user_context: dict[str, Any],
+    ) -> AsyncGenerator[dict[str, Any], None]:
+        """Streaming generator phát token theo thời gian thực (SSE) để giảm độ trễ cảm nhận."""
+        initial_state: CareerAssistantState = {
+            "message": message,
+            "history": history,
+            "user_context": user_context,
+            "resource_context": user_context.get("_resources", {}),
+        }
+        plan_result = _plan_assistant_action(initial_state)
+        intent = plan_result.get("intent", "career_chat")
+        suggested_actions = plan_result.get("suggested_actions", [])
+        state = {**initial_state, **plan_result}
+
+        # 1. Nhánh Fast Deterministic / Orchestration (< 5ms)
+        if intent in {
+            "security_refusal", "list_cvs", "list_jds", "prepare_gap_analysis", "prepare_interview",
+            "grounded_cv_request", "latest_analysis", "explain_analysis", "action_plan", "compare_positions",
+            "greeting", "introduction", "help",
+        }:
+            orchestrate_result = await _respond_with_orchestration(state)
+            resp_text = orchestrate_result.get("response", "")
+            actions = orchestrate_result.get("suggested_actions", suggested_actions)
+            yield {
+                "type": "metadata",
+                "intent": intent,
+                "suggested_actions": actions,
+                "provider": orchestrate_result.get("provider", "nova_orchestrator"),
+                "model": orchestrate_result.get("model", "deterministic_orchestration"),
+            }
+            yield {"type": "chunk", "content": resp_text}
+            yield {
+                "type": "done",
+                "response": resp_text,
+                "suggested_actions": actions,
+                "tools_used": orchestrate_result.get("tools_used", ["verified_user_database"]),
+                "provider": orchestrate_result.get("provider", "nova_orchestrator"),
+                "model": orchestrate_result.get("model", "deterministic_orchestration"),
+                "llm_succeeded": True,
+            }
+            return
+
+        # 2. Nhánh System Clock / Datetime (< 5ms)
+        if intent == "datetime":
+            dt_result = await _respond_with_current_datetime(state)
+            resp_text = dt_result.get("response", "")
+            yield {
+                "type": "metadata",
+                "intent": intent,
+                "suggested_actions": [],
+                "provider": "system_clock",
+                "model": "deterministic_datetime",
+            }
+            yield {"type": "chunk", "content": resp_text}
+            yield {
+                "type": "done",
+                "response": resp_text,
+                "suggested_actions": [],
+                "tools_used": dt_result.get("tools_used", ["system_clock"]),
+                "provider": "system_clock",
+                "model": "deterministic_datetime",
+                "llm_succeeded": True,
+            }
+            return
+
+        # 3. Nhánh Weather Tool
+        tools_used: list[str] = []
+        if intent == "weather":
+            weather_res = await _load_weather_context(state)
+            state = {**state, **weather_res}
+            tools_used = weather_res.get("tools_used", [])
+
+        # 4. Kiểm tra khóa Gemini
+        settings = get_settings()
+        if not settings.google_genai_api_key:
+            err_text = (
+                "Mình chưa thể trò chuyện bằng AI vì máy chủ chưa cấu hình GEMINI_API_KEY. "
+                "Hãy thêm API key rồi khởi động lại backend; mình sẽ không giả lập câu trả lời LLM."
+            )
+            yield {
+                "type": "metadata",
+                "intent": intent,
+                "suggested_actions": [],
+                "provider": "google_gemini",
+                "model": settings.model_name,
+            }
+            yield {"type": "chunk", "content": err_text}
+            yield {
+                "type": "done",
+                "response": err_text,
+                "suggested_actions": [],
+                "tools_used": tools_used,
+                "provider": "google_gemini",
+                "model": settings.model_name,
+                "llm_succeeded": False,
+                "error": "missing_gemini_api_key",
+            }
+            return
+
+        # 5. In-Memory Cache Check
+        cache_key = f"{_normalize_intent_text(message)}:{user_context.get('role', '')}:{user_context.get('current_page', '')}"
+        cached = _get_cached_response(cache_key)
+        if cached:
+            resp_text = cached.get("response", "")
+            yield {
+                "type": "metadata",
+                "intent": intent,
+                "suggested_actions": suggested_actions,
+                "provider": "in_memory_cache",
+                "model": "in_memory_cache",
+            }
+            yield {"type": "chunk", "content": resp_text}
+            yield {
+                "type": "done",
+                "response": resp_text,
+                "suggested_actions": suggested_actions,
+                "tools_used": ["in_memory_cache"],
+                "provider": "in_memory_cache",
+                "model": "in_memory_cache",
+                "llm_succeeded": True,
+            }
+            return
+
+        yield {
+            "type": "metadata",
+            "intent": intent,
+            "suggested_actions": suggested_actions,
+            "provider": "google_gemini",
+            "model": settings.model_name,
+        }
+
+        messages = _build_gemini_messages(state)
+        llm = ChatGoogleGenerativeAI(
+            model=settings.model_name,
+            api_key=settings.google_genai_api_key,
+            temperature=0.6,
+            max_output_tokens=512,
+            request_timeout=settings.llm_timeout_seconds,
+            retries=settings.llm_max_retries,
+        )
+
+        full_content_parts: list[str] = []
+        try:
+            async for chunk in llm.astream(messages):
+                chunk_text = _chunk_to_text(chunk.content)
+                if chunk_text:
+                    full_content_parts.append(chunk_text)
+                    yield {"type": "chunk", "content": chunk_text}
+
+            final_response = "".join(full_content_parts).strip()
+            if not final_response:
+                raise ValueError("Gemini trả về nội dung rỗng")
+
+            _set_cached_response(cache_key, {"response": final_response})
+
+            yield {
+                "type": "done",
+                "response": final_response,
+                "suggested_actions": suggested_actions,
+                "tools_used": tools_used or ["gemini_chat"],
+                "provider": "google_gemini",
+                "model": settings.model_name,
+                "llm_succeeded": True,
+            }
+        except Exception as exc:
+            logger.warning("Streaming Career Assistant Agent thất bại: %s", exc)
+            fallback_text = "Nova đang mất kết nối với Gemini. Vui lòng thử lại sau ít phút."
+            if not full_content_parts:
+                yield {"type": "chunk", "content": fallback_text}
+            yield {
+                "type": "done",
+                "response": "".join(full_content_parts).strip() or fallback_text,
+                "suggested_actions": suggested_actions,
+                "tools_used": tools_used,
+                "provider": "google_gemini",
+                "model": settings.model_name,
+                "llm_succeeded": False,
+                "error": str(exc),
+            }
 
 
 career_assistant_agent = CareerAssistantAgent()

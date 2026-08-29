@@ -422,6 +422,92 @@ class ApiClient {
     return await this.requestAssistant('/assistant/chat', options);
   }
 
+  static async chatWithAssistantStream(
+    message,
+    history = [],
+    currentPage = 'dashboard',
+    conversationId = null,
+    operation = null,
+    { onChunk, onMetadata, onDone, onError } = {}
+  ) {
+    const token = this.getToken();
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const endpoint = '/assistant/chat/stream';
+    const requestUrl = /^https?:\/\//i.test(endpoint) ? endpoint : `${API_BASE_URL}${endpoint}`;
+
+    try {
+      const response = await fetch(requestUrl, {
+        method: 'POST',
+        headers,
+        credentials: 'include',
+        body: JSON.stringify({
+          message,
+          history,
+          current_page: currentPage,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || null,
+          conversation_id: conversationId,
+          operation,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const err = new Error(errorData.detail || `Lỗi HTTP ${response.status}`);
+        err.status = response.status;
+        if (onError) onError(err);
+        throw err;
+      }
+
+      if (!response.body) {
+        throw new Error('ReadableStream not supported');
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder('utf-8');
+      let buffer = '';
+      let accumulatedText = '';
+      let doneResult = null;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (trimmed.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(trimmed.slice(6));
+              if (data.type === 'metadata' && onMetadata) {
+                onMetadata(data);
+              } else if (data.type === 'chunk') {
+                accumulatedText += data.content || '';
+                if (onChunk) onChunk(data.content || '', accumulatedText);
+              } else if (data.type === 'done') {
+                doneResult = data;
+                if (onDone) onDone(data);
+              }
+            } catch (_e) {}
+          }
+        }
+      }
+
+      return doneResult || {
+        response: accumulatedText,
+        llm_succeeded: true,
+        conversation_id: conversationId,
+        suggested_actions: [],
+      };
+    } catch (err) {
+      if (onError) onError(err);
+      throw err;
+    }
+  }
+
   static async listAssistantConversations() {
     return await this.requestAssistant('/assistant/conversations');
   }
@@ -1595,7 +1681,11 @@ function startAppLogic() {
         matchButton.classList.add('is-loading');
         matchButton.disabled = true;
         const matchButtonText = matchButton.querySelector('span');
-        if (matchButtonText) matchButtonText.textContent = `${stepText} ${progress}%`;
+        if (matchButtonText) {
+          matchButtonText.textContent = `${stepText} ${progress}%`;
+        } else {
+          matchButton.textContent = `Đang phân tích ${progress}%`;
+        }
       }
       const hint = document.getElementById('p1-cta-hint');
       if (hint) {
@@ -8700,6 +8790,84 @@ TÊN CÔNG TY:
       }
     }
 
+    function appendActionList(message, actions = []) {
+      if (!actions || !actions.length) return;
+      const actionList = document.createElement('div');
+      actionList.className = 'ai-chat-actions';
+      actions.forEach(action => {
+        if (action.action_type === 'evidence') {
+          const details = document.createElement('details');
+          details.className = 'ai-chat-evidence';
+          const summary = document.createElement('summary');
+          summary.textContent = action.label || 'Nguồn và bằng chứng';
+          details.appendChild(summary);
+          (action.sources || []).forEach(source => {
+            const item = document.createElement('div');
+            item.className = 'ai-chat-source';
+            const title = document.createElement('strong');
+            title.textContent = source.title || source.source_type;
+            const meta = document.createElement('small');
+            const provenanceLabels = {
+              user_data: 'Dữ liệu người dùng',
+              verified_analysis: 'Phân tích đã kiểm chứng',
+              system_data: 'Dữ liệu hệ thống',
+              recommendation: 'Khuyến nghị tương lai',
+            };
+            meta.textContent = `${provenanceLabels[source.provenance] || source.provenance || 'Nguồn'}${source.updated_at ? ` · ${formatConversationDate(source.updated_at)}` : ''}`;
+            item.append(title, meta);
+            if (source.quote) {
+              const quote = document.createElement('blockquote');
+              quote.textContent = source.quote;
+              item.appendChild(quote);
+            }
+            details.appendChild(item);
+          });
+          actionList.appendChild(details);
+          return;
+        }
+        if (['run_gap_analysis', 'start_interview'].includes(action.action_type)) {
+          const card = document.createElement('div');
+          card.className = 'ai-chat-operation';
+          card.dataset.actionType = action.action_type;
+          const cvSelect = document.createElement('select');
+          cvSelect.dataset.resourceType = 'cv';
+          cvSelect.setAttribute('aria-label', 'Chọn CV cho Nova');
+          const jdSelect = document.createElement('select');
+          jdSelect.dataset.resourceType = 'jd';
+          jdSelect.setAttribute('aria-label', 'Chọn JD cho Nova');
+          const fillOptions = (select, placeholder, options) => {
+            const initial = document.createElement('option');
+            initial.value = '';
+            initial.textContent = placeholder;
+            select.appendChild(initial);
+            (options || []).forEach(option => {
+              const element = document.createElement('option');
+              element.value = option.id;
+              element.textContent = `${option.label}${option.meta ? ` · ${option.meta}` : ''}`;
+              select.appendChild(element);
+            });
+          };
+          fillOptions(cvSelect, 'Chọn CV…', action.options?.cvs);
+          fillOptions(jdSelect, 'Chọn JD…', action.options?.jds);
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'ai-chat-operation-confirm';
+          button.textContent = action.label;
+          card.append(cvSelect, jdSelect, button);
+          actionList.appendChild(card);
+          return;
+        }
+        const targetPage = action.page === 'gap' ? 'cv' : action.page;
+        if (!ALL_VIEWS.includes(targetPage)) return;
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.dataset.assistantTarget = targetPage;
+        button.textContent = action.label;
+        actionList.appendChild(button);
+      });
+      message.appendChild(actionList);
+    }
+
     function appendChatMessage(role, text, actions = []) {
       const message = document.createElement('div');
       message.className = `ai-chat-message ${role}`;
@@ -8711,80 +8879,7 @@ TÊN CÔNG TY:
       message.append(name, paragraph);
 
       if (role === 'assistant' && actions.length) {
-        const actionList = document.createElement('div');
-        actionList.className = 'ai-chat-actions';
-        actions.forEach(action => {
-          if (action.action_type === 'evidence') {
-            const details = document.createElement('details');
-            details.className = 'ai-chat-evidence';
-            const summary = document.createElement('summary');
-            summary.textContent = action.label || 'Nguồn và bằng chứng';
-            details.appendChild(summary);
-            (action.sources || []).forEach(source => {
-              const item = document.createElement('div');
-              item.className = 'ai-chat-source';
-              const title = document.createElement('strong');
-              title.textContent = source.title || source.source_type;
-              const meta = document.createElement('small');
-              const provenanceLabels = {
-                user_data: 'Dữ liệu người dùng',
-                verified_analysis: 'Phân tích đã kiểm chứng',
-                system_data: 'Dữ liệu hệ thống',
-                recommendation: 'Khuyến nghị tương lai',
-              };
-              meta.textContent = `${provenanceLabels[source.provenance] || source.provenance || 'Nguồn'}${source.updated_at ? ` · ${formatConversationDate(source.updated_at)}` : ''}`;
-              item.append(title, meta);
-              if (source.quote) {
-                const quote = document.createElement('blockquote');
-                quote.textContent = source.quote;
-                item.appendChild(quote);
-              }
-              details.appendChild(item);
-            });
-            actionList.appendChild(details);
-            return;
-          }
-          if (['run_gap_analysis', 'start_interview'].includes(action.action_type)) {
-            const card = document.createElement('div');
-            card.className = 'ai-chat-operation';
-            card.dataset.actionType = action.action_type;
-            const cvSelect = document.createElement('select');
-            cvSelect.dataset.resourceType = 'cv';
-            cvSelect.setAttribute('aria-label', 'Chọn CV cho Nova');
-            const jdSelect = document.createElement('select');
-            jdSelect.dataset.resourceType = 'jd';
-            jdSelect.setAttribute('aria-label', 'Chọn JD cho Nova');
-            const fillOptions = (select, placeholder, options) => {
-              const initial = document.createElement('option');
-              initial.value = '';
-              initial.textContent = placeholder;
-              select.appendChild(initial);
-              (options || []).forEach(option => {
-                const element = document.createElement('option');
-                element.value = option.id;
-                element.textContent = `${option.label}${option.meta ? ` · ${option.meta}` : ''}`;
-                select.appendChild(element);
-              });
-            };
-            fillOptions(cvSelect, 'Chọn CV…', action.options?.cvs);
-            fillOptions(jdSelect, 'Chọn JD…', action.options?.jds);
-            const button = document.createElement('button');
-            button.type = 'button';
-            button.className = 'ai-chat-operation-confirm';
-            button.textContent = action.label;
-            card.append(cvSelect, jdSelect, button);
-            actionList.appendChild(card);
-            return;
-          }
-          const targetPage = action.page === 'gap' ? 'cv' : action.page;
-          if (!ALL_VIEWS.includes(targetPage)) return;
-          const button = document.createElement('button');
-          button.type = 'button';
-          button.dataset.assistantTarget = targetPage;
-          button.textContent = action.label;
-          actionList.appendChild(button);
-        });
-        message.appendChild(actionList);
+        appendActionList(message, actions);
       }
       messagesElement.appendChild(message);
       messagesElement.scrollTop = messagesElement.scrollHeight;
@@ -8792,25 +8887,70 @@ TÊN CÔNG TY:
     }
 
     async function submitAssistantRequest(text, operation = null) {
-      const previousHistory = conversationHistory.slice(-10);
+      const previousHistory = conversationHistory.slice(-6);
       appendChatMessage('user', text);
       conversationHistory.push({ role: 'user', content: text });
       if (sendButton) sendButton.disabled = true;
       const typing = appendTypingIndicator();
+
+      let streamMessageElement = null;
+      let streamParagraph = null;
+      let hasReceivedFirstChunk = false;
+
+      const onChunk = (chunk, accumulated) => {
+        if (!hasReceivedFirstChunk) {
+          hasReceivedFirstChunk = true;
+          typing.remove();
+          streamMessageElement = document.createElement('div');
+          streamMessageElement.className = 'ai-chat-message assistant';
+          const name = document.createElement('span');
+          name.className = 'ai-chat-message-name';
+          name.textContent = 'Nova';
+          streamParagraph = document.createElement('p');
+          streamMessageElement.append(name, streamParagraph);
+          messagesElement.appendChild(streamMessageElement);
+        }
+        if (streamParagraph) {
+          streamParagraph.textContent = accumulated;
+        }
+        messagesElement.scrollTop = messagesElement.scrollHeight;
+      };
+
       try {
-        const result = await ApiClient.chatWithAssistant(
+        const result = await ApiClient.chatWithAssistantStream(
           text,
           previousHistory,
           currentViewName,
           currentConversationId,
-          operation
+          operation,
+          {
+            onChunk,
+            onMetadata: data => {
+              if (data.conversation_id) {
+                currentConversationId = data.conversation_id;
+              }
+            },
+          }
         );
-        typing.remove();
-        currentConversationId = result.conversation_id;
+
+        if (!hasReceivedFirstChunk) {
+          typing.remove();
+        }
+
+        currentConversationId = result.conversation_id || currentConversationId;
         const response = result.llm_succeeded
           ? result.response
           : getAssistantUnavailableMessage();
-        appendChatMessage('assistant', response, result.llm_succeeded ? (result.suggested_actions || []) : []);
+
+        if (streamMessageElement) {
+          if (streamParagraph) streamParagraph.textContent = response;
+          if (result.suggested_actions && result.suggested_actions.length) {
+            appendActionList(streamMessageElement, result.suggested_actions);
+          }
+        } else {
+          appendChatMessage('assistant', response, result.llm_succeeded ? (result.suggested_actions || []) : []);
+        }
+
         conversationHistory.push({ role: 'assistant', content: response });
         companion.classList.toggle('is-online', Boolean(result.llm_succeeded));
         if (statusText) {
@@ -8821,6 +8961,9 @@ TÊN CÔNG TY:
         return result;
       } catch (err) {
         typing.remove();
+        if (streamMessageElement && !streamParagraph?.textContent) {
+          streamMessageElement.remove();
+        }
         if (err.status === 401) {
           performLogout({ notify: false });
           appendChatMessage('assistant', 'Phiên đăng nhập đã hết hạn. Bạn hãy đăng nhập lại.');
