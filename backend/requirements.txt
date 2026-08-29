@@ -42,8 +42,8 @@ google-genai>=1.0.0
 # ==========================================
 # 5. VOICE INTERVIEW (Pipeline 3)
 # ==========================================
-deepgram-sdk>=3.0.0,<4.0.0      # Deepgram Nova-3 STT (streaming WebSocket)
-gTTS>=2.5.0                      # Google Translate TTS (miễn phí, hỗ trợ tiếng Việt tốt)
+elevenlabs>=2.0.0,<3.0.0        # ElevenLabs TTS (eleven_flash_v2_5, hỗ trợ tiếng Việt)
+gTTS>=2.5.0                      # Fallback TTS khi ElevenLabs lỗi/hết quota
 
 # Vector stores: pgvector embeddings and Qdrant market-JD retrieval
 pgvector>=0.2.0

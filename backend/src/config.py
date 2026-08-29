@@ -94,11 +94,26 @@ class Settings(BaseSettings):
     mineru_poll_timeout_seconds: float = Field(default=120, ge=10, le=300)
     weather_api_key: str = ""
 
-    # Voice Interview (Pipeline 3): Deepgram STT + Gemini LLM + gTTS
-    deepgram_api_key: str = ""
+    # Voice Interview (Pipeline 3): Gemini Live STT + Gemini LLM + ElevenLabs TTS
+    # STT: Gemini Live API (free tier khong gioi han RPM/RPD).
+    gemini_stt_model: str = "gemini-3.5-transcribe-live"
     openai_api_key: str = ""
     voice_llm_model: str = "gemini-2.5-flash"
     voice_llm_fallback_model: str = "gemini-2.5-flash"
+
+    # TTS: ElevenLabs là nhà cung cấp chính, gTTS là fallback khi thiếu key,
+    # lỗi mạng hoặc hết quota. Không bao giờ để buổi phỏng vấn im lặng.
+    # Voice ID mặc định là giọng tiếng Anh; hãy chọn giọng hợp tiếng Việt rồi
+    # override qua ELEVENLABS_VOICE_ID_*.
+    # LƯU Ý: gói Free KHÔNG dùng được "library voice" qua API (trả 402
+    # paid_plan_required) — ví dụ Rachel 21m00Tcm4TlvDq8ikWAM và Charlotte
+    # XB0fDUnXU5powFXDhCwa đều bị chặn. Hai mặc định dưới đây đã được xác minh
+    # chạy được trên gói Free.
+    elevenlabs_api_key: str = ""
+    elevenlabs_model: str = "eleven_flash_v2_5"
+    elevenlabs_voice_id_female: str = "EXAVITQu4vr4xnSDxMaL"
+    elevenlabs_voice_id_male: str = "JBFqnCBsd6RMkjVDRZzb"
+    elevenlabs_timeout_seconds: float = Field(default=15, ge=3, le=60)
     # Final STAR scores are deterministic; LLM wording is opt-in so the
     # report is always available immediately after a voice session.
     interview_report_llm_enabled: bool = False

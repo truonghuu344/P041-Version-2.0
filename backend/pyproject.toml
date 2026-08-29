@@ -39,6 +39,11 @@ dependencies = [
 
     "httpx>=0.28.0",
     "reportlab>=4.2.0",
+
+    # Voice interview: Gemini Live STT, ElevenLabs TTS (gTTS fallback).
+    # Bắt buộc có ở đây, nếu không `uv sync` sẽ dựng env câm.
+    "elevenlabs>=2.0.0,<3.0.0",
+    "gTTS>=2.5.0",
 ]
 [project.scripts]
 app = "src.main:app"

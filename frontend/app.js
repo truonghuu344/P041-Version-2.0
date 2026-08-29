@@ -6038,7 +6038,7 @@ TÊN CÔNG TY:
   /* ── Voice Interview WebSocket Client ─────────────────────── */
   let voiceWs = null;
   let voiceMediaStream = null;
-  let voiceMediaRecorder = null;
+  let voicePcmNode = null;
   let voiceAudioContext = null;
   let voiceGainNode = null;
   let voiceIsRecording = false;
@@ -6126,6 +6126,13 @@ TÊN CÔNG TY:
         if (sttPartialText) sttPartialText.textContent = voiceTranscriptParts.join(' ');
         break;
 
+      case 'utterance_end':
+        // VAD báo hết một đoạn nói. KHÔNG tự gửi: ứng viên có thể đang nghĩ
+        // rồi nói tiếp, tự gửi ở đây là cắt ngang câu trả lời đang dở.
+        // Chỉ đồng bộ lại phần đã nghe theo bản server đang giữ.
+        if (msg.text && sttPartialText) sttPartialText.textContent = msg.text;
+        break;
+
       case 'nudge':
         showToast(msg.message, 'info');
         break;
@@ -6194,24 +6201,62 @@ TÊN CÔNG TY:
     }
   }
 
+  /* Backend (Gemini Live) chỉ nhận PCM16 16kHz thô, không nhận webm/opus. */
+  const PCM_WORKLET_NAME = 'pcm16-downsampler';
+
+  function pcmToBase64(buffer) {
+    // Không dùng String.fromCharCode(...array): với chunk lớn nó làm vỡ stack.
+    const bytes = new Uint8Array(buffer);
+    const CHUNK = 0x8000;
+    let binary = '';
+    for (let i = 0; i < bytes.length; i += CHUNK) {
+      binary += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK));
+    }
+    return btoa(binary);
+  }
+
+  async function loadPcmWorklet(ctx) {
+    // app.js được nạp cả từ Next.js lẫn index.html cũ nên đường dẫn tĩnh phân
+    // giải khác nhau; thử tuyệt đối trước, rồi tương đối.
+    try {
+      await ctx.audioWorklet.addModule('/pcm16-worklet.js');
+    } catch (_e) {
+      await ctx.audioWorklet.addModule('./pcm16-worklet.js');
+    }
+  }
+
   async function startVoiceRecording() {
     if (voiceIsRecording) return;
     try {
       voiceMediaStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: false, autoGainControl: true, channelCount: 1, sampleRate: { ideal: 16000 } } });
 
-      const actualRate = voiceMediaStream.getAudioTracks()[0]?.getSettings()?.sampleRate || 48000;
-      voiceAudioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: actualRate });
+      // Mở context thẳng ở 16kHz để chính trình duyệt resample — bộ lọc của nó
+      // tốt hơn nhiều so với hạ tần số thủ công trong worklet, và khi đó worklet
+      // chỉ còn việc đổi Float32 sang Int16. Trình duyệt nào từ chối tần số này
+      // thì worklet tự lo phần hạ tần số (chất lượng thấp hơn nhưng vẫn chạy).
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      try {
+        voiceAudioContext = new AudioCtx({ sampleRate: 16000 });
+      } catch (_e) {
+        voiceAudioContext = new AudioCtx();
+      }
+      await loadPcmWorklet(voiceAudioContext);
+
       const source = voiceAudioContext.createMediaStreamSource(voiceMediaStream);
       voiceGainNode = voiceAudioContext.createGain();
       voiceGainNode.gain.value = 2.5;
-      const dest = voiceAudioContext.createMediaStreamDestination();
+      voicePcmNode = new AudioWorkletNode(voiceAudioContext, PCM_WORKLET_NAME);
       source.connect(voiceGainNode);
-      voiceGainNode.connect(dest);
+      voiceGainNode.connect(voicePcmNode);
+      // Đồ thị Web Audio được kéo từ destination; node không nối tới đích có
+      // thể không bao giờ chạy process() ở một số trình duyệt. Worklet không
+      // ghi gì vào outputs nên nối thẳng tới destination là im lặng hoàn toàn.
+      voicePcmNode.connect(voiceAudioContext.destination);
 
-      voiceMediaRecorder = new MediaRecorder(dest.stream, { mimeType: MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm' });
       voiceIsRecording = true;
       voiceTranscriptParts = [];
 
+      // Phải báo trước khi audio tới: backend mở phiên STT ở message này.
       if (voiceWs) voiceWs.send(JSON.stringify({ type: 'start_recording' }));
 
       const sttIndicator = document.getElementById('page-interview-stt-indicator');
@@ -6219,25 +6264,26 @@ TÊN CÔNG TY:
       if (sttIndicator) sttIndicator.style.display = 'flex';
       if (sttPartialText) sttPartialText.textContent = 'Đang nghe...';
 
-      voiceMediaRecorder.ondataavailable = async (e) => {
-        if (e.data.size > 0 && voiceWs?.readyState === WebSocket.OPEN) {
-          const buf = await e.data.arrayBuffer();
-          const b64 = btoa(String.fromCharCode(...new Uint8Array(buf)));
-          voiceWs.send(JSON.stringify({ type: 'audio_chunk', data: b64 }));
-        }
+      // Worklet phát mỗi khung ~100ms theo đồng hồ audio, tức là đúng nhịp
+      // thật — điều kiện bắt buộc để server không bỏ đoạn sau chỗ ngập ngừng.
+      voicePcmNode.port.onmessage = (event) => {
+        if (voiceWs?.readyState !== WebSocket.OPEN) return;
+        voiceWs.send(JSON.stringify({ type: 'audio_chunk', data: pcmToBase64(event.data) }));
       };
-      voiceMediaRecorder.start(250);
 
       const voiceButton = document.getElementById('page-interview-voice');
       voiceButton?.classList.add('is-listening');
     } catch (err) {
+      stopVoiceRecording();
       showToast('Không thể truy cập microphone. Hãy cấp quyền truy cập.', 'error');
     }
   }
 
   function stopVoiceRecording() {
-    if (voiceMediaRecorder && voiceMediaRecorder.state !== 'inactive') {
-      voiceMediaRecorder.stop();
+    if (voicePcmNode) {
+      voicePcmNode.port.onmessage = null;
+      voicePcmNode.disconnect();
+      voicePcmNode = null;
     }
     if (voiceAudioContext) {
       voiceAudioContext.close().catch(() => {});
@@ -6249,7 +6295,6 @@ TÊN CÔNG TY:
       voiceMediaStream = null;
     }
     voiceIsRecording = false;
-    voiceMediaRecorder = null;
 
     if (voiceWs) voiceWs.send(JSON.stringify({ type: 'stop_recording' }));
     const voiceButton = document.getElementById('page-interview-voice');
