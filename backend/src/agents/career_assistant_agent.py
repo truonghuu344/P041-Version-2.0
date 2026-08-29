@@ -412,8 +412,11 @@ def _chunk_to_text(content: Any) -> str:
     if isinstance(content, list):
         parts = []
         for item in content:
-            if isinstance(item, dict) and item.get("text"):
-                parts.append(str(item["text"]))
+            if isinstance(item, dict):
+                if item.get("type") == "text" and item.get("text"):
+                    parts.append(str(item["text"]))
+                elif "text" in item and not item.get("type"):
+                    parts.append(str(item["text"]))
             elif isinstance(item, str):
                 parts.append(item)
         return "".join(parts)
@@ -463,6 +466,8 @@ QUY TẮC THỜI TIẾT:
         content = str(item.get("content", "")).strip()
         if not content:
             continue
+        if len(content) > 600:
+            content = content[:600] + "... [đã rút gọn]"
         if item.get("role") == "assistant":
             messages.append(AIMessage(content=content))
         else:
@@ -508,8 +513,9 @@ async def _respond_with_gemini(state: CareerAssistantState) -> dict[str, Any]:
             model=settings.model_name,
             api_key=settings.google_genai_api_key,
             temperature=0.6,
-            max_output_tokens=512,
-            request_timeout=settings.llm_timeout_seconds,
+            max_output_tokens=2048,
+            request_timeout=max(60.0, float(settings.llm_timeout_seconds)),
+            timeout=max(60.0, float(settings.llm_timeout_seconds)),
             retries=settings.llm_max_retries,
         )
         answer = await llm.ainvoke(messages)
@@ -720,8 +726,9 @@ class CareerAssistantAgent:
             model=settings.model_name,
             api_key=settings.google_genai_api_key,
             temperature=0.6,
-            max_output_tokens=512,
-            request_timeout=settings.llm_timeout_seconds,
+            max_output_tokens=2048,
+            request_timeout=max(60.0, float(settings.llm_timeout_seconds)),
+            timeout=max(60.0, float(settings.llm_timeout_seconds)),
             retries=settings.llm_max_retries,
         )
 

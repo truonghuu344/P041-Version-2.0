@@ -559,6 +559,7 @@ async def assistant_chat_stream(
                     "interview_count": interview_count or 0,
                     "_resources": orchestration_resources,
                 }
+                yield f"data: {json.dumps({'type': 'init', 'conversation_id': conversation_id}, ensure_ascii=False)}\n\n"
                 async for event in career_assistant_agent.astream_run(
                     message=payload.message,
                     history=history,
