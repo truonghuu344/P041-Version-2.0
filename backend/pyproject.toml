@@ -40,6 +40,11 @@ dependencies = [
     "httpx>=0.28.0",
     "reportlab>=4.2.0",
 
+    # Object storage R2/S3. Chi duoc dung khi STORAGE_PROVIDER=r2, nhung
+    # phai khai bao o day: thieu no thi `uv sync` dung env ma moi thao tac
+    # upload deu chet bang ModuleNotFoundError.
+    "boto3>=1.35.0",
+
     # Voice interview: Gemini Live STT, ElevenLabs TTS (gTTS fallback).
     # Bắt buộc có ở đây, nếu không `uv sync` sẽ dựng env câm.
     "elevenlabs>=2.0.0,<3.0.0",
