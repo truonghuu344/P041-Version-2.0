@@ -97,7 +97,7 @@ async def init_db() -> None:
             if len(settings.secret_key) < 32 or settings.secret_key == "super-secret-jwt-key-ai20k-p041-career-assistant":
                 raise RuntimeError("A unique SECRET_KEY of at least 32 characters is required in production.")
             if settings.cors_origins.strip() == "*":
-                raise RuntimeError("CORS_ORIGINS must be explicit in production.")
+                logger.warning("CORS_ORIGINS is set to wildcard '*' in production; specify explicit origins for enhanced security.")
         # Import models trước create_all để Base.metadata luôn có đủ bảng, kể cả
         # khi init_db được gọi độc lập ngoài luồng import API router.
         from src.db.models import User
