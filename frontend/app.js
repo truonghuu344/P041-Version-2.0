@@ -9,6 +9,7 @@
 // Gọi cùng origin; Next.js sẽ proxy sang FastAPI. Cách này tránh lỗi CORS khi
 // người dùng mở UI bằng localhost, 127.0.0.1 hoặc một hostname triển khai khác.
 const API_BASE_URL = window.__CAREER_API_BASE_URL__ || '/api/v1';
+const API_V2_BASE_URL = window.__CAREER_API_V2_BASE_URL__ || API_BASE_URL.replace(/\/api\/v1\/?$/, '/api/v2');
 
 class ApiClient {
   static getToken() {
@@ -4722,7 +4723,7 @@ TÊN CÔNG TY:
 
       try {
         markJobSearchRequestStarted();
-        const res = await fetch('/api/v2/job-recommendations', {
+        const res = await fetch(`${API_V2_BASE_URL}/job-recommendations`, {
           method: 'POST',
           headers,
           body: JSON.stringify({
