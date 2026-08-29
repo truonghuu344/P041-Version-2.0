@@ -26,6 +26,7 @@ from src.services.interview_service import (
     generate_final_star_report,
 )
 from src.services.voice import tts_service
+from src.services.voice.keyterms import extract_keyterms
 from src.services.voice.silence_handler import SilenceHandler
 from src.services.voice.stt_service import STTStream
 from src.services.voice.voice_orchestrator import VoiceInterviewOrchestrator
@@ -73,6 +74,7 @@ class VoiceInterviewSession:
         self.stt_stream: STTStream | None = None
         self.silence_handler: SilenceHandler | None = None
         self._transcript_buffer: list[str] = []
+        self._keyterms: list[str] = []
         self._silence_task: asyncio.Task[None] | None = None
 
     async def run(self) -> None:
@@ -91,6 +93,14 @@ class VoiceInterviewSession:
             cv_text = session.cv.raw_text or ""
             jd_title = session.jd.title
             jd_requirements = session.jd.requirements_text
+
+            # Mớm thuật ngữ của chính CV/JD này cho STT. Transcript sai thuật
+            # ngữ ("OAuth2" thành "OAuth") sẽ kéo theo chấm STAR sai.
+            self._keyterms = extract_keyterms(jd_title, jd_requirements, cv_text)
+            logger.info(
+                "Voice session %s: %d keyterm rút từ CV/JD",
+                self.session_id, len(self._keyterms),
+            )
 
             # Phase 1: Preparing
             await _send_json(self.ws, {
@@ -168,6 +178,7 @@ class VoiceInterviewSession:
                     on_partial=self._on_stt_partial,
                     on_final=self._on_stt_final,
                     on_utterance_end=self._on_utterance_end,
+                    keyterms=self._keyterms,
                 )
                 await self.stt_stream.start()
                 self._start_silence_monitor()
@@ -338,7 +349,18 @@ class VoiceInterviewSession:
         await _send_json(self.ws, {"type": "transcript_final", "text": text})
 
     async def _on_utterance_end(self) -> None:
-        pass
+        """Gemini VAD báo một đoạn nói đã kết thúc.
+
+        CỐ Ý KHÔNG tự gửi câu trả lời ở đây. Ứng viên phỏng vấn ngập ngừng
+        giữa chừng là chuyện bình thường, và VAD chốt ngay ở lần im lặng đầu
+        tiên — tự submit sẽ cắt ngang câu trả lời đang dở. Tín hiệu này chỉ
+        dùng để báo giao diện là đã nghe xong đoạn vừa rồi; quyết định gửi
+        vẫn thuộc về ứng viên, hoặc về `SilenceHandler` khi im lặng đủ lâu.
+        """
+        await _send_json(self.ws, {
+            "type": "utterance_end",
+            "text": " ".join(self._transcript_buffer).strip(),
+        })
 
     def _start_silence_monitor(self) -> None:
         self._stop_silence_monitor()

@@ -41,7 +41,12 @@ def test_cv_and_jd_selection_open_analysis_results_in_gap_modal():
     assert "place-items: center" in MATCH_CSS
     assert "max-height: calc(100dvh - 108px)" in MATCH_CSS
     assert 'id="p1-analysis-journey"' not in PAGE_JS
-    assert "matchButton.textContent = `Đang phân tích ${progress}%`" in APP_JS
+    # Tiến độ match phải nằm gọn trong CTA, không tách thành card nhiều bước.
+    # Chỉ khẳng định phần hợp đồng thật sự (đích ghi + nội dung hiển thị);
+    # bản trước ghim nguyên một dòng code nên gãy khi refactor dù hành vi không đổi.
+    assert "document.getElementById('p1-analyze-btn')" in APP_JS
+    assert "matchButtonText.textContent = `${stepText} ${progress}%`" in APP_JS
+    assert "|| 'Đang phân tích'" in APP_JS
 
 
 def test_gap_modal_shows_compact_user_facing_result_and_ai_action():

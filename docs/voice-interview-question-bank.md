@@ -14,16 +14,17 @@ Nghiên cứu và chọn stack cho pipeline phỏng vấn voice real-time:
 
 | Thành phần | Công nghệ | Lý do chọn |
 |---|---|---|
-| **STT** (Speech-to-Text) | Deepgram Nova-3 | Streaming WebSocket, hỗ trợ tiếng Việt, interim results, VAD |
+| **STT** (Speech-to-Text) | Gemini 3.5 Transcribe Live | Live API WebSocket; free tier không giới hạn RPM/RPD; interim + committed transcript, VAD, `custom_vocabulary` nạp thuật ngữ từ CV/JD |
 | **LLM** (Conversation) | Gemini 3.5 Flash (primary) + Gemini 2.0 Flash (fallback) | Cả team dùng chung Gemini API key; `response_mime_type="application/json"` |
-| **TTS** (Text-to-Speech) | gTTS (Google Translate TTS) | Miễn phí, hỗ trợ tiếng Việt tốt, ổn định |
+| **TTS** (Text-to-Speech) | ElevenLabs Flash v2.5 (gTTS làm fallback) | Giọng tự nhiên hơn hẳn; tự rơi về gTTS khi thiếu key/lỗi/hết quota để buổi phỏng vấn không bị im lặng |
 
 ### Thiết kế luồng phỏng vấn
 
 ```
-User nói → Mic (WebSocket binary) → Deepgram Nova-3 STT
-  → Transcript text → Gemini Flash LLM (JSON response)
-  → Extract message → gTTS → Audio base64
+User nói → Mic → AudioWorklet (PCM16 16kHz, khung 100ms)
+  → WebSocket → Gemini 3.5 Transcribe Live (STT)
+  → Transcript text → Gemini Flash-Lite LLM (JSON response)
+  → Extract message → ElevenLabs TTS → Audio base64
   → WebSocket → Frontend playback
 ```
 
@@ -63,12 +64,12 @@ ws://localhost:8000/api/v1/ws/interview/{session_id}?token=<JWT>
 | File | Mô tả |
 |---|---|
 | `backend/src/services/voice/voice_orchestrator.py` | Engine phỏng vấn: system prompt VI/EN, phase management, LLM call (Gemini + OpenAI fallback), `_extract_llm_response()` xử lý JSON |
-| `backend/src/services/voice/tts_service.py` | TTS service dùng gTTS, async wrapper, base64 encode |
-| `backend/src/services/voice/stt_service.py` | Deepgram Nova-3 STT streaming, VAD, interim/final transcript |
+| `backend/src/services/voice/tts_service.py` | TTS ElevenLabs, tự fallback sang gTTS, async wrapper, base64 encode |
+| `backend/src/services/voice/stt_service.py` | Gemini Live STT streaming, VAD, interim/final transcript, keyterms |
 | `backend/src/services/voice/silence_handler.py` | Phát hiện im lặng kéo dài, tự động nhắc ứng viên |
 | `backend/src/api/v1/ws_interview.py` | WebSocket endpoint, JWT auth, session lifecycle, audio routing |
 | `backend/src/api/routes.py` | Đăng ký WebSocket router |
-| `backend/requirements.txt` | Thêm `deepgram-sdk`, `openai`, `gTTS` |
+| `backend/requirements.txt` | Thêm `elevenlabs`, `gTTS` (STT dùng `google-genai` đã có sẵn) |
 | `backend/requirements-prod.txt` | Tương tự cho production |
 
 ### Frontend
@@ -83,7 +84,7 @@ ws://localhost:8000/api/v1/ws/interview/{session_id}?token=<JWT>
 | File | Thay đổi |
 |---|---|
 | `docker-compose.yml` | Thêm CORS origins: `http://192.168.2.21:3001`, ports 3001/55215/57409/62879 |
-| `backend/src/config.py` | Thêm config keys cho Deepgram, OpenAI |
+| `backend/src/config.py` | Thêm config keys cho Gemini STT, ElevenLabs |
 
 ---
 
@@ -174,6 +175,6 @@ ws://localhost:8000/api/v1/ws/interview/{session_id}?token=<JWT>
 - [ ] Interview report: topic/criterion scores, evidence-highlighting transcript
 - [ ] Benchmark: STT (WER/CER), evidence precision/recall, score MAE
 - [ ] E2E test: mock STT/TTS/WebSocket, safety tests (injection, silence, code-switch)
-- [ ] Provider-agnostic STT/TTS adapters (hiện hardcode Deepgram + gTTS)
+- [ ] Provider-agnostic STT/TTS adapters (hiện hardcode Gemini Live + ElevenLabs)
 - [ ] Audio waveform visualization trên frontend
 - [ ] Reconnect logic khi WebSocket bị ngắt
