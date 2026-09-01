@@ -111,8 +111,20 @@ function authHeaders(extra: Record<string, string> = {}): Record<string, string>
   return token ? { ...extra, Authorization: `Bearer ${token}` } : extra;
 }
 
+function resolveApiUrl(endpoint: string): string {
+  if (!endpoint || /^https?:\/\//i.test(endpoint)) return endpoint || '';
+  const root = 'https://p041-version-2-0.onrender.com';
+  const customV1 = (typeof window !== 'undefined' && window.__CAREER_API_BASE_URL__) || `${root}/api/v1`;
+  const customV2 = (typeof window !== 'undefined' && window.__CAREER_API_V2_BASE_URL__) || `${root}/api/v2`;
+  const clean = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  if (clean.startsWith('/api/v2/')) return `${customV2.replace(/\/api\/v2\/?$/, '')}${clean}`;
+  if (clean.startsWith('/api/v1/')) return `${customV1.replace(/\/api\/v1\/?$/, '')}${clean}`;
+  return `${customV1.replace(/\/$/, '')}${clean}`;
+}
+
 async function requestJson<T>(url: string, init: RequestInit = {}): Promise<T> {
-  const response = await fetch(url, {
+  const targetUrl = resolveApiUrl(url);
+  const response = await fetch(targetUrl, {
     ...init,
     credentials: 'include',
     headers: authHeaders({

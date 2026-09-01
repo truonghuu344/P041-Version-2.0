@@ -6,10 +6,34 @@
    FastAPI Backend Integration (PostgreSQL)
    ============================================================ */
 
-// Gọi cùng origin; Next.js sẽ proxy sang FastAPI. Cách này tránh lỗi CORS khi
-// người dùng mở UI bằng localhost, 127.0.0.1 hoặc một hostname triển khai khác.
-const API_BASE_URL =
-  typeof window === 'undefined' ? '/api/v1' : window.__CAREER_API_BASE_URL__ || '/api/v1';
+const DEFAULT_API_ORIGIN = 'https://p041-version-2-0.onrender.com';
+
+function getValidApiBase(v, defaultPath = '/api/v1') {
+  if (typeof window !== 'undefined' && v && /^https?:\/\//i.test(v)) {
+    return v;
+  }
+  return `${DEFAULT_API_ORIGIN}${defaultPath}`;
+}
+
+function resolveApiUrl(endpoint) {
+  if (!endpoint || /^https?:\/\//i.test(endpoint)) {
+    return endpoint || '';
+  }
+  const customV1 = getValidApiBase(typeof window !== 'undefined' ? window.__CAREER_API_BASE_URL__ : null, '/api/v1');
+  const customV2 = getValidApiBase(typeof window !== 'undefined' ? window.__CAREER_API_V2_BASE_URL__ : null, '/api/v2');
+
+  const clean = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+
+  if (clean.startsWith('/api/v2/')) {
+    return `${customV2.replace(/\/api\/v2\/?$/, '')}${clean}`;
+  }
+  if (clean.startsWith('/api/v1/')) {
+    return `${customV1.replace(/\/api\/v1\/?$/, '')}${clean}`;
+  }
+  return `${customV1.replace(/\/$/, '')}${clean}`;
+}
+
+const API_BASE_URL = getValidApiBase(typeof window !== 'undefined' ? window.__CAREER_API_BASE_URL__ : null, '/api/v1');
 
 function getSafeApiMessage(status, endpoint = '') {
   if (status === 401) return 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.';
@@ -79,7 +103,7 @@ export class ApiClient {
     const config = { ...options, headers, credentials: 'include' };
 
     try {
-      const requestUrl = /^https?:\/\//i.test(endpoint) ? endpoint : `${API_BASE_URL}${endpoint}`;
+      const requestUrl = resolveApiUrl(endpoint);
       const response = await fetch(requestUrl, config);
       const data = await response.json().catch(() => ({}));
 

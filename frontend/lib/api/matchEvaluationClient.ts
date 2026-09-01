@@ -5,6 +5,18 @@
  * Nguyên tắc: không tự tính score, chỉ gọi và trả về data từ server.
  */
 
+const DEFAULT_API_ORIGIN = 'https://p041-version-2-0.onrender.com';
+
+function resolveApiUrl(endpoint: string): string {
+  if (!endpoint || /^https?:\/\//i.test(endpoint)) return endpoint || '';
+  const customV1 = (typeof window !== 'undefined' && window.__CAREER_API_BASE_URL__) || `${DEFAULT_API_ORIGIN}/api/v1`;
+  const customV2 = (typeof window !== 'undefined' && window.__CAREER_API_V2_BASE_URL__) || `${DEFAULT_API_ORIGIN}/api/v2`;
+  const clean = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  if (clean.startsWith('/api/v2/')) return `${customV2.replace(/\/api\/v2\/?$/, '')}${clean}`;
+  if (clean.startsWith('/api/v1/')) return `${customV1.replace(/\/api\/v1\/?$/, '')}${clean}`;
+  return `${customV2.replace(/\/$/, '')}${clean}`;
+}
+
 const BASE = '/api/v2/matches';
 
 function safeApiError(status: number): string {
@@ -20,7 +32,8 @@ function headers(token: string) {
 }
 
 async function apiFetch<T>(url: string, token: string): Promise<T> {
-  const res = await fetch(url, { headers: headers(token) });
+  const targetUrl = resolveApiUrl(url);
+  const res = await fetch(targetUrl, { headers: headers(token) });
   if (!res.ok) {
     throw new Error(safeApiError(res.status));
     const body = await res.json().catch(() => ({}));

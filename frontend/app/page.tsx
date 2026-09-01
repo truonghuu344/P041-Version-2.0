@@ -24,27 +24,26 @@ import NotificationBell from '../components/notifications/NotificationBell';
 import NotificationsView from '../components/notifications/NotificationsView';
 import { MiniCVSheet } from '../components/candidate/TemplatePreviewCard';
 
-
-
 export default function Page() {
   // DOM ownership is delegated to child views. These identifiers document the
   // stable page-level integration contract used by the legacy controller:
   // id="job-search-form" · id="job-search-cv-select" · id="job-match-cv-btn"
   // The CV view owns the opener: onClick={() => setIsTemplateGalleryOpen(true)}
-  const [isMounted, setIsMounted] = useState(false);
   const [isTemplateGalleryOpen, setIsTemplateGalleryOpen] = useState(false);
   const [selectedCVTemplate, setSelectedCVTemplate] = useState<CVTemplateName | null>(null);
-  const [templateFilter, setTemplateFilter] = useState<'all' | 'ats' | 'tech' | 'creative' | 'compact' | 'business'>('all');
+  const [templateFilter, setTemplateFilter] = useState<
+    'all' | 'ats' | 'tech' | 'creative' | 'compact' | 'business'
+  >('all');
 
   useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (!isMounted) return;
-    // The legacy controller needs the complete client-rendered DOM before it binds events.
-    // @ts-expect-error dynamically imported non-module script
-    void import('../app.js');
+    type LegacyRuntimeWindow = Window & {
+      __careerAppPromise?: Promise<unknown>;
+    };
+    const runtimeWindow = window as LegacyRuntimeWindow;
+    // A single shared promise makes the legacy controller idempotent across
+    // React remounts and gives follow-up bindings a deterministic ready point.
+    // @ts-expect-error dynamically imported non-module legacy script
+    runtimeWindow.__careerAppPromise ??= import('../app.js');
 
     const bindEnterpriseNav = () => {
       const handleEnterpriseNav = (id: string, tab: string) => {
@@ -65,9 +64,11 @@ export default function Page() {
       handleEnterpriseNav('btn-enterprise-create-job', 'create-job');
     };
 
-    bindEnterpriseNav();
-    setTimeout(bindEnterpriseNav, 300);
-  }, [isMounted]);
+    void runtimeWindow.__careerAppPromise.then(bindEnterpriseNav).catch((error) => {
+      runtimeWindow.__careerAppPromise = undefined;
+      console.error('Không thể khởi tạo giao diện Career Assistant:', error);
+    });
+  }, []);
 
   const selectCVTemplate = (templateName: CVTemplateName) => {
     setSelectedCVTemplate(templateName);
@@ -100,20 +101,13 @@ export default function Page() {
     input.focus();
   };
 
-  // This application is DOM-driven and browser extensions can add attributes such as
-  // `fdprocessedid` to form controls before React hydrates them. Hydrate a stable,
-  // non-interactive shell first, then render the interactive application on the client.
-  if (!isMounted) {
-    return <div id="app-bootstrap" aria-hidden="true" suppressHydrationWarning />;
-  }
-
   return (
     <>
       <header className="navbar" id="navbar">
         <div className="navbar-inner">
           <a href="#" className="brand" id="brand-logo">
             <span className="brand-icon">
-              <Image src="/images/image2.png" alt="CV Assistant" width={36} height={36} priority />
+              <Image src="/images/image2.webp" alt="CV Assistant" width={36} height={36} priority />
             </span>
             <span className="brand-name">Career Assistant</span>
           </a>
@@ -142,13 +136,25 @@ export default function Page() {
             <a href="#" className="nav-link role-only-link" id="nav-counselor-reports" hidden>
               <span className="nav-text">Báo cáo</span>
             </a>
-            <a href="#" className="nav-link role-only-link" id="nav-enterprise" aria-label="Dashboard Tuyển Dụng" hidden>
+            <a
+              href="#"
+              className="nav-link role-only-link"
+              id="nav-enterprise"
+              aria-label="Dashboard Tuyển Dụng"
+              hidden
+            >
               <span className="nav-text">Dashboard Tuyển Dụng</span>
             </a>
             <a href="#" className="nav-link role-only-link" id="nav-enterprise-jobs" hidden>
               <span className="nav-text">Tin tuyển dụng</span>
             </a>
-            <a href="#" className="nav-link role-only-link" id="nav-enterprise-candidates" aria-label="Hồ sơ ứng tuyển" hidden>
+            <a
+              href="#"
+              className="nav-link role-only-link"
+              id="nav-enterprise-candidates"
+              aria-label="Hồ sơ ứng tuyển"
+              hidden
+            >
               <span className="nav-text">Ứng viên</span>
             </a>
             <a href="#" className="nav-link role-only-link" id="nav-enterprise-reports" hidden>
@@ -160,10 +166,18 @@ export default function Page() {
           </nav>
 
           <div className="header-utilities">
-            <button className="btn-primary role-only-link" id="btn-enterprise-create-job" style={{ marginRight: '16px' }} hidden>
+            <button
+              className="btn-primary role-only-link"
+              id="btn-enterprise-create-job"
+              style={{ marginRight: '16px' }}
+              hidden
+            >
               + Đăng tin
             </button>
-            <div id="header-notification-container" style={{ marginRight: '8px', display: 'flex', alignItems: 'center' }}>
+            <div
+              id="header-notification-container"
+              style={{ marginRight: '8px', display: 'flex', alignItems: 'center' }}
+            >
               <NotificationBell />
             </div>
             <div id="auth-container">
@@ -248,169 +262,258 @@ export default function Page() {
 
       <JobRecommendationModal />
 
-      <div
-        id="cv-template-modal-overlay"
-        className={`modal-overlay${isTemplateGalleryOpen ? ' open' : ''}`}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="cv-template-gallery-title"
-        hidden={!isTemplateGalleryOpen}
-      >
-        <div className="modal-card cv-template-gallery-card">
-          <button
-            type="button"
-            className="modal-close"
-            aria-label="Đóng"
-            onClick={() => setIsTemplateGalleryOpen(false)}
-          >
-            ×
-          </button>
-          <div className="cv-template-gallery-header">
-            <h2 id="cv-template-gallery-title" className="modal-title">
-              <Sparkles size={22} style={{ color: '#0d9488' }} /> Chọn <span>Mẫu CV Chuyên Nghiệp</span>
-            </h2>
-            <p className="modal-sub">
-              Tất cả mẫu đều chuẩn ATS, tương thích với hệ thống quét tự động. Hãy chọn mẫu phù hợp nhất với ngành nghề của bạn.
-            </p>
-          </div>
+      {isTemplateGalleryOpen && (
+        <div
+          id="cv-template-modal-overlay"
+          className="modal-overlay open"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="cv-template-gallery-title"
+        >
+          <div className="modal-card cv-template-gallery-card">
+            <button
+              type="button"
+              className="modal-close"
+              aria-label="Đóng"
+              onClick={() => setIsTemplateGalleryOpen(false)}
+            >
+              ×
+            </button>
+            <div className="cv-template-gallery-header">
+              <h2 id="cv-template-gallery-title" className="modal-title">
+                <Sparkles size={22} style={{ color: '#0d9488' }} /> Chọn{' '}
+                <span>Mẫu CV Chuyên Nghiệp</span>
+              </h2>
+              <p className="modal-sub">
+                Tất cả mẫu đều chuẩn ATS, tương thích với hệ thống quét tự động. Hãy chọn mẫu phù
+                hợp nhất với ngành nghề của bạn.
+              </p>
+            </div>
 
-          <div className="template-category-tabs" role="tablist" aria-label="Bộ lọc mẫu CV">
-            {[
-              { id: 'all', label: 'Tất cả mẫu' },
-              { id: 'ats', label: '🎯 Chuẩn Harvard ATS' },
-              { id: 'tech', label: '💻 Công nghệ & IT' },
-              { id: 'creative', label: '🎨 Sáng tạo & UI/UX' },
-              { id: 'compact', label: '⚡ 1 Trang Tinh gọn' },
-              { id: 'business', label: '📊 Finance & Quản trị' },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                className={`template-tab-btn${templateFilter === tab.id ? ' active' : ''}`}
-                onClick={() => setTemplateFilter(tab.id as typeof templateFilter)}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
+            <div className="template-category-tabs" role="tablist" aria-label="Bộ lọc mẫu CV">
+              {[
+                { id: 'all', label: 'Tất cả mẫu' },
+                { id: 'ats', label: '🎯 Chuẩn Harvard ATS' },
+                { id: 'tech', label: '💻 Công nghệ & IT' },
+                { id: 'creative', label: '🎨 Sáng tạo & UI/UX' },
+                { id: 'compact', label: '⚡ 1 Trang Tinh gọn' },
+                { id: 'business', label: '📊 Finance & Quản trị' },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  className={`template-tab-btn${templateFilter === tab.id ? ' active' : ''}`}
+                  onClick={() => setTemplateFilter(tab.id as typeof templateFilter)}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
 
-          <div className="template-gallery-grid">
-            {(templateFilter === 'all' || templateFilter === 'ats') && (
-              <article className="template-preview template-preview-classic" data-selected={selectedCVTemplate === 'classic'}>
-                <div className="template-preview-viewport" onClick={() => selectCVTemplate('classic')}>
-                  <span className="template-card-badge badge-ats">ATS 100% TIÊU CHUẨN</span>
-                  <MiniCVSheet templateId="classic" />
-                </div>
-                <div className="template-card-info">
-                  <div>
-                    <h3>Classic ATS</h3>
-                    <div className="template-card-role"><Sparkles size={13} /> Mọi ngành nghề, IT, Quản lý, Tài chính</div>
-                    <p>Chuẩn Harvard 1 cột, đơn giản và đạt điểm quét cao nhất với mọi hệ thống ATS.</p>
+            <div className="template-gallery-grid">
+              {(templateFilter === 'all' || templateFilter === 'ats') && (
+                <article
+                  className="template-preview template-preview-classic"
+                  data-selected={selectedCVTemplate === 'classic'}
+                >
+                  <div
+                    className="template-preview-viewport"
+                    onClick={() => selectCVTemplate('classic')}
+                  >
+                    <span className="template-card-badge badge-ats">ATS 100% TIÊU CHUẨN</span>
+                    <MiniCVSheet templateId="classic" />
                   </div>
-                  <div className="template-preview-actions">
-                    <button type="button" className="template-select-btn" onClick={() => selectCVTemplate('classic')}>
-                      {selectedCVTemplate === 'classic' ? 'Đang chọn' : 'Dùng mẫu này'}
-                    </button>
-                    <a className="template-download-btn" href="/api/v1/cvs/templates/classic" target="_blank" rel="noopener noreferrer">
-                      Tải PDF mẫu
-                    </a>
+                  <div className="template-card-info">
+                    <div>
+                      <h3>Classic ATS</h3>
+                      <div className="template-card-role">
+                        <Sparkles size={13} /> Mọi ngành nghề, IT, Quản lý, Tài chính
+                      </div>
+                      <p>
+                        Chuẩn Harvard 1 cột, đơn giản và đạt điểm quét cao nhất với mọi hệ thống
+                        ATS.
+                      </p>
+                    </div>
+                    <div className="template-preview-actions">
+                      <button
+                        type="button"
+                        className="template-select-btn"
+                        onClick={() => selectCVTemplate('classic')}
+                      >
+                        {selectedCVTemplate === 'classic' ? 'Đang chọn' : 'Dùng mẫu này'}
+                      </button>
+                      <a
+                        className="template-download-btn"
+                        href="/api/v1/cvs/templates/classic"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Tải PDF mẫu
+                      </a>
+                    </div>
                   </div>
-                </div>
-              </article>
-            )}
+                </article>
+              )}
 
-            {(templateFilter === 'all' || templateFilter === 'tech') && (
-              <article className="template-preview template-preview-modern" data-selected={selectedCVTemplate === 'modern'}>
-                <div className="template-preview-viewport" onClick={() => selectCVTemplate('modern')}>
-                  <span className="template-card-badge badge-popular">PHỔ BIẾN NHẤT</span>
-                  <MiniCVSheet templateId="modern" />
-                </div>
-                <div className="template-card-info">
-                  <div>
-                    <h3>Modern Tech</h3>
-                    <div className="template-card-role"><Sparkles size={13} /> Developer, Data, AI, DevOps</div>
-                    <p>Bố cục 2 cột hiện đại, sidebar chuyên nghiệp dành cho Developer &amp; Data.</p>
+              {(templateFilter === 'all' || templateFilter === 'tech') && (
+                <article
+                  className="template-preview template-preview-modern"
+                  data-selected={selectedCVTemplate === 'modern'}
+                >
+                  <div
+                    className="template-preview-viewport"
+                    onClick={() => selectCVTemplate('modern')}
+                  >
+                    <span className="template-card-badge badge-popular">PHỔ BIẾN NHẤT</span>
+                    <MiniCVSheet templateId="modern" />
                   </div>
-                  <div className="template-preview-actions">
-                    <button type="button" className="template-select-btn" onClick={() => selectCVTemplate('modern')}>
-                      {selectedCVTemplate === 'modern' ? 'Đang chọn' : 'Dùng mẫu này'}
-                    </button>
-                    <a className="template-download-btn" href="/api/v1/cvs/templates/modern" target="_blank" rel="noopener noreferrer">
-                      Tải PDF mẫu
-                    </a>
+                  <div className="template-card-info">
+                    <div>
+                      <h3>Modern Tech</h3>
+                      <div className="template-card-role">
+                        <Sparkles size={13} /> Developer, Data, AI, DevOps
+                      </div>
+                      <p>
+                        Bố cục 2 cột hiện đại, sidebar chuyên nghiệp dành cho Developer &amp; Data.
+                      </p>
+                    </div>
+                    <div className="template-preview-actions">
+                      <button
+                        type="button"
+                        className="template-select-btn"
+                        onClick={() => selectCVTemplate('modern')}
+                      >
+                        {selectedCVTemplate === 'modern' ? 'Đang chọn' : 'Dùng mẫu này'}
+                      </button>
+                      <a
+                        className="template-download-btn"
+                        href="/api/v1/cvs/templates/modern"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Tải PDF mẫu
+                      </a>
+                    </div>
                   </div>
-                </div>
-              </article>
-            )}
+                </article>
+              )}
 
-            {(templateFilter === 'all' || templateFilter === 'creative') && (
-              <article className="template-preview template-preview-creative" data-selected={selectedCVTemplate === 'creative'}>
-                <div className="template-preview-viewport" onClick={() => selectCVTemplate('creative')}>
-                  <span className="template-card-badge badge-creative">DARK CREATIVE</span>
-                  <MiniCVSheet templateId="creative" />
-                </div>
-                <div className="template-card-info">
-                  <div>
-                    <h3>Creative Dark</h3>
-                    <div className="template-card-role"><Sparkles size={13} /> UI/UX, Product, Creative Tech</div>
-                    <p>Header tối màu cá tính, timeline đồ họa cho UI/UX &amp; Creative Tech.</p>
+              {(templateFilter === 'all' || templateFilter === 'creative') && (
+                <article
+                  className="template-preview template-preview-creative"
+                  data-selected={selectedCVTemplate === 'creative'}
+                >
+                  <div
+                    className="template-preview-viewport"
+                    onClick={() => selectCVTemplate('creative')}
+                  >
+                    <span className="template-card-badge badge-creative">DARK CREATIVE</span>
+                    <MiniCVSheet templateId="creative" />
                   </div>
-                  <div className="template-preview-actions">
-                    <button type="button" className="template-select-btn" onClick={() => selectCVTemplate('creative')}>
-                      {selectedCVTemplate === 'creative' ? 'Đang chọn' : 'Dùng mẫu này'}
-                    </button>
-                    <a className="template-download-btn" href="/api/v1/cvs/templates/creative" target="_blank" rel="noopener noreferrer">
-                      Tải PDF mẫu
-                    </a>
+                  <div className="template-card-info">
+                    <div>
+                      <h3>Creative Dark</h3>
+                      <div className="template-card-role">
+                        <Sparkles size={13} /> UI/UX, Product, Creative Tech
+                      </div>
+                      <p>Header tối màu cá tính, timeline đồ họa cho UI/UX &amp; Creative Tech.</p>
+                    </div>
+                    <div className="template-preview-actions">
+                      <button
+                        type="button"
+                        className="template-select-btn"
+                        onClick={() => selectCVTemplate('creative')}
+                      >
+                        {selectedCVTemplate === 'creative' ? 'Đang chọn' : 'Dùng mẫu này'}
+                      </button>
+                      <a
+                        className="template-download-btn"
+                        href="/api/v1/cvs/templates/creative"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Tải PDF mẫu
+                      </a>
+                    </div>
                   </div>
-                </div>
-              </article>
-            )}
+                </article>
+              )}
 
-            {(templateFilter === 'all' || templateFilter === 'compact') && (
-              <article className="template-preview template-preview-compact" data-selected={selectedCVTemplate === 'compact'}>
-                <div className="template-preview-viewport" onClick={() => selectCVTemplate('compact')}>
-                  <span className="template-card-badge badge-compact">1 TRANG TINH GỌN</span>
-                  <MiniCVSheet templateId="compact" />
-                </div>
-                <div className="template-card-info">
-                  <div>
-                    <h3>Minimalist Compact</h3>
-                    <div className="template-card-role"><Sparkles size={13} /> Senior, Tech Lead, Manager</div>
-                    <p>Tối ưu hóa mật độ thông tin gói gọn trong 1 trang duy nhất, căn chỉnh lề sắc nét.</p>
+              {(templateFilter === 'all' || templateFilter === 'compact') && (
+                <article
+                  className="template-preview template-preview-compact"
+                  data-selected={selectedCVTemplate === 'compact'}
+                >
+                  <div
+                    className="template-preview-viewport"
+                    onClick={() => selectCVTemplate('compact')}
+                  >
+                    <span className="template-card-badge badge-compact">1 TRANG TINH GỌN</span>
+                    <MiniCVSheet templateId="compact" />
                   </div>
-                  <div className="template-preview-actions">
-                    <button type="button" className="template-select-btn" onClick={() => selectCVTemplate('compact')}>
-                      {selectedCVTemplate === 'compact' ? 'Đang chọn' : 'Dùng mẫu này'}
-                    </button>
+                  <div className="template-card-info">
+                    <div>
+                      <h3>Minimalist Compact</h3>
+                      <div className="template-card-role">
+                        <Sparkles size={13} /> Senior, Tech Lead, Manager
+                      </div>
+                      <p>
+                        Tối ưu hóa mật độ thông tin gói gọn trong 1 trang duy nhất, căn chỉnh lề sắc
+                        nét.
+                      </p>
+                    </div>
+                    <div className="template-preview-actions">
+                      <button
+                        type="button"
+                        className="template-select-btn"
+                        onClick={() => selectCVTemplate('compact')}
+                      >
+                        {selectedCVTemplate === 'compact' ? 'Đang chọn' : 'Dùng mẫu này'}
+                      </button>
+                    </div>
                   </div>
-                </div>
-              </article>
-            )}
+                </article>
+              )}
 
-            {(templateFilter === 'all' || templateFilter === 'business') && (
-              <article className="template-preview template-preview-elegant" data-selected={selectedCVTemplate === 'elegant'}>
-                <div className="template-preview-viewport" onClick={() => selectCVTemplate('elegant')}>
-                  <span className="template-card-badge badge-elegant">SANG TRỌNG</span>
-                  <MiniCVSheet templateId="elegant" />
-                </div>
-                <div className="template-card-info">
-                  <div>
-                    <h3>Elegant Executive</h3>
-                    <div className="template-card-role"><Sparkles size={13} /> Finance, Banking, BA, Legal</div>
-                    <p>Phong cách trang nhã với phân cách tinh tế, đường viền thanh lịch và phân cấp rõ ràng.</p>
+              {(templateFilter === 'all' || templateFilter === 'business') && (
+                <article
+                  className="template-preview template-preview-elegant"
+                  data-selected={selectedCVTemplate === 'elegant'}
+                >
+                  <div
+                    className="template-preview-viewport"
+                    onClick={() => selectCVTemplate('elegant')}
+                  >
+                    <span className="template-card-badge badge-elegant">SANG TRỌNG</span>
+                    <MiniCVSheet templateId="elegant" />
                   </div>
-                  <div className="template-preview-actions">
-                    <button type="button" className="template-select-btn" onClick={() => selectCVTemplate('elegant')}>
-                      {selectedCVTemplate === 'elegant' ? 'Đang chọn' : 'Dùng mẫu này'}
-                    </button>
+                  <div className="template-card-info">
+                    <div>
+                      <h3>Elegant Executive</h3>
+                      <div className="template-card-role">
+                        <Sparkles size={13} /> Finance, Banking, BA, Legal
+                      </div>
+                      <p>
+                        Phong cách trang nhã với phân cách tinh tế, đường viền thanh lịch và phân
+                        cấp rõ ràng.
+                      </p>
+                    </div>
+                    <div className="template-preview-actions">
+                      <button
+                        type="button"
+                        className="template-select-btn"
+                        onClick={() => selectCVTemplate('elegant')}
+                      >
+                        {selectedCVTemplate === 'elegant' ? 'Đang chọn' : 'Dùng mẫu này'}
+                      </button>
+                    </div>
                   </div>
-                </div>
-              </article>
-            )}
+                </article>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       <div className="modal-overlay" id="modal-overlay" role="dialog">
         <div
@@ -446,7 +549,8 @@ export default function Page() {
             </div>
             <p className="google-auth-help" id="google-auth-help" hidden></p>
             <p className="google-auth-note">
-              Google chỉ dùng cho tài khoản Sinh viên. Cố vấn và Doanh nghiệp vui lòng đăng ký bằng Email.
+              Google chỉ dùng cho tài khoản Sinh viên. Cố vấn và Doanh nghiệp vui lòng đăng ký bằng
+              Email.
             </p>
             <div className="auth-divider">
               <span>hoặc dùng Email</span>
@@ -559,7 +663,13 @@ export default function Page() {
                 </button>
               </div>
             </div>
-            <p id="auth-form-feedback" className="auth-form-feedback" role="alert" aria-live="polite" hidden />
+            <p
+              id="auth-form-feedback"
+              className="auth-form-feedback"
+              role="alert"
+              aria-live="polite"
+              hidden
+            />
             <button type="submit" className="btn-submit" id="btn-submit">
               <span className="btn-submit-text" id="btn-submit-label">
                 Đăng nhập
@@ -1499,7 +1609,7 @@ export default function Page() {
           <div className="ai-chat-identity">
             <span className="ai-chat-orb" aria-hidden="true">
               <Image
-                src="/images/chatbot.png"
+                src="/images/chatbot.webp"
                 alt=""
                 width={38}
                 height={38}

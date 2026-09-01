@@ -7,7 +7,10 @@ type Props = { onNavigate: (tab: import('./EnterpriseView').EnterpriseTab) => vo
 type Application = { id: string; jd_id: string; jd_title: string; candidate_name: string; candidate_email: string; cv_id: string; match_score: number; status: ApplicationStatus; shared_at: string };
 type SharedCV = { title: string; raw_text?: string; parsed_json?: { summary?: string; skills?: string[] } };
 
-const API_BASE_URL = typeof window !== 'undefined' ? window.__CAREER_API_BASE_URL__ || '/api/v1' : '/api/v1';
+const API_BASE_URL =
+  typeof window !== 'undefined'
+    ? window.__CAREER_API_BASE_URL__ || 'https://p041-version-2-0.onrender.com/api/v1'
+    : 'https://p041-version-2-0.onrender.com/api/v1';
 const STATUS_LABELS: Record<ApplicationStatus, string> = { submitted: 'Đã nhận', shortlisted: 'Sơ tuyển', interview: 'Mời phỏng vấn', hired: 'Đã tuyển', rejected: 'Không phù hợp' };
 
 async function enterpriseRequest<T>(path: string, init: RequestInit = {}): Promise<T> {

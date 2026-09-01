@@ -27,6 +27,7 @@ import { escapeHtml, showToast } from './utils.js';
     let conversationHistory = [];
     let currentConversationId = null;
     let historyOpen = false;
+    let assistantStatusLoaded = false;
 
     function getAssistantUnavailableMessage() {
       return 'Nova đang tạm thời chưa sẵn sàng. Bạn có thể thử lại sau hoặc tiếp tục dùng các công cụ Match CV, tối ưu CV và luyện phỏng vấn trong ứng dụng.';
@@ -150,6 +151,7 @@ import { escapeHtml, showToast } from './utils.js';
       hint?.classList.add('is-hidden');
       companion.hidden = isOpen;
       if (isOpen) {
+        void loadAssistantStatus();
         requestAnimationFrame(() => {
           placeChatPanel();
           input.focus();
@@ -201,6 +203,8 @@ import { escapeHtml, showToast } from './utils.js';
     }
 
     async function loadAssistantStatus() {
+      if (assistantStatusLoaded) return;
+      assistantStatusLoaded = true;
       try {
         const status = await ApiClient.getAssistantStatus();
         companion.classList.toggle('is-online', Boolean(status.configured));
@@ -210,6 +214,7 @@ import { escapeHtml, showToast } from './utils.js';
             : 'Dịch vụ AI tạm thời chưa sẵn sàng';
         }
       } catch (_err) {
+        assistantStatusLoaded = false;
         companion.classList.remove('is-online');
         if (statusText) statusText.textContent = 'Dịch vụ AI tạm thời chưa sẵn sàng';
       }
@@ -395,33 +400,8 @@ import { escapeHtml, showToast } from './utils.js';
     });
 
     if (sourceImage && spriteCanvas) {
-      const spriteContext = spriteCanvas.getContext('2d', { willReadFrequently: true });
-      let lastSpriteFrame = 0;
-      function renderSprite(timestamp) {
-        if (spriteContext && sourceImage.complete && sourceImage.naturalWidth && timestamp - lastSpriteFrame > 70) {
-          lastSpriteFrame = timestamp;
-          try {
-            spriteContext.clearRect(0, 0, 64, 64);
-            spriteContext.imageSmoothingEnabled = false;
-            spriteContext.drawImage(sourceImage, 0, 0, 64, 64);
-            const frame = spriteContext.getImageData(0, 0, 64, 64);
-            for (let index = 0; index < frame.data.length; index += 4) {
-              const red = frame.data[index];
-              const green = frame.data[index + 1];
-              const blue = frame.data[index + 2];
-              if (green > 105 && green > red * 1.35 && green > blue * 1.28) {
-                frame.data[index + 3] = 0;
-              }
-            }
-            spriteContext.putImageData(frame, 0, 0);
-          } catch (_err) {
-            spriteCanvas.classList.add('is-hidden');
-            sourceImage.classList.add('is-fallback');
-          }
-        }
-        requestAnimationFrame(renderSprite);
-      }
-      requestAnimationFrame(renderSprite);
+      spriteCanvas.classList.add('is-hidden');
+      sourceImage.classList.add('is-fallback');
       sourceImage.addEventListener('error', () => {
         spriteCanvas.classList.add('is-hidden');
         sourceImage.classList.add('is-fallback');
@@ -429,7 +409,6 @@ import { escapeHtml, showToast } from './utils.js';
     }
 
     restoreCompanionPosition();
-    loadAssistantStatus();
     window.setTimeout(() => hint?.classList.add('is-hidden'), 6500);
   }
 

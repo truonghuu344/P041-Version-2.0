@@ -1,15 +1,24 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import EnterpriseDashboard from './EnterpriseDashboard';
-import EnterpriseJobsList from './EnterpriseJobsList';
-import EnterpriseCreateJob from './EnterpriseCreateJob';
-import EnterpriseJobDetail from './EnterpriseJobDetail';
-import EnterpriseCandidatesList from './EnterpriseCandidatesList';
-import EnterpriseReports from './EnterpriseReports';
-import EnterpriseCompanyProfile from './EnterpriseCompanyProfile';
 
-export type EnterpriseTab = 'dashboard' | 'jobs' | 'create-job' | 'job-detail' | 'candidates' | 'reports' | 'profile';
+const EnterpriseJobsList = dynamic(() => import('./EnterpriseJobsList'));
+const EnterpriseCreateJob = dynamic(() => import('./EnterpriseCreateJob'));
+const EnterpriseJobDetail = dynamic(() => import('./EnterpriseJobDetail'));
+const EnterpriseCandidatesList = dynamic(() => import('./EnterpriseCandidatesList'));
+const EnterpriseReports = dynamic(() => import('./EnterpriseReports'));
+const EnterpriseCompanyProfile = dynamic(() => import('./EnterpriseCompanyProfile'));
+
+export type EnterpriseTab =
+  | 'dashboard'
+  | 'jobs'
+  | 'create-job'
+  | 'job-detail'
+  | 'candidates'
+  | 'reports'
+  | 'profile';
 
 export default function EnterpriseView(props: any) {
   const [activeTab, setActiveTab] = useState<EnterpriseTab>('dashboard');
@@ -40,7 +49,7 @@ export default function EnterpriseView(props: any) {
         }
       }
     };
-    
+
     // Listen to custom event from global navbar
     window.addEventListener('navigate-enterprise', handleNavigate);
     return () => window.removeEventListener('navigate-enterprise', handleNavigate);
@@ -49,17 +58,22 @@ export default function EnterpriseView(props: any) {
   // Synchronize active classes on global navbar
   useEffect(() => {
     const navMap: Record<EnterpriseTab, string> = {
-      'dashboard': 'nav-enterprise',
-      'jobs': 'nav-enterprise-jobs',
+      dashboard: 'nav-enterprise',
+      jobs: 'nav-enterprise-jobs',
       'create-job': 'btn-enterprise-create-job',
       'job-detail': 'nav-enterprise-jobs',
-      'candidates': 'nav-enterprise-candidates',
-      'reports': 'nav-enterprise-reports',
-      'profile': '',
+      candidates: 'nav-enterprise-candidates',
+      reports: 'nav-enterprise-reports',
+      profile: '',
     };
 
     const targetNavId = navMap[activeTab];
-    ['nav-enterprise', 'nav-enterprise-jobs', 'nav-enterprise-candidates', 'nav-enterprise-reports'].forEach((id) => {
+    [
+      'nav-enterprise',
+      'nav-enterprise-jobs',
+      'nav-enterprise-candidates',
+      'nav-enterprise-reports',
+    ].forEach((id) => {
       const el = document.getElementById(id);
       if (el) {
         if (id === targetNavId) {
@@ -76,7 +90,15 @@ export default function EnterpriseView(props: any) {
       case 'dashboard':
         return <EnterpriseDashboard onNavigate={setActiveTab} />;
       case 'jobs':
-        return <EnterpriseJobsList onNavigate={setActiveTab} onSelectJob={(id) => { setActiveJobId(id); setActiveTab('job-detail'); }} />;
+        return (
+          <EnterpriseJobsList
+            onNavigate={setActiveTab}
+            onSelectJob={(id) => {
+              setActiveJobId(id);
+              setActiveTab('job-detail');
+            }}
+          />
+        );
       case 'create-job':
         return <EnterpriseCreateJob onNavigate={setActiveTab} />;
       case 'job-detail':
@@ -94,9 +116,7 @@ export default function EnterpriseView(props: any) {
 
   return (
     <section className="app-view recruiter-app-view" id="view-enterprise">
-      <div className="recruiter-workspace">
-        {renderContent()}
-      </div>
+      <div className="recruiter-workspace">{renderContent()}</div>
     </section>
   );
 }

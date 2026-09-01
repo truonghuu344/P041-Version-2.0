@@ -2,13 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { ApiClient } from '../../api-client.js';
-import {
-  Bell,
-  CheckCheck,
-  NotificationIcon,
-  Search,
-  SlidersHorizontal,
-} from './notificationIcons';
+import { Bell, CheckCheck, NotificationIcon, Search, SlidersHorizontal } from './notificationIcons';
 import { formatTimeAgo, NotificationItem } from './NotificationPopover';
 
 export default function NotificationsView() {
@@ -17,6 +11,7 @@ export default function NotificationsView() {
   const [activeTab, setActiveTab] = useState<'all' | 'unread'>('all');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [isActive, setIsActive] = useState(false);
 
   // Load user role
   useEffect(() => {
@@ -26,6 +21,19 @@ export default function NotificationsView() {
         setUserRole(user.role);
       }
     }
+  }, []);
+
+  useEffect(() => {
+    const syncActiveView = (event?: Event) => {
+      const requestedView = (event as CustomEvent<{ view?: string }>)?.detail?.view;
+      setIsActive(
+        requestedView === 'notifications' ||
+          document.getElementById('view-notifications')?.classList.contains('active') === true,
+      );
+    };
+    syncActiveView();
+    window.addEventListener('career:view-changed', syncActiveView);
+    return () => window.removeEventListener('career:view-changed', syncActiveView);
   }, []);
 
   // Fetch notifications
@@ -42,19 +50,18 @@ export default function NotificationsView() {
   }, []);
 
   useEffect(() => {
+    if (!isActive) return;
     loadNotifications();
 
     const handleRefresh = () => loadNotifications();
     window.addEventListener('career:notifications-refresh', handleRefresh);
     return () => window.removeEventListener('career:notifications-refresh', handleRefresh);
-  }, [loadNotifications]);
+  }, [isActive, loadNotifications]);
 
   // Mark single as read
   const handleItemClick = async (item: NotificationItem) => {
     if (!item.is_read) {
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === item.id ? { ...n, is_read: true } : n))
-      );
+      setNotifications((prev) => prev.map((n) => (n.id === item.id ? { ...n, is_read: true } : n)));
       try {
         await ApiClient.markNotificationRead(item.id);
         window.dispatchEvent(new Event('career:notifications-refresh'));
@@ -91,7 +98,7 @@ export default function NotificationsView() {
     try {
       await ApiClient.markAllNotificationsRead();
       setNotifications((prev) =>
-        prev.map((item) => ({ ...item, is_read: true, read_at: new Date().toISOString() }))
+        prev.map((item) => ({ ...item, is_read: true, read_at: new Date().toISOString() })),
       );
       window.dispatchEvent(new Event('career:notifications-refresh'));
     } catch (err) {
@@ -179,7 +186,11 @@ export default function NotificationsView() {
   const emptyStateCopy = getEmptyStateCopy();
 
   return (
-    <section className="app-view notifications-view-page" id="view-notifications" style={{ display: 'none' }}>
+    <section
+      className="app-view notifications-view-page"
+      id="view-notifications"
+      style={{ display: 'none' }}
+    >
       {/* Header */}
       <div className="notifications-page-header">
         <div className="notifications-page-title-group">
@@ -205,7 +216,10 @@ export default function NotificationsView() {
       <div className="notifications-toolbar">
         <div className="notifications-toolbar-left">
           {/* Status Tabs */}
-          <div className="notification-popover-tabs" style={{ padding: 0, background: 'transparent', border: 'none' }}>
+          <div
+            className="notification-popover-tabs"
+            style={{ padding: 0, background: 'transparent', border: 'none' }}
+          >
             <button
               type="button"
               className={`notification-tab-btn ${activeTab === 'all' ? 'active' : ''}`}
@@ -223,7 +237,9 @@ export default function NotificationsView() {
           </div>
 
           {/* Category Filter */}
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', marginLeft: '12px' }}>
+          <div
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', marginLeft: '12px' }}
+          >
             <SlidersHorizontal size={15} style={{ color: '#64748b' }} />
             <select
               value={selectedCategory}

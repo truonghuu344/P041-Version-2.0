@@ -1,10 +1,28 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { PencilLine, Plus, Search, Sparkles, Trash2, Upload } from 'lucide-react';
 
-import CVVariantWizard from './CVVariantWizard';
+const CVVariantWizard = dynamic(() => import('./CVVariantWizard'));
 
 export default function CVView({ selectedCVTemplate, setIsTemplateGalleryOpen }: any) {
+  const [hasOpenedCVView, setHasOpenedCVView] = useState(false);
+
+  useEffect(() => {
+    const syncActiveView = (event?: Event) => {
+      const requestedView = (event as CustomEvent<{ view?: string }>)?.detail?.view;
+      if (
+        requestedView === 'cv' ||
+        document.getElementById('view-cv')?.classList.contains('active')
+      ) {
+        setHasOpenedCVView(true);
+      }
+    };
+    syncActiveView();
+    window.addEventListener('career:view-changed', syncActiveView);
+    return () => window.removeEventListener('career:view-changed', syncActiveView);
+  }, []);
+
   return (
     <section className="app-view buddy-landing" id="view-cv">
       <div className="career-portfolio-workspace" id="career-portfolio-workspace">
@@ -166,7 +184,8 @@ export default function CVView({ selectedCVTemplate, setIsTemplateGalleryOpen }:
             </button>
           </form>
         </div>
-        <CVVariantWizard />
+        {/* Keep the wizard mounted after its first visit so in-progress edits survive navigation. */}
+        {hasOpenedCVView && <CVVariantWizard />}
 
         {/* Modal Xem Chi Tiết CV */}
         <div
@@ -197,21 +216,16 @@ export default function CVView({ selectedCVTemplate, setIsTemplateGalleryOpen }:
                 </p>
               </div>
             </div>
-            <div className="cv-modal-body career-cv-detail-modal-body" id="career-cv-detail-content" />
+            <div
+              className="cv-modal-body career-cv-detail-modal-body"
+              id="career-cv-detail-content"
+            />
             <div className="cv-modal-footer career-cv-detail-modal-footer">
-              <button
-                type="button"
-                className="cv-btn-delete-item"
-                id="career-cv-detail-delete-btn"
-              >
+              <button type="button" className="cv-btn-delete-item" id="career-cv-detail-delete-btn">
                 <Trash2 size={15} /> Xóa CV
               </button>
               <div className="career-cv-detail-footer-right">
-                <button
-                  type="button"
-                  className="cv-modal-cancel"
-                  id="career-cv-detail-cancel-btn"
-                >
+                <button type="button" className="cv-modal-cancel" id="career-cv-detail-cancel-btn">
                   Đóng
                 </button>
                 <button
@@ -221,11 +235,7 @@ export default function CVView({ selectedCVTemplate, setIsTemplateGalleryOpen }:
                 >
                   Việc phù hợp
                 </button>
-                <button
-                  type="button"
-                  className="cv-modal-select"
-                  id="career-cv-detail-match-btn"
-                >
+                <button type="button" className="cv-modal-select" id="career-cv-detail-match-btn">
                   Match với Job
                 </button>
               </div>

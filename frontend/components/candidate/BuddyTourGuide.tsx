@@ -68,7 +68,7 @@ export default function BuddyTourGuide() {
   return (
     <aside className="buddy-tour" style={position} aria-live="polite">
       <div className="buddy-tour-mascot">
-        <Image src="/images/image1.png" alt="Career Buddy" width={44} height={44} />
+        <Image src="/images/image1.webp" alt="Career Buddy" width={44} height={44} />
       </div>
       <div className="buddy-tour-card">
         <button

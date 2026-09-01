@@ -1,19 +1,42 @@
+
 /* ============================================================
    CAREER COPILOT X – app.js
-/* ============================================================
-   CAREER COPILOT X – app.js
-   Deep Space Starfield + Shooting Stars Animation Engine
-   FastAPI Backend Integration (PostgreSQL)
+   FastAPI Backend Integration
    ============================================================ */
 
-// Gọi cùng origin; Next.js sẽ proxy sang FastAPI. Cách này tránh lỗi CORS khi
-// người dùng mở UI bằng localhost, 127.0.0.1 hoặc một hostname triển khai khác.
-const API_BASE_URL = window.__CAREER_API_BASE_URL__ || '/api/v1';
-const API_V2_BASE_URL = window.__CAREER_API_V2_BASE_URL__ || API_BASE_URL.replace(/\/api\/v1\/?$/, '/api/v2');
+const DEFAULT_API_ORIGIN = 'https://p041-version-2-0.onrender.com';
+
+function getValidApiBase(v, defaultPath = '/api/v1') {
+  if (typeof window !== 'undefined' && v && /^https?:\/\//i.test(v)) {
+    return v;
+  }
+  return `${DEFAULT_API_ORIGIN}${defaultPath}`;
+}
+
+function resolveApiUrl(endpoint) {
+  if (!endpoint || /^https?:\/\//i.test(endpoint)) {
+    return endpoint || '';
+  }
+  const customV1 = getValidApiBase(typeof window !== 'undefined' ? window.__CAREER_API_BASE_URL__ : null, '/api/v1');
+  const customV2 = getValidApiBase(typeof window !== 'undefined' ? window.__CAREER_API_V2_BASE_URL__ : null, '/api/v2');
+
+  const clean = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+
+  if (clean.startsWith('/api/v2/')) {
+    return `${customV2.replace(/\/api\/v2\/?$/, '')}${clean}`;
+  }
+  if (clean.startsWith('/api/v1/')) {
+    return `${customV1.replace(/\/api\/v1\/?$/, '')}${clean}`;
+  }
+  return `${customV1.replace(/\/$/, '')}${clean}`;
+}
+
+const API_BASE_URL = getValidApiBase(typeof window !== 'undefined' ? window.__CAREER_API_BASE_URL__ : null, '/api/v1');
+const API_V2_BASE_URL = getValidApiBase(typeof window !== 'undefined' ? window.__CAREER_API_V2_BASE_URL__ : null, '/api/v2');
 
 class ApiClient {
   static getToken() {
-    return localStorage.getItem('access_token');
+    return typeof localStorage !== 'undefined' ? localStorage.getItem('access_token') : null;
   }
 
   static setToken(token) {
@@ -69,7 +92,7 @@ class ApiClient {
     const config = { ...options, headers, credentials: 'include' };
 
     try {
-      const requestUrl = /^https?:\/\//i.test(endpoint) ? endpoint : `${API_BASE_URL}${endpoint}`;
+      const requestUrl = resolveApiUrl(endpoint);
       const response = await fetch(requestUrl, config);
       const data = await response.json().catch(() => ({}));
 
@@ -1354,6 +1377,9 @@ function startAppLogic() {
     });
 
     currentViewName = targetViewName;
+    window.dispatchEvent(new CustomEvent('career:view-changed', {
+      detail: { view: targetViewName },
+    }));
     document.body.classList.toggle('focus-mode', targetViewName === 'match');
     document.querySelectorAll('[data-mobile-view]').forEach(button => {
       button?.classList.toggle('active', button.dataset.mobileView === targetViewName);
@@ -3572,7 +3598,7 @@ TÊN CÔNG TY:
       <div class="job-processing-backdrop"></div>
       <section class="job-processing-card" role="dialog" aria-modal="true" aria-live="polite" aria-labelledby="job-processing-title">
         <div class="job-processing-mascot" aria-hidden="true">
-          <img src="/images/image2.png" alt="">
+          <img src="/images/image2.webp" alt="">
           <span data-processing-symbol>✦</span>
         </div>
         <h3 id="job-processing-title" data-processing-title></h3>
@@ -8706,6 +8732,7 @@ TÊN CÔNG TY:
     let conversationHistory = [];
     let currentConversationId = null;
     let historyOpen = false;
+    let assistantStatusLoaded = false;
 
     function getAssistantUnavailableMessage() {
       return 'Nova đang tạm thời chưa sẵn sàng. Bạn có thể thử lại sau hoặc tiếp tục dùng các công cụ Match CV, tối ưu CV và luyện phỏng vấn trong ứng dụng.';
@@ -8829,6 +8856,7 @@ TÊN CÔNG TY:
       hint?.classList.add('is-hidden');
       companion.hidden = isOpen;
       if (isOpen) {
+        void loadAssistantStatus();
         requestAnimationFrame(() => {
           placeChatPanel();
           input.focus();
@@ -9038,6 +9066,8 @@ TÊN CÔNG TY:
     }
 
     async function loadAssistantStatus() {
+      if (assistantStatusLoaded) return;
+      assistantStatusLoaded = true;
       try {
         const status = await ApiClient.getAssistantStatus();
         companion?.classList.toggle('is-online', Boolean(status.configured));
@@ -9047,6 +9077,7 @@ TÊN CÔNG TY:
             : 'Dịch vụ AI tạm thời chưa sẵn sàng';
         }
       } catch (_err) {
+        assistantStatusLoaded = false;
         companion?.classList.remove('is-online');
         if (statusText) statusText.textContent = 'Dịch vụ AI tạm thời chưa sẵn sàng';
       }
@@ -9166,33 +9197,11 @@ TÊN CÔNG TY:
     });
 
     if (sourceImage && spriteCanvas) {
-      const spriteContext = spriteCanvas.getContext('2d', { willReadFrequently: true });
-      let lastSpriteFrame = 0;
-      function renderSprite(timestamp) {
-        if (spriteContext && sourceImage.complete && sourceImage.naturalWidth && timestamp - lastSpriteFrame > 70) {
-          lastSpriteFrame = timestamp;
-          try {
-            spriteContext.clearRect(0, 0, 64, 64);
-            spriteContext.imageSmoothingEnabled = false;
-            spriteContext.drawImage(sourceImage, 0, 0, 64, 64);
-            const frame = spriteContext.getImageData(0, 0, 64, 64);
-            for (let index = 0; index < frame.data.length; index += 4) {
-              const red = frame.data[index];
-              const green = frame.data[index + 1];
-              const blue = frame.data[index + 2];
-              if (green > 105 && green > red * 1.35 && green > blue * 1.28) {
-                frame.data[index + 3] = 0;
-              }
-            }
-            spriteContext.putImageData(frame, 0, 0);
-          } catch (_err) {
-            spriteCanvas?.classList.add('is-hidden');
-            sourceImage?.classList.add('is-fallback');
-          }
-        }
-        requestAnimationFrame(renderSprite);
-      }
-      requestAnimationFrame(renderSprite);
+      // The visible GIF is already optimized for the launcher. Keeping a hidden
+      // canvas in sync used to read and rewrite every pixel indefinitely, even
+      // while the chat was closed, which consumed CPU without changing the UI.
+      spriteCanvas.classList.add('is-hidden');
+      sourceImage.classList.add('is-fallback');
       sourceImage?.addEventListener('error', () => {
         spriteCanvas?.classList.add('is-hidden');
         sourceImage?.classList.add('is-fallback');
@@ -9200,7 +9209,6 @@ TÊN CÔNG TY:
     }
 
     restoreCompanionPosition();
-    loadAssistantStatus();
     window.setTimeout(() => hint?.classList.add('is-hidden'), 6500);
   }
 
