@@ -8,10 +8,23 @@
   padding-top: 0 !important;
 }
 
+/* Trang báo cáo phỏng vấn độc lập (view-interview-report) — cùng khung
+   .interview-shell nhưng chỉ có một cột nội dung, không có sidebar setup. */
+#view-interview-report,
+#view-interview-report.buddy-landing {
+  min-height: calc(100vh - 72px);
+  background: var(--background);
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+#view-interview-report .interview-shell {
+  padding-top: 30px;
+}
+
 .interview-shell {
-  width: min(1320px, calc(100% - 64px));
+  width: min(1360px, calc(100% - 48px));
   margin: 0 auto;
-  padding-bottom: 72px;
+  padding: 24px 0 64px;
 }
 
 .interview-page-header {
@@ -39,7 +52,11 @@
 
 .interview-layout {
   display: grid;
-  grid-template-columns: 476px minmax(0, 1fr);
+  /* Sidebar co giãn theo bề ngang màn hình thay vì cứng 476px: trên desktop
+     rộng vẫn giữ 476px như cũ, còn trên laptop 1280-1440px nó thu lại để khung
+     hội thoại không bị bóp. Sàn 340px giữ cho chỗ chọn CV/JD và danh sách câu
+     hỏi vẫn đọc được. */
+  grid-template-columns: clamp(340px, 30vw, 476px) minmax(0, 1fr);
   gap: 20px;
   align-items: start;
 }
@@ -145,7 +162,9 @@
   color: var(--primary);
   cursor: pointer;
   flex-shrink: 0;
-  transition: background 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
 }
 .interview-upload-cv-btn:hover {
   background: var(--primary);
@@ -256,6 +275,287 @@
   border-radius: 50%;
   background: var(--primary-soft);
   color: var(--primary);
+}
+
+/* Panel ngân hàng câu hỏi nằm TRONG .interview-sidebar (thay khối "Hướng dẫn
+   nhanh" cũ), ngay dưới chỗ chọn CV/JD sinh ra nó — không cần vị trí lưới
+   tường minh vì .interview-layout vẫn chỉ có đúng 2 phần tử con. */
+.interview-agenda-card {
+  display: flex;
+  flex-direction: column;
+  padding: 18px 22px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--card);
+}
+.interview-agenda-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.interview-agenda-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.interview-agenda-heading h3 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 15px;
+  letter-spacing: -0.02em;
+}
+.interview-agenda-heading p {
+  margin: 3px 0 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.4;
+}
+/* Bộ câu hỏi rơi về generic: phải nhìn ra ngay, vì nếu trông như bình thường
+   thì người dùng tưởng câu hỏi đã bám CV/JD của mình trong khi thực tế không. */
+.interview-agenda-heading p.is-fallback {
+  color: #b45309;
+  font-weight: 600;
+}
+.interview-agenda-regenerate-btn {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.interview-agenda-regenerate-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+.interview-agenda-create-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 14px 16px;
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  background: var(--primary-soft);
+}
+.interview-agenda-create-row p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 12.5px;
+}
+.interview-agenda-create-btn {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 0 16px;
+  border: 1px solid var(--primary);
+  border-radius: 8px;
+  color: #fff;
+  background: var(--primary);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.interview-agenda-create-btn:hover {
+  background: var(--primary-hover);
+}
+.interview-agenda-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--primary-soft);
+  color: var(--text-secondary);
+  font-size: 12.5px;
+}
+.interview-agenda-spinner {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  border: 2px solid color-mix(in srgb, var(--primary) 30%, transparent);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: interview-agenda-spin 0.8s linear infinite;
+}
+@keyframes interview-agenda-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.interview-agenda-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+.interview-agenda-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.interview-agenda-chip:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+.interview-agenda-chip.is-active {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: #fff;
+}
+.interview-agenda-list {
+  display: grid;
+  gap: 8px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.interview-agenda-empty-filter {
+  padding: 14px 4px;
+  color: var(--text-secondary);
+  font-size: 12.5px;
+}
+.interview-agenda-item {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--card);
+  overflow: hidden;
+}
+.interview-agenda-item.is-disabled {
+  background: #fafafa;
+}
+.interview-agenda-item__row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.interview-agenda-item__checkbox {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  margin-left: 14px;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+.interview-agenda-item__trigger {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: var(--text-primary);
+}
+.interview-agenda-item__trigger:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+.interview-agenda-item__index {
+  flex-shrink: 0;
+  color: var(--text-secondary);
+  font-size: 11.5px;
+  font-weight: 800;
+}
+.interview-agenda-item__title {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 650;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.interview-agenda-item.is-disabled .interview-agenda-item__title {
+  color: var(--text-secondary);
+}
+.interview-agenda-item__disabled-tag {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #f1f1f1;
+  color: var(--text-secondary);
+  font-size: 10.5px;
+  font-weight: 700;
+}
+.interview-agenda-item__chevron {
+  flex-shrink: 0;
+  color: var(--text-secondary);
+  transition: transform 0.15s;
+}
+.interview-agenda-item.is-open .interview-agenda-item__chevron {
+  transform: rotate(180deg);
+}
+.interview-agenda-item__body {
+  display: grid;
+  gap: 8px;
+  padding: 4px 14px 14px 44px;
+  border-top: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+.interview-agenda-item__question {
+  margin: 10px 0 0;
+  color: var(--text-primary);
+  font-weight: 650;
+}
+.interview-agenda-evidence {
+  margin: 0;
+  padding: 8px 10px;
+  border-left: 2px solid var(--primary);
+  border-radius: 6px;
+  background: var(--primary-soft);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-style: italic;
+}
+.interview-agenda-evidence strong {
+  color: var(--primary);
+  font-style: normal;
+}
+.interview-agenda-followups {
+  margin: 0;
+}
+.interview-agenda-followups strong {
+  color: var(--text-primary);
+}
+.interview-agenda-followups ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+.interview-agenda-followups li {
+  margin-bottom: 4px;
 }
 
 .interview-live-card {
@@ -672,7 +972,7 @@
   color: var(--primary);
 }
 
-@media (max-width: 980px) {
+@media (max-width: 1199.98px) {
   .interview-shell {
     width: min(100% - 40px, 720px);
     padding: 28px 0 64px;
@@ -685,7 +985,7 @@
     max-height: 650px;
   }
 }
-@media (max-width: 560px) {
+@media (max-width: 767.98px) {
   .interview-page-header h2 {
     font-size: 34px;
   }
@@ -717,5 +1017,222 @@
   .interview-report-card > header {
     align-items: flex-start;
     flex-wrap: wrap;
+  }
+}
+
+/* ============================================================
+   BÁO CÁO PHỎNG VẤN — trang độc lập (view-interview-report)
+   Header có điểm tổng/JD/ngày giờ/chế độ + nút back/retry, và transcript
+   gấp/mở theo từng câu hỏi. Tái dùng .interview-report-card cho phần thân
+   (điểm STAR, điểm mạnh/cải thiện, khuyến nghị, form CSAT) — các rule
+   .report-page-card bên dưới ghi đè display:none mặc định vì giờ đây nó
+   là nội dung chính của cả trang, không còn ẩn/hiện theo trạng thái phỏng vấn.
+============================================================ */
+.report-page-card {
+  display: block;
+  max-width: 880px;
+  margin: 0 auto 40px;
+  padding: 26px;
+}
+
+.report-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+.report-header-back,
+.report-header-retry {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--text-primary);
+  font-size: 12.5px;
+  font-weight: 750;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.report-header-back:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+.report-header-retry {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+.report-header-retry:hover {
+  opacity: 0.9;
+}
+.report-header-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+.report-header-main > div {
+  flex: 1;
+  min-width: 0;
+}
+.report-header-main h3 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 17px;
+  letter-spacing: -0.02em;
+}
+.report-header-main > strong {
+  flex-shrink: 0;
+  color: var(--primary);
+  font-size: 28px;
+  letter-spacing: -0.04em;
+}
+.report-header-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 4px 0 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.report-header-dot {
+  color: var(--border);
+}
+.report-mode-badge {
+  display: inline-flex;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.report-transcript-card {
+  margin-top: 18px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fbfcfb;
+}
+.report-transcript-card h4 {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 10px;
+  color: var(--text-primary);
+  font-size: 13px;
+}
+.report-transcript-card h4 svg {
+  color: var(--primary);
+}
+.report-transcript-list {
+  display: grid;
+  gap: 8px;
+}
+.report-transcript-empty {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 12.5px;
+}
+.report-transcript-item {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--card);
+  overflow: hidden;
+}
+.report-transcript-item__trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: var(--text-primary);
+}
+.report-transcript-item__trigger:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+.report-transcript-item__index {
+  flex-shrink: 0;
+  color: var(--text-secondary);
+  font-size: 11.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.report-transcript-item__question {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 650;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.report-transcript-item__score {
+  flex-shrink: 0;
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 800;
+}
+.report-transcript-item__chevron {
+  flex-shrink: 0;
+  color: var(--text-secondary);
+  transition: transform 0.15s;
+}
+.report-transcript-item.is-open .report-transcript-item__chevron {
+  transform: rotate(180deg);
+}
+.report-transcript-item__body {
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px 14px;
+  border-top: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+.report-transcript-item__body p {
+  margin: 0;
+}
+.report-transcript-item__body strong {
+  color: var(--text-primary);
+}
+.report-transcript-item__star {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 4px;
+}
+.report-transcript-item__star .star-badge {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fbfcfb;
+}
+
+@media (max-width: 720px) {
+  .report-page-card {
+    padding: 18px;
+  }
+  .report-page-header {
+    flex-wrap: wrap;
+  }
+  .report-header-main {
+    order: 3;
+    width: 100%;
+  }
+  .report-transcript-item__star {
+    grid-template-columns: 1fr 1fr;
   }
 }

@@ -211,10 +211,10 @@ def generate_deterministic_explanations(
                 continue
             req_id = str(req.get("requirement_id") or req.get("id") or "")
             req_text = str(req.get("normalized_value") or req.get("text") or "")
-            is_mandatory = bool(req.get("mandatory") or req.get("requirement_type") == "JD_REQUIRED_SKILL")
+            is_mandatory = bool(req.get("mandatory"))
 
             code = "MISSING_REQUIRED_SKILL" if is_mandatory else "MISSING_PREFERRED_SKILL"
-            msg_vi = f"Chưa tìm thấy evidence cho {req_text}" if req_text else "Chưa có bằng chứng cho yêu cầu này"
+            msg_vi = f"Chưa tìm thấy evidence cho {req_text}" if req_text else "Chưa tìm thấy evidence cho yêu cầu này"
             msg_en = f"Missing evidence for {req_text}" if req_text else "No evidence found for requirement"
 
             gaps_items.append(

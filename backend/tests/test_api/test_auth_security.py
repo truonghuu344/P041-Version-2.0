@@ -57,7 +57,7 @@ async def test_gmail_dot_plus_and_googlemail_aliases_cannot_create_duplicate_acc
                 "email": alias,
                 "password": "Password123!",
                 "full_name": "Duplicate Gmail User",
-                "role": "enterprise",
+                "role": "student",
             },
         )
         assert duplicate.status_code == 400
@@ -83,6 +83,69 @@ async def test_register_validates_input(client, payload, missing_field):
     response = await client.post("/api/v1/auth/register", json=payload)
     assert response.status_code == 422
     assert any(missing_field in [str(part) for part in item["loc"]] for item in response.json()["detail"])
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("role", ["admin", "superuser", "enterprise"])
+async def test_public_register_never_creates_privileged_roles(client, role):
+    """Client-supplied privileged or removed roles are rejected before any user is stored."""
+    response = await client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": f"escalation-{role}@example.com",
+            "password": "Password123!",
+            "full_name": "Privilege Escalation Attempt",
+            "role": role,
+        },
+    )
+    assert response.status_code == 422
+
+    login_attempt = await client.post(
+        "/api/v1/auth/login",
+        json={"email": f"escalation-{role}@example.com", "password": "Password123!"},
+    )
+    assert login_attempt.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_enterprise_login_is_rejected(client):
+    """Enterprise accounts are no longer supported."""
+    response = await client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": "recruiter@example.com",
+            "password": "Password123!",
+            "full_name": "Recruiter Lead",
+            "role": "enterprise",
+        },
+    )
+    assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_admin_can_still_provision_counselor_accounts(client):
+    """The only path into the counselor role is Admin provisioning."""
+    _admin, admin_headers = await create_admin(client)
+    created = await client.post(
+        "/api/v1/admin/users",
+        headers=admin_headers,
+        json={
+            "email": "invited-counselor@example.com",
+            "password": "Password123!",
+            "full_name": "Invited Counselor",
+            "role": "counselor",
+        },
+    )
+    assert created.status_code == 201
+    assert created.json()["role"] == "counselor"
+
+    # The invited counselor activates the account by logging in.
+    login = await client.post(
+        "/api/v1/auth/login",
+        json={"email": "invited-counselor@example.com", "password": "Password123!"},
+    )
+    assert login.status_code == 200
+    assert login.json()["user"]["role"] == "counselor"
 
 
 @pytest.mark.asyncio
@@ -193,11 +256,11 @@ async def test_admin_can_manage_regular_user_but_cannot_delete_self(client):
     updated = await client.put(
         f"/api/v1/admin/users/{user_id}",
         headers=admin_headers,
-        json={"full_name": "Updated User", "role": "enterprise"},
+        json={"full_name": "Updated User", "role": "student"},
     )
     assert updated.status_code == 200
     assert updated.json()["full_name"] == "Updated User"
-    assert updated.json()["role"] == "enterprise"
+    assert updated.json()["role"] == "student"
 
     deleted = await client.delete(f"/api/v1/admin/users/{user_id}", headers=admin_headers)
     assert deleted.status_code == 204
@@ -218,7 +281,7 @@ async def test_admin_cannot_create_duplicate_gmail_alias(client):
             "email": "companyrecruiter+hr@googlemail.com",
             "password": "Password123!",
             "full_name": "Duplicate Recruiter",
-            "role": "enterprise",
+            "role": "counselor",
         },
     )
     assert response.status_code == 400

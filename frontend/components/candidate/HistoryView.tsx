@@ -1,34 +1,56 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   FileCheck,
+  CheckCircle2,
   Mic,
-  Sparkles,
   TrendingUp,
   Search,
   ArrowUpDown,
   X,
   ChevronLeft,
   ChevronRight,
-  ExternalLink,
   RotateCcw,
   Clock,
-  Calendar,
-  CheckCircle2,
-  AlertCircle,
-  HelpCircle,
   ArrowUpRight,
   BarChart3,
-  CalendarDays,
   Download,
-  FileBarChart,
-  Gauge,
   Lightbulb,
+  Gauge,
   Trophy,
+  FileBarChart,
 } from 'lucide-react';
 
 export default function HistoryView() {
   const [activePage, setActivePage] = useState<'history' | 'reports'>('history');
+
+  useEffect(() => {
+    const triggerLoad = () => {
+      if (typeof window !== 'undefined') {
+        const anyWin = window as unknown as { loadMissionArchive?: () => void; renderHistoryDashboard?: () => void };
+        if (typeof anyWin.loadMissionArchive === 'function') {
+          anyWin.loadMissionArchive();
+        } else if (typeof anyWin.renderHistoryDashboard === 'function') {
+          anyWin.renderHistoryDashboard();
+        }
+      }
+    };
+
+    triggerLoad();
+
+    const handleAppReady = () => {
+      triggerLoad();
+    };
+
+    window.addEventListener('career-app:ready', handleAppReady);
+    document.addEventListener('app:ready', handleAppReady);
+    document.addEventListener('auth:changed', handleAppReady);
+
+    return () => {
+      window.removeEventListener('career-app:ready', handleAppReady);
+      document.removeEventListener('app:ready', handleAppReady);
+      document.removeEventListener('auth:changed', handleAppReady);
+    };
+  }, [activePage]);
 
   return (
     <section className="app-view buddy-landing" id="view-history">
@@ -42,10 +64,24 @@ export default function HistoryView() {
             </p>
           </div>
           <div className="history-heading-actions">
-            <button type="button" className="history-export-btn" aria-label="Xuất báo cáo PDF">
+            <button
+              type="button"
+              id="history-export-report-btn"
+              className="history-export-btn"
+              aria-label="Xuất báo cáo PDF"
+            >
               <Download size={16} /> Xuất báo cáo
             </button>
-            <div className="history-period-chip"><CalendarDays size={15} /> Cập nhật hôm nay</div>
+            <button
+              type="button"
+              id="history-refresh-btn"
+              className="history-period-chip history-refresh-btn"
+              aria-label="Làm mới dữ liệu"
+              title="Nhấn để tải lại dữ liệu mới nhất"
+            >
+              <RotateCcw size={14} className="history-refresh-icon" />
+              <span id="history-refresh-text">Cập nhật hôm nay</span>
+            </button>
           </div>
         </header>
 
@@ -69,235 +105,236 @@ export default function HistoryView() {
         </nav>
 
         <div hidden={activePage !== 'history'}>
-        <section className="history-kpi-row" aria-label="Tổng quan số liệu">
-          <article className="history-kpi-card is-match">
-            <span className="history-kpi-icon">
-              <FileCheck size={20} />
-            </span>
-            <div className="history-kpi-data">
-              <strong id="archive-match-count" className="history-kpi-value">0</strong>
-              <span className="history-kpi-label">Lần so khớp CV</span>
-            </div>
-          </article>
-
-          <article className="history-kpi-card is-optimized">
-            <span className="history-kpi-icon">
-              <Sparkles size={20} />
-            </span>
-            <div className="history-kpi-data">
-              <strong id="archive-optimized-count" className="history-kpi-value">0</strong>
-              <span className="history-kpi-label">CV đã tối ưu</span>
-            </div>
-          </article>
-
-          <article className="history-kpi-card is-interview">
-            <span className="history-kpi-icon">
-              <Mic size={20} />
-            </span>
-            <div className="history-kpi-data">
-              <strong id="archive-interview-count" className="history-kpi-value">0</strong>
-              <span className="history-kpi-label">Phiên phỏng vấn</span>
-            </div>
-          </article>
-
-          <article className="history-kpi-card is-best-match">
-            <span className="history-kpi-icon">
-              <TrendingUp size={20} />
-            </span>
-            <div className="history-kpi-data">
-              <strong id="archive-best-match" className="history-kpi-value">0%</strong>
-              <span className="history-kpi-label">Match cao nhất</span>
-            </div>
-          </article>
-        </section>
-
-        {/* 3. Analytics (2/3 Progress Line Chart + 1/3 Activity Donut Chart) */}
-        <section className="history-analytics-section" id="history-analytics-section" aria-label="Phân tích tiến độ">
-          <div className="analytics-card progress-card">
-            <div className="analytics-card-header">
-              <div className="analytics-card-title-wrap">
-                <h3 className="analytics-card-title">Tiến bộ theo thời gian</h3>
-                <span className="analytics-card-caption">Theo dõi điểm số qua các lần đánh giá gần nhất</span>
+          {/* 2. KPI Cards */}
+          <section className="history-kpi-row" aria-label="Tổng quan số liệu">
+            <article className="history-kpi-card is-match">
+              <span className="history-kpi-icon">
+                <FileCheck size={20} />
+              </span>
+              <div className="history-kpi-data">
+                <strong id="archive-match-count" className="history-kpi-value">0</strong>
+                <span className="history-kpi-label">Lần so khớp CV</span>
               </div>
-              <div className="analytics-metric-switch" role="tablist" aria-label="Chọn loại chỉ số">
-                <button
-                  type="button"
-                  id="metric-tab-match"
-                  className="metric-switch-btn active"
-                  data-metric="match"
-                  role="tab"
-                  aria-selected="true"
-                >
-                  Match CV
+            </article>
+
+            <article className="history-kpi-card is-optimized">
+              <span className="history-kpi-icon">
+                <CheckCircle2 size={20} />
+              </span>
+              <div className="history-kpi-data">
+                <strong id="archive-optimized-count" className="history-kpi-value">0</strong>
+                <span className="history-kpi-label">CV đã tối ưu</span>
+              </div>
+            </article>
+
+            <article className="history-kpi-card is-interview">
+              <span className="history-kpi-icon">
+                <Mic size={20} />
+              </span>
+              <div className="history-kpi-data">
+                <strong id="archive-interview-count" className="history-kpi-value">0</strong>
+                <span className="history-kpi-label">Phiên phỏng vấn</span>
+              </div>
+            </article>
+
+            <article className="history-kpi-card is-best-match">
+              <span className="history-kpi-icon">
+                <TrendingUp size={20} />
+              </span>
+              <div className="history-kpi-data">
+                <strong id="archive-best-match" className="history-kpi-value">0%</strong>
+                <span className="history-kpi-label">Match cao nhất</span>
+              </div>
+            </article>
+          </section>
+
+          {/* 3. Analytics (2/3 Progress Line Chart + 1/3 Activity Donut Chart) */}
+          <section className="history-analytics-section" id="history-analytics-section" aria-label="Phân tích tiến độ">
+            <div className="analytics-card progress-card">
+              <div className="analytics-card-header">
+                <div className="analytics-card-title-wrap">
+                  <h3 className="analytics-card-title">Tiến bộ theo thời gian</h3>
+                  <span className="analytics-card-caption">Theo dõi điểm số qua các lần đánh giá gần nhất</span>
+                </div>
+                <div className="analytics-metric-switch" role="tablist" aria-label="Chọn loại chỉ số">
+                  <button
+                    type="button"
+                    id="metric-tab-match"
+                    className="metric-switch-btn active"
+                    data-metric="match"
+                    role="tab"
+                    aria-selected="true"
+                  >
+                    Match CV
+                  </button>
+                  <button
+                    type="button"
+                    id="metric-tab-interview"
+                    className="metric-switch-btn"
+                    data-metric="interview"
+                    role="tab"
+                    aria-selected="false"
+                  >
+                    Phỏng vấn
+                  </button>
+                </div>
+              </div>
+              <div className="analytics-chart-wrap" id="history-progress-chart-container">
+                {/* Dynamic SVG / Canvas Chart rendered via JS */}
+                <div className="chart-placeholder-loading" id="progress-chart-loading">
+                  <span>Đang tạo biểu đồ tiến độ...</span>
+                </div>
+              </div>
+              {/* Tooltip for chart */}
+              <div id="history-chart-tooltip" className="history-chart-tooltip" hidden></div>
+            </div>
+
+            <div className="analytics-card distribution-card">
+              <div className="analytics-card-header">
+                <div className="analytics-card-title-wrap">
+                  <h3 className="analytics-card-title">Hoạt động của bạn</h3>
+                  <span className="analytics-card-caption">Tỷ lệ các loại nhiệm vụ</span>
+                </div>
+              </div>
+              <div className="donut-chart-wrap" id="history-donut-chart-container">
+                {/* Dynamic Donut Chart rendered via JS */}
+                <div className="chart-placeholder-loading" id="donut-chart-loading">
+                  <span>Đang tải phân bổ...</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* 4. Activity History Main Section */}
+          <section className="history-main-card" aria-label="Lịch sử hoạt động">
+            <div className="history-section-header">
+              <h3 className="history-section-title">Lịch sử hoạt động</h3>
+              <span id="archive-result-count" className="history-total-count" aria-live="polite">
+                0 kết quả
+              </span>
+            </div>
+
+            {/* Clean Toolbar: Search & Multi-Filters */}
+            <div className="history-toolbar">
+              <div className="history-search-wrap">
+                <Search size={16} className="history-search-icon" aria-hidden="true" />
+                <input
+                  type="search"
+                  id="history-search-input"
+                  className="history-search-input"
+                  placeholder="Tìm CV, công việc hoặc công ty..."
+                  aria-label="Tìm kiếm lịch sử"
+                />
+              </div>
+
+              <div className="history-filter-controls">
+                {/* Activity Type Filter */}
+                <div className="filter-select-wrap">
+                  <select id="filter-activity-type" className="history-filter-select" aria-label="Lọc theo loại hoạt động">
+                    <option value="all">Loại hoạt động: Tất cả</option>
+                    <option value="match">Match CV &amp; JD</option>
+                    <option value="optimized">CV đã tối ưu</option>
+                    <option value="interview">Phỏng vấn</option>
+                  </select>
+                </div>
+
+                {/* Time Filter */}
+                <div className="filter-select-wrap">
+                  <select id="filter-time-range" className="history-filter-select" aria-label="Lọc theo khoảng thời gian">
+                    <option value="all">Thời gian: Tất cả</option>
+                    <option value="7days">7 ngày qua</option>
+                    <option value="30days">30 ngày qua</option>
+                    <option value="3months">3 tháng qua</option>
+                  </select>
+                </div>
+
+                {/* Status Filter */}
+                <div className="filter-select-wrap">
+                  <select id="filter-status" className="history-filter-select" aria-label="Lọc theo trạng thái">
+                    <option value="all">Trạng thái: Tất cả</option>
+                    <option value="completed">Hoàn thành</option>
+                    <option value="inprogress">Đang thực hiện</option>
+                    <option value="failed">Lỗi</option>
+                  </select>
+                </div>
+
+                {/* Sort Dropdown */}
+                <div className="filter-select-wrap">
+                  <select id="history-sort-by" className="history-filter-select sort-select" aria-label="Sắp xếp danh sách">
+                    <option value="newest">Mới nhất</option>
+                    <option value="oldest">Cũ nhất</option>
+                    <option value="match_high">Match cao nhất</option>
+                    <option value="match_low">Match thấp nhất</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Active Filter Chips Bar */}
+            <div id="history-active-chips" className="history-active-chips" hidden aria-live="polite">
+              {/* Populated dynamically */}
+            </div>
+
+            {/* 5. Data Table (Desktop) & Compact List (Mobile) */}
+            <div className="history-table-container">
+              <table className="history-data-table" id="history-data-table" aria-label="Danh sách lịch sử hoạt động">
+                <thead>
+                  <tr>
+                    <th scope="col" className="col-type">Hoạt động</th>
+                    <th scope="col" className="col-cv">CV</th>
+                    <th scope="col" className="col-job">Công việc / JD</th>
+                    <th scope="col" className="col-result sortable-col text-center" id="col-sort-result" data-sort="score" title="Nhấp để sắp xếp">
+                      <span className="th-center-wrap">Kết quả <ArrowUpDown size={13} className="sort-icon" /></span>
+                    </th>
+                    <th scope="col" className="col-status text-center">Trạng thái</th>
+                    <th scope="col" className="col-date sortable-col text-center" id="col-sort-date" data-sort="date" title="Nhấp để sắp xếp">
+                      <span className="th-center-wrap">Thời gian <ArrowUpDown size={13} className="sort-icon" /></span>
+                    </th>
+                    <th scope="col" className="col-action text-center">Hành động</th>
+                  </tr>
+                </thead>
+                <tbody id="history-table-body">
+                  {/* Dynamically populated rows */}
+                </tbody>
+              </table>
+
+              {/* Mobile list view container */}
+              <div id="history-mobile-list" className="history-mobile-list" aria-live="polite">
+                {/* Dynamically populated cards */}
+              </div>
+
+              {/* Empty state container */}
+              <div id="history-empty-state" className="history-empty-state" hidden>
+                {/* Dynamic empty state depending on no data vs no filter match */}
+              </div>
+            </div>
+
+            {/* 11. Pagination Bar */}
+            <footer className="history-pagination-bar" id="history-pagination-bar">
+              <div className="pagination-info" id="pagination-info">
+                Hiển thị 1–20 / 0 kết quả
+              </div>
+              <nav className="pagination-nav" id="pagination-nav" aria-label="Phân trang">
+                <button type="button" className="pagination-btn prev-btn" id="pagination-prev-btn" aria-label="Trang trước" disabled>
+                  <ChevronLeft size={16} />
                 </button>
-                <button
-                  type="button"
-                  id="metric-tab-interview"
-                  className="metric-switch-btn"
-                  data-metric="interview"
-                  role="tab"
-                  aria-selected="false"
-                >
-                  Phỏng vấn
+                <div className="pagination-pages" id="pagination-pages">
+                  {/* Page buttons */}
+                </div>
+                <button type="button" className="pagination-btn next-btn" id="pagination-next-btn" aria-label="Trang sau" disabled>
+                  <ChevronRight size={16} />
                 </button>
-              </div>
-            </div>
-            <div className="analytics-chart-wrap" id="history-progress-chart-container">
-              {/* Dynamic SVG / Canvas Chart rendered via JS */}
-              <div className="chart-placeholder-loading" id="progress-chart-loading">
-                <span>Đang tạo biểu đồ tiến độ...</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="analytics-card distribution-card">
-            <div className="analytics-card-header">
-              <div className="analytics-card-title-wrap">
-                <h3 className="analytics-card-title">Hoạt động của bạn</h3>
-                <span className="analytics-card-caption">Tỷ lệ các loại nhiệm vụ</span>
-              </div>
-            </div>
-            <div className="donut-chart-wrap" id="history-donut-chart-container">
-              {/* Dynamic Donut Chart rendered via JS */}
-              <div className="chart-placeholder-loading" id="donut-chart-loading">
-                <span>Đang tải phân bổ...</span>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* 4. Activity History Main Section */}
-        <section className="history-main-card" aria-label="Lịch sử hoạt động">
-          <div className="history-section-header">
-            <h3 className="history-section-title">Lịch sử hoạt động</h3>
-            <span id="archive-result-count" className="history-total-count" aria-live="polite">
-              0 kết quả
-            </span>
-          </div>
-
-          {/* Clean Toolbar: Search & Multi-Filters */}
-          <div className="history-toolbar">
-            <div className="history-search-wrap">
-              <Search size={16} className="history-search-icon" aria-hidden="true" />
-              <input
-                type="search"
-                id="history-search-input"
-                className="history-search-input"
-                placeholder="Tìm CV, công việc hoặc công ty..."
-                aria-label="Tìm kiếm lịch sử"
-              />
-            </div>
-
-            <div className="history-filter-controls">
-              {/* Activity Type Filter */}
-              <div className="filter-select-wrap">
-                <select id="filter-activity-type" className="history-filter-select" aria-label="Lọc theo loại hoạt động">
-                  <option value="all">Loại hoạt động: Tất cả</option>
-                  <option value="match">Match CV &amp; JD</option>
-                  <option value="optimized">CV đã tối ưu</option>
-                  <option value="interview">Phỏng vấn</option>
+              </nav>
+              <div className="pagination-page-size">
+                <select id="pagination-size-select" className="page-size-select" aria-label="Số bản ghi mỗi trang">
+                  <option value="10">10 / trang</option>
+                  <option value="20">20 / trang</option>
+                  <option value="50">50 / trang</option>
+                  <option value="100">100 / trang</option>
                 </select>
               </div>
-
-              {/* Time Filter */}
-              <div className="filter-select-wrap">
-                <select id="filter-time-range" className="history-filter-select" aria-label="Lọc theo khoảng thời gian">
-                  <option value="all">Thời gian: Tất cả</option>
-                  <option value="7days">7 ngày qua</option>
-                  <option value="30days">30 ngày qua</option>
-                  <option value="3months">3 tháng qua</option>
-                </select>
-              </div>
-
-              {/* Status Filter */}
-              <div className="filter-select-wrap">
-                <select id="filter-status" className="history-filter-select" aria-label="Lọc theo trạng thái">
-                  <option value="all">Trạng thái: Tất cả</option>
-                  <option value="completed">Hoàn thành</option>
-                  <option value="inprogress">Đang thực hiện</option>
-                  <option value="failed">Lỗi</option>
-                </select>
-              </div>
-
-              {/* Sort Dropdown */}
-              <div className="filter-select-wrap">
-                <select id="history-sort-by" className="history-filter-select sort-select" aria-label="Sắp xếp danh sách">
-                  <option value="newest">Mới nhất</option>
-                  <option value="oldest">Cũ nhất</option>
-                  <option value="match_high">Match cao nhất</option>
-                  <option value="match_low">Match thấp nhất</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* Active Filter Chips Bar */}
-          <div id="history-active-chips" className="history-active-chips" hidden aria-live="polite">
-            {/* Populated dynamically */}
-          </div>
-
-          {/* 5. Data Table (Desktop) & Compact List (Mobile) */}
-          <div className="history-table-container">
-            <table className="history-data-table" id="history-data-table" aria-label="Danh sách lịch sử hoạt động">
-              <thead>
-                <tr>
-                  <th scope="col" className="col-type">Hoạt động</th>
-                  <th scope="col" className="col-cv">CV</th>
-                  <th scope="col" className="col-job">Công việc / JD</th>
-                  <th scope="col" className="col-result sortable-col" id="col-sort-result" data-sort="score">
-                    <span>Kết quả</span>
-                    <ArrowUpDown size={13} className="sort-icon" />
-                  </th>
-                  <th scope="col" className="col-status">Trạng thái</th>
-                  <th scope="col" className="col-date sortable-col" id="col-sort-date" data-sort="date">
-                    <span>Ngày</span>
-                    <ArrowUpDown size={13} className="sort-icon" />
-                  </th>
-                  <th scope="col" className="col-action text-right">Hành động</th>
-                </tr>
-              </thead>
-              <tbody id="history-table-body">
-                {/* Dynamically populated rows */}
-              </tbody>
-            </table>
-
-            {/* Mobile list view container */}
-            <div id="history-mobile-list" className="history-mobile-list" aria-live="polite">
-              {/* Dynamically populated cards */}
-            </div>
-
-            {/* Empty state container */}
-            <div id="history-empty-state" className="history-empty-state" hidden>
-              {/* Dynamic empty state depending on no data vs no filter match */}
-            </div>
-          </div>
-
-          {/* 11. Pagination Bar */}
-          <footer className="history-pagination-bar" id="history-pagination-bar">
-            <div className="pagination-info" id="pagination-info">
-              Hiển thị 1–20 / 0 kết quả
-            </div>
-            <nav className="pagination-nav" id="pagination-nav" aria-label="Phân trang">
-              <button type="button" className="pagination-btn prev-btn" id="pagination-prev-btn" aria-label="Trang trước" disabled>
-                <ChevronLeft size={16} />
-              </button>
-              <div className="pagination-pages" id="pagination-pages">
-                {/* Page buttons */}
-              </div>
-              <button type="button" className="pagination-btn next-btn" id="pagination-next-btn" aria-label="Trang sau" disabled>
-                <ChevronRight size={16} />
-              </button>
-            </nav>
-            <div className="pagination-page-size">
-              <select id="pagination-size-select" className="page-size-select" aria-label="Số bản ghi mỗi trang">
-                <option value="10">10 / trang</option>
-                <option value="20">20 / trang</option>
-                <option value="50">50 / trang</option>
-                <option value="100">100 / trang</option>
-              </select>
-            </div>
-          </footer>
-        </section>
+            </footer>
+          </section>
         </div>
 
         <section className="career-report-page" hidden={activePage !== 'reports'} aria-label="Báo cáo tiến độ">
@@ -317,20 +354,49 @@ export default function HistoryView() {
           </div>
 
           <div className="report-content-grid">
-            <article className="report-panel report-trend-panel">
-              <div className="report-panel-heading"><div><span className="report-label">XU HƯỚNG</span><h4>Điểm match theo thời gian</h4></div><span className="report-growth"><ArrowUpRight size={14} /> Đang theo dõi</span></div>
-              <div className="report-chart" id="report-trend-chart" aria-label="Biểu đồ điểm match theo thời gian">
-                <div className="report-chart-line"><i /><i /><i /><i /><i /><i /></div>
-                <div className="report-chart-axis"><span>Tuần 1</span><span>Tuần 2</span><span>Tuần 3</span><span>Hôm nay</span></div>
+            <article className="report-panel report-skills-panel">
+              <div className="report-panel-heading">
+                <div>
+                  <span className="report-label">PHÂN TÍCH KỸ NĂNG</span>
+                  <h4>Độ phủ kỹ năng theo mục tiêu</h4>
+                </div>
+                <span className="report-growth" id="report-skills-match-rate">
+                  <ArrowUpRight size={14} /> Tối ưu liên tục
+                </span>
               </div>
-              <p className="report-panel-note">Dữ liệu được tổng hợp từ các lần so khớp CV và JD của bạn.</p>
+              <div id="report-skills-breakdown" className="report-skills-breakdown">
+                <div className="report-skills-group">
+                  <span className="report-skills-group-title matched">Kỹ năng phù hợp nổi bật</span>
+                  <div className="report-skills-tags" id="report-matched-skills-tags">
+                    <span className="skill-tag match">Đang cập nhật</span>
+                  </div>
+                </div>
+                <div className="report-skills-group">
+                  <span className="report-skills-group-title missing">Kỹ năng cần bổ sung / cải thiện</span>
+                  <div className="report-skills-tags" id="report-missing-skills-tags">
+                    <span className="skill-tag missing">Đang cập nhật</span>
+                  </div>
+                </div>
+              </div>
+              <p className="report-panel-note">Tổng hợp từ các phân tích JD gần nhất giúp bạn định hướng nâng cao năng lực.</p>
             </article>
+
             <article className="report-panel report-action-panel">
-              <div className="report-panel-heading"><div><span className="report-label">ƯU TIÊN TIẾP THEO</span><h4>3 việc giúp tăng cơ hội</h4></div><Lightbulb size={20} className="report-lightbulb" /></div>
+              <div className="report-panel-heading">
+                <div>
+                  <span className="report-label">ƯU TIÊN TIẾP THEO</span>
+                  <h4>Lộ trình hành động cá nhân hóa</h4>
+                </div>
+                <Lightbulb size={20} className="report-lightbulb" />
+              </div>
               <ol className="report-actions-list" id="report-priority-actions">
-                <li><span>01</span><div><strong>Hoàn thiện hồ sơ CV</strong><p>Thêm các kết quả có thể đo lường vào phần kinh nghiệm.</p></div></li>
-                <li><span>02</span><div><strong>Luyện một phiên phỏng vấn</strong><p>Thực hành trả lời theo cấu trúc STAR cho vị trí mục tiêu.</p></div></li>
-                <li><span>03</span><div><strong>So khớp với một JD mới</strong><p>Đo khoảng cách kỹ năng trước khi ứng tuyển.</p></div></li>
+                <li>
+                  <span>01</span>
+                  <div>
+                    <strong>Đang phân tích hành động tối ưu...</strong>
+                    <p>Hệ thống đang cá nhân hóa lộ trình dựa trên hồ sơ của bạn.</p>
+                  </div>
+                </li>
               </ol>
             </article>
           </div>
@@ -340,40 +406,48 @@ export default function HistoryView() {
             <div id="report-recent-list" className="report-recent-list"><p>Những báo cáo mới nhất của bạn sẽ hiển thị tại đây.</p></div>
           </article>
         </section>
+      </main>
 
-        {/* 7. Right-Side Detail Drawer */}
-        <div id="history-drawer-overlay" className="history-drawer-overlay" aria-hidden="true" />
-        <aside
-          id="history-detail-drawer"
-          className="history-detail-drawer"
-          aria-label="Bảng chi tiết hoạt động"
-          aria-hidden="true"
-          tabIndex={-1}
-        >
-          <div className="drawer-header">
-            <div className="drawer-header-info">
-              <span id="drawer-activity-badge" className="drawer-type-badge">Match CV</span>
-              <h3 id="drawer-item-title" className="drawer-title">Chi tiết hoạt động</h3>
+      {/* Detail Modal Dialog */}
+      <div id="history-modal-overlay" className="history-modal-overlay" aria-hidden="true" />
+      <div
+        id="history-detail-modal"
+        className="history-detail-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Bảng chi tiết hoạt động"
+        aria-labelledby="drawer-item-title"
+        aria-hidden="true"
+        tabIndex={-1}
+      >
+        <div className="history-modal-card">
+          <header className="history-modal-header">
+            <div className="history-modal-header-info">
+              <div className="history-modal-badge-row">
+                <span id="drawer-activity-badge" className="drawer-type-badge is-match">Match CV</span>
+                <span id="modal-status-badge" className="status-pill is-completed"><span className="status-dot"></span> Hoàn thành</span>
+              </div>
+              <h3 id="drawer-item-title" className="history-modal-title">Chi tiết hoạt động</h3>
             </div>
             <button
               type="button"
-              id="btn-close-history-drawer"
-              className="drawer-close-btn"
+              id="btn-close-history-modal"
+              className="history-modal-close-btn"
               aria-label="Đóng chi tiết"
             >
               <X size={20} />
             </button>
-          </div>
+          </header>
 
-          <div className="drawer-body" id="drawer-body-content">
+          <div className="history-modal-body" id="drawer-body-content">
             {/* Populated dynamically */}
           </div>
 
-          <div className="drawer-footer" id="drawer-footer-actions">
-            {/* Populated dynamically with primary action, secondary action and options */}
-          </div>
-        </aside>
-      </main>
+          <footer className="history-modal-footer" id="drawer-footer-actions">
+            {/* Populated dynamically with action buttons */}
+          </footer>
+        </div>
+      </div>
     </section>
   );
 }

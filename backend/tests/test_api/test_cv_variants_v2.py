@@ -168,6 +168,10 @@ async def test_mode_b_confirmation_autosave_publish_block_and_recovery(client):
     blocked = await client.post(f"/api/v2/cv-variants/{variant['id']}/validate", headers=headers)
     assert blocked.status_code == 200
     assert blocked.json()["passed"] is False
+    assert any(item["errors"] for item in blocked.json()["validators"] if not item["passed"])
+    invalid_preview = await client.get(f"/api/v2/cv-variants/{variant['id']}/export?preview=true", headers=headers)
+    assert invalid_preview.status_code == 200
+    assert invalid_preview.content.startswith(b"%PDF")
     publish_blocked = await client.post(f"/api/v2/cv-variants/{variant['id']}/publish", headers=headers)
     assert publish_blocked.status_code == 422
     assert publish_blocked.json()["code"] == "CV_VARIANT_PUBLISH_BLOCKED"

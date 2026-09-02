@@ -1,4 +1,6 @@
 
+from types import SimpleNamespace
+
 import pytest
 
 from tests.helpers import insert_cv, insert_jd, register_and_login
@@ -197,6 +199,20 @@ async def test_interview_followup_completion_and_report(client, monkeypatch):
             "recommendations": ["Tiếp tục luyện STAR"],
         }
 
+    # Luồng text lấy câu hỏi từ agenda chứ không gọi generate_interview_questions
+    # nữa (hàm đó chỉ còn là lưới an toàn khi agenda rỗng). Stub thẳng tầng
+    # agenda để bộ câu hỏi trong test vẫn xác định được.
+    async def fake_ensure_agenda(_db, **_kwargs):
+        agenda = SimpleNamespace(
+            id="agenda-test",
+            questions_json=[
+                {"id": f"A-00{i}", "question_vi": text, "is_enabled": True}
+                for i, text in enumerate(await fake_questions(), start=1)
+            ],
+        )
+        return agenda, True
+
+    monkeypatch.setattr("src.api.v1.interviews.ensure_agenda", fake_ensure_agenda)
     monkeypatch.setattr("src.api.v1.interviews.generate_interview_questions", fake_questions)
     monkeypatch.setattr("src.api.v1.interviews.evaluate_answer_and_check_followup", fake_evaluation)
     monkeypatch.setattr("src.api.v1.interviews.generate_final_star_report", fake_report)
@@ -235,8 +251,25 @@ async def test_interview_followup_completion_and_report(client, monkeypatch):
 
     report = await client.get(f"/api/v1/interviews/{session_id}/report", headers=headers)
     assert report.status_code == 200
-    assert report.json()["total_score"] == 80
-    assert report.json()["strengths"] == ["Action rõ ràng"]
+    report_body = report.json()
+    assert report_body["total_score"] == 80
+    assert report_body["strengths"] == ["Action rõ ràng"]
+
+    qa_history = report_body["qa_history"]
+    assert len(qa_history) == 3
+    assert [item["question_index"] for item in qa_history] == sorted(
+        item["question_index"] for item in qa_history
+    )
+
+    first_qa = qa_history[0]
+    assert first_qa["question_text"] == "Câu hỏi tình huống 1?"
+    assert first_qa["user_answer"] == "Tôi đã xử lý một sự cố trong dự án."
+    assert first_qa["follow_up_question"] == "Kết quả cụ thể là gì?"
+
+    assert report_body["jd_title"] == jd.title
+    assert report_body["cv_title"] == cv.title
+    assert report_body["mode"] == "text"
+    assert report_body["language"] == "vi"
 
     after_completion = await client.post(
         f"/api/v1/interviews/{session_id}/answer",

@@ -1,0 +1,1712 @@
+/*
+ * ================================================================
+ * SHARED UI LAYER — dùng chung cho cả 4 phân hệ
+ * Student · Counselor · Enterprise · Admin
+ * ================================================================
+ *
+ * File này được import CUỐI CÙNG trong globals.css. Hệ quả:
+ *   • cùng specificity  → rule ở đây thắng mọi scope theo trang
+ *     (legacy.css, theme.css, counselor.css, enterprise.css, responsive.css…);
+ *   • cần thắng rule `!important` của scope cũ → phải dùng `!important`
+ *     kèm specificity bằng hoặc cao hơn (xem §3.3, §4.4).
+ *
+ * Mục tiêu: một hệ thống duy nhất cho viền, nút, ô tìm kiếm, thẻ KPI,
+ * hàng công cụ và modal — thay cho việc mỗi trang tự style một kiểu.
+ *
+ * MỤC LỤC
+ *   §1  Preflight bù (zero-specificity)
+ *   §2  Nút / link / action chip dùng chung
+ *   §3  Ô tìm kiếm · select · hàng công cụ
+ *   §4  Thẻ KPI / summary
+ *   §5  Modal · dialog · drawer
+ *   §6  Scrollbar mỏng
+ *   §7  Admin console
+ *   §8  Hệ màu trạng thái (status) — NGUỒN SỰ THẬT DUY NHẤT
+ */
+
+:root {
+  --ui-border: #e2e8f0;
+  --ui-border-strong: #cbd5e1;
+  --ui-surface: #ffffff;
+  --ui-surface-soft: #f8fafc;
+  --ui-text: #171d19;
+  --ui-text-muted: #475569;
+  --ui-text-subtle: #64748b;
+  --ui-placeholder: #94a3b8;
+  --ui-primary: #006948;
+  --ui-primary-hover: #047857;
+  --ui-primary-soft: #ecfdf5;
+  --ui-radius: 10px;
+  --ui-radius-lg: 12px;
+  --ui-control-h: 42px;
+  --ui-gap: 12px;
+  --ui-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  --ui-shadow-modal: 0 24px 60px rgba(15, 23, 42, 0.18);
+  --ui-ring: 0 0 0 3px rgba(5, 150, 105, 0.15);
+  --ui-scroll-thumb: #cbd5e1;
+  --ui-scroll-thumb-hover: #94a3b8;
+  --ui-font: 'Inter', -apple-system, blinkmacsystemfont, 'Segoe UI', roboto, sans-serif;
+  --ui-font-headline: 'Plus Jakarta Sans', 'Inter', sans-serif;
+}
+
+.admin-shell { max-width: 1366px; width:100%; margin:0 auto; padding:24px 16px 48px; box-sizing:border-box; }
+@media (min-width: 768px) { .admin-shell { padding:32px 20px 56px; } }
+@media (min-width: 1200px) { .admin-shell { padding:36px 24px 64px; } }
+/* .admin-heading / .admin-eyebrow / .admin-tabs đã được bỏ: khu vực admin dùng
+   điều hướng dùng chung ở AppHeader thay cho tiêu đề lặp lại và dải tab trong trang. */
+.admin-kpis { display:grid; grid-template-columns:repeat(5, minmax(0,1fr)); gap:14px; margin-bottom:20px; }
+.admin-kpi, .admin-panel { background:var(--card); border:1px solid var(--border); border-radius:var(--radius-md); box-shadow:var(--card-shadow); }
+.admin-kpi { padding:18px; display:grid; gap:8px; color:var(--primary); }
+.admin-kpi strong { font-size:28px; color:var(--text-primary); }
+.admin-kpi span { color:var(--text-secondary); font-size:13px; font-weight:600; }
+.admin-grid-2 { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; }
+.admin-panel { padding:20px; min-width:0; }
+.admin-panel-title { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:16px; }
+.admin-panel-title h2 { margin:0; font-size:17px; letter-spacing:0; }
+.admin-attention { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
+.admin-attention div { padding:14px; background:var(--primary-soft); border-radius:var(--radius-sm); display:grid; gap:3px; }
+.admin-attention strong { font-size:24px; color:var(--primary); }.admin-attention span, .admin-activity small { color:var(--text-secondary); font-size:12px; }
+.admin-activity { display:grid; gap:11px; }.admin-activity div { display:flex; justify-content:space-between; gap:12px; padding-bottom:10px; border-bottom:1px solid var(--border); }.admin-activity div:last-child { border-bottom:0; }
+.admin-table-panel { margin-top:4px; }.admin-table-scroll { overflow:auto; scrollbar-width:thin; scrollbar-color:var(--primary-border) transparent; }.admin-table-scroll table { width:100%; border-collapse:collapse; min-width:620px; }.admin-table-scroll th { text-align:left; color:var(--text-secondary); font-size:11px; text-transform:uppercase; letter-spacing:.05em; padding:11px 12px; border-bottom:1px solid var(--border); }.admin-table-scroll td { padding:14px 12px; border-bottom:1px solid var(--border); color:var(--text-primary); font-size:13px; font-weight:600; }.admin-table-scroll tr:last-child td { border-bottom:0; }
+.status-badge { display:inline-flex; align-items:center; padding:4px 8px; border-radius:999px; font-size:11px; font-weight:800; }.status-badge.is-success { color:var(--color-success); background:var(--color-success-soft); }.status-badge.is-warning { color:var(--color-warning-hover); background:var(--color-warning-soft); }.status-badge.is-neutral { color:var(--color-neutral-hover); background:var(--color-neutral-soft); }
+.admin-state { padding:48px 20px; text-align:center; color:var(--text-secondary); }.admin-state.is-error { display:flex; justify-content:center; align-items:center; gap:8px; color:var(--color-danger); }
+@media (max-width: 900px) { .admin-kpis { grid-template-columns:repeat(3,minmax(0,1fr)); } .admin-grid-2 { grid-template-columns:1fr; } }
+@media (max-width: 600px) { .admin-shell { padding:24px 16px 40px; }.admin-kpis { grid-template-columns:repeat(2,minmax(0,1fr)); }.admin-kpi strong { font-size:24px; }.admin-attention { grid-template-columns:1fr; } }
+
+/* ══════════════════════════════════════════════════════════════
+   §1. PREFLIGHT BÙ
+   tailwind.config.js đặt `corePlugins: { preflight: false }` nên
+   Tailwind Preflight KHÔNG chạy. Hệ quả trên toàn app:
+     • <button> giữ nguyên UA style `border: 2px outset ButtonBorder`
+       + `background: ButtonFace` + chữ 13.33px  → đúng thứ "viền đen
+       thô" mà brief yêu cầu bỏ;
+     • phần tử thường mặc định `border-style: none` nên utility
+       `border`/`border-[#E2E8F0]` của Tailwind vẽ ra… không thấy gì
+       (badge, chip, divider);
+     • <table> giữ `border-collapse: separate` + `border-spacing: 2px`
+       khiến `divide-y` gắn trên <tr> bị bỏ qua.
+   Toàn bộ khối này bọc trong `:where()` → specificity (0,0,0), luôn
+   THUA mọi utility Tailwind và mọi rule legacy. Nó chỉ vá phần mặc
+   định của trình duyệt, không ghi đè thiết kế nào đang có.
+   ══════════════════════════════════════════════════════════════ */
+
+:where(*, *::before, *::after) {
+  border-width: 0;
+  border-style: solid;
+  border-color: var(--ui-border);
+}
+
+/* Form control cần lại 1px viền (vì rule trên vừa xoá viền UA của chúng).
+   Checkbox/radio/range/color/file vẫn do UA vẽ nên không bị ảnh hưởng. */
+:where(input, select, textarea) {
+  border-width: 1px;
+  border-color: var(--ui-border);
+  border-radius: var(--ui-radius);
+  background-color: var(--ui-surface);
+  color: var(--ui-text);
+  font: inherit;
+}
+
+:where(input, textarea)::placeholder {
+  color: var(--ui-placeholder);
+  opacity: 1;
+}
+
+/* Nút: bỏ hẳn vẻ ngoài mặc định của trình duyệt. Không đặt background
+   nên nút chưa có class nào sẽ về dạng "ghost" (không viền cứng, nền
+   trong suốt) — đúng yêu cầu cho action dạng text. */
+:where(button) {
+  -webkit-appearance: none;
+  appearance: none;
+  background-color: transparent;
+  background-image: none;
+  color: inherit;
+  font: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
+  text-align: inherit;
+  text-transform: none;
+  cursor: pointer;
+}
+
+:where(button:disabled, input:disabled, select:disabled, textarea:disabled) {
+  cursor: not-allowed;
+}
+
+:where(table) {
+  border-collapse: collapse;
+  border-spacing: 0;
+  text-indent: 0;
+}
+
+/* Icon inline (lucide) không có Preflight sẽ nằm trên baseline chữ →
+   lệch xuống vài px so với text cạnh nó. `vertical-align: middle` xử lý
+   đúng chỗ đó mà không đổi `display` (đổi display sang block sẽ làm icon
+   trong <p>/<span> rớt xuống dòng riêng). */
+:where(svg, img, video, canvas, audio, iframe, embed, object) {
+  vertical-align: middle;
+}
+
+:where(img, video) {
+  max-width: 100%;
+  height: auto;
+}
+
+:where(hr) {
+  height: 0;
+  color: inherit;
+  border-top-width: 1px;
+}
+
+:where(summary) {
+  cursor: pointer;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   §2. NÚT / LINK / ACTION CHIP
+   ══════════════════════════════════════════════════════════════ */
+
+/* §2.1 — Bộ nút dùng chung. Dùng cho markup mới, không cần tự viết lại
+   padding/viền/hover cho từng trang. */
+.ui-btn,
+.ui-btn-primary,
+.ui-btn-secondary,
+.ui-btn-ghost,
+.ui-btn-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: var(--ui-control-h);
+  padding: 0 16px;
+  border: 1px solid transparent;
+  border-radius: var(--ui-radius);
+  background-color: transparent;
+  font-family: var(--ui-font);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--ui-text);
+  white-space: nowrap;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.ui-btn-primary {
+  background-color: var(--ui-primary);
+  border-color: var(--ui-primary);
+  color: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.ui-btn-primary:hover {
+  background-color: var(--ui-primary-hover);
+  border-color: var(--ui-primary-hover);
+}
+
+.ui-btn-secondary,
+.ui-btn {
+  background-color: var(--ui-surface);
+  border-color: var(--ui-border);
+  color: var(--ui-text);
+}
+
+.ui-btn-secondary:hover,
+.ui-btn:hover {
+  background-color: var(--ui-surface-soft);
+  border-color: var(--ui-border-strong);
+  color: var(--ui-primary);
+}
+
+.ui-btn-ghost {
+  color: var(--ui-text-muted);
+  padding: 0 12px;
+}
+
+.ui-btn-ghost:hover {
+  background-color: var(--ui-surface-soft);
+  color: var(--ui-primary);
+}
+
+.ui-btn-danger {
+  background-color: #dc2626;
+  border-color: #dc2626;
+  color: #ffffff;
+}
+
+.ui-btn-danger:hover {
+  background-color: #b91c1c;
+  border-color: #b91c1c;
+}
+
+.ui-btn-sm {
+  height: 34px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+
+.ui-btn-icon {
+  width: var(--ui-control-h);
+  height: var(--ui-control-h);
+  padding: 0;
+  flex: 0 0 auto;
+}
+
+.ui-btn:disabled,
+.ui-btn-primary:disabled,
+.ui-btn-secondary:disabled,
+.ui-btn-ghost:disabled,
+.ui-btn-danger:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Link/action dạng text: không viền cứng, chỉ đổi màu + nền nhạt. */
+.ui-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  background: none;
+  padding: 0;
+  font-family: var(--ui-font);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ui-primary);
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.ui-link:hover {
+  color: var(--ui-primary-hover);
+}
+
+/* §2.2 — Chuẩn hoá bán kính/viền cho các họ nút cũ trong phạm vi các
+   trang portal.
+   Danh sách dưới đây là TOÀN BỘ 14 `#view-*` của app (xem `id="view-…"`
+   trong components/) TRỪ `#view-dashboard`: đó là trang landing có hero
+   tối, viền sáng + bán kính riêng ở đó là chủ ý, không phải lỗi.
+   Phải liệt kê tay từng scope vì `:is()` không nâng specificity theo
+   phần tử đứng trước, mà ta cần đúng (1,1,0) để thắng rule theo trang. */
+#view-counselor :is(.btn, .btn-primary, .btn-secondary, .btn-outline, .btn-ghost, .btn-icon),
+#view-enterprise :is(.btn, .btn-primary, .btn-secondary, .btn-outline, .btn-ghost, .btn-icon),
+#view-company-profile :is(.btn, .btn-primary, .btn-secondary, .btn-outline, .btn-ghost, .btn-icon),
+#view-admin :is(.btn, .btn-primary, .btn-secondary, .btn-outline, .btn-ghost, .btn-icon),
+#view-history :is(.btn, .btn-primary, .btn-secondary, .btn-outline, .btn-ghost, .btn-icon),
+#view-profile :is(.btn, .btn-primary, .btn-secondary, .btn-outline, .btn-ghost, .btn-icon),
+#view-find-jobs :is(.btn, .btn-primary, .btn-secondary, .btn-outline, .btn-ghost, .btn-icon),
+#view-jobs :is(.btn, .btn-primary, .btn-secondary, .btn-outline, .btn-ghost, .btn-icon),
+#view-match :is(.btn, .btn-primary, .btn-secondary, .btn-outline, .btn-ghost, .btn-icon),
+#view-cv :is(.btn, .btn-primary, .btn-secondary, .btn-outline, .btn-ghost, .btn-icon),
+#view-gap :is(.btn, .btn-primary, .btn-secondary, .btn-outline, .btn-ghost, .btn-icon),
+#view-interview :is(.btn, .btn-primary, .btn-secondary, .btn-outline, .btn-ghost, .btn-icon),
+#view-upgrade :is(.btn, .btn-primary, .btn-secondary, .btn-outline, .btn-ghost, .btn-icon),
+#view-notifications :is(.btn, .btn-primary, .btn-secondary, .btn-outline, .btn-ghost, .btn-icon) {
+  border-radius: var(--ui-radius) !important;
+}
+
+#view-counselor :is(.btn-outline, .btn-secondary),
+#view-enterprise :is(.btn-outline, .btn-secondary),
+#view-company-profile :is(.btn-outline, .btn-secondary),
+#view-admin :is(.btn-outline, .btn-secondary),
+#view-history :is(.btn-outline, .btn-secondary),
+#view-profile :is(.btn-outline, .btn-secondary),
+#view-find-jobs :is(.btn-outline, .btn-secondary),
+#view-jobs :is(.btn-outline, .btn-secondary),
+#view-match :is(.btn-outline, .btn-secondary),
+#view-cv :is(.btn-outline, .btn-secondary),
+#view-gap :is(.btn-outline, .btn-secondary),
+#view-interview :is(.btn-outline, .btn-secondary),
+#view-upgrade :is(.btn-outline, .btn-secondary),
+#view-notifications :is(.btn-outline, .btn-secondary) {
+  border-color: var(--ui-border) !important;
+}
+
+/* §2.3 — Focus: bỏ ring khi click chuột, giữ ring rõ khi đi bằng bàn phím.
+   enterprise.css/counselor.css đang đặt `outline: none !important` cho
+   cả :focus-visible ở specificity (1,1,1) → phải khớp specificity + có
+   `!important` mới thắng, và vì file này nạp sau nên rule dưới đây win. */
+#view-counselor :is(button, a, [role='button'], [role='tab'], summary):focus-visible,
+#view-enterprise :is(button, a, [role='button'], [role='tab'], summary):focus-visible,
+#view-company-profile :is(button, a, [role='button'], [role='tab'], summary):focus-visible,
+#view-admin :is(button, a, [role='button'], [role='tab'], summary):focus-visible,
+#view-history :is(button, a, [role='button'], [role='tab'], summary):focus-visible,
+#view-profile :is(button, a, [role='button'], [role='tab'], summary):focus-visible,
+#view-find-jobs :is(button, a, [role='button'], [role='tab'], summary):focus-visible,
+#view-jobs :is(button, a, [role='button'], [role='tab'], summary):focus-visible,
+#view-match :is(button, a, [role='button'], [role='tab'], summary):focus-visible,
+#view-cv :is(button, a, [role='button'], [role='tab'], summary):focus-visible,
+#view-gap :is(button, a, [role='button'], [role='tab'], summary):focus-visible,
+#view-interview :is(button, a, [role='button'], [role='tab'], summary):focus-visible,
+#view-upgrade :is(button, a, [role='button'], [role='tab'], summary):focus-visible,
+#view-notifications :is(button, a, [role='button'], [role='tab'], summary):focus-visible {
+  outline: 2px solid var(--ui-primary) !important;
+  outline-offset: 2px !important;
+}
+
+.ui-btn:focus-visible,
+.ui-btn-primary:focus-visible,
+.ui-btn-secondary:focus-visible,
+.ui-btn-ghost:focus-visible,
+.ui-btn-danger:focus-visible,
+.ui-link:focus-visible,
+.ui-search-input:focus-visible {
+  outline: 2px solid var(--ui-primary);
+  outline-offset: 2px;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   §3. Ô TÌM KIẾM · SELECT · HÀNG CÔNG CỤ
+   ══════════════════════════════════════════════════════════════ */
+
+/* §3.1 — Hàng công cụ: search + filter + action nằm CÙNG một dòng,
+   chỉ wrap khi hết chỗ. Thay cho việc xếp dọc gây thừa khoảng trắng. */
+.ui-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ui-gap);
+  width: 100%;
+  min-width: 0;
+}
+
+.ui-toolbar-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ui-gap);
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+.ui-toolbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ui-gap);
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+/* §3.2 — Ô tìm kiếm.
+   Icon: absolute, kích thước cố định, canh giữa bằng top 50% + translate
+   → luôn cùng trục dọc với text bất kể line-height của input.
+   Input: KHÔNG padding dọc, chiều cao cố định → text tự canh giữa;
+   padding-left = icon-left (14) + icon-width (18) + khoảng thở (10) = 42px. */
+.ui-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1 1 260px;
+  min-width: 220px;
+  max-width: 420px;
+  min-height: var(--ui-control-h);
+}
+
+.ui-search-icon,
+.ui-search > svg:first-child {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  color: var(--ui-placeholder);
+  pointer-events: none;
+  z-index: 2;
+  margin: 0;
+  flex: 0 0 auto;
+}
+
+.ui-search-input {
+  width: 100%;
+  height: var(--ui-control-h);
+  min-height: var(--ui-control-h);
+  padding: 0 14px 0 42px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius);
+  background-color: var(--ui-surface-soft);
+  color: var(--ui-text);
+  font-family: var(--ui-font);
+  font-size: 14px;
+  line-height: normal;
+  box-sizing: border-box;
+  outline: none;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.ui-search-input::placeholder {
+  color: var(--ui-placeholder);
+}
+
+.ui-search-input:hover {
+  border-color: var(--ui-border-strong);
+}
+
+.ui-search-input:focus {
+  background-color: var(--ui-surface);
+  border-color: var(--ui-primary);
+  box-shadow: var(--ui-ring);
+}
+
+/* Nút xoá nội dung nằm bên phải: chừa chỗ để không đè lên chữ. */
+.ui-search-clear {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ui-text-subtle);
+  cursor: pointer;
+  z-index: 2;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.ui-search-clear:hover {
+  background-color: #f1f5f9;
+  color: var(--ui-text);
+}
+
+.ui-search:has(.ui-search-clear) .ui-search-input {
+  padding-right: 40px;
+}
+
+/* §3.3 — Thắng lại các rule scope cũ.
+   • enterprise.css:345  `#view-enterprise input[type='search'] { padding-left: 14px !important }`
+     → chữ bắt đầu ngay dưới icon (đây chính là lỗi "icon lệch/đè chữ").
+   • counselor.css:334   ép `height/max-height: 44px !important` cho mọi input.
+   Specificity (1,1,0) + `!important` + nạp sau ⇒ rule dưới đây thắng cả hai. */
+#view-enterprise .ui-search-input,
+#view-company-profile .ui-search-input,
+#view-counselor .ui-search-input,
+#view-admin .ui-search-input,
+#view-history .ui-search-input,
+#view-find-jobs .ui-search-input,
+#view-jobs .ui-search-input,
+#view-match .ui-search-input,
+#view-cv .ui-search-input,
+#view-gap .ui-search-input,
+#view-interview .ui-search-input,
+#view-upgrade .ui-search-input,
+#view-notifications .ui-search-input,
+#view-profile .ui-search-input {
+  height: var(--ui-control-h) !important;
+  min-height: var(--ui-control-h) !important;
+  max-height: var(--ui-control-h) !important;
+  padding: 0 14px 0 42px !important;
+  border: 1px solid var(--ui-border) !important;
+  border-radius: var(--ui-radius) !important;
+  background-color: var(--ui-surface-soft) !important;
+  font-size: 14px !important;
+}
+
+#view-enterprise .ui-search:has(.ui-search-clear) .ui-search-input,
+#view-counselor .ui-search:has(.ui-search-clear) .ui-search-input {
+  padding-right: 40px !important;
+}
+
+#view-enterprise .ui-search-input:focus,
+#view-company-profile .ui-search-input:focus,
+#view-counselor .ui-search-input:focus,
+#view-admin .ui-search-input:focus,
+#view-history .ui-search-input:focus,
+#view-find-jobs .ui-search-input:focus,
+#view-jobs .ui-search-input:focus,
+#view-match .ui-search-input:focus,
+#view-cv .ui-search-input:focus,
+#view-gap .ui-search-input:focus,
+#view-interview .ui-search-input:focus,
+#view-upgrade .ui-search-input:focus,
+#view-notifications .ui-search-input:focus,
+#view-profile .ui-search-input:focus {
+  background-color: var(--ui-surface) !important;
+  border-color: var(--ui-primary) !important;
+  box-shadow: var(--ui-ring) !important;
+}
+
+/* §3.4 — Select/filter dùng chung: cùng chiều cao với search + nút. */
+.ui-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  height: var(--ui-control-h);
+  min-height: var(--ui-control-h);
+  padding: 0 34px 0 14px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius);
+  background-color: var(--ui-surface);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 14px;
+  color: var(--ui-text);
+  font-family: var(--ui-font);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: normal;
+  box-sizing: border-box;
+  cursor: pointer;
+  outline: none;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.ui-select:hover {
+  border-color: var(--ui-border-strong);
+}
+
+.ui-select:focus {
+  border-color: var(--ui-primary);
+  box-shadow: var(--ui-ring);
+}
+
+/* Mobile: search chiếm cả dòng, filter/action xuống dưới nhưng vẫn theo hàng. */
+@media (max-width: 767.98px) {
+  .ui-search {
+    flex: 1 1 100%;
+    max-width: none;
+  }
+
+  .ui-toolbar-actions {
+    margin-left: 0;
+    width: 100%;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   §4. THẺ KPI / SUMMARY
+   Bố cục ngang: icon | (value → title → helper). Gọn, không có
+   khoảng trống dồn giữa thẻ như kiểu `justify-between` + min-height.
+   ══════════════════════════════════════════════════════════════ */
+
+/* §4.1 — Lưới KPI. Bậc dừng theo đúng tier chung của app
+   (tailwind screens sm/md = 768, lg/xl = 1200 · responsive.css):
+   ≥1200 → 4 cột · 768–1199 → 2 cột · <768 → 1 cột. */
+.ui-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 16px;
+  width: 100%;
+  min-width: 0;
+}
+
+.ui-kpi-grid.cols-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.ui-kpi-grid.cols-5 {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+@media (max-width: 1199.98px) {
+  .ui-kpi-grid,
+  .ui-kpi-grid.cols-3,
+  .ui-kpi-grid.cols-5 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767.98px) {
+  .ui-kpi-grid,
+  .ui-kpi-grid.cols-3,
+  .ui-kpi-grid.cols-5 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* §4.2 — Thẻ KPI. `height: 100%` + grid `align-items: stretch` ⇒ mọi thẻ
+   cùng chiều cao; nội dung neo lên trên nên không bị kéo giãn theo thẻ
+   cao nhất. `text-align: left` để dùng được cho cả <button>. */
+.ui-kpi-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  height: 100%;
+  padding: 16px 18px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-lg);
+  background-color: var(--ui-surface);
+  box-shadow: var(--ui-shadow);
+  text-align: left;
+  white-space: normal;
+  box-sizing: border-box;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+a.ui-kpi-card,
+button.ui-kpi-card,
+.ui-kpi-card[role='button'] {
+  cursor: pointer;
+  width: 100%;
+  font: inherit;
+  color: inherit;
+}
+
+a.ui-kpi-card:hover,
+button.ui-kpi-card:hover,
+.ui-kpi-card[role='button']:hover {
+  background-color: var(--ui-surface-soft);
+  border-color: var(--ui-border-strong);
+}
+
+.ui-kpi-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  align-self: flex-start;
+  width: 42px;
+  height: 42px;
+  border-radius: var(--ui-radius-lg);
+  background-color: var(--ui-primary-soft);
+  color: var(--ui-primary);
+}
+
+.ui-kpi-main {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.ui-kpi-value {
+  font-family: var(--ui-font-headline);
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--ui-text);
+  margin: 0;
+}
+
+.ui-kpi-label {
+  font-family: var(--ui-font);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--ui-text-muted);
+  margin: 4px 0 0;
+}
+
+.ui-kpi-sub {
+  font-family: var(--ui-font);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--ui-text-subtle);
+  margin: 2px 0 0;
+}
+
+/* Badge phụ neo góc trên phải, nằm TRONG viền thẻ (không "floating"). */
+.ui-kpi-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+  align-self: flex-start;
+  margin-left: auto;
+  padding: 3px 9px;
+  border: 1px solid var(--ui-border);
+  border-radius: 9999px;
+  background-color: var(--ui-surface-soft);
+  font-family: var(--ui-font);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--ui-text-muted);
+  white-space: nowrap;
+}
+
+@media (min-width: 1200px) {
+  .ui-kpi-value {
+    font-size: 30px;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .ui-kpi-card {
+    padding: 14px 16px;
+  }
+}
+
+/* §4.3 — Biến thể tông màu (icon + badge). Lấy trực tiếp token §8 thay vì hex
+   riêng, để KPI và badge trạng thái trên cùng một trang không lệch tông. */
+.ui-kpi-card.tone-warning .ui-kpi-icon,
+.ui-kpi-icon.tone-warning {
+  background-color: var(--status-warning-bg);
+  color: var(--status-warning-fg);
+}
+
+.ui-kpi-card.tone-info .ui-kpi-icon,
+.ui-kpi-icon.tone-info {
+  background-color: var(--status-info-bg);
+  color: var(--status-info-fg);
+}
+
+.ui-kpi-card.tone-neutral .ui-kpi-icon,
+.ui-kpi-icon.tone-neutral {
+  background-color: var(--status-neutral-bg);
+  color: var(--status-neutral-fg);
+}
+
+.ui-kpi-badge.tone-warning {
+  background-color: var(--status-warning-bg);
+  border-color: var(--status-warning-bd);
+  color: var(--status-warning-fg);
+}
+
+.ui-kpi-badge.tone-info {
+  background-color: var(--status-info-bg);
+  border-color: var(--status-info-bd);
+  color: var(--status-info-fg);
+}
+
+.ui-kpi-badge.tone-success {
+  background-color: var(--status-success-bg);
+  border-color: var(--status-success-bd);
+  color: var(--status-success-fg);
+}
+
+/* §4.4 — Áp hệ KPI dùng chung cho các họ thẻ cũ, để 4 phân hệ không còn
+   mỗi nơi một kiểu. Admin: theme.css dùng `!important` ở specificity
+   (1,1,0) nên phần override phải khớp mức đó. */
+#view-admin .admin-stats-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  gap: 16px !important;
+}
+
+@media (max-width: 1199.98px) {
+  #view-admin .admin-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 767.98px) {
+  #view-admin .admin-stats-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+#view-admin .admin-stat-card {
+  padding: 16px 18px !important;
+  border-radius: var(--ui-radius-lg) !important;
+  box-shadow: var(--ui-shadow) !important;
+  gap: 2px !important;
+  justify-content: flex-start !important;
+}
+
+#view-admin .admin-stat-card:hover {
+  transform: none;
+  background-color: var(--ui-surface-soft) !important;
+  box-shadow: var(--ui-shadow) !important;
+}
+
+#view-admin .admin-stat-num {
+  font-family: var(--ui-font-headline) !important;
+  font-size: 28px !important;
+  margin-bottom: 2px !important;
+}
+
+#view-admin .admin-stat-lbl {
+  font-size: 13px !important;
+  line-height: 1.35 !important;
+}
+
+/* Legacy KPI của phân hệ doanh nghiệp dùng ngoài dashboard. */
+.recruiter-kpi-grid {
+  align-items: stretch;
+}
+
+.recruiter-kpi-card {
+  border-radius: var(--ui-radius-lg);
+  box-shadow: var(--ui-shadow);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   §5. MODAL · DIALOG · DRAWER
+   Nguyên tắc chung cho cả 4 phân hệ:
+     • overlay không cuộn, không nối scroll ra trang (overscroll-behavior);
+     • shell giới hạn 88dvh và `overflow: hidden`;
+     • CHỈ phần body cuộn, header/footer đứng yên;
+     • scrollbar mỏng 8px, có `scrollbar-gutter: stable` nên không đè chữ.
+   ══════════════════════════════════════════════════════════════ */
+
+/* §5.1 — Overlay. Chỉ thêm thuộc tính bổ sung, không ép lại position/
+   display để không phá các overlay legacy đã tự bố cục. */
+.ui-modal-overlay,
+[class*='modal-overlay'],
+[class*='modal-backdrop'],
+[class*='drawer-overlay'] {
+  overscroll-behavior: contain;
+}
+
+.ui-modal-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  overflow: hidden;
+}
+
+/* §5.2 — Shell dùng chung. Không đặt max-width để giữ nguyên utility
+   `max-w-*` đang có trong markup. */
+.ui-modal {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 0;
+  max-height: 88dvh;
+  background-color: var(--ui-surface);
+  border: 1px solid var(--ui-border);
+  border-radius: 14px;
+  box-shadow: var(--ui-shadow-modal);
+  overflow: hidden;
+}
+
+.ui-modal-header {
+  flex: 0 0 auto;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--ui-border);
+  background-color: var(--ui-surface);
+}
+
+.ui-modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 18px 20px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.ui-modal-footer {
+  flex: 0 0 auto;
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--ui-border);
+  background-color: var(--ui-surface);
+}
+
+.ui-modal-title {
+  font-family: var(--ui-font-headline);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--ui-text);
+  margin: 0;
+}
+
+.ui-modal-sub {
+  font-family: var(--ui-font);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ui-text-subtle);
+  margin: 4px 0 0;
+}
+
+.ui-modal-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ui-text-subtle);
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.ui-modal-close:hover {
+  background-color: #f1f5f9;
+  color: var(--ui-text);
+}
+
+/* §5.3 — Retrofit modal legacy: shell nào đã có phần body riêng thì xếp
+   dọc + kẹp chiều cao, để cuộn xảy ra bên trong body chứ không ở shell.
+   `:has()` lấy specificity của argument (0,1,0) nên tổng (0,2,0) — đủ
+   thắng các rule `max-height` (0,1,0) của từng file scope. */
+[class*='modal-card']:has([class*='modal-body']),
+[class*='modal-card']:has([class*='modal-content']),
+[class*='modal-box']:has([class*='modal-body']),
+[class*='modal-panel']:has([class*='modal-body']),
+[class*='modal-sheet']:has([class*='modal-body']),
+[class*='modal-container']:has([class*='modal-body']),
+[class*='drawer-panel']:has([class*='drawer-body']) {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: 88dvh;
+  overflow: hidden;
+}
+
+[class*='modal-body'],
+[class*='modal-content'],
+[class*='drawer-body'] {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+[class*='modal-header'],
+[class*='modal-footer'],
+[class*='drawer-header'],
+[class*='drawer-footer'] {
+  flex: 0 0 auto;
+}
+
+/* §5.4 — Lưới an toàn cho dialog chưa dùng class dùng chung: bản thân
+   dialog cuộn, nhưng bằng scrollbar mỏng và vẫn kẹp trong viewport.
+   Ghi đè responsive.css:136 (`overflow: auto` + max-height ở mobile).
+   LOẠI TRỪ popover/dropdown: `.notification-popover-card` cũng mang
+   role="dialog" nhưng đã có vùng cuộn riêng (`.notification-popover-list`,
+   max-height 400px) và cố tình `overflow: hidden` (notifications.css:95).
+   Không loại trừ thì rule này (0,4,0) sẽ thắng (0,1,0) và bật thêm một
+   thanh cuộn thứ hai trên chính popover — đúng lỗi brief muốn tránh.
+   LOẠI TRỪ `.authx-card`: modal Đăng nhập/Đăng ký được thiết kế vừa khít
+   desktop (compact, không cuộn trong) và tự khai báo max-height 90vh —
+   rule này (0,6,0) từng ép `overflow-y: auto` + max-height 88dvh lên nó,
+   sinh ra đúng thanh cuộn nội bộ mà brief yêu cầu bỏ. */
+[role='dialog']:not(.ui-modal):not(.authx-card):not([class*='modal-card']):not([class*='modal-sheet']):not([class*='popover']):not([class*='dropdown']),
+[role='alertdialog']:not(.ui-modal):not(.authx-card):not([class*='modal-card']):not([class*='modal-sheet']):not([class*='popover']):not([class*='dropdown']) {
+  max-height: 88dvh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+}
+
+/* Shell dùng class chung thì không tự cuộn — body lo việc đó. */
+[role='dialog'].ui-modal,
+[role='alertdialog'].ui-modal {
+  overflow: hidden;
+}
+
+@media (max-width: 767.98px) {
+  .ui-modal,
+  [class*='modal-card']:has([class*='modal-body']),
+  [class*='modal-card']:has([class*='modal-content']),
+  [class*='modal-box']:has([class*='modal-body']),
+  [class*='modal-panel']:has([class*='modal-body']),
+  [class*='modal-container']:has([class*='modal-body']) {
+    max-height: 90dvh;
+  }
+
+  .ui-modal-header,
+  .ui-modal-footer {
+    padding: 14px 16px;
+  }
+
+  .ui-modal-body {
+    padding: 16px;
+  }
+}
+
+/* §5.5 — LỚP GIA CỐ, áp cho CẢ modal legacy và modal React.
+   Vá 3 lỗi mà §5.1–§5.4 chưa với tới:
+     (a) HAI thanh cuộn cùng lúc: app.js chỉ khoá cuộn trang cho
+         job-drawer (app.js:5020); họ `.modal-overlay` và modal React
+         thì không khoá gì cả.
+     (b) `.modal-card` (legacy.css:1865) tự cuộn bằng scrollbar NATIVE
+         dày; `.modal-close` (legacy.css:1916) lại là `position:absolute`
+         nằm TRONG vùng cuộn nên trượt mất khi kéo nội dung.
+     (c) Chiều cao vượt dải 85–90vh: `#modal-card` = calc(100dvh - 40px),
+         `#modal-card.auth-modal-card` = 92vh.
+   ------------------------------------------------------------------ */
+
+/* (a) Khoá cuộn trang bằng CSS thuần — không sửa JS, không sửa markup.
+   Chỉ khoá theo dấu hiệu CHỈ CÓ khi modal đang mở:
+     • Overlay legacy nằm SẴN trong DOM ⇒ buộc phải khoá theo `.open`
+       (quy ước có sẵn ở legacy.css:1859). TUYỆT ĐỐI không khoá theo
+       [aria-modal] — page.tsx:373/538/725 đặt sẵn thuộc tính đó trên
+       overlay luôn tồn tại, sẽ khoá trang VĨNH VIỄN.
+     • Modal React unmount khi đóng (`return null`) và backdrop dùng
+       utility `.fixed.inset-0`; overlay legacy không có class đó nên
+       hai nhóm selector không bắt lẫn sang nhau. */
+body:has(.modal-overlay.open),
+body:has([class*='modal-backdrop']),
+body:has(div.fixed.inset-0 [role='dialog']),
+body:has(div.fixed.inset-0 [role='alertdialog']),
+body.job-drawer-open,
+body.gap-result-modal-open,
+body.job-preview-modal-open {
+  overflow: hidden;
+}
+
+/* Giữ chỗ thanh cuộn của trang để lúc khoá/mở modal không giật ngang. */
+html {
+  scrollbar-gutter: stable;
+}
+
+/* (b)+(c) Modal legacy tự cuộn ở shell: kẹp chiều cao đúng dải brief,
+   thanh cuộn mỏng và CHỪA MÁNG nên không đè chữ/nút.
+   Không cần `!important`: shared-ui.css import CUỐI nên cùng
+   specificity (0,1,0) là đã thắng legacy.css:1865. */
+.modal-card {
+  max-height: 90dvh;
+  scrollbar-gutter: stable;
+}
+
+/* `#modal-card` (1,0,0) phải được đối lại cùng độ đặc hiệu, nếu không
+   max-height cũ calc(100dvh - 40px) vẫn thắng. */
+#modal-card {
+  max-height: 90dvh;
+}
+
+/* Modal legacy nào đã được bọc `.modal-body` thì §5.3 biến shell thành
+   flex column + `overflow:hidden`. Khi đó padding phải chuyển từ shell
+   vào từng vùng, nếu không thanh cuộn của body sẽ nằm thụt vào 32px
+   giữa thân modal. Đồng thời `.modal-close` (absolute) thôi trượt vì
+   shell không còn là vùng cuộn.
+   `.modal-header` (legacy.css:1943) có `margin-bottom:24px` — cộng với
+   padding mới sẽ thành khoảng hở ~54px, nên phải reset về 0 và thay
+   bằng một đường kẻ mảnh để header ghim trông ra header. Màu kẻ theo
+   nền tối vì selector này chỉ khớp `.modal-card` legacy (gradient tối);
+   `.auth-modal-card` nền trắng không có `.modal-body` nên không khớp. */
+.modal-card:has(> [class*='modal-body']) {
+  padding: 0;
+}
+
+.modal-card:has(> [class*='modal-body']) > .modal-header {
+  margin-bottom: 0;
+  padding: 26px 28px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.modal-card:has(> [class*='modal-body']) > [class*='modal-body'] {
+  padding: 16px 28px 24px;
+}
+
+.modal-card:has(> [class*='modal-body']) > .modal-close {
+  top: 14px;
+  right: 14px;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   §6. SCROLLBAR MỎNG
+   Firefox dùng `scrollbar-width`, WebKit/Blink dùng ::-webkit-scrollbar.
+   Thumb bọc viền trong suốt + `background-clip: padding-box` để trông
+   mảnh (thực 8px, nhìn như 4px) và không dán sát chữ.
+   ══════════════════════════════════════════════════════════════ */
+
+.ui-scroll-thin,
+.ui-modal-body,
+[class*='modal-body'],
+[class*='modal-content'],
+[class*='drawer-body'],
+.modal-card,
+.ui-table-wrap {
+  scrollbar-width: thin;
+  scrollbar-color: var(--ui-scroll-thumb) transparent;
+}
+
+.ui-scroll-thin::-webkit-scrollbar,
+.ui-modal-body::-webkit-scrollbar,
+[class*='modal-body']::-webkit-scrollbar,
+[class*='modal-content']::-webkit-scrollbar,
+[class*='drawer-body']::-webkit-scrollbar,
+.modal-card::-webkit-scrollbar,
+.ui-table-wrap::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.ui-scroll-thin::-webkit-scrollbar-track,
+.ui-modal-body::-webkit-scrollbar-track,
+[class*='modal-body']::-webkit-scrollbar-track,
+[class*='modal-content']::-webkit-scrollbar-track,
+[class*='drawer-body']::-webkit-scrollbar-track,
+.modal-card::-webkit-scrollbar-track,
+.ui-table-wrap::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.ui-scroll-thin::-webkit-scrollbar-thumb,
+.ui-modal-body::-webkit-scrollbar-thumb,
+[class*='modal-body']::-webkit-scrollbar-thumb,
+[class*='modal-content']::-webkit-scrollbar-thumb,
+[class*='drawer-body']::-webkit-scrollbar-thumb,
+.modal-card::-webkit-scrollbar-thumb,
+.ui-table-wrap::-webkit-scrollbar-thumb {
+  background-color: var(--ui-scroll-thumb);
+  background-clip: padding-box;
+  border: 2px solid transparent;
+  border-radius: 9999px;
+}
+
+.ui-scroll-thin::-webkit-scrollbar-thumb:hover,
+.ui-modal-body::-webkit-scrollbar-thumb:hover,
+[class*='modal-body']::-webkit-scrollbar-thumb:hover,
+[class*='modal-content']::-webkit-scrollbar-thumb:hover,
+[class*='drawer-body']::-webkit-scrollbar-thumb:hover,
+.modal-card::-webkit-scrollbar-thumb:hover,
+.ui-table-wrap::-webkit-scrollbar-thumb:hover {
+  background-color: var(--ui-scroll-thumb-hover);
+  background-clip: padding-box;
+}
+
+/* Bảng dữ liệu dày: cuộn ngang trong khung riêng, không đẩy cả trang. */
+.ui-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Người dùng bật "giảm chuyển động": tắt transition của lớp dùng chung. */
+@media (prefers-reduced-motion: reduce) {
+  .ui-btn,
+  .ui-btn-primary,
+  .ui-btn-secondary,
+  .ui-btn-ghost,
+  .ui-btn-danger,
+  .ui-kpi-card,
+  .ui-search-input,
+  .ui-select,
+  .ui-modal-close,
+  .ui-search-clear {
+    transition: none;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   §7. ADMIN CONSOLE — bổ sung cho cổng quản trị /admin/*
+   Tái dùng 100% token & pattern phía trên (viền, radius, KPI,
+   scrollbar mỏng, badge semantic). Không khai báo lại màu mới.
+   ══════════════════════════════════════════════════════════════ */
+
+/* §7.1 — Bảng dữ liệu admin nằm trong .ui-table-wrap (đã có scrollbar
+   mỏng từ §6). Kiểu th/td khớp .admin-table-scroll để mọi bảng admin
+   đồng nhất mật độ hiển thị. */
+.admin-table-panel table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-table-panel th {
+  text-align: left;
+  padding: 11px 14px;
+  background: var(--ui-surface-soft);
+  border-bottom: 1px solid var(--ui-border);
+  color: var(--ui-text-subtle);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.admin-table-panel td {
+  padding: 13px 14px;
+  border-bottom: 1px solid var(--ui-border);
+  color: var(--ui-text);
+  font-size: 13px;
+  font-weight: 600;
+  vertical-align: middle;
+}
+
+.admin-table-panel tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.admin-table-panel tbody tr:hover td {
+  background: rgba(248, 250, 252, 0.7);
+}
+
+/* Khung bo góc cho khối bảng (khớp .ui-kpi-card / DataTable). */
+.admin-table-panel {
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-lg);
+  background-color: var(--ui-surface);
+  box-shadow: var(--ui-shadow);
+  overflow: hidden;
+}
+
+/* Chi tiết sự kiện trong bảng nhật ký: mô tả tiếng Việt dạng "Nhãn: giá trị",
+   gọn gàng, không bao giờ hiển thị JSON / mã kỹ thuật cho admin. */
+.ui-audit-details {
+  display: grid;
+  gap: 2px;
+  max-width: 380px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+  line-height: 1.55;
+}
+.ui-audit-details li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.ui-audit-details li > span {
+  color: var(--ui-text-subtle, #64748B);
+  font-weight: 500;
+}
+.ui-audit-details strong {
+  color: var(--ui-text, #0F172A);
+  font-weight: 600;
+}
+
+/* §7.2 — Hành tác trên dòng: cụm nút nhỏ căn phải, wrap gọn. */
+.admin-row-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  gap: 8px;
+}
+
+/* §7.3 — Dòng phụ trong ô (industry, mô tả ngắn…). */
+.admin-meta {
+  display: block;
+  margin-top: 2px;
+  color: var(--ui-text-subtle);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* §7.4 — Ô "Cần chú ý" dạng nút (dashboard): tái dùng .admin-attention. */
+button.admin-attention-item {
+  border: 1px solid transparent;
+  background: var(--primary-soft);
+  border-radius: var(--radius-sm);
+  display: grid;
+  gap: 3px;
+  padding: 14px;
+  text-align: left;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+button.admin-attention-item:hover {
+  border-color: var(--primary-border);
+  background: #f0fdf7;
+}
+
+button.admin-attention-item strong {
+  font-size: 24px;
+  color: var(--primary);
+}
+
+button.admin-attention-item span {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+/* §7.5 — Lưới chi tiết trong modal (hồ sơ DN, thực tập…). */
+.admin-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 18px;
+  margin: 0;
+}
+
+.admin-detail-grid > div {
+  min-width: 0;
+}
+
+.admin-detail-grid dt {
+  color: var(--ui-text-subtle);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 2px;
+}
+
+.admin-detail-grid dd {
+  margin: 0;
+  color: var(--ui-text);
+  font-size: 13px;
+  font-weight: 600;
+  overflow-wrap: break-word;
+}
+
+@media (max-width: 575.98px) {
+  .admin-detail-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* §7.6 — Thanh tiến độ thực tập: dùng đúng tông Emerald chủ đạo. */
+.admin-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 120px;
+}
+
+.admin-progress-bar {
+  flex: 1 1 auto;
+  height: 6px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  overflow: hidden;
+}
+
+.admin-progress-bar span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--ui-primary);
+}
+
+.admin-progress small {
+  color: var(--ui-text-subtle);
+  font-size: 11px;
+  font-weight: 700;
+  min-width: 34px;
+  text-align: right;
+}
+
+/* §7.7 — Biến thể nút/badge semantic mở rộng (vẫn dùng palette chung). */
+.ui-btn-danger-soft {
+  background-color: #fef2f2;
+  border-color: #fecaca;
+  color: #dc2626;
+}
+
+.ui-btn-danger-soft:hover {
+  background-color: #fee2e2;
+  border-color: #fca5a5;
+  color: #b91c1c;
+}
+
+.status-badge.is-danger {
+  color: var(--color-danger);
+  background: var(--color-danger-soft);
+}
+
+.status-badge.is-info-soft {
+  color: #1d4ed8;
+  background: #eff6ff;
+}
+
+/* §7.8 — Bề rộng admin shell đã khai báo ở đầu file (§0); không khai báo
+   lại ở đây để tránh trùng CSS. */
+
+/* ══════════════════════════════════════════════════════════════
+   §8. HỆ MÀU TRẠNG THÁI (STATUS SYSTEM)
+       NGUỒN SỰ THẬT DUY NHẤT cho màu trạng thái của cả 4 phân hệ
+       Student · Counselor · Enterprise · Admin
+   ══════════════════════════════════════════════════════════════
+
+   NGUYÊN TẮC
+     • Cùng một trạng thái ⇒ CÙNG một màu ở mọi phân hệ. Mọi file CSS
+       theo trang (legacy, enterprise, notifications, jobs, history,
+       match, profile, cv-variants, ai-activity…) KHÔNG hardcode mã màu
+       trạng thái nữa mà tham chiếu token dưới đây.
+     • Nền nhạt + chữ đủ đậm; KHÔNG dùng badge nền đặc bão hoà.
+     • KHÔNG dùng màu làm tín hiệu duy nhất: luôn kèm nhãn tiếng Việt
+       (và icon khi có) — xem `.ui-status` bên dưới.
+     • KHÔNG tô màu trạng thái cho nút CTA chính. Token ở đây chỉ dành
+       cho badge, chỉ báo (dot/indicator), alert và trạng thái timeline.
+     • Tránh tím/hồng ngẫu nhiên. Trạng thái "phỏng vấn / đã lên lịch"
+       thuộc họ Blue (thông tin), không phải tím.
+
+   `var()` được giải ở thời điểm computed-value nên dù shared-ui.css là
+   file import CUỐI trong globals.css, các file import TRƯỚC vẫn dùng
+   được token này bình thường.
+
+   Lưu ý tương phản: các cặp màu dưới đây theo đúng đặc tả thiết kế.
+   Cặp Green/Amber đạt WCAG AA cho chữ lớn (≈3.3–3.5:1) chứ chưa đạt AA
+   cho chữ nhỏ, nên `.ui-status` dùng cỡ chữ 12px/weight 700 (thay cho
+   11px/600 rải rác trước đây) để tăng độ đọc, và luôn có nhãn chữ.
+*/
+
+:root {
+  /* Green — thành công · đã xác thực · đã nhận · đang hoạt động · hoàn tất */
+  --status-success-fg: #059669;
+  --status-success-bg: #ecfdf5;
+  --status-success-bd: #a7f3d0;
+
+  /* Blue — thông tin · đã nộp · đã xem · đã lên lịch · đang xử lý */
+  --status-info-fg: #2563eb;
+  --status-info-bg: #eff6ff;
+  --status-info-bd: #bfdbfe;
+
+  /* Amber — chờ xử lý · đang đợi · nháp · cần hành động · sắp hết hạn */
+  --status-warning-fg: #d97706;
+  --status-warning-bg: #fffbeb;
+  --status-warning-bd: #fde68a;
+
+  /* Red — từ chối · thất bại · hết hạn · bị chặn · đã huỷ · lỗi */
+  --status-danger-fg: #dc2626;
+  --status-danger-bg: #fef2f2;
+  --status-danger-bd: #fecaca;
+
+  /* Slate — không hoạt động · đã đóng · lưu trữ · trung tính/mặc định */
+  --status-neutral-fg: #64748b;
+  --status-neutral-bg: #f1f5f9;
+  --status-neutral-bd: #e2e8f0;
+
+  /* Hình khối chuẩn của badge trạng thái (dùng chung mọi phân hệ). */
+  --status-height: 24px;
+  --status-radius: 999px;
+  --status-pad-x: 10px;
+  --status-font: 12px;
+  --status-gap: 6px;
+
+  /* Biến thể cho badge nằm trên NỀN TỐI CỐ ĐỊNH (các card neon legacy của
+     phân hệ Student: `.badge-ok/.badge-need/.badge-focus`, `.modal-card`…).
+     Không thể dùng token sáng ở trên vì chữ tối trên nền tối sẽ mất đọc,
+     và khối `[data-theme='dark']` bên dưới KHÔNG bao giờ kích hoạt —
+     layout.tsx chỉ render `<html lang="vi">` trơn, không set theme class.
+     Giữ ĐÚNG 5 họ màu, chỉ đổi độ sáng. */
+  --status-success-on-dark-fg: #6ee7b7;
+  --status-success-on-dark-bg: rgba(5, 150, 105, 0.18);
+  --status-info-on-dark-fg: #93c5fd;
+  --status-info-on-dark-bg: rgba(37, 99, 235, 0.2);
+  --status-warning-on-dark-fg: #fcd34d;
+  --status-warning-on-dark-bg: rgba(217, 119, 6, 0.18);
+  --status-danger-on-dark-fg: #fca5a5;
+  --status-danger-on-dark-bg: rgba(220, 38, 38, 0.18);
+  --status-neutral-on-dark-fg: #cbd5e1;
+  --status-neutral-on-dark-bg: rgba(100, 116, 139, 0.18);
+}
+
+/* Nền tối: giữ ĐÚNG họ màu, chỉ đảo vai nền/chữ để còn đọc được. */
+[data-theme='dark'],
+.dark {
+  --status-success-fg: #6ee7b7;
+  --status-success-bg: rgba(5, 150, 105, 0.16);
+  --status-success-bd: rgba(110, 231, 183, 0.32);
+
+  --status-info-fg: #93c5fd;
+  --status-info-bg: rgba(37, 99, 235, 0.18);
+  --status-info-bd: rgba(147, 197, 253, 0.32);
+
+  --status-warning-fg: #fcd34d;
+  --status-warning-bg: rgba(217, 119, 6, 0.18);
+  --status-warning-bd: rgba(252, 211, 77, 0.32);
+
+  --status-danger-fg: #fca5a5;
+  --status-danger-bg: rgba(220, 38, 38, 0.18);
+  --status-danger-bd: rgba(252, 165, 165, 0.32);
+
+  --status-neutral-fg: #cbd5e1;
+  --status-neutral-bg: rgba(100, 116, 139, 0.18);
+  --status-neutral-bd: rgba(203, 213, 225, 0.28);
+
+  /* Hình khối control cũng phải đảo theo nền: theme.css §form dùng
+     `var(--ui-border)` nên nếu không khai báo lại ở đây, ô nhập trên nền tối
+     sẽ đeo viền sáng #e2e8f0. (Khối này hiện là dead code — layout.tsx chỉ
+     render `<html lang="vi">` — nhưng giữ đúng để bật theme là dùng được.) */
+  --ui-border: #334155;
+  --ui-border-strong: #475569;
+  --ui-surface: #1e293b;
+  --ui-surface-soft: #0f172a;
+  --ui-text: #e2e8f0;
+  --ui-text-muted: #cbd5e1;
+  --ui-text-subtle: #94a3b8;
+}
+
+/* §8.1 — Badge trạng thái dùng chung. Một chiều cao, một radius, một
+   padding, một cỡ chữ, một khoảng cách icon cho cả 4 phân hệ. */
+.ui-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--status-gap);
+  box-sizing: border-box;
+  min-height: var(--status-height);
+  padding: 0 var(--status-pad-x);
+  border: 1px solid var(--status-neutral-bd);
+  border-radius: var(--status-radius);
+  background-color: var(--status-neutral-bg);
+  color: var(--status-neutral-fg);
+  font-family: var(--ui-font);
+  font-size: var(--status-font);
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: 0;
+  white-space: nowrap;
+  vertical-align: middle;
+  text-decoration: none;
+}
+
+/* Icon trong badge: không co, cùng cỡ, cùng khoảng cách với nhãn chữ. */
+.ui-status > svg,
+.ui-status > i,
+.ui-status > .ui-status-icon {
+  flex: 0 0 auto;
+  width: 13px;
+  height: 13px;
+  font-size: 12px;
+  line-height: 1;
+}
+
+/* Chỉ báo dạng chấm: luôn lấy màu chữ hiện hành của badge. */
+.ui-status-dot {
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background-color: currentcolor;
+}
+
+.ui-status.is-success {
+  background-color: var(--status-success-bg);
+  border-color: var(--status-success-bd);
+  color: var(--status-success-fg);
+}
+
+.ui-status.is-info {
+  background-color: var(--status-info-bg);
+  border-color: var(--status-info-bd);
+  color: var(--status-info-fg);
+}
+
+.ui-status.is-warning {
+  background-color: var(--status-warning-bg);
+  border-color: var(--status-warning-bd);
+  color: var(--status-warning-fg);
+}
+
+.ui-status.is-danger {
+  background-color: var(--status-danger-bg);
+  border-color: var(--status-danger-bd);
+  color: var(--status-danger-fg);
+}
+
+.ui-status.is-neutral {
+  background-color: var(--status-neutral-bg);
+  border-color: var(--status-neutral-bd);
+  color: var(--status-neutral-fg);
+}
+
+/* §8.2 — Hai cỡ phụ, vẫn giữ nguyên tỉ lệ padding/gap. */
+.ui-status-sm {
+  --status-height: 20px;
+  --status-pad-x: 8px;
+  --status-font: 11px;
+  --status-gap: 5px;
+}
+
+.ui-status-lg {
+  --status-height: 28px;
+  --status-pad-x: 12px;
+  --status-font: 13px;
+  --status-gap: 7px;
+}
+
+/* §8.3 — Chuẩn hoá hình khối cho các họ badge cũ, để 4 phân hệ đồng
+   nhất chiều cao/radius/padding/cỡ chữ mà không phải đổi markup.
+   Màu của từng biến thể vẫn do file theo trang khai báo, nhưng đã
+   trỏ về token §8 nên không còn lệch nhau. */
+.recruiter-badge-success,
+.recruiter-badge-neutral,
+.recruiter-badge-info,
+.recruiter-badge-warning,
+.recruiter-badge-danger,
+.status-pill,
+.notif-tag,
+.funnel-step-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--status-gap);
+  box-sizing: border-box;
+  min-height: var(--status-height);
+  padding: 0 var(--status-pad-x);
+  border-radius: var(--status-radius);
+  font-size: var(--status-font);
+  font-weight: 700;
+  line-height: 1.35;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+/* §8.4 — Alert/banner semantic: nền nhạt, viền cùng họ, chữ đủ đậm.
+   Dùng cho thông báo trong trang (không phải nút CTA). */
+.ui-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--status-info-bd);
+  border-radius: var(--ui-radius);
+  background-color: var(--status-info-bg);
+  color: var(--status-info-fg);
+  font-family: var(--ui-font);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.ui-alert.is-success {
+  border-color: var(--status-success-bd);
+  background-color: var(--status-success-bg);
+  color: var(--status-success-fg);
+}
+
+.ui-alert.is-warning {
+  border-color: var(--status-warning-bd);
+  background-color: var(--status-warning-bg);
+  color: var(--status-warning-fg);
+}
+
+.ui-alert.is-danger {
+  border-color: var(--status-danger-bd);
+  background-color: var(--status-danger-bg);
+  color: var(--status-danger-fg);
+}
+
+.ui-alert.is-neutral {
+  border-color: var(--status-neutral-bd);
+  background-color: var(--status-neutral-bg);
+  color: var(--status-neutral-fg);
+}
+
+/* §9.9 — Hồ sơ quản trị (/admin/profile): tái dùng hệ card/input của
+   counselor-profile và nâng control lên chuẩn 44px như trang Cố vấn. */
+.admin-profile {
+  --ui-control-h: 44px;
+}
+

@@ -85,17 +85,20 @@ class GeminiEmbeddingProvider:
         from google.genai import types
 
         try:
-            response = await self._client.aio.models.embed_content(
-                model=self.name,
-                contents=content,
-                config=types.EmbedContentConfig(output_dimensionality=self.vector_size),
+            response = await asyncio.wait_for(
+                self._client.aio.models.embed_content(
+                    model=self.name,
+                    contents=content,
+                    config=types.EmbedContentConfig(output_dimensionality=self.vector_size),
+                ),
+                timeout=4.0,
             )
             vector = list(response.embeddings[0].values)
             if len(vector) != self.vector_size:
                 raise ValueError("Embedding dimension does not match configuration.")
             return vector
         except Exception as exc:
-            raise JobRAGUnavailableError("Không thể tạo Gemini embedding.") from exc
+            raise JobRAGUnavailableError("Không thể tạo Gemini embedding hoặc request bị timeout.") from exc
 
     async def embed_documents(self, texts: Sequence[str]) -> list[list[float]]:
         from google.genai import types
@@ -104,14 +107,17 @@ class GeminiEmbeddingProvider:
             return []
         formatted = [f"title: market job | text: {item}" for item in texts]
         try:
-            response = await self._client.aio.models.embed_content(
-                model=self.name,
-                contents=formatted,
-                config=types.EmbedContentConfig(output_dimensionality=self.vector_size),
+            response = await asyncio.wait_for(
+                self._client.aio.models.embed_content(
+                    model=self.name,
+                    contents=formatted,
+                    config=types.EmbedContentConfig(output_dimensionality=self.vector_size),
+                ),
+                timeout=8.0,
             )
             return [list(emb.values) for emb in response.embeddings]
         except Exception as exc:
-            raise JobRAGUnavailableError("Không thể tạo Gemini embedding.") from exc
+            raise JobRAGUnavailableError("Không thể tạo Gemini embedding hoặc request bị timeout.") from exc
 
     async def embed_query(self, text_value: str) -> list[float]:
         return await self._embed(f"task: search result | query: {text_value}")

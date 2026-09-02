@@ -1,12 +1,10 @@
-import hashlib
-import json
 import logging
 import os
 import uuid
 from io import BytesIO
 from pathlib import Path
 from time import perf_counter
-from typing import Any, Literal
+from typing import Literal
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from fastapi.responses import StreamingResponse
@@ -30,7 +28,8 @@ from src.db.models import (
     User,
 )
 from src.models.schemas import CVBulkDeleteRequest, CVBulkDeleteResponse, CVOut, ManualCVCreate
-from src.services.cv_blocks import apply_cv_block_patches
+from src.services.cv_blocks import apply_cv_block_patches, enrich_parsed_cv_from_raw_text
+from src.services.cv_normalization import normalize_cv_data
 from src.services.cv_parser import extract_text_from_document, parse_cv_to_structured_json
 from src.services.file_security import FileSecurityError, scan_uploaded_file
 from src.services.object_storage import ObjectStorageError, delete_async, put_bytes_async
@@ -41,11 +40,6 @@ router = APIRouter(prefix="/cvs", tags=["CV Management"])
 logger = logging.getLogger(__name__)
 
 UPLOAD_DIR = "./data/uploads"
-
-
-def _fingerprint(value: Any) -> str:
-    encoded = json.dumps(value, ensure_ascii=False, sort_keys=True, default=str).encode("utf-8")
-    return hashlib.sha256(encoded).hexdigest()
 
 
 async def _remove_uploaded_file(saved_filepath: str | None) -> None:
@@ -252,40 +246,6 @@ async def upload_cv(
 
     cv_title = title.strip() if title.strip() else file.filename
 
-    # Kiểm tra xem user đã có bản ghi CV này chưa để tránh lưu trùng lặp
-    existing_cv_stmt = (
-        select(CV)
-        .where(
-            CV.user_id == current_user.id,
-            (CV.raw_text == raw_text) | ((CV.title == cv_title) & (CV.raw_text == raw_text)),
-        )
-        .order_by(CV.updated_at.desc(), CV.created_at.desc())
-    )
-    existing_cv = (await db.scalars(existing_cv_stmt)).first()
-
-    if existing_cv:
-        existing_cv.title = cv_title
-        existing_cv.parsed_json = parsed_json
-        existing_cv.file_path = saved_filepath
-        db.add(
-            UsageEvent(
-                user_id=current_user.id,
-                event_name="cv_parse_reuse",
-                duration_ms=round((perf_counter() - started_at) * 1000),
-                metadata_json={
-                    "use_llm": bool(parsed_json.get("agent_metadata", {}).get("llm_called")),
-                    "llm_policy": parse_mode,
-                    "file_type": file_ext,
-                    "reused_cv_id": existing_cv.id,
-                },
-            )
-        )
-        await db.flush()
-        await get_or_create_cv_snapshot(db, existing_cv)
-        await db.commit()
-        await db.refresh(existing_cv)
-        return existing_cv
-
     new_cv = CV(
         user_id=current_user.id,
         title=cv_title,
@@ -313,6 +273,7 @@ async def upload_cv(
         await db.flush()
         await get_or_create_cv_snapshot(db, new_cv)
         await db.commit()
+        logger.info("CV parsed and created: id=%s, user_id=%s, title=%s", new_cv.id, current_user.id, cv_title)
     except Exception as exc:
         await db.rollback()
         try:
@@ -325,6 +286,24 @@ async def upload_cv(
             detail="Không thể lưu CV vào cơ sở dữ liệu. File đã được dọn an toàn.",
         ) from exc
     await db.refresh(new_cv)
+
+    # Tự động đồng bộ hóa Vector Embedding cho Chatbot Cascading RAG
+    try:
+        from src.services.assistant_rag import get_assistant_rag_service
+
+        rag_service = get_assistant_rag_service()
+        await rag_service.index_cv(
+            session=db,
+            user_id=current_user.id,
+            cv_id=new_cv.id,
+            title=new_cv.title,
+            raw_text=new_cv.raw_text,
+            parsed_json=new_cv.parsed_json,
+        )
+        await db.commit()
+    except Exception:
+        logger.warning("Không thể tạo RAG embeddings cho CV mới: %s", new_cv.id, exc_info=True)
+
     return new_cv
 
 
@@ -334,57 +313,35 @@ async def list_user_cvs(
     current_user: User = Depends(get_current_user),
 ) -> list[CVOut]:
     """Danh sách tất cả CV của người dùng hiện tại kèm trạng thái (CV gốc, Đã Match, Đã tối ưu) và sắp xếp theo lần sử dụng gần nhất."""
-    stmt = select(CV).where(CV.user_id == current_user.id).order_by(CV.updated_at.desc(), CV.created_at.desc())
+    stmt = select(CV).where(CV.user_id == current_user.id)
     result = await db.execute(stmt)
-    all_cvs = list(result.scalars().all())
-    if not all_cvs:
+    cvs = list(result.scalars().all())
+    if not cvs:
         return []
 
-    # Nhóm các bản ghi CV trùng lặp (cùng raw_text hoặc cùng title + raw_text)
-    # Giữ lại bản ghi chính (primary cv - mới nhất) và gom id của các bản trùng để ánh xạ match/analysis
-    unique_cvs: list[CV] = []
-    seen_fingerprints: dict[str, str] = {}  # fingerprint -> primary_cv_id
-    dup_to_primary: dict[str, str] = {}     # cv_id -> primary_cv_id
-
-    for cv in all_cvs:
-        text_normalized = (cv.raw_text or "").strip()
-        if text_normalized:
-            fp = _fingerprint({"title": (cv.title or "").strip().lower(), "text": text_normalized})
-        else:
-            fp = _fingerprint({"title": (cv.title or "").strip().lower(), "id": cv.id})
-
-        if fp not in seen_fingerprints:
-            seen_fingerprints[fp] = cv.id
-            dup_to_primary[cv.id] = cv.id
-            unique_cvs.append(cv)
-        else:
-            dup_to_primary[cv.id] = seen_fingerprints[fp]
-
-    cvs = unique_cvs
     cv_ids = [cv.id for cv in cvs]
-    all_cv_ids = list(dup_to_primary.keys())
 
-    # 1. Lấy tất cả CVAnalysis của user (cho toàn bộ các cv_id kể cả bản trùng)
+    # 1. Lấy tất cả CVAnalysis của user
     analyses_stmt = select(CVAnalysis).where(
         CVAnalysis.user_id == current_user.id,
-        CVAnalysis.cv_id.in_(all_cv_ids),
+        CVAnalysis.cv_id.in_(cv_ids),
     )
     analyses = (await db.scalars(analyses_stmt)).all()
 
     # 2. Lấy tất cả MatchRun của user
     matches_stmt = select(MatchRun).where(
         MatchRun.user_id == current_user.id,
-        MatchRun.cv_id.in_(all_cv_ids),
+        MatchRun.cv_id.in_(cv_ids),
     )
     matches = (await db.scalars(matches_stmt)).all()
 
     # 3. Lấy snapshots và variants của user
     snapshots_stmt = select(CVSnapshot).where(
         CVSnapshot.user_id == current_user.id,
-        CVSnapshot.cv_id.in_(all_cv_ids),
+        CVSnapshot.cv_id.in_(cv_ids),
     )
     snapshots = (await db.scalars(snapshots_stmt)).all()
-    snap_id_to_cv_id = {s.id: dup_to_primary.get(s.cv_id, s.cv_id) for s in snapshots}
+    snap_id_to_cv_id = {s.id: s.cv_id for s in snapshots}
     snap_ids = list(snap_id_to_cv_id.keys())
 
     variants_by_cv_id: dict[str, list] = {cid: [] for cid in cv_ids}
@@ -396,8 +353,8 @@ async def list_user_cvs(
         variants = (await db.scalars(variants_stmt)).all()
         for var in variants:
             cid = snap_id_to_cv_id.get(var.source_cv_snapshot_id)
-            if cid and cid in variants_by_cv_id:
-                variants_by_cv_id[cid].append(var)
+            if cid:
+                variants_by_cv_id.setdefault(cid, []).append(var)
 
     # 4. Lấy JobRecommendationRun của user
     rec_runs_by_cv_id: dict[str, list] = {cid: [] for cid in cv_ids}
@@ -409,21 +366,17 @@ async def list_user_cvs(
         rec_runs = (await db.scalars(rec_stmt)).all()
         for r in rec_runs:
             cid = snap_id_to_cv_id.get(r.cv_snapshot_id)
-            if cid and cid in rec_runs_by_cv_id:
-                rec_runs_by_cv_id[cid].append(r)
+            if cid:
+                rec_runs_by_cv_id.setdefault(cid, []).append(r)
 
-    # Nhóm analyses và matches theo primary cv_id
+    # Nhóm analyses và matches theo cv_id
     analyses_by_cv_id: dict[str, list] = {cid: [] for cid in cv_ids}
     for a in analyses:
-        primary_id = dup_to_primary.get(a.cv_id, a.cv_id)
-        if primary_id in analyses_by_cv_id:
-            analyses_by_cv_id[primary_id].append(a)
+        analyses_by_cv_id.setdefault(a.cv_id, []).append(a)
 
     matches_by_cv_id: dict[str, list] = {cid: [] for cid in cv_ids}
     for m in matches:
-        primary_id = dup_to_primary.get(m.cv_id, m.cv_id)
-        if primary_id in matches_by_cv_id:
-            matches_by_cv_id[primary_id].append(m)
+        matches_by_cv_id.setdefault(m.cv_id, []).append(m)
 
     enriched_cvs: list[CVOut] = []
     for cv in cvs:
@@ -499,6 +452,24 @@ async def create_manual_cv(
     db.add(cv)
     await db.commit()
     await db.refresh(cv)
+
+    # Tự động đồng bộ hóa Vector Embedding cho Chatbot Cascading RAG
+    try:
+        from src.services.assistant_rag import get_assistant_rag_service
+
+        rag_service = get_assistant_rag_service()
+        await rag_service.index_cv(
+            session=db,
+            user_id=current_user.id,
+            cv_id=cv.id,
+            title=cv.title,
+            raw_text=cv.raw_text,
+            parsed_json=cv.parsed_json,
+        )
+        await db.commit()
+    except Exception:
+        logger.warning("Không thể tạo RAG embeddings cho CV thủ công: %s", cv.id, exc_info=True)
+
     return cv
 
 
@@ -606,7 +577,9 @@ async def export_cv_pdf(
             else:
                 accepted_texts.append(decision.final_text)
 
-    parsed = dict(cv.parsed_json or {})
+    # Legacy download remains on the same normalized structured renderer as v2.
+    # This avoids an old export endpoint becoming a Markdown/PDF bypass.
+    parsed = enrich_parsed_cv_from_raw_text(dict(cv.parsed_json or {}), cv.raw_text)
     if accepted_block_patches:
         parsed, _, invalid_block_ids = apply_cv_block_patches(parsed, accepted_block_patches)
         if invalid_block_ids:
@@ -617,8 +590,9 @@ async def export_cv_pdf(
     if accepted_replacements:
         parsed, unmatched_texts = apply_accepted_rewrites(parsed, accepted_replacements)
         accepted_texts.extend(unmatched_texts)
+    parsed = normalize_cv_data(parsed, title=cv.title, source_text=cv.raw_text)
     template_name = template or parsed.get("template_name") or "classic"
-    if template_name not in {"classic", "modern", "compact"}:
+    if template_name not in {"classic", "modern", "elegant", "compact", "creative"}:
         raise HTTPException(status_code=422, detail="Template CV không hợp lệ.")
     pdf_bytes = build_cv_pdf(
         title=cv.title,
@@ -655,6 +629,17 @@ async def bulk_delete_cvs(
             DocumentArtifact.source_entity_id.in_(deleted_ids),
         )
     )
+
+    # Dọn dẹp Vector Embeddings tương ứng
+    try:
+        from src.services.assistant_rag import get_assistant_rag_service
+
+        rag_service = get_assistant_rag_service()
+        for cv_id in deleted_ids:
+            await rag_service.delete_cv_embeddings(db, current_user.id, cv_id)
+    except Exception:
+        logger.warning("Không thể dọn dẹp RAG embeddings cho bulk delete CVs", exc_info=True)
+
     for cv in cvs:
         await db.delete(cv)
     await db.commit()
@@ -707,6 +692,24 @@ async def reanalyze_cv(
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc)) from exc
     await db.commit()
     await db.refresh(cv)
+
+    # Cập nhật lại vector embedding sau khi re-parse
+    try:
+        from src.services.assistant_rag import get_assistant_rag_service
+
+        rag_service = get_assistant_rag_service()
+        await rag_service.index_cv(
+            session=db,
+            user_id=current_user.id,
+            cv_id=cv.id,
+            title=cv.title,
+            raw_text=cv.raw_text,
+            parsed_json=cv.parsed_json,
+        )
+        await db.commit()
+    except Exception:
+        logger.warning("Không thể cập nhật RAG embeddings sau khi re-analyze CV: %s", cv.id, exc_info=True)
+
     return cv
 
 
@@ -753,6 +756,16 @@ async def delete_cv(
             DocumentArtifact.source_entity_id == cv.id,
         )
     )
+
+    # Dọn dẹp Vector Embeddings tương ứng
+    try:
+        from src.services.assistant_rag import get_assistant_rag_service
+
+        rag_service = get_assistant_rag_service()
+        await rag_service.delete_cv_embeddings(db, current_user.id, cv.id)
+    except Exception:
+        logger.warning("Không thể dọn dẹp RAG embeddings cho CV: %s", cv.id, exc_info=True)
+
     await db.delete(cv)
     await db.commit()
 

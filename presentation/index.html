@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Career Assistant — Demo Day 03/09/2026 | Team 041 WinTop</title>
+  <meta name="description" content="Career Assistant — Tối ưu CV. Hiểu khoảng cách. Sẵn sàng phỏng vấn." />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #0d1a12; --ink-light: #1c2e20;
+      --emerald: #059669; --emerald-dark: #047857; --emerald-pale: #d1fae5;
+      --muted: #6b7c72; --rule: #c9d7cd; --bg: #ffffff; --bg-tint: #f6faf7;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { font-family: 'Inter', system-ui, sans-serif; background: #1a1a1a; color: var(--ink); overflow: hidden; }
+    .deck { width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .slide { display: none; width: 1280px; height: 720px; background: var(--bg); position: relative; overflow: hidden; flex-shrink: 0; }
+    .slide.active { display: flex; }
+    .accent-bar { position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: var(--emerald); }
+    .slide-num { position: absolute; bottom: 20px; right: 32px; font-size: 11px; font-weight: 600; letter-spacing: .1em; color: var(--rule); }
+    .slide-label { position: absolute; bottom: 20px; left: 32px; font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--rule); }
+    .t-tag { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+    .em { color: var(--emerald); }
+    .pill { display: inline-block; background: var(--emerald-pale); color: var(--emerald-dark); font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: 3px 10px; border-radius: 99px; }
+    /* NAV */
+    .nav { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; z-index: 100; background: rgba(255,255,255,.95); padding: 8px 18px; border-radius: 40px; box-shadow: 0 2px 12px rgba(0,0,0,.15); }
+    .nav button { background: none; border: none; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; padding: 4px 10px; border-radius: 20px; transition: all .2s; }
+    .nav button:hover { background: var(--emerald-pale); color: var(--emerald-dark); }
+    .slide-indicator { font-size: 13px; font-weight: 700; color: var(--ink); display: flex; align-items: center; min-width: 48px; justify-content: center; }
+    /* PROGRESS */
+    .progress { position: fixed; top: 0; left: 0; right: 0; height: 3px; background: var(--rule); z-index: 100; }
+    .progress-fill { height: 100%; background: var(--emerald); transition: width .3s ease; }
+
+    /* PRINT STYLES */
+    @media print {
+      body { background: #ffffff !important; overflow: visible !important; }
+      .deck { width: auto !important; height: auto !important; display: block !important; overflow: visible !important; }
+      .slide { display: flex !important; width: 1280px !important; height: 720px !important; transform: none !important; page-break-after: always; break-after: page; }
+      .nav, .progress { display: none !important; }
+    }
+
+    /* SLIDE 1 - TITLE */
+    #slide-1 { flex-direction: column; justify-content: center; align-items: flex-start; padding: 72px 96px; }
+    #slide-1 .eyebrow { display: flex; align-items: center; gap: 14px; margin-bottom: 36px; }
+    #slide-1 .eyebrow .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--emerald); }
+    #slide-1 .main-title { font-size: 120px; font-weight: 900; letter-spacing: -.04em; line-height: .95; color: var(--ink); margin-bottom: 32px; }
+    #slide-1 .main-title .em-line { color: var(--emerald); }
+    #slide-1 .tagline { font-size: 22px; font-weight: 400; color: var(--muted); line-height: 1.5; margin-bottom: 56px; max-width: 560px; border-left: 3px solid var(--emerald); padding-left: 18px; }
+    #slide-1 .meta { display: flex; gap: 48px; }
+    #slide-1 .meta-item { display: flex; flex-direction: column; gap: 3px; }
+    #slide-1 .meta-label { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+    #slide-1 .meta-value { font-size: 15px; font-weight: 700; color: var(--ink); }
+    #slide-1 .deco { position: absolute; right: 72px; top: 50%; transform: translateY(-50%); width: 280px; display: flex; flex-direction: column; gap: 4px; opacity: .06; }
+    #slide-1 .deco div { height: 2px; background: var(--emerald); }
+
+    /* SLIDE 2 - PROBLEM */
+    #slide-2 { flex-direction: column; }
+    #slide-2 .s2-top { padding: 32px 68px 24px; border-bottom: 1px solid var(--rule); display: flex; align-items: flex-start; gap: 24px; }
+    #slide-2 .s2-q { font-size: 34px; font-weight: 800; color: var(--ink); line-height: 1.2; flex: 1; }
+    #slide-2 .s2-target { flex-shrink: 0; text-align: right; }
+    #slide-2 .s2-target-desc { font-size: 13px; font-weight: 600; color: var(--muted); margin-top: 6px; }
+    #slide-2 .chain { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 32px 80px; gap: 0; }
+    #slide-2 .c-step { display: flex; align-items: flex-start; gap: 20px; }
+    #slide-2 .c-left { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; width: 20px; }
+    #slide-2 .c-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--emerald); flex-shrink: 0; margin-top: 5px; }
+    #slide-2 .c-line { width: 2px; flex: 1; background: var(--rule); min-height: 28px; }
+    #slide-2 .c-text { padding-bottom: 24px; }
+    #slide-2 .c-title { font-size: 24px; font-weight: 800; color: var(--ink); }
+    #slide-2 .c-desc { font-size: 15px; font-weight: 400; color: var(--muted); margin-top: 3px; }
+    #slide-2 .c-step.final .c-title { color: var(--emerald); }
+
+    /* SLIDE 3 - SOLUTION */
+    #slide-3 { flex-direction: column; justify-content: flex-start; padding: 64px 68px; }
+    #slide-3 .s3-top { padding: 0; }
+    #slide-3 .s3-head { font-size: 36px; font-weight: 800; color: var(--ink); max-width: 680px; line-height: 1.2; }
+    #slide-3 .flow { display: flex; align-items: stretch; margin-top: 40px; padding: 0; gap: 0; min-height: 116px; }
+    #slide-3 .fs { flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; position: relative; }
+    #slide-3 .fs:not(:last-child)::after { content: '→'; position: absolute; right: -6px; top: 28px; font-size: 20px; font-weight: 700; color: var(--emerald); }
+    #slide-3 .fs-box { width: 100%; min-height: 116px; padding: 18px 12px; border: 1.5px solid var(--rule); border-radius: 8px; background: #fff; display: flex; flex-direction: column; justify-content: center; }
+    #slide-3 .fs.em .fs-box { border-color: var(--emerald); background: var(--emerald-pale); }
+    #slide-3 .fs-num { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+    #slide-3 .fs-name { font-size: 15px; font-weight: 800; color: var(--ink); margin-top: 2px; }
+    #slide-3 .fs.em .fs-name { color: var(--emerald-dark); }
+    #slide-3 .fs-desc { font-size: 11px; color: var(--muted); font-weight: 500; margin-top: 4px; line-height: 1.35; }
+    #slide-3 .s3-diff { margin-top: 28px; padding: 18px 28px; min-height: 96px; background: var(--bg-tint); border-left: 4px solid var(--emerald); border-radius: 0 6px 6px 0; display: flex; flex-direction: column; justify-content: center; }
+    #slide-3 .diff-lbl { font-size: 10.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--emerald); margin-bottom: 5px; }
+    #slide-3 .diff-txt { font-size: 16px; font-weight: 500; color: var(--ink); line-height: 1.5; }
+
+    /* SLIDE 4 - PRODUCT */
+    #slide-4 { flex-direction: row; }
+    #slide-4 .s4-left { flex: 0 0 34%; padding: 36px 32px; border-right: 1px solid var(--rule); display: flex; flex-direction: column; justify-content: space-between; }
+    #slide-4 .s4-head { font-size: 22px; font-weight: 800; color: var(--ink); line-height: 1.25; margin-top: 4px; }
+    #slide-4 .s4-steps { display: flex; flex-direction: column; gap: 0; margin-top: 8px; }
+    #slide-4 .st { display: flex; align-items: flex-start; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--rule); }
+    #slide-4 .st:last-child { border-bottom: none; }
+    #slide-4 .st-n { width: 24px; height: 24px; border-radius: 50%; background: var(--emerald); color: #fff; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+    #slide-4 .st-title { font-size: 14.5px; font-weight: 700; color: var(--ink); }
+    #slide-4 .st-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+    #slide-4 .s4-quote { font-size: 12px; font-weight: 600; color: var(--muted); font-style: italic; border-top: 1px solid var(--rule); padding-top: 10px; }
+
+    /* Right 66% - 4 Large Product Metrics in 2x2 */
+    #slide-4 .s4-right { flex: 0 0 66%; padding: 40px 48px; display: flex; flex-direction: column; justify-content: center; }
+    #slide-4 .s4-grid-header { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; }
+    #slide-4 .sg { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 20px; }
+    #slide-4 .sc { padding: 24px 28px; border: 1.5px solid var(--rule); border-radius: 8px; background: var(--bg); display: flex; flex-direction: column; justify-content: center; }
+    #slide-4 .sc-num { font-size: 58px; font-weight: 900; line-height: 1; color: var(--ink); letter-spacing: -.03em; }
+    #slide-4 .sc-num.em { color: var(--emerald); }
+    #slide-4 .sc-num.text-format { font-size: 34px; letter-spacing: -.02em; padding: 6px 0; }
+    #slide-4 .sc-desc { font-size: 15px; font-weight: 700; color: var(--ink); margin-top: 8px; }
+    #slide-4 .sc-src { font-size: 10.5px; color: var(--muted); font-weight: 500; margin-top: 3px; }
+
+    /* SLIDE 5 - ARCHITECTURE */
+    #slide-5 { flex-direction: row; }
+    #slide-5 .arch { width: 360px; flex-shrink: 0; padding: 48px 40px; border-right: 1px solid var(--rule); display: flex; flex-direction: column; justify-content: center; }
+    #slide-5 .al { display: flex; flex-direction: column; align-items: center; text-align: center; }
+    #slide-5 .ab { width: 100%; padding: 14px 16px; border: 1.5px solid var(--rule); border-radius: 8px; margin-bottom: 0; }
+    #slide-5 .ab.hi { border-color: var(--emerald); background: var(--emerald-pale); }
+    #slide-5 .ab-lbl { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+    #slide-5 .ab-tech { font-size: 17px; font-weight: 700; color: var(--ink); margin-top: 2px; }
+    #slide-5 .ab.hi .ab-tech { color: var(--emerald-dark); }
+    #slide-5 .aa { font-size: 18px; color: var(--emerald); font-weight: 700; padding: 5px 0; line-height: 1; }
+    #slide-5 .dec { flex: 1; padding: 48px 52px; display: flex; flex-direction: column; justify-content: center; gap: 32px; }
+    #slide-5 .dec-head { font-size: 36px; font-weight: 800; color: var(--ink); line-height: 1.2; margin-bottom: 4px; }
+    #slide-5 .dq { font-size: 22px; font-weight: 800; color: var(--emerald); }
+    #slide-5 .da { font-size: 16px; font-weight: 500; color: var(--ink-light); line-height: 1.5; margin-top: 6px; }
+    #slide-5 .dpills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    #slide-5 .dp { padding: 3px 10px; border: 1.5px solid var(--emerald); border-radius: 20px; font-size: 11px; font-weight: 700; color: var(--emerald-dark); }
+    #slide-5 .sep { height: 1px; background: var(--rule); }
+
+    /* SLIDE 6 - AI APPROACH */
+    #slide-6 { flex-direction: column; }
+    #slide-6 .s6-top { padding: 24px 68px 16px; border-bottom: 1px solid var(--rule); }
+    #slide-6 .s6-head { font-size: 28px; font-weight: 800; color: var(--ink); line-height: 1.25; }
+    #slide-6 .s6-body { flex: 1; display: flex; min-height: 0; }
+    
+    /* Left column ~65% */
+    #slide-6 .s6-left { flex: 0 0 65%; padding: 20px 44px; border-right: 1px solid var(--rule); display: flex; flex-direction: column; justify-content: center; gap: 8px; }
+    #slide-6 .s6-area-lbl { font-size: 10.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
+    #slide-6 .s6-stage-box { padding: 8px 14px; border: 1.5px solid var(--rule); border-radius: 6px; background: var(--bg); display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    #slide-6 .s6-stage-lbl { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); flex-shrink: 0; }
+    #slide-6 .s6-node-row { display: flex; align-items: center; gap: 8px; flex: 1; justify-content: flex-end; }
+    #slide-6 .s6-node-sm { padding: 4px 10px; border: 1px solid var(--rule); border-radius: 4px; font-size: 11px; font-weight: 600; color: var(--ink); background: var(--bg-tint); }
+    #slide-6 .s6-node-sm.em { border-color: var(--emerald); background: var(--emerald-pale); color: var(--emerald-dark); font-weight: 700; }
+    #slide-6 .s6-arr-r { font-size: 13px; color: var(--emerald); font-weight: 700; }
+    #slide-6 .s6-stage-down { text-align: center; color: var(--emerald); font-size: 12px; font-weight: 700; line-height: 1; }
+
+    /* LangGraph Box Focus */
+    #slide-6 .s6-lg-box { border: 1.5px solid var(--emerald); border-radius: 8px; padding: 10px 16px; background: rgba(5, 150, 105, 0.03); display: flex; flex-direction: column; align-items: center; gap: 2px; }
+    #slide-6 .s6-lg-tag { font-size: 10.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--emerald-dark); margin-bottom: 4px; }
+    #slide-6 .s6-lg-diagram { display: flex; flex-direction: column; align-items: center; width: 100%; }
+    #slide-6 .s6-node { padding: 5px 14px; border: 1.5px solid var(--rule); border-radius: 4px; font-size: 11px; font-weight: 600; color: var(--ink); text-align: center; min-width: 120px; background: #fff; }
+    #slide-6 .s6-node.s6-start { background: var(--ink); color: #fff; border-color: var(--ink); }
+    #slide-6 .s6-node.s6-end { background: var(--emerald); color: #fff; border-color: var(--emerald); }
+    #slide-6 .s6-node.s6-em { border-color: var(--emerald); background: var(--emerald-pale); color: var(--emerald-dark); }
+    #slide-6 .s6-node.s6-dim { border-color: var(--rule); color: var(--muted); background: var(--bg-tint); }
+    #slide-6 .s6-sub { display: block; font-size: 9px; font-weight: 500; color: var(--muted); margin-top: 1px; }
+    #slide-6 .s6-node.s6-em .s6-sub { color: var(--emerald-dark); opacity: 0.85; }
+    #slide-6 .s6-arr-v { font-size: 11px; color: var(--emerald); font-weight: 700; line-height: 1; padding: 2px 0; }
+    #slide-6 .s6-lg-split { display: flex; align-items: flex-start; gap: 16px; justify-content: center; width: 100%; }
+    #slide-6 .s6-lg-branch { display: flex; flex-direction: column; align-items: center; gap: 0; }
+    #slide-6 .s6-branch-lbl { font-size: 9px; color: var(--muted); font-weight: 600; text-transform: uppercase; }
+    #slide-6 .s6-branch-lbl.em { color: var(--emerald); font-weight: 700; }
+
+    /* Right column ~35% */
+    #slide-6 .s6-right { flex: 0 0 35%; padding: 24px 36px; display: flex; flex-direction: column; justify-content: space-between; }
+    #slide-6 .s6-principles { display: flex; flex-direction: column; gap: 14px; }
+    #slide-6 .s6-p-item { display: flex; flex-direction: column; gap: 2px; }
+    #slide-6 .s6-p-title { font-size: 13.5px; font-weight: 800; color: var(--ink); display: flex; align-items: center; gap: 8px; }
+    #slide-6 .s6-p-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--emerald); flex-shrink: 0; }
+    #slide-6 .s6-p-desc { font-size: 12px; font-weight: 500; color: var(--muted); line-height: 1.4; padding-left: 14px; }
+    #slide-6 .s6-metrics-box { padding: 12px 16px; background: var(--bg-tint); border: 1px solid var(--rule); border-radius: 6px; border-left: 3px solid var(--emerald); }
+    #slide-6 .s6-m-val { font-size: 22px; font-weight: 900; color: var(--ink); line-height: 1.1; }
+    #slide-6 .s6-m-val .em { color: var(--emerald); }
+    #slide-6 .s6-m-desc { font-size: 12px; font-weight: 700; color: var(--ink); margin-top: 3px; }
+    #slide-6 .s6-m-ctx { font-size: 10px; color: var(--muted); font-weight: 500; margin-top: 2px; }
+
+    /* SLIDE 7 - TECHNICAL */
+    #slide-7 { flex-direction: column; }
+    #slide-7 .s7-top { padding: 28px 68px 18px; border-bottom: 1px solid var(--rule); }
+    #slide-7 .s7-head { font-size: 32px; font-weight: 800; color: var(--ink); }
+    #slide-7 .s7-body { flex: 1; display: flex; min-height: 0; }
+    #slide-7 .metrics { flex: 1; padding: 20px 40px; display: grid; grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 16px 20px; }
+    #slide-7 .mb { display: flex; flex-direction: column; justify-content: center; padding: 12px 14px; border: 1px solid var(--rule); border-radius: 6px; background: var(--bg); }
+    #slide-7 .mn { font-size: 42px; font-weight: 900; color: var(--ink); letter-spacing: -.03em; line-height: 1; }
+    #slide-7 .mn.em { color: var(--emerald); }
+    #slide-7 .md { font-size: 13px; font-weight: 700; color: var(--ink); margin-top: 5px; }
+    #slide-7 .ms { font-size: 9.5px; color: var(--muted); font-weight: 500; margin-top: 2px; }
+    #slide-7 .cicd { width: 300px; flex-shrink: 0; border-left: 1px solid var(--rule); padding: 20px 28px; display: flex; flex-direction: column; gap: 10px; }
+    #slide-7 .cicd-lbl { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+    #slide-7 .cf { display: flex; flex-direction: column; gap: 0; align-items: flex-start; }
+    #slide-7 .cs { padding: 9px 16px; border: 1.5px solid var(--rule); border-radius: 5px; font-size: 14px; font-weight: 700; color: var(--ink); min-width: 130px; text-align: center; }
+    #slide-7 .cs.em { border-color: var(--emerald); background: var(--emerald-pale); color: var(--emerald-dark); }
+    #slide-7 .cd { width: 2px; height: 10px; background: var(--rule); margin-left: 63px; }
+    #slide-7 .tools { font-size: 11px; color: var(--muted); font-weight: 500; line-height: 1.7; }
+    #slide-7 .deploy { margin-top: auto; padding-top: 14px; border-top: 1px solid var(--rule); font-size: 11px; color: var(--muted); font-weight: 500; }
+
+    /* SLIDE 8 - DEMO */
+    #slide-8 { flex-direction: column; align-items: center; justify-content: center; padding: 52px 80px; }
+    #slide-8 .s8-lbl { font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 24px; }
+    #slide-8 .s8-head { font-size: 48px; font-weight: 800; color: var(--ink); text-align: center; line-height: 1.2; margin-bottom: 44px; }
+    #slide-8 .cta { display: flex; flex-direction: column; align-items: center; gap: 18px; margin-bottom: 48px; }
+    #slide-8 .play { display: flex; align-items: center; gap: 14px; padding: 18px 44px; background: var(--ink); color: #fff; border-radius: 6px; text-decoration: none; font-size: 26px; font-weight: 800; transition: background .2s; }
+    #slide-8 .play:hover { background: var(--emerald); }
+    #slide-8 .tri { width: 0; height: 0; border-style: solid; border-width: 9px 0 9px 16px; border-color: transparent transparent transparent #fff; }
+    #slide-8 .url { font-size: 13px; color: var(--muted); font-weight: 500; word-break: break-all; text-align: center; }
+    #slide-8 .mflow { display: flex; align-items: center; gap: 10px; }
+    #slide-8 .mfs { font-size: 16px; font-weight: 700; color: var(--ink); }
+    #slide-8 .mfa { font-size: 16px; color: var(--emerald); font-weight: 700; }
+
+    /* SLIDE 9 - CHALLENGES */
+    #slide-9 { flex-direction: column; }
+    #slide-9 .s9-top { padding: 30px 68px 22px; border-bottom: 1px solid var(--rule); }
+    #slide-9 .s9-head { font-size: 34px; font-weight: 800; color: var(--ink); }
+    #slide-9 .chs { flex: 1; display: flex; gap: 0; }
+    #slide-9 .ch { flex: 1; padding: 24px 32px; border-right: 1px solid var(--rule); display: flex; flex-direction: column; gap: 10px; }
+    #slide-9 .ch:last-child { border-right: none; }
+    #slide-9 .ch-n { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+    #slide-9 .ch-p { font-size: 18px; font-weight: 800; color: var(--ink); line-height: 1.3; }
+    #slide-9 .ch-row { display: flex; align-items: flex-start; gap: 8px; }
+    #slide-9 .ch-arr { font-size: 14px; color: var(--emerald); font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+    #slide-9 .ch-item { font-size: 13px; font-weight: 500; color: var(--ink-light); line-height: 1.4; }
+    #slide-9 .ch-l { font-size: 11px; font-weight: 700; color: var(--emerald-dark); font-style: italic; padding: 7px 10px; background: var(--emerald-pale); border-radius: 4px; }
+    #slide-9 .ch-m { font-size: 12px; font-weight: 700; color: var(--ink); padding: 7px 10px; background: var(--bg-tint); border: 1px solid var(--rule); border-radius: 4px; }
+    #slide-9 .s9-footer { padding: 14px 68px; border-top: 1px solid var(--rule); background: var(--bg-tint); }
+    #slide-9 .ret-l { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--emerald); margin-bottom: 3px; }
+    #slide-9 .ret-t { font-size: 15px; font-weight: 600; color: var(--ink); font-style: italic; }
+
+    /* SLIDE 10 - TEAM & CLOSING */
+    #slide-10 { flex-direction: row; }
+    #slide-10 .s10-left { flex: 0 0 35%; padding: 36px 36px; border-right: 1px solid var(--rule); display: flex; flex-direction: column; justify-content: space-between; }
+    #slide-10 .th { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+    #slide-10 .team-list { display: flex; flex-direction: column; gap: 0; }
+    #slide-10 .mb { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--rule); }
+    #slide-10 .mb:last-of-type { border-bottom: none; }
+    #slide-10 .mi { width: 34px; height: 34px; border-radius: 50%; background: var(--emerald-pale); color: var(--emerald-dark); font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
+    #slide-10 .mn-name { font-size: 14px; font-weight: 700; color: var(--ink); line-height: 1.2; }
+    #slide-10 .mn-role { font-size: 11.5px; font-weight: 600; color: var(--emerald); margin-top: 1px; }
+    #slide-10 .mn-c { font-size: 11.5px; font-weight: 400; color: var(--muted); margin-top: 2px; line-height: 1.35; }
+    #slide-10 .mentor { font-size: 12px; color: var(--ink-light); font-weight: 600; padding-top: 10px; border-top: 1px solid var(--rule); }
+
+    /* Right 65% */
+    #slide-10 .s10-right { flex: 0 0 65%; padding: 36px 44px; display: flex; flex-direction: column; justify-content: space-between; }
+    #slide-10 .rh { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+    
+    /* Timeline styles */
+    #slide-10 .timeline { display: flex; flex-direction: column; gap: 0; }
+    #slide-10 .tl-item { display: flex; align-items: flex-start; gap: 16px; position: relative; padding-bottom: 14px; }
+    #slide-10 .tl-item:last-child { padding-bottom: 0; }
+    #slide-10 .tl-left { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; width: 80px; }
+    #slide-10 .tl-tag { font-size: 10.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--emerald-dark); background: var(--emerald-pale); padding: 3px 8px; border-radius: 4px; text-align: center; width: 100%; }
+    #slide-10 .tl-line { width: 2px; flex: 1; background: var(--rule); min-height: 18px; margin-top: 4px; }
+    #slide-10 .tl-item:last-child .tl-line { display: none; }
+    #slide-10 .tl-content { flex: 1; padding-top: 1px; }
+    #slide-10 .tl-title { font-size: 14.5px; font-weight: 700; color: var(--ink); line-height: 1.3; }
+    #slide-10 .tl-desc { font-size: 12px; font-weight: 400; color: var(--muted); margin-top: 1px; line-height: 1.35; }
+
+    /* Closing */
+    #slide-10 .closing { text-align: center; padding-top: 16px; border-top: 1px solid var(--rule); display: flex; flex-direction: column; align-items: center; gap: 2px; }
+    #slide-10 .thanks { font-size: 16px; font-weight: 700; color: var(--ink-light); }
+    #slide-10 .qa { font-size: 44px; font-weight: 900; color: var(--emerald); letter-spacing: -.02em; line-height: 1.05; }
+    #slide-10 .team-tag { font-size: 11.5px; color: var(--muted); font-weight: 600; margin-top: 2px; }
+  </style>
+</head>
+<body>
+<div class="progress"><div class="progress-fill" id="pf"></div></div>
+<div class="deck">
+
+  <!-- SLIDE 1 - TITLE -->
+  <section class="slide active" id="slide-1">
+    <div class="accent-bar"></div>
+    <div class="eyebrow"><div class="dot"></div><span class="t-tag">VinUni AI20K Build Phase — Cohort 3 &nbsp;·&nbsp; Team 041 WinTop</span></div>
+    <h1 class="main-title">CAREER<br><span class="em-line">ASSISTANT</span></h1>
+    <p class="tagline">Tối ưu CV. Hiểu khoảng cách.<br>Sẵn sàng phỏng vấn.</p>
+    <div class="meta">
+      <div class="meta-item"><span class="meta-label">Nhóm</span><span class="meta-value">Team 041 · WinTop</span></div>
+      <div class="meta-item"><span class="meta-label">Sự kiện</span><span class="meta-value">Demo Day · 03/09/2026</span></div>
+      <div class="meta-item"><span class="meta-label">Chương trình</span><span class="meta-value">AI20K Cohort 3</span></div>
+    </div>
+    <div class="deco">
+      <div style="width:100%"></div><div style="width:82%"></div><div style="width:94%"></div>
+      <div style="width:60%"></div><div style="width:78%"></div><div style="width:88%"></div>
+      <div style="width:50%"></div><div style="width:70%"></div>
+    </div>
+    <div class="slide-num">01 / 10</div>
+  </section>
+
+  <!-- SLIDE 2 - PROBLEM -->
+  <section class="slide" id="slide-2">
+    <div class="accent-bar"></div>
+    <div class="s2-top">
+      <h2 class="s2-q">Sinh viên năm 3–4 gặp khó khăn gì<br>khi tìm thực tập và việc làm?</h2>
+      <div class="s2-target">
+        <span class="pill">Target Users</span>
+        <div class="s2-target-desc">Sinh viên năm 3–4<br>&amp; mới ra trường</div>
+      </div>
+    </div>
+    <div class="chain">
+      <div class="c-step">
+        <div class="c-left"><div class="c-dot"></div><div class="c-line"></div></div>
+        <div class="c-text"><div class="c-title">CV GỬI ĐI</div><div class="c-desc">CV một mẫu — gửi cho tất cả JD, không tối ưu theo từng vị trí</div></div>
+      </div>
+      <div class="c-step">
+        <div class="c-left"><div class="c-dot"></div><div class="c-line"></div></div>
+        <div class="c-text"><div class="c-title">KHÔNG BIẾT THIẾU GÌ</div><div class="c-desc">Không có phản hồi cụ thể: kỹ năng nào còn thiếu, mức độ phù hợp ra sao</div></div>
+      </div>
+      <div class="c-step">
+        <div class="c-left"><div class="c-dot"></div><div class="c-line"></div></div>
+        <div class="c-text"><div class="c-title">KHÔNG BIẾT VÌ SAO BỊ LOẠI</div><div class="c-desc">Quy trình tuyển dụng thiếu minh bạch — không biết mình đã thua ở điểm nào</div></div>
+      </div>
+      <div class="c-step final">
+        <div class="c-left"><div class="c-dot" style="width:14px;height:14px"></div></div>
+        <div class="c-text"><div class="c-title">PHỎNG VẤN THẬT MỚI BIẾT MÌNH CHƯA SẴN SÀNG</div><div class="c-desc">Cơ hội luyện tập với phản hồi có cấu trúc rất hiếm — chỉ biết khi đã thất bại thật</div></div>
+      </div>
+    </div>
+    <div class="slide-label">02 — Problem</div><div class="slide-num">02 / 10</div>
+  </section>
+
+  <!-- SLIDE 3 - SOLUTION -->
+  <section class="slide" id="slide-3">
+    <div class="accent-bar"></div>
+    <div class="s3-top">
+      <p class="t-tag" style="margin-bottom:10px">Solution</p>
+      <h2 class="s3-head">Một luồng liên tục: từ CV đến sẵn sàng phỏng vấn.</h2>
+    </div>
+    <div class="flow">
+      <div class="fs"><div class="fs-box"><div class="fs-num">Input</div><div class="fs-name">CV + JD</div><div class="fs-desc">PDF / DOCX<br>+ 98 JD hoặc tự dán</div></div></div>
+      <div class="fs em"><div class="fs-box"><div class="fs-num">Bước 1</div><div class="fs-name">MATCH</div><div class="fs-desc">FitScore có<br>bằng chứng</div></div></div>
+      <div class="fs em"><div class="fs-box"><div class="fs-num">Bước 2</div><div class="fs-name">GAP</div><div class="fs-desc">Kỹ năng còn thiếu<br>+ lộ trình ưu tiên</div></div></div>
+      <div class="fs em"><div class="fs-box"><div class="fs-num">Bước 3</div><div class="fs-name">IMPROVE CV</div><div class="fs-desc">Gợi ý sửa +<br>Accept/Reject (HITL)</div></div></div>
+      <div class="fs em"><div class="fs-box"><div class="fs-num">Bước 4</div><div class="fs-name">MOCK INTERVIEW</div><div class="fs-desc">Text + giọng nói<br>STAR Rubric</div></div></div>
+      <div class="fs"><div class="fs-box"><div class="fs-num">Output</div><div class="fs-name">APPLY</div><div class="fs-desc">Hồ sơ đã tối ưu<br>+ sẵn sàng</div></div></div>
+    </div>
+    <div class="s3-diff">
+      <div class="diff-lbl">Differentiator</div>
+      <div class="diff-txt">Phân tích dựa trên <strong>evidence từ CV/JD thực tế</strong> — không chỉ trả lời như chatbot thông thường. Điểm số do backend tính tất định, không để LLM tự chấm.</div>
+    </div>
+    <div class="slide-label">03 — Solution</div><div class="slide-num">03 / 10</div>
+  </section>
+
+  <!-- SLIDE 4 - PRODUCT -->
+  <section class="slide" id="slide-4">
+    <div class="accent-bar"></div>
+    <div class="s4-left">
+      <div>
+        <p class="t-tag" style="margin-bottom:8px">Product Journey</p>
+        <h2 class="s4-head">Một hồ sơ →<br>hành trình xuyên suốt.</h2>
+        <div class="s4-steps">
+          <div class="st"><div class="st-n">1</div><div><div class="st-title">Upload CV</div><div class="st-sub">PDF / DOCX · OCR parser</div></div></div>
+          <div class="st"><div class="st-n">2</div><div><div class="st-title">Chọn JD</div><div class="st-sub">Catalog 98 JD hoặc dán tự do</div></div></div>
+          <div class="st"><div class="st-n">3</div><div><div class="st-title">Xem độ phù hợp</div><div class="st-sub">FitScore · evidence · 9-step trace</div></div></div>
+          <div class="st"><div class="st-n">4</div><div><div class="st-title">Khoảng cách kỹ năng</div><div class="st-sub">Gap Analysis · lộ trình ưu tiên</div></div></div>
+          <div class="st"><div class="st-n">5</div><div><div class="st-title">Tối ưu CV</div><div class="st-sub">Gợi ý sửa · Accept / Reject (HITL)</div></div></div>
+          <div class="st"><div class="st-n">6</div><div><div class="st-title">Phỏng vấn thử</div><div class="st-sub">Text + giọng nói · STAR 8 phases</div></div></div>
+        </div>
+      </div>
+      <div class="s4-quote">"Không bịa thêm kỹ năng — mọi gợi ý đều từ CV/JD thực."</div>
+    </div>
+    <div class="s4-right">
+      <div class="s4-grid-header">Verified Product Facts</div>
+      <div class="sg">
+        <!-- SOURCE: (Get-ChildItem data\jds\raw -Filter "JD-*.html" -File).Count = 98 -->
+        <div class="sc">
+          <div class="sc-num em">98</div>
+          <div class="sc-desc">JD trong catalog</div>
+          <div class="sc-src">data/jds/raw/ · file count verified</div>
+        </div>
+
+        <!-- SOURCE: backend/src/services/voice/voice_orchestrator.py PHASES list = 8 items -->
+        <div class="sc">
+          <div class="sc-num">8</div>
+          <div class="sc-desc">Phases phỏng vấn giọng nói</div>
+          <div class="sc-src">voice_orchestrator.py · forward-only state machine</div>
+        </div>
+
+        <!-- SOURCE: backend/src/services/cv_parser.py MinerU OCR PDF & DOCX format support -->
+        <div class="sc">
+          <div class="sc-num em text-format">PDF / DOCX</div>
+          <div class="sc-desc">Định dạng CV hỗ trợ</div>
+          <div class="sc-src">MinerU OCR parser · trích xuất layout đa cột</div>
+        </div>
+
+        <!-- SOURCE: Frontend candidate complete end-to-end journey steps -->
+        <div class="sc">
+          <div class="sc-num">6</div>
+          <div class="sc-desc">Bước trong hành trình chính</div>
+          <div class="sc-src">Upload → Match → Gap → Optimize → Mock → Apply</div>
+        </div>
+      </div>
+    </div>
+    <div class="slide-label">04 — Product</div><div class="slide-num">04 / 10</div>
+  </section>
+
+  <!-- SLIDE 5 - ARCHITECTURE -->
+  <section class="slide" id="slide-5">
+    <div class="accent-bar"></div>
+    <div class="arch">
+      <p class="t-tag" style="margin-bottom:18px;text-align:center">Architecture</p>
+      <div class="al">
+        <div class="ab"><div class="ab-lbl">Client</div><div class="ab-tech">Next.js</div></div>
+        <div class="aa">↓</div>
+        <div class="ab"><div class="ab-lbl">API &amp; Domain</div><div class="ab-tech">FastAPI</div></div>
+        <div class="aa">↓</div>
+        <div class="ab hi"><div class="ab-lbl">AI Orchestration</div><div class="ab-tech">LangGraph</div></div>
+        <div class="aa">↓</div>
+        <div class="ab hi"><div class="ab-lbl">Data</div><div class="ab-tech">PostgreSQL + pgvector</div></div>
+        <div class="aa">↓</div>
+        <div class="ab"><div class="ab-lbl">External Services</div><div class="ab-tech">Gemini · MinerU · Deepgram · gTTS</div></div>
+      </div>
+    </div>
+    <div class="dec">
+      <h2 class="dec-head">Hai quyết định<br>kiến trúc cốt lõi</h2>
+      <div>
+        <div class="dq">Tại sao LangGraph?</div>
+        <div class="da">Workflow AI cần kiểm soát chặt: state riêng, routing có điều kiện, retry khi fail, không chạy tự do như chatbot.</div>
+        <div class="dpills">
+          <span class="dp">State</span><span class="dp">Routing</span><span class="dp">Retry</span><span class="dp">Checkpoint</span><span class="dp">Controlled flow</span>
+        </div>
+      </div>
+      <div class="sep"></div>
+      <div>
+        <div class="dq">Tại sao pgvector?</div>
+        <div class="da">Dữ liệu quan hệ + vector search + metadata filter trong một PostgreSQL. Không cần Qdrant riêng — giảm độ phức tạp và cost vận hành.</div>
+        <div class="dpills">
+          <span class="dp">Relational + Vector</span><span class="dp">One DB</span><span class="dp">Metadata filter</span>
+        </div>
+      </div>
+    </div>
+    <div class="slide-label">05 — Architecture</div><div class="slide-num">05 / 10</div>
+  </section>
+
+  <!-- SLIDE 6 - AI APPROACH -->
+  <section class="slide" id="slide-6">
+    <div class="accent-bar"></div>
+    <div class="s6-top">
+      <p class="t-tag" style="margin-bottom:6px">AI / LLM Approach</p>
+      <h2 class="s6-head">AI tìm bằng chứng. LangGraph điều phối. Backend quyết định điểm.</h2>
+    </div>
+    <div class="s6-body">
+      <!-- 65% Left: LangGraph & Evidence Execution Flow -->
+      <div class="s6-left">
+        <div class="s6-area-lbl">Quy trình điều phối &amp; kiểm soát bằng chứng</div>
+        
+        <!-- Step 1: Hybrid Retrieval -->
+        <div class="s6-stage-box">
+          <span class="s6-stage-lbl">1. Hybrid Retrieval</span>
+          <div class="s6-node-row">
+            <span class="s6-node-sm">CV Chunks + JD</span>
+            <span class="s6-arr-r">→</span>
+            <span class="s6-node-sm em">BM25 ⊕ pgvector (RRF)</span>
+          </div>
+        </div>
+
+        <div class="s6-stage-down">↓</div>
+
+        <!-- Step 2: LangGraph State Machine (Focus) -->
+        <div class="s6-lg-box">
+          <div class="s6-lg-tag">2. LangGraph State Machine (GapAnalysisAgent)</div>
+          <div class="s6-lg-diagram">
+            <div class="s6-node s6-start">START</div>
+            <div class="s6-arr-v">↓</div>
+            <div class="s6-node">validate_input</div>
+            <div class="s6-arr-v">↓</div>
+            <div class="s6-lg-split">
+              <div class="s6-lg-branch">
+                <span class="s6-branch-lbl">error</span>
+                <div class="s6-arr-v">↓</div>
+                <div class="s6-node s6-dim">END (error)</div>
+              </div>
+              <div class="s6-lg-branch">
+                <span class="s6-branch-lbl em">valid</span>
+                <div class="s6-arr-v">↓</div>
+                <div class="s6-node s6-em">extract_evidence <span class="s6-sub">Phân loại quan hệ ngữ nghĩa</span></div>
+                <div class="s6-arr-v">↓</div>
+                <div class="s6-node s6-em">draft_analysis <span class="s6-sub">Tổng hợp khoảng cách kỹ năng</span></div>
+                <div class="s6-arr-v">↓</div>
+                <div class="s6-node">integrity_guardrail <span class="s6-sub">Kiểm tra tính nhất quán</span></div>
+                <div class="s6-arr-v">↓</div>
+                <div class="s6-node s6-end">END (success)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="s6-stage-down">↓</div>
+
+        <!-- Step 3: Backend Deterministic Scoring -->
+        <div class="s6-stage-box">
+          <span class="s6-stage-lbl">3. Backend Engine</span>
+          <div class="s6-node-row">
+            <span class="s6-node-sm em">
+              FitScore 5 thành phần
+              <span class="s6-sub" style="font-size:9px;color:var(--emerald-dark);font-weight:600">Skills 35% · Exp 30% · Domain 15% · Edu 10% · Pref 10%</span>
+            </span>
+            <span class="s6-arr-r">→</span>
+            <span class="s6-node-sm">Báo cáo khoảng cách &amp; Lộ trình</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 35% Right: 3 Principles + Verified Metrics -->
+      <div class="s6-right">
+        <div class="s6-principles">
+          <div class="s6-p-item">
+            <div class="s6-p-title"><span class="s6-p-dot"></span>Evidence First</div>
+            <div class="s6-p-desc">Không có evidence thì không claim. Mọi nhận định bắt buộc trích dẫn dẫn chứng thực tế từ CV.</div>
+          </div>
+
+          <div class="s6-p-item">
+            <div class="s6-p-title"><span class="s6-p-dot"></span>Structured Output</div>
+            <div class="s6-p-desc">Toàn bộ phản hồi bám sát JSON Schema và được Pydantic kiểm tra kiểu dữ liệu nghiêm ngặt.</div>
+          </div>
+
+          <div class="s6-p-item">
+            <div class="s6-p-title"><span class="s6-p-dot"></span>Deterministic Scoring</div>
+            <div class="s6-p-desc">LLM không trực tiếp cho điểm số. Điểm FitScore do backend tính toán tất định theo rubric 5 yếu tố (Skills, Exp, Domain, Edu, Pref).</div>
+          </div>
+        </div>
+
+        <!-- Verified Benchmark Card -->
+        <div class="s6-metrics-box">
+          <div class="s6-m-val"><span class="em">14 / 15</span> <span style="font-size:13px;color:var(--muted);font-weight:700">(93.3%)</span></div>
+          <div class="s6-m-desc">CV–JD Pipeline Golden Cases Pass</div>
+          <div class="s6-m-ctx">Score separation: Positive 84.7 · Negative 0.0</div>
+        </div>
+      </div>
+    </div>
+    <div class="slide-label">06 — AI / LLM Approach</div><div class="slide-num">06 / 10</div>
+  </section>
+
+  <!-- SLIDE 7 - TECHNICAL HIGHLIGHTS -->
+  <section class="slide" id="slide-7">
+    <div class="accent-bar"></div>
+    <div class="s7-top">
+      <p class="t-tag" style="margin-bottom:6px">Engineering Proof</p>
+      <h2 class="s7-head">Số liệu đo thực tế — không ước tính.</h2>
+    </div>
+    <div class="s7-body">
+      <div class="metrics">
+        <!-- SOURCE: pytest --collect-only -q: "745 tests collected in 8.83s" -->
+        <div class="mb">
+          <div class="mn em">745+</div>
+          <div class="md">Backend tests (pytest)</div>
+          <div class="ms">pytest --collect-only · 49 test files</div>
+        </div>
+
+        <!-- SOURCE: npx jest: "Tests: 159 passed, 159 total" — verified 2026-09-02 -->
+        <div class="mb">
+          <div class="mn">159</div>
+          <div class="md">Frontend tests (Jest)</div>
+          <div class="ms">npx jest · confirmed 2026-09-02</div>
+        </div>
+
+        <!-- SOURCE: eval/results/cv_jd_report.json passed_cases:14, total_cases:15 -->
+        <div class="mb">
+          <div class="mn em">14<span style="font-size:.5em;color:var(--muted)">/15</span></div>
+          <div class="md">Pipeline golden eval pass</div>
+          <div class="ms">cv_jd_report.json · pass rate 93.3%</div>
+        </div>
+
+        <!-- SOURCE: eval/MANUAL_TEST_EVIDENCE.md 2026-08-16 -->
+        <div class="mb">
+          <div class="mn">6/6</div>
+          <div class="md">Manual system test cases</div>
+          <div class="ms">MANUAL_TEST_EVIDENCE.md · Gate 2</div>
+        </div>
+
+        <!-- SOURCE: eval/results/top_k_benchmark_report.json latency_p95_ms at K=30: 1152.94 -->
+        <div class="mb">
+          <div class="mn em">&lt;1.2s</div>
+          <div class="md">P95 retrieval latency (K=30)</div>
+          <div class="ms">1,152.9ms · 52 CV × 98 JD</div>
+        </div>
+
+        <!-- SOURCE: eval/results/top_k_benchmark_report.json avg_recall_at_k at K=30: 0.7171 -->
+        <div class="mb">
+          <div class="mn">71.7<span style="font-size:.5em;color:var(--muted)">%</span></div>
+          <div class="md">Recall@30 (Top-K retrieval)</div>
+          <div class="ms">top_k_benchmark_report.json</div>
+        </div>
+      </div>
+      <div class="cicd">
+        <div class="cicd-lbl">CI / CD Pipeline</div>
+        <div class="cf">
+          <div class="cs">Push / PR</div><div class="cd"></div>
+          <div class="cs em">Ruff Lint</div><div class="cd"></div>
+          <div class="cs em">pytest</div><div class="cd"></div>
+          <div class="cs">TypeScript Check</div><div class="cd"></div>
+          <div class="cs">Next.js Build</div><div class="cd"></div>
+          <div class="cs em">✓ Gate</div>
+        </div>
+        <div class="tools">GitHub Actions · Ruff · pytest<br>ESLint · TypeScript · Docker</div>
+        <div class="deploy">Deploy: Vercel (frontend) · Render (backend)<br>Docker Compose (3 services: db, clamav, backend)</div>
+      </div>
+    </div>
+    <div class="slide-label">07 — Technical Highlights</div><div class="slide-num">07 / 10</div>
+  </section>
+
+  <!-- SLIDE 8 - DEMO VIDEO -->
+  <section class="slide" id="slide-8">
+    <div class="accent-bar"></div>
+    <p class="s8-lbl">Demo</p>
+    <h2 class="s8-head">Từ CV đến phỏng vấn<br>trong 2–3 phút.</h2>
+    <div class="cta">
+      <!-- SOURCE: docs/video-demo.md — URL confirmed, viewer verified by HinDayNi 01/09/2026 -->
+      <a class="play" href="https://drive.google.com/file/d/1zWl_Mfx4aL-ZlOA2s7hinjmOSMlB-ten/view?usp=sharing" target="_blank" rel="noopener">
+        <div class="tri"></div>XEM VIDEO DEMO
+      </a>
+    </div>
+    <div class="mflow">
+      <span class="mfs">CV</span><span class="mfa">→</span>
+      <span class="mfs">MATCH</span><span class="mfa">→</span>
+      <span class="mfs">GAP</span><span class="mfa">→</span>
+      <span class="mfs">IMPROVE</span><span class="mfa">→</span>
+      <span class="mfs">INTERVIEW</span>
+    </div>
+    <div class="slide-label">08 — Demo</div><div class="slide-num">08 / 10</div>
+  </section>
+
+  <!-- SLIDE 9 - CHALLENGES & LEARNINGS -->
+  <section class="slide" id="slide-9">
+    <div class="accent-bar"></div>
+    <div class="s9-top">
+      <p class="t-tag" style="margin-bottom:6px">Challenges &amp; Learnings</p>
+      <h2 class="s9-head">Thử thách → Quyết định → Bài học.</h2>
+    </div>
+    <div class="chs">
+      <!-- SOURCE: docs/journal.md Giai đoạn 2 — LLM hallucination decision -->
+      <div class="ch">
+        <div class="ch-n">Challenge 01</div>
+        <div class="ch-p">LLM tự cho điểm<br>→ không nhất quán</div>
+        <div class="ch-row"><span class="ch-arr">→</span><span class="ch-item">Backend tính FitScore tất định theo evidence. LLM chỉ phân loại quan hệ ngữ nghĩa, không cho điểm số.</span></div>
+        <div class="ch-l">"Dùng AI để hiểu — dùng logic tất định để quyết định điểm số."</div>
+        <!-- SOURCE: eval/results/v1_eval_report.json NO_EVIDENCE FP Rate: 0.00% -->
+        <div class="ch-m">NO_EVIDENCE FP = 0%<br><span style="font-size:9.5px;color:var(--muted)">v1_eval_report.json</span></div>
+      </div>
+      <!-- SOURCE: docs/journal.md Giai đoạn 3 — matching too slow -->
+      <div class="ch">
+        <div class="ch-n">Challenge 02</div>
+        <div class="ch-p">So khớp toàn bộ<br>98 JD quá chậm</div>
+        <div class="ch-row"><span class="ch-arr">→</span><span class="ch-item">2-stage retrieval: Top-30 bằng BM25 + vector trước, sau đó mới so khớp rubric chi tiết trên tập nhỏ.</span></div>
+        <div class="ch-l">"Thu hẹp không gian tìm kiếm trước khi phân tích sâu."</div>
+        <!-- SOURCE: docs/journal.md ">15s → <1.8s" + top_k_benchmark P95=1152ms K=30 -->
+        <div class="ch-m">&gt;15s → &lt;1.8s / lần gợi ý<br><span style="font-size:9.5px;color:var(--muted)">docs/journal.md Giai đoạn 3</span></div>
+      </div>
+      <!-- SOURCE: docs/journal.md Giai đoạn 4, voice_orchestrator.py PHASES = 8 -->
+      <div class="ch">
+        <div class="ch-n">Challenge 03</div>
+        <div class="ch-p">Phỏng vấn giọng nói<br>mất kiểm soát kịch bản</div>
+        <div class="ch-row"><span class="ch-arr">→</span><span class="ch-item">State machine 8 phases cứng — phase chỉ tiến, không lùi. WebSocket recovery khi mất kết nối.</span></div>
+        <div class="ch-l">"AI real-time cần state management chặt chẽ hơn AI batch."</div>
+        <!-- SOURCE: voice_orchestrator.py PHASES list = 8 items, forward-only -->
+        <div class="ch-m">8 phases · forward-only<br><span style="font-size:9.5px;color:var(--muted)">voice_orchestrator.py · PHASES list</span></div>
+      </div>
+    </div>
+    <div class="s9-footer">
+      <div class="ret-l">Nếu làm lại —</div>
+      <div class="ret-t">"Thiết kế evaluation, evidence schema và guardrail ngay từ Sprint đầu tiên."</div>
+    </div>
+    <div class="slide-label">09 — Challenges &amp; Learnings</div><div class="slide-num">09 / 10</div>
+  </section>
+
+  <!-- SLIDE 10 - TEAM & NEXT STEPS -->
+  <section class="slide" id="slide-10">
+    <div class="accent-bar"></div>
+    <!-- SOURCE: docs/journal.md section 1 — team roles and contributions -->
+    <div class="s10-left">
+      <div>
+        <div class="th">Team 041 · WinTop</div>
+        <div class="team-list">
+          <div class="mb">
+            <div class="mi">TH</div>
+            <div>
+              <div class="mn-name">Nguyễn Thị Thanh Hiền</div>
+              <div class="mn-role">Project Lead · Frontend Architect</div>
+              <div class="mn-c">Quản lý tiến độ, kiến trúc Next.js portals &amp; Vercel deploy</div>
+            </div>
+          </div>
+          <div class="mb">
+            <div class="mi">HT</div>
+            <div>
+              <div class="mn-name">Vũ Hữu Trường</div>
+              <div class="mn-role">AI &amp; Systems Architect</div>
+              <div class="mn-c">LangGraph Multi-Agent, Voice Engine &amp; pgvector</div>
+            </div>
+          </div>
+          <div class="mb">
+            <div class="mi">XĐ</div>
+            <div>
+              <div class="mn-name">Vũ Xuân Đức</div>
+              <div class="mn-role">Backend Core &amp; Security</div>
+              <div class="mn-c">FastAPI async, Auth RBAC, 98 JD catalog &amp; Render deploy</div>
+            </div>
+          </div>
+          <div class="mb">
+            <div class="mi">MQ</div>
+            <div>
+              <div class="mn-name">Nguyễn Minh Quân</div>
+              <div class="mn-role">QA &amp; Evaluation Lead</div>
+              <div class="mn-c">Khung kiểm thử toàn diện, Golden benchmark &amp; CI/CD</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="mentor">Mentor: Trần Vũ Anh (Andy)</div>
+    </div>
+
+    <!-- Right: 65% Roadmap Timeline & Strong Closing -->
+    <div class="s10-right">
+      <div>
+        <div class="rh">Growth Roadmap</div>
+        <div class="timeline">
+          <div class="tl-item">
+            <div class="tl-left">
+              <span class="tl-tag">PILOT</span>
+              <div class="tl-line"></div>
+            </div>
+            <div class="tl-content">
+              <div class="tl-title">Sinh viên &amp; Career Center</div>
+              <div class="tl-desc">Triển khai thử nghiệm thực tế với sinh viên và trung tâm hướng nghiệp.</div>
+            </div>
+          </div>
+
+          <div class="tl-item">
+            <div class="tl-left">
+              <span class="tl-tag">VALIDATE</span>
+              <div class="tl-line"></div>
+            </div>
+            <div class="tl-content">
+              <div class="tl-title">CV Quality · Interview Readiness</div>
+              <div class="tl-desc">Đo lường tỉ lệ cải thiện chất lượng hồ sơ và sự sẵn sàng phỏng vấn.</div>
+            </div>
+          </div>
+
+          <div class="tl-item">
+            <div class="tl-left">
+              <span class="tl-tag">EXPAND</span>
+              <div class="tl-line"></div>
+            </div>
+            <div class="tl-content">
+              <div class="tl-title">JD Catalog · Employer Partnerships</div>
+              <div class="tl-desc">Mở rộng danh mục việc làm thị trường và kết nối mạng lưới đối tác doanh nghiệp.</div>
+            </div>
+          </div>
+
+          <div class="tl-item">
+            <div class="tl-left">
+              <span class="tl-tag">SCALE</span>
+              <div class="tl-line"></div>
+            </div>
+            <div class="tl-content">
+              <div class="tl-title">Mở rộng quy mô triển khai</div>
+              <div class="tl-desc">Hoàn thiện hạ tầng đám mây đa trường và tối ưu hóa vận hành quy mô lớn.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="closing">
+        <div class="thanks">Cảm ơn Ban Tổ Chức &amp; Hội Đồng Đánh Giá.</div>
+        <div class="qa">Q &amp; A</div>
+        <div class="team-tag">Team 041 · WinTop · VinUni AI20K Demo Day 03/09/2026</div>
+      </div>
+    </div>
+    <div class="slide-label">10 — Team &amp; Next Steps</div><div class="slide-num">10 / 10</div>
+  </section>
+
+</div><!-- /.deck -->
+
+<nav class="nav">
+  <button onclick="changeSlide(-1)">← Prev</button>
+  <div class="slide-indicator" id="si">1 / 10</div>
+  <button onclick="changeSlide(1)">Next →</button>
+</nav>
+
+<script>
+  const TOTAL = 10;
+  let cur = 1;
+
+  const W = 1280, H = 720;
+  function scaleSlide() {
+    const scaleX = window.innerWidth / W;
+    const scaleY = window.innerHeight / H;
+    const scale = Math.min(scaleX, scaleY);
+    const slide = document.querySelector('.slide.active');
+    if (slide) {
+      slide.style.transform = 'scale(' + scale + ')';
+      slide.style.transformOrigin = 'center center';
+    }
+  }
+
+  function goTo(n) {
+    if (n < 1 || n > TOTAL) return;
+    document.querySelector('.slide.active').classList.remove('active');
+    cur = n;
+    const s = document.getElementById('slide-' + cur);
+    s.classList.add('active');
+    document.getElementById('si').textContent = cur + ' / ' + TOTAL;
+    document.getElementById('pf').style.width = (cur / TOTAL * 100) + '%';
+    scaleSlide();
+  }
+  function changeSlide(d) { goTo(cur + d); }
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); changeSlide(1); }
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); changeSlide(-1); }
+    const n = parseInt(e.key); if (n >= 1 && n <= 9) goTo(n);
+    if (e.key === '0') goTo(10);
+  });
+
+  let tx = 0;
+  document.addEventListener('touchstart', e => { tx = e.touches[0].clientX; });
+  document.addEventListener('touchend', e => { const dx = tx - e.changedTouches[0].clientX; if (Math.abs(dx) > 50) changeSlide(dx > 0 ? 1 : -1); });
+
+  window.addEventListener('resize', scaleSlide);
+  document.getElementById('pf').style.width = (1 / TOTAL * 100) + '%';
+  scaleSlide();
+</script>
+</body>
+</html>

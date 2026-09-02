@@ -76,7 +76,11 @@ async def _get_match_or_404(match_id: str, user_id: str, db: AsyncSession) -> Ma
     """Lấy MatchRun, kiểm tra ownership. Trả về 404 để tránh enumeration."""
     match = await db.get(MatchRun, match_id)
     if match is None or match.user_id != user_id:
-        raise PipelineError(404, "Match không tồn tại hoặc bạn không có quyền truy cập.")
+        raise PipelineError(
+            "MATCH_001",
+            "Match không tồn tại hoặc bạn không có quyền truy cập.",
+            status_code=404,
+        )
     return match
 
 

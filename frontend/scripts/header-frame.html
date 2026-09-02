@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <title>header-frame</title>
+    <!--
+      Static copy of components/shared/AppHeader.tsx markup loaded against the REAL
+      stylesheet graph (app/globals.css → its @import chain). Rendered inside an
+      iframe by header-probe.html so each breakpoint gets an exact viewport width.
+
+      Caveat: `@tailwind components/utilities` (inside legacy.css) is not compiled
+      here, so Tailwind utility classes are inert. Every declaration that decides
+      header visibility is `!important` in the hand-written CSS, so the properties
+      under test resolve identically to the real build.
+    -->
+    <link rel="stylesheet" href="../app/globals.css" />
+    <style>
+      html,
+      body {
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body class="role-student">
+    <header class="navbar app-header-root" id="navbar">
+      <div class="navbar-inner">
+        <a href="#" class="brand" id="brand-logo">
+          <span class="brand-icon"></span>
+          <span class="brand-name font-bold text-slate-900">Career Assistant</span>
+        </a>
+
+        <nav class="nav-links" id="nav-links" aria-label="Điều hướng chính">
+          <a href="#" class="nav-link active" id="nav-dashboard"><span class="nav-text">Trang chủ</span></a>
+          <a href="#" class="nav-link" id="nav-match"><span class="nav-text">So khớp CV</span></a>
+          <a href="#" class="nav-link" id="nav-interview"><span class="nav-text">Phỏng vấn</span></a>
+          <a href="#" class="nav-link" id="nav-cv"><span class="nav-text">CV của tôi</span></a>
+          <a href="#" class="nav-link" id="nav-find-jobs"><span class="nav-text">Việc làm</span></a>
+          <a href="#" class="nav-link" id="nav-history"><span class="nav-text">Lịch sử &amp; Báo cáo</span></a>
+        </nav>
+
+        <div class="header-utilities flex items-center gap-2">
+          <div id="header-notification-container" class="flex items-center justify-center">
+            <button type="button" class="notification-bell-btn" aria-label="Thông báo">B</button>
+          </div>
+          <div class="flex items-center justify-center">
+            <button type="button" class="user-account-trigger" aria-label="Tài khoản">A</button>
+          </div>
+          <button type="button" class="hamburger" id="hamburger" aria-label="Mở menu điều hướng">
+            <span></span><span></span><span></span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <script>
+      function snap(label, el) {
+        if (!el) return { label, missing: true };
+        const cs = getComputedStyle(el);
+        const r = el.getBoundingClientRect();
+        return {
+          label,
+          display: cs.display,
+          visibility: cs.visibility,
+          opacity: cs.opacity,
+          color: cs.color,
+          position: cs.position,
+          overflowX: cs.overflowX,
+          gap: cs.columnGap,
+          fontSize: cs.fontSize,
+          rect: { x: Math.round(r.x), y: Math.round(r.y), w: Math.round(r.width), h: Math.round(r.height) },
+          scrollW: el.scrollWidth,
+          clientW: el.clientWidth,
+          clipped: el.scrollWidth > el.clientWidth + 1,
+        };
+      }
+
+      // Called by the parent harness once the iframe has been sized.
+      window.report = function report() {
+        const nav = document.getElementById('nav-links');
+        const ham = document.getElementById('hamburger');
+        const links = [...document.querySelectorAll('#nav-links .nav-link')];
+        const navVisible = getComputedStyle(nav).display !== 'none';
+        const hamVisible = getComputedStyle(ham).display !== 'none';
+        const inner = document.querySelector('.navbar-inner');
+        return {
+          innerWidth: window.innerWidth,
+          navVisible,
+          hamVisible,
+          bothVisible: navVisible && hamVisible,
+          neitherVisible: !navVisible && !hamVisible,
+          targets: [
+            snap('header#navbar', document.getElementById('navbar')),
+            snap('.navbar-inner', inner),
+            snap('#nav-links', nav),
+            snap('.header-utilities', document.querySelector('.header-utilities')),
+            snap('#hamburger', ham),
+            snap('bell', document.querySelector('.notification-bell-btn')),
+            snap('avatar', document.querySelector('.user-account-trigger')),
+          ],
+          links: links.map((a) => {
+            const r = a.getBoundingClientRect();
+            return {
+              id: a.id,
+              text: a.textContent.trim(),
+              display: getComputedStyle(a).display,
+              x: Math.round(r.x),
+              right: Math.round(r.right),
+              w: Math.round(r.width),
+              top: Math.round(r.top),
+              lost: r.width === 0 || r.right <= 0 || r.x >= window.innerWidth,
+            };
+          }),
+          navRowCount: new Set(links.map((a) => Math.round(a.getBoundingClientRect().top))).size,
+          // Nav overlapping the utilities cluster means labels sit under the bell/avatar.
+          navOverlapsUtilities: (() => {
+            if (!navVisible) return false;
+            const n = nav.getBoundingClientRect();
+            const u = document.querySelector('.header-utilities').getBoundingClientRect();
+            return n.right > u.left + 1;
+          })(),
+          innerClipped: inner.scrollWidth > inner.clientWidth + 1,
+          docHScroll: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
+        };
+      };
+    </script>
+  </body>
+</html>

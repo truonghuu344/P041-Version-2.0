@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { Check, Eye, Sparkles, UserCheck } from 'lucide-react';
+import { Check, Eye, FileText, UserCheck } from 'lucide-react';
+
 
 export interface CVTemplateInfo {
   id: string;
@@ -28,7 +29,7 @@ export const CV_TEMPLATES: CVTemplateInfo[] = [
     desc: 'Chuẩn Harvard 1 cột kinh điển, đạt điểm quét tối đa trên mọi hệ thống ATS (Workday, Greenhouse, Taleo).',
     accentColor: '#1e293b',
     layout: 'single-column',
-    imageUrl: '/images/templates/classic.webp',
+    imageUrl: '/images/templates/classic.jpg',
     samplePdfUrl: '/api/v1/cvs/templates/classic',
   },
   {
@@ -41,7 +42,7 @@ export const CV_TEMPLATES: CVTemplateInfo[] = [
     desc: 'Bố cục 2 cột hiện đại với sidebar màu xanh ngọc, hiển thị kỹ năng dạng tags nổi bật và layout cân đối.',
     accentColor: '#0d9488',
     layout: 'two-column',
-    imageUrl: '/images/templates/modern.webp',
+    imageUrl: '/images/templates/modern.jpg',
     samplePdfUrl: '/api/v1/cvs/templates/modern',
   },
   {
@@ -54,7 +55,7 @@ export const CV_TEMPLATES: CVTemplateInfo[] = [
     desc: 'Header tối màu cá tính, timeline kinh nghiệm dạng đồ họa và huy hiệu kỹ năng trực quan thu hút nhà tuyển dụng.',
     accentColor: '#0f172a',
     layout: 'timeline-banner',
-    imageUrl: '/images/templates/creative.webp',
+    imageUrl: '/images/templates/creative.jpg',
     samplePdfUrl: '/api/v1/cvs/templates/creative',
   },
   {
@@ -67,7 +68,7 @@ export const CV_TEMPLATES: CVTemplateInfo[] = [
     desc: 'Tối ưu hóa mật độ thông tin gói gọn trong 1 trang duy nhất, căn chỉnh lề sắc nét, loại bỏ chi tiết thừa.',
     accentColor: '#334155',
     layout: 'compact-single',
-    imageUrl: '/images/templates/compact.webp',
+    imageUrl: '/images/templates/compact.jpg',
     samplePdfUrl: '/api/v1/cvs/templates/classic',
   },
   {
@@ -80,23 +81,23 @@ export const CV_TEMPLATES: CVTemplateInfo[] = [
     desc: 'Phong cách trang nhã với phân cách tinh tế, đường viền thanh lịch và cấu trúc phân cấp thông tin rõ ràng.',
     accentColor: '#1e3a8a',
     layout: 'elegant-split',
-    imageUrl: '/images/templates/elegant.webp',
+    imageUrl: '/images/templates/elegant.jpg',
     samplePdfUrl: '/api/v1/cvs/templates/modern',
   },
 ];
 
 /* ── Realistic TopCV-Style Miniature Image Renderer ── */
 
-const TEMPLATE_IMAGE_MAP: Record<string, string> = {
-  classic: '/images/templates/classic.webp',
-  modern: '/images/templates/modern.webp',
-  creative: '/images/templates/creative.webp',
-  compact: '/images/templates/compact.webp',
-  elegant: '/images/templates/elegant.webp',
-};
-
 export function MiniCVSheet({ templateId }: { templateId: string }) {
-  const src = TEMPLATE_IMAGE_MAP[templateId] || TEMPLATE_IMAGE_MAP.classic;
+  const imageMap: Record<string, string> = {
+    classic: '/images/templates/classic.jpg',
+    modern: '/images/templates/modern.jpg',
+    creative: '/images/templates/creative.jpg',
+    compact: '/images/templates/compact.jpg',
+    elegant: '/images/templates/elegant.jpg',
+  };
+
+  const src = imageMap[templateId] || imageMap.classic;
 
   return (
     <div className={`mini-cv-image-wrapper sheet-${templateId}`} aria-hidden="true">
@@ -105,10 +106,7 @@ export function MiniCVSheet({ templateId }: { templateId: string }) {
         src={src}
         alt={`Mẫu thiết kế CV ${templateId}`}
         className="mini-cv-template-img"
-        width={640}
-        height={905}
-        loading="eager"
-        decoding="async"
+        loading="lazy"
       />
     </div>
   );
@@ -140,7 +138,9 @@ export default function TemplatePreviewCard({
         tabIndex={0}
         aria-label={`Chọn mẫu ${template.name}`}
       >
-        <span className={`template-card-badge ${template.badgeClass}`}>{template.badge}</span>
+        <span className={`template-card-badge ${template.badgeClass}`}>
+          {template.badge}
+        </span>
         <MiniCVSheet templateId={template.id} />
         {onQuickPreview && (
           <button
@@ -160,8 +160,9 @@ export default function TemplatePreviewCard({
         <div>
           <h3>{template.name}</h3>
           <div className="template-card-role">
-            <Sparkles size={13} /> {template.role}
+            <FileText size={13} /> {template.role}
           </div>
+
           <p>{template.desc}</p>
         </div>
 

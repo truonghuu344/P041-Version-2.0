@@ -34,8 +34,6 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 10080
     api_rate_limit_per_minute: int = Field(default=120, ge=10, le=10_000)
     max_request_body_mb: int = Field(default=22, ge=1, le=100)
-    # Hard budget for the interactive deterministic Match request.
-    match_timeout_seconds: float = Field(default=4.5, ge=1.0, le=5.0)
     document_max_file_size_mb: int = Field(default=20, ge=1, le=100)
     document_max_pages: int = Field(default=20, ge=1, le=100)
     malware_scan_mode: Literal["auto", "required", "disabled"] = "auto"
@@ -68,10 +66,14 @@ class Settings(BaseSettings):
     # tên biến môi trường chuẩn của SDK Google/LangChain.
     gemini_api_key: str = ""
     google_api_key: str = ""
-    model_name: str = "gemini-2.5-flash"
+    model_name: str = "gemini-3.5-flash"
     llm_temperature: float = Field(default=1.0, ge=0.0, le=2.0)
     llm_timeout_seconds: float = Field(default=45, ge=5, le=120)
     llm_max_retries: int = Field(default=1, ge=0, le=3)
+    # Chat is an interactive path: fail over to the grounded RAG extractive
+    # answer quickly instead of making the user wait for the generic LLM SLA.
+    assistant_llm_timeout_seconds: float = Field(default=12, ge=3, le=45)
+    assistant_llm_max_retries: int = Field(default=0, ge=0, le=2)
     # Local-first: parsing uses deterministic extraction by default. A cloud
     # structured parse is an explicit, deployment-wide opt-in only.
     cv_parser_mode: Literal["local", "gemini"] = "local"
@@ -94,39 +96,19 @@ class Settings(BaseSettings):
     mineru_poll_timeout_seconds: float = Field(default=120, ge=10, le=300)
     weather_api_key: str = ""
 
-    # Voice Interview (Pipeline 3): Gemini Live STT + Gemini LLM + ElevenLabs TTS
-    # STT: Gemini Live API (free tier khong gioi han RPM/RPD).
+    # Voice Interview: Gemini Live STT, with Deepgram retained for deployments
+    # that still use the newer provider-specific integration.
     gemini_stt_model: str = "gemini-3.5-transcribe-live"
+    deepgram_api_key: str = ""
     openai_api_key: str = ""
-    voice_llm_model: str = "gemini-2.5-flash"
-    voice_llm_fallback_model: str = "gemini-2.5-flash"
-
-    # TTS: ElevenLabs là nhà cung cấp chính, gTTS là fallback khi thiếu key,
-    # lỗi mạng hoặc hết quota. Không bao giờ để buổi phỏng vấn im lặng.
-    # Voice ID mặc định là giọng tiếng Anh; hãy chọn giọng hợp tiếng Việt rồi
-    # override qua ELEVENLABS_VOICE_ID_*.
-    # LƯU Ý: gói Free KHÔNG dùng được "library voice" qua API (trả 402
-    # paid_plan_required) — ví dụ Rachel 21m00Tcm4TlvDq8ikWAM và Charlotte
-    # XB0fDUnXU5powFXDhCwa đều bị chặn. Hai mặc định dưới đây đã được xác minh
-    # chạy được trên gói Free.
+    voice_llm_model: str = "gemini-3.5-flash"
+    voice_llm_fallback_model: str = "gemini-3.5-flash-lite"
+    # ElevenLabs is primary TTS; gTTS remains the no-key/error fallback.
     elevenlabs_api_key: str = ""
     elevenlabs_model: str = "eleven_flash_v2_5"
     elevenlabs_voice_id_female: str = "EXAVITQu4vr4xnSDxMaL"
     elevenlabs_voice_id_male: str = "JBFqnCBsd6RMkjVDRZzb"
     elevenlabs_timeout_seconds: float = Field(default=15, ge=3, le=60)
-    # Final STAR scores are deterministic; LLM wording is opt-in so the
-    # report is always available immediately after a voice session.
-    interview_report_llm_enabled: bool = False
-
-    # LangSmith / LangChain Observability & Tracing
-    langchain_tracing_v2: bool = False
-    langchain_api_key: str = ""
-    langchain_project: str = "ai20k-agent"
-    langchain_endpoint: str = "https://api.smith.langchain.com"
-    langsmith_tracing: bool = False
-    langsmith_api_key: str = ""
-    langsmith_project: str = "ai20k-agent"
-    langsmith_endpoint: str = "https://api.smith.langchain.com"
 
     # Database
     # `DATABASE_URL` is preferred for hosted databases. For the local Docker
@@ -148,26 +130,6 @@ class Settings(BaseSettings):
             )
         return self
 
-    @model_validator(mode="after")
-    def sync_langsmith_environ(self) -> "Settings":
-        tracing_enabled = self.langchain_tracing_v2 or self.langsmith_tracing
-        api_key = self.langsmith_api_key or self.langchain_api_key
-        project = self.langsmith_project or self.langchain_project or "ai20k-agent"
-        endpoint = self.langsmith_endpoint or self.langchain_endpoint or "https://api.smith.langchain.com"
-
-        if tracing_enabled and api_key:
-            import os
-
-            os.environ["LANGCHAIN_TRACING_V2"] = "true"
-            os.environ["LANGSMITH_TRACING"] = "true"
-            os.environ["LANGCHAIN_API_KEY"] = api_key
-            os.environ["LANGSMITH_API_KEY"] = api_key
-            os.environ["LANGCHAIN_PROJECT"] = project
-            os.environ["LANGSMITH_PROJECT"] = project
-            os.environ["LANGCHAIN_ENDPOINT"] = endpoint
-            os.environ["LANGSMITH_ENDPOINT"] = endpoint
-        return self
-
     # pgvector / Market JD RAG
     vector_search_enabled: bool = False
     # Do not select a paid embedding API merely because a Gemini key exists.
@@ -176,20 +138,28 @@ class Settings(BaseSettings):
     vector_dimensions: int = Field(default=768, ge=128, le=3072)
     vector_sync_on_startup: bool = False
     vector_auto_sync: bool = False
+    deployed_data_sync_on_startup: bool = True
 
     # Top Jobs recommendation (BM25 + vector + weighted RRF + eligibility gate)
-    job_recommend_bm25_k: int = Field(default=30, ge=1, le=200)
-    job_recommend_vector_k: int = Field(default=30, ge=1, le=200)
-    job_recommend_candidate_k: int = Field(default=30, ge=1, le=200)
+    job_recommend_bm25_k: int = Field(default=100, ge=1, le=200)
+    job_recommend_vector_k: int = Field(default=100, ge=1, le=200)
+    # Each candidate runs the evidence-based CV–JD pipeline. Evaluating 100
+    # sequentially took about a minute in production and caused the Next.js
+    # dev proxy to reset its upstream socket before a Top-10 response arrived.
+    # Score a compact pool for an interactive Top-10. The immutable cache makes
+    # repeated requests effectively instant, while 12 preserves two alternates.
+    job_recommend_candidate_k: int = Field(default=12, ge=1, le=200)
     job_recommend_final_k: int = Field(default=10, ge=1, le=100)
     job_recommend_rrf_k: int = Field(default=60, ge=1, le=1000)
     job_recommend_bm25_weight: float = Field(default=1.0, ge=0.0, le=10.0)
     job_recommend_vector_weight: float = Field(default=1.0, ge=0.0, le=10.0)
-    job_recommend_must_have_threshold: float = Field(default=0.50, ge=0.0, le=1.0)
+    job_recommend_must_have_threshold: float = Field(default=0.75, ge=0.0, le=1.0)
     job_recommend_score_cap: float = Field(default=49.0, ge=0.0, le=100.0)
+    job_recommend_ready_candidate_reserve: int = Field(default=10, ge=0, le=50)
     # Reuse a completed Top Jobs run only when its immutable CV snapshot,
     # filters, catalog revision and retrieval configuration still match.
     top_jobs_cache_enabled: bool = True
+    # Giữ cố định v1, không tăng version khi thay đổi code.
     top_jobs_cache_version: str = "v1"
 
     # CV-JD Matching v1 (Requirement -> BM25/Vector -> RRF -> Evidence -> Rubric)
@@ -204,15 +174,20 @@ class Settings(BaseSettings):
     cv_jd_evidence_max_per_requirement: int = Field(default=3, ge=1, le=10)
     cv_jd_score_decimal_places: int = Field(default=1, ge=0, le=4)
     cv_jd_extraction_min_confidence: float = Field(default=0.50, ge=0.0, le=1.0)
+    # A skill listed without project/experience evidence is only a self-declaration.
+    cv_jd_declared_skill_score_cap: float = Field(default=50.0, ge=0.0, le=100.0)
+    cv_jd_mandatory_failure_score_cap: float = Field(default=49.0, ge=0.0, le=100.0)
     cv_jd_rating_poor_max: float = Field(default=49.9, ge=0.0, le=100.0)
     cv_jd_rating_average_max: float = Field(default=69.9, ge=0.0, le=100.0)
     cv_jd_rating_good_max: float = Field(default=84.9, ge=0.0, le=100.0)
+    match_finalization_timeout_seconds: int = Field(default=60, ge=10, le=300)
     # LLM may only draft explanatory guidance after deterministic scoring.
     # Keep it opt-in to make cost and data sharing explicit.
     match_explanation_llm_enabled: bool = False
     # Reuse a completed CV/JD analysis whenever both immutable snapshots and
-    # this cache version match. Bump the version after changing prompt logic.
+    # this cache version match.
     gap_analysis_cache_enabled: bool = True
+    # Giữ cố định v1, không tăng version khi thay đổi code.
     gap_analysis_cache_version: str = "v1"
     resume_optimization_llm_enabled: bool = False
 

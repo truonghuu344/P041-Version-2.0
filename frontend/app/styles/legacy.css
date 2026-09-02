@@ -414,7 +414,7 @@ body {
   animation: floatCard 6s ease-in-out infinite;
 }
 
-@media (max-width: 992px) {
+@media (max-width: 1199.98px) {
   .hero-container {
     grid-template-columns: 1fr;
     gap: 32px;
@@ -570,17 +570,20 @@ body {
   align-items: center;
   line-height: 1.3;
 }
+/* Badge trên card neon nền tối — dùng biến thể on-dark của §8
+   (shared-ui.css) để giữ đúng 5 họ màu mà vẫn đọc được.
+   `.badge-focus` trước đây là TÍM, nay về họ Blue (thông tin). */
 .badge-ok {
-  background: rgba(0, 230, 118, 0.15);
-  color: #00e676;
+  background: var(--status-success-on-dark-bg);
+  color: var(--status-success-on-dark-fg);
 }
 .badge-need {
-  background: rgba(255, 165, 0, 0.15);
-  color: #ffab40;
+  background: var(--status-warning-on-dark-bg);
+  color: var(--status-warning-on-dark-fg);
 }
 .badge-focus {
-  background: rgba(124, 77, 255, 0.2);
-  color: #b084fc;
+  background: var(--status-info-on-dark-bg);
+  color: var(--status-info-on-dark-fg);
 }
 
 /* Metrics area */
@@ -953,7 +956,7 @@ body {
 }
 
 /* ===== RESPONSIVE ===== */
-@media (max-width: 900px) {
+@media (max-width: 1199.98px) {
   .agent-card {
     max-width: 620px;
     flex-direction: column;
@@ -968,17 +971,8 @@ body {
   }
 }
 
-@media (max-width: 640px) {
-  .nav-links {
-    display: none;
-  }
-  .btn-login {
-    display: none;
-  }
-  .hamburger {
-    display: flex;
-  }
-
+/* Nav visibility (nav-links/hamburger/btn-login) is owned by styles/navbar.css */
+@media (max-width: 767.98px) {
   .dashboard-card {
     padding: 16px;
     border-radius: var(--radius-lg);
@@ -1693,7 +1687,7 @@ body {
   background: #e7eee9;
 }
 
-@media (max-width: 920px) {
+@media (max-width: 1199.98px) {
   .buddy-hero-shell {
     grid-template-columns: 1fr;
     padding-top: 20px;
@@ -1730,7 +1724,7 @@ body {
     gap: 12px;
   }
 }
-@media (max-width: 640px) {
+@media (max-width: 767.98px) {
   .buddy-landing {
     padding: 22px 0 65px;
   }
@@ -1833,7 +1827,7 @@ body {
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 767.98px) {
   .features-grid {
     grid-template-columns: 1fr;
   }
@@ -2244,13 +2238,13 @@ body {
   z-index: 1;
 }
 .register-link {
-  color: var(--accent-purple);
+  color: #2563eb;
   text-decoration: none;
   font-weight: 600;
   transition: color 0.2s;
 }
 .register-link:hover {
-  color: #c084fc;
+  color: #1d4ed8;
 }
 
 .auth-form-feedback {
@@ -2263,9 +2257,9 @@ body {
 }
 
 .auth-form-feedback.is-error {
-  color: #b42318;
-  background: #fff1f0;
-  border: 1px solid #fecaca;
+  color: var(--status-danger-fg);
+  background: var(--status-danger-bg);
+  border: 1px solid var(--status-danger-bd);
 }
 
 .auth-form-feedback.is-success {
@@ -2324,38 +2318,6 @@ body {
     opacity: 1;
     transform: scale(1.6);
   }
-}
-
-/* ── Toast notification ── */
-.toast {
-  position: fixed;
-  bottom: 28px;
-  left: 50%;
-  transform: translateX(-50%) translateY(20px);
-  background: rgba(14, 15, 50, 0.95);
-  border: 1px solid rgba(124, 77, 255, 0.35);
-  border-radius: 12px;
-  padding: 12px 20px;
-  font-size: 13px;
-  color: #fff;
-  z-index: 9999;
-  opacity: 0;
-  transition:
-    opacity 0.3s,
-    transform 0.3s;
-  backdrop-filter: blur(12px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-  white-space: nowrap;
-}
-.toast.show {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-.toast.success {
-  border-color: rgba(0, 230, 118, 0.4);
-}
-.toast.error {
-  border-color: rgba(255, 78, 106, 0.4);
 }
 
 /* ============================================================
@@ -2956,7 +2918,7 @@ html.light .page-title,
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 24px;
 }
-@media (max-width: 860px) {
+@media (max-width: 1199.98px) {
   .vessel-grid {
     grid-template-columns: 1fr;
   }
@@ -2971,7 +2933,7 @@ html.light .page-title,
   }
 }
 
-@media (max-width: 1040px) {
+@media (max-width: 1199.98px) {
   .vessel-header-row {
     flex-direction: column;
     align-items: stretch !important;
@@ -3647,16 +3609,16 @@ html.light .page-title,
   background: rgba(255, 255, 255, 0.92);
 }
 .cv-result-panel.is-matched {
-  border-color: #a7f3d0;
-  background: #f0fdf4;
+  border-color: var(--status-success-bd);
+  background: var(--status-success-bg);
 }
 .cv-result-panel.is-missing {
-  border-color: #fed7aa;
-  background: #fff7ed;
+  border-color: var(--status-danger-bd);
+  background: var(--status-danger-bg);
 }
 .cv-result-panel.is-partial {
-  border-color: #fde68a;
-  background: #fffbeb;
+  border-color: var(--status-warning-bd);
+  background: var(--status-warning-bg);
 }
 .cv-result-panel h5 {
   margin: 0 0 11px;
@@ -3685,20 +3647,23 @@ html.light .page-title,
   font-size: 12px;
   font-weight: 800;
 }
+/* Ba thẻ kết quả đối chiếu trước đây dùng cam `#c2410c` và vàng `#a16207` —
+   lệch hẳn so với bản `#view-match` trong match.css. Nay cả hai nơi cùng dùng
+   §8: khớp → Green, thiếu → Red, một phần → Amber. */
 .cv-result-tag.matched {
-  color: #047857;
-  background: #d1fae5;
-  border: 1px solid #a7f3d0;
+  color: var(--status-success-fg);
+  background: var(--status-success-bg);
+  border: 1px solid var(--status-success-bd);
 }
 .cv-result-tag.missing {
-  color: #c2410c;
-  background: #ffedd5;
-  border: 1px solid #fed7aa;
+  color: var(--status-danger-fg);
+  background: var(--status-danger-bg);
+  border: 1px solid var(--status-danger-bd);
 }
 .cv-result-tag.partial {
-  color: #a16207;
-  background: #fef9c3;
-  border: 1px solid #fde68a;
+  color: var(--status-warning-fg);
+  background: var(--status-warning-bg);
+  border: 1px solid var(--status-warning-bd);
 }
 .cv-result-action-list {
   display: grid;
@@ -3771,18 +3736,18 @@ html.light .page-title,
 }
 .cv-result-guardrail {
   padding: 6px 10px;
-  border: 1px solid #86efac;
+  border: 1px solid var(--status-success-bd);
   border-radius: 999px;
-  color: #047857;
-  background: #dcfce7;
+  color: var(--status-success-fg);
+  background: var(--status-success-bg);
   font-size: 11px;
   font-weight: 900;
   white-space: nowrap;
 }
 .cv-result-guardrail.is-warning {
-  color: #b45309;
-  border-color: #fcd34d;
-  background: #fef3c7;
+  color: var(--status-warning-fg);
+  border-color: var(--status-warning-bd);
+  background: var(--status-warning-bg);
 }
 .cv-result-score-breakdown {
   display: grid;
@@ -3855,10 +3820,10 @@ html.light .page-title,
 .cv-result-warnings p {
   margin: 8px 0 0;
   padding: 8px 10px;
-  border-left: 3px solid #f59e0b;
+  border-left: 3px solid var(--status-warning-fg);
   border-radius: 6px;
-  color: #92400e;
-  background: #fffbeb;
+  color: var(--status-warning-fg);
+  background: var(--status-warning-bg);
   font-size: 11px;
 }
 .cv-result-evidence-list {
@@ -3899,20 +3864,20 @@ html.light .page-title,
   text-transform: uppercase;
 }
 .cv-result-evidence-status.matched {
-  color: #047857;
-  background: #d1fae5;
+  color: var(--status-success-fg);
+  background: var(--status-success-bg);
 }
 .cv-result-evidence-status.partial {
-  color: #a16207;
-  background: #fef9c3;
+  color: var(--status-warning-fg);
+  background: var(--status-warning-bg);
 }
 .cv-result-evidence-status.missing {
-  color: #c2410c;
-  background: #ffedd5;
+  color: var(--status-danger-fg);
+  background: var(--status-danger-bg);
 }
 .cv-result-evidence-status.unknown {
-  color: #475569;
-  background: #e2e8f0;
+  color: var(--status-neutral-fg);
+  background: var(--status-neutral-bg);
 }
 .cv-result-deep-grid {
   display: grid;
@@ -3981,7 +3946,7 @@ html.light .page-title,
   min-height: 42px;
   padding: 10px 12px;
 }
-@media (max-width: 900px) {
+@media (max-width: 1199.98px) {
   .cv-result-score-breakdown {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -3989,7 +3954,7 @@ html.light .page-title,
     grid-template-columns: 1fr;
   }
 }
-@media (max-width: 680px) {
+@media (max-width: 767.98px) {
   .cv-result-deep-grid,
   .cv-result-skills-grid,
   .cv-result-detail-grid {
@@ -4015,13 +3980,13 @@ html.light .page-title,
   background: #f1f5f9;
 }
 .agent-progress span.active {
-  color: #1d4ed8;
-  background: #dbeafe;
-  box-shadow: inset 0 0 0 1px #93c5fd;
+  color: var(--status-info-fg);
+  background: var(--status-info-bg);
+  box-shadow: inset 0 0 0 1px var(--status-info-bd);
 }
 .agent-progress span.done {
-  color: #047857;
-  background: #d1fae5;
+  color: var(--status-success-fg);
+  background: var(--status-success-bg);
 }
 
 .ship-btn-primary {
@@ -4075,7 +4040,7 @@ html.light .page-title,
   gap: 6px;
 }
 .check-mark {
-  color: #10b981;
+  color: var(--status-success-fg);
   font-weight: 800;
 }
 
@@ -4280,16 +4245,16 @@ html.light .page-title,
 }
 .missing-chip {
   font-size: 10px;
-  color: #92400e;
-  background: #fef3c7;
-  border: 1px solid #fde68a;
+  color: var(--status-warning-fg);
+  background: var(--status-warning-bg);
+  border: 1px solid var(--status-warning-bd);
   padding: 3px 7px;
   border-radius: 999px;
 }
 .missing-clear {
   font-size: 10px;
-  color: #047857;
-  background: #d1fae5;
+  color: var(--status-success-fg);
+  background: var(--status-success-bg);
   border-radius: 999px;
   padding: 4px 7px;
 }
@@ -4333,7 +4298,7 @@ html.light .page-title,
   cursor: pointer;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 767.98px) {
   .agent-runtime-panel {
     grid-template-columns: 1fr 1fr;
   }
@@ -4369,7 +4334,7 @@ html.light .page-title,
   }
 }
 
-@media (min-width: 641px) and (max-width: 980px) {
+@media (min-width: 768px) and (max-width: 1199.98px) {
   .template-gallery-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -4802,19 +4767,7 @@ html.light .job-results-mode,
   margin-bottom: 20px;
 }
 
-@media (max-width: 820px) {
-  .job-search-results {
-    grid-template-columns: 1fr;
-  }
-  .job-cv-match-row {
-    grid-template-columns: 1fr 1fr;
-  }
-  .job-cv-match-row label {
-    grid-column: 1 / -1;
-  }
-}
-
-@media (max-width: 560px) {
+@media (max-width: 767.98px) {
   .job-search-console {
     padding: 20px 16px;
   }
@@ -5030,7 +4983,7 @@ html.light .job-results-mode,
   height: 1px;
   background: var(--border);
 }
-@media (max-width: 900px) {
+@media (max-width: 1199.98px) {
   .jd-create-grid {
     grid-template-columns: 1fr;
   }
@@ -5190,7 +5143,7 @@ html.light .job-results-mode,
   color: #8fa1c7;
 }
 
-@media (max-width: 720px) {
+@media (max-width: 767.98px) {
   .interview-selection-grid {
     grid-template-columns: 1fr;
     align-items: stretch;
@@ -5652,7 +5605,7 @@ html.light .gap-select-menu,
   }
 }
 
-@media (max-width: 720px) {
+@media (max-width: 767.98px) {
   .gap-selection-grid {
     flex-direction: column;
   }
@@ -5747,13 +5700,13 @@ html.light .gap-select-menu,
   height: 12px;
   border: 2px solid #090d25;
   border-radius: 50%;
-  background: #f59e0b;
-  box-shadow: 0 0 10px rgba(245, 158, 11, 0.78);
+  background: var(--status-warning-on-dark-fg);
+  box-shadow: 0 0 10px rgba(252, 211, 77, 0.78);
 }
 
 .ai-companion.is-online .ai-companion-status-dot {
-  background: #22c55e;
-  box-shadow: 0 0 11px rgba(34, 197, 94, 0.86);
+  background: var(--status-success-on-dark-fg);
+  box-shadow: 0 0 11px rgba(110, 231, 183, 0.86);
 }
 
 .ai-companion-hint {
@@ -6334,7 +6287,7 @@ body.light-mode .ai-chat-history-item,
   }
 }
 
-@media (max-width: 560px) {
+@media (max-width: 767.98px) {
   .ai-companion {
     right: 12px;
     bottom: 12px;
@@ -6570,7 +6523,7 @@ body.light-mode .ai-chat-history-item,
   }
 }
 
-@media (max-width: 560px) {
+@media (max-width: 767.98px) {
   .cv-bulk-toolbar {
     flex-wrap: wrap;
   }
@@ -6864,7 +6817,7 @@ body.light-mode .ai-chat-history-item,
 .compact-item {
   grid-column: 1 / -1;
 }
-@media (max-width: 900px) {
+@media (max-width: 1199.98px) {
   .gap-score-breakdown {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -6875,7 +6828,7 @@ body.light-mode .ai-chat-history-item,
     grid-template-columns: 1fr;
   }
 }
-@media (max-width: 720px) {
+@media (max-width: 767.98px) {
   .gap-plan-grid,
   .gap-score-breakdown {
     grid-template-columns: 1fr;
@@ -8108,14 +8061,16 @@ html.light .form-input:focus,
   font-size: 13px;
 }
 
+/* Nhãn chi tiết trong kho lưu trữ nằm trên nền tối → dùng biến thể on-dark của
+   §8. Tím `#c084fc` cũ ở `is-info` bị bỏ vì "thông tin" thuộc họ Blue. */
 .archive-detail-label.is-positive {
-  color: #4ade80;
+  color: var(--status-success-on-dark-fg);
 }
 .archive-detail-label.is-warning {
-  color: #fb923c;
+  color: var(--status-warning-on-dark-fg);
 }
 .archive-detail-label.is-info {
-  color: #c084fc;
+  color: var(--status-info-on-dark-fg);
 }
 
 .archive-detail-list {
@@ -8254,7 +8209,7 @@ html.light .form-input:focus,
 }
 
 /* Responsive adjustments for Mobile/Tablet */
-@media (max-width: 992px) {
+@media (max-width: 1199.98px) {
   .profile-workspace {
     grid-template-columns: 1fr;
   }
@@ -8269,7 +8224,7 @@ html.light .form-input:focus,
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 767.98px) {
   .trajectory-steps {
     grid-template-columns: 1fr;
   }
@@ -8291,7 +8246,8 @@ html.light .form-input:focus,
   top: 0 !important;
   left: 0 !important;
   right: 0 !important;
-  z-index: 100 !important;
+  z-index: 10000 !important;
+  overflow: visible !important;
   padding: 0 24px !important;
   height: 60px !important;
   display: flex !important;
@@ -8359,8 +8315,8 @@ html.light .form-input:focus,
   letter-spacing: 0.2px !important;
 }
 
+/* `display` do navbar.css §6 quyết định theo gate 1200px — không khai ở đây. */
 .nav-links {
-  display: flex !important;
   align-items: center !important;
   gap: 6px !important;
   flex: 1 !important;
@@ -8484,7 +8440,7 @@ html.light .form-input:focus,
 
 .google-auth-note {
   margin: 8px 0 0;
-  color: var(--text-dim);
+  color: #6b7a99;
   font-size: 12px;
   line-height: 1.45;
   text-align: center;
@@ -8686,7 +8642,7 @@ html.light .form-input:focus,
   opacity: 1;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 767.98px) {
   .modal-overlay {
     padding: 10px;
   }
@@ -9675,7 +9631,7 @@ html.light .section-subtitle,
   padding: 0;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 767.98px) {
   .hero-actions > div {
     flex-direction: column;
     align-items: stretch;
@@ -9755,7 +9711,7 @@ html.light .section-subtitle,
   padding: 9px;
   border: 1px solid rgba(245, 158, 11, 0.35);
   border-radius: 8px;
-  color: #fcd34d;
+  color: var(--status-warning-on-dark-fg);
   font-size: 11px;
 }
 .jd-apply-row {
@@ -9765,8 +9721,22 @@ html.light .section-subtitle,
   flex: 1;
   min-width: 160px;
 }
+.jd-recruitment-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 10px;
+  color: var(--accent, #38bdf8);
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.jd-recruitment-link:hover,
+.jd-recruitment-link:focus-visible {
+  text-decoration: underline;
+}
 
-@media (max-width: 780px) {
+@media (max-width: 1199.98px) {
   .manual-cv-grid,
   .role-dashboard-grid {
     grid-template-columns: 1fr;
@@ -10000,7 +9970,7 @@ html.light .section-subtitle,
   color: #fca5a5;
 }
 
-@media (max-width: 700px) {
+@media (max-width: 767.98px) {
   .ai-log-stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -10486,7 +10456,7 @@ body.light-mode .gap-workspace .gap-select-trigger,
   box-shadow: 0 7px 18px rgba(71, 85, 105, 0.08);
 }
 
-@media (max-width: 720px) {
+@media (max-width: 767.98px) {
   .gap-workspace .gap-card {
     padding: 18px;
   }
@@ -10668,14 +10638,10 @@ select {
 }
 
 .nav-links {
-  display: flex !important;
   align-self: stretch;
   align-items: stretch;
   justify-content: center;
   gap: 3px !important;
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
   flex: 0 0 auto !important;
   margin: 0;
 }
@@ -10787,9 +10753,16 @@ select {
   background: var(--card, #ffffff);
   font-size: 18px;
   cursor: pointer;
-  transition: transform .18s ease, border-color .18s ease, background .18s ease;
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    background 0.18s ease;
 }
-.application-notification-bell:hover { transform: translateY(-1px); border-color: #5dae87; background: #eef9f2; }
+.application-notification-bell:hover {
+  transform: translateY(-1px);
+  border-color: #5dae87;
+  background: #eef9f2;
+}
 .application-notification-bell b {
   position: absolute;
   top: -4px;
@@ -10845,7 +10818,8 @@ select {
 }
 .candidate-account-dropdown {
   position: absolute;
-  z-index: 1000;
+  z-index: 1050 !important;
+  pointer-events: auto !important;
   top: calc(100% + 10px);
   right: 0;
   display: none;
@@ -10954,7 +10928,9 @@ select {
   font-weight: 500;
   text-align: left;
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
 }
 .candidate-account-dropdown button:not(.candidate-avatar-trigger):hover {
   background: var(--primary-soft, #e7f4ed);
@@ -10969,111 +10945,86 @@ select {
   color: #be123c !important;
 }
 
-.candidate-bottom-nav {
-  display: none;
+.actor-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 8px;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  transition: all 0.2s ease;
 }
-.mobile-account-preferences {
-  display: none;
+.actor-badge-student {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid rgba(5, 150, 105, 0.2);
 }
-@media (max-width: 820px) {
-  .navbar {
-    height: 68px !important;
-  }
-  .navbar-inner {
-    height: 68px !important;
-    padding: 0 18px !important;
-    gap: 10px !important;
-  }
-  .nav-links,
-  #auth-container,
-  .theme-toggle-btn,
-  .lang-switcher {
-    display: none !important;
-  }
-  .hamburger {
-    display: none !important;
-  }
-  .candidate-bottom-nav {
-    position: fixed;
-    z-index: 1000;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    padding: 7px 6px calc(7px + env(safe-area-inset-bottom));
-    border-top: 1px solid var(--border);
-    background: var(--navbar-bg);
-    box-shadow: 0 -8px 24px rgba(20, 33, 61, 0.07);
-    backdrop-filter: blur(14px);
-  }
-  .candidate-bottom-nav button {
-    border: 0;
-    background: transparent;
-    color: var(--text-secondary);
-    font: inherit;
-    font-size: 10px;
-    font-weight: 650;
-    cursor: pointer;
-  }
-  .candidate-bottom-nav span {
-    display: block;
-    margin-bottom: 3px;
-    color: inherit;
-    font-size: 17px;
-    line-height: 18px;
-  }
-  .candidate-bottom-nav button.active {
-    color: var(--primary);
-  }
-  .mobile-account-preferences {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    margin: 0 0 18px;
-    padding: 13px 14px;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    background: var(--card);
-  }
-  .mobile-account-preferences p {
-    color: var(--text-primary);
-    font-size: 13px;
-    font-weight: 700;
-  }
-  .mobile-account-preferences div {
-    display: flex;
-    gap: 5px;
-  }
-  .mobile-account-preferences button {
-    padding: 7px 8px;
-    border: 0;
-    border-radius: 6px;
-    background: var(--primary-soft);
-    color: var(--primary);
-    font: inherit;
-    font-size: 11px;
-    font-weight: 700;
-    cursor: pointer;
-  }
-  body {
-    padding-bottom: 72px;
-  }
+.actor-badge-counselor {
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid rgba(37, 99, 235, 0.2);
+}
+.actor-badge-enterprise {
+  background: #fff7ed;
+  color: #ea580c;
+  border: 1px solid rgba(234, 88, 12, 0.2);
+}
+.actor-badge-admin {
+  background: #fdf4ff;
+  color: #9333ea;
+  border: 1px solid rgba(147, 51, 234, 0.2);
 }
 
-@media (min-width: 821px) and (max-width: 1100px) {
-  .navbar-inner {
-    padding: 0 18px !important;
-    gap: 16px !important;
-  }
-  .nav-link {
-    padding: 0 8px !important;
-    font-size: 12px !important;
-  }
-  .brand-name {
-    font-size: 14px !important;
-  }
+.candidate-account-header {
+  padding: 8px 10px 10px;
+  border-bottom: 1px solid var(--border, #dbe5df);
+  margin-bottom: 4px;
+}
+.candidate-account-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary, #17322b);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.candidate-account-email {
+  font-size: 11px;
+  color: var(--text-secondary, #5d716a);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-top: 1px;
+}
+.candidate-account-role-badge {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 10px;
+  font-weight: 700;
+}
+.candidate-account-role-badge.badge-student {
+  background: #ecfdf5;
+  color: #059669;
+}
+.candidate-account-role-badge.badge-counselor {
+  background: #eff6ff;
+  color: #2563eb;
+}
+.candidate-account-role-badge.badge-enterprise {
+  background: #fff7ed;
+  color: #ea580c;
+}
+.candidate-account-role-badge.badge-admin {
+  background: #fdf4ff;
+  color: #9333ea;
+}
+
+.mobile-account-preferences {
+  display: none;
 }
 /* ══ MISSION ARCHIVE & STUDENT REPORT STYLES ══ */
 .archive-workspace {
@@ -11518,17 +11469,18 @@ html.light .job-search-input-wrap input,
   color: var(--text-primary) !important;
 }
 :is(html.light, [data-theme='light'], body.light-mode) .badge-ok {
-  color: #0b7a47 !important;
+  color: var(--status-success-fg) !important;
 }
 :is(html.light, [data-theme='light'], body.light-mode) .badge-need {
-  color: #b45309 !important;
+  color: var(--status-warning-fg) !important;
 }
+/* Trước đây là tím `#7a3fd6`; "focus/phỏng vấn" thuộc họ Blue theo §8. */
 :is(html.light, [data-theme='light'], body.light-mode) .badge-focus {
-  color: #7a3fd6 !important;
+  color: var(--status-info-fg) !important;
 }
 :is(html.light, [data-theme='light'], body.light-mode) .archive-tag.tag-interview,
 :is(html.light, [data-theme='light'], body.light-mode) .tag-interview {
-  color: #8a6d00 !important;
+  color: var(--status-info-fg) !important;
 }
 :is(html.light, [data-theme='light'], body.light-mode) .archive-tag.tag-gap,
 :is(html.light, [data-theme='light'], body.light-mode) .tag-gap {
@@ -11850,6 +11802,8 @@ html.light .job-search-input-wrap input,
   border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
   box-shadow: none !important;
   backdrop-filter: none !important;
+  overflow: visible !important;
+  z-index: 10000 !important;
 }
 .navbar-inner {
   width: min(100%, 1440px) !important;
@@ -11857,6 +11811,7 @@ html.light .job-search-input-wrap input,
   max-width: 1440px !important;
   padding: 0 32px !important;
   position: relative;
+  overflow: visible !important;
 }
 .brand {
   gap: 10px !important;
@@ -12075,12 +12030,6 @@ body.light-mode .lang-check,
   color: #2d8c6f;
 }
 
-@media (max-width: 820px) {
-  .header-utilities {
-    display: none;
-  }
-}
-
 /* Header interaction contract: no layout-affecting values change on hover or active. */
 .navbar .nav-link {
   position: relative !important;
@@ -12125,24 +12074,6 @@ body.role-student .nav-links {
 body.role-student .nav-link {
   flex: 0 0 auto;
 }
-@media (min-width: 821px) and (max-width: 1120px) {
-  .navbar-inner {
-    padding-inline: 20px !important;
-  }
-  body.role-student .nav-links {
-    gap: 20px !important;
-  }
-  .navbar .nav-link {
-    font-size: 12px !important;
-  }
-  .brand-name {
-    font-size: 14px !important;
-  }
-  .header-utilities {
-    gap: 6px;
-  }
-}
-
 /* ============================================================
    ENTERPRISE NAV-LINK OVERRIDES (CHUẨN DOANH NGHIỆP)
 ============================================================ */
@@ -12207,13 +12138,13 @@ body.role-student .nav-link {
   display: none !important;
 }
 
-/* Fix for nav-links alignment and preventing overlap */
+/* Fix for nav-links alignment and preventing overlap.
+   `display` do navbar.css §6 quyết định theo gate 1200px — không khai ở đây. */
 .navbar .nav-links {
   position: static !important;
   transform: none !important;
   flex: 1 1 auto !important;
   justify-content: center !important;
-  display: flex !important;
   flex-wrap: nowrap !important;
   gap: 8px !important;
 }
@@ -12225,36 +12156,6 @@ body.role-student .nav-link {
 /* ============================================================
    RESPONSIVE ENTERPRISE MENU (CHỐNG TRÀN)
 ============================================================ */
-@media (max-width: 1300px) {
-  .navbar .nav-links {
-    gap: 4px !important;
-  }
-  .navbar .nav-link {
-    padding: 0 10px !important;
-    margin: 0 2px !important;
-    font-size: 13px !important;
-  }
-}
-
-@media (max-width: 1120px) {
-  .navbar .nav-links {
-    gap: 2px !important;
-  }
-  .navbar .nav-link {
-    padding: 0 8px !important;
-    margin: 0 !important;
-    font-size: 12px !important;
-    height: 38px !important;
-  }
-}
-
-@media (max-width: 950px) {
-  .navbar .nav-link {
-    padding: 0 6px !important;
-    font-size: 11px !important;
-  }
-}
-
 /* ============================================================
    PIPELINE 1 – PHÂN TÍCH CV VỚI JD
    Guided 3-step workflow redesign.
@@ -12412,12 +12313,6 @@ body.role-student .nav-link {
   grid-template-columns: minmax(320px, 0.7fr) minmax(0, 1.3fr);
   gap: 24px;
   margin-bottom: 20px;
-}
-
-@media (max-width: 1023px) {
-  .p1-workflow-grid {
-    grid-template-columns: 1fr;
-  }
 }
 
 /* ── Step Card ── */
@@ -13022,7 +12917,7 @@ body.role-student .nav-link {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
-.p1-job-card {
+.p1-job-card-legacy {
   padding: 13px;
   border: 1px solid #dce8e2;
   border-radius: 13px;
@@ -13033,17 +12928,17 @@ body.role-student .nav-link {
     box-shadow 0.18s ease,
     border-color 0.18s ease;
 }
-.p1-job-card:hover,
-.p1-job-card:focus-within {
+.p1-job-card-legacy:hover,
+.p1-job-card-legacy:focus-within {
   transform: translateY(-2px);
   border-color: #98cfb2;
   box-shadow: 0 7px 18px rgba(29, 63, 48, 0.08);
 }
-.p1-job-card-head {
+.p1-job-card-legacy-head {
   display: flex;
   gap: 9px;
 }
-.p1-job-company-mark {
+.p1-job-company-mark-legacy {
   display: grid;
   place-items: center;
   flex: 0 0 30px;
@@ -13054,7 +12949,7 @@ body.role-student .nav-link {
   font-size: 10px;
   font-weight: 800;
 }
-.p1-job-card h4 {
+.p1-job-card-legacy h4 {
   overflow: hidden;
   margin: 0;
   color: var(--buddy-navy);
@@ -13063,7 +12958,7 @@ body.role-student .nav-link {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.p1-job-card p {
+.p1-job-card-legacy p {
   overflow: hidden;
   margin: 2px 0 0;
   color: #607184;
@@ -13071,7 +12966,7 @@ body.role-student .nav-link {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.p1-job-meta {
+.p1-job-card-legacy-meta {
   display: flex;
   flex-wrap: wrap;
   gap: 5px 8px;
@@ -13079,13 +12974,13 @@ body.role-student .nav-link {
   color: #607184;
   font-size: 11px;
 }
-.p1-job-skills {
+.p1-job-card-legacy-skills {
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
   min-height: 24px;
 }
-.p1-job-skills span {
+.p1-job-card-legacy-skills span {
   max-width: 100%;
   overflow: hidden;
   padding: 4px 7px;
@@ -13096,7 +12991,7 @@ body.role-student .nav-link {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.p1-job-card button {
+.p1-job-card-legacy button {
   width: 100%;
   margin-top: 12px;
   padding: 0;
@@ -13109,7 +13004,7 @@ body.role-student .nav-link {
   font-weight: 800;
   cursor: pointer;
 }
-.p1-job-card.is-current {
+.p1-job-card-legacy.is-current {
   border-color: var(--buddy-emerald);
   background: #f7fcf8;
 }
@@ -13145,7 +13040,7 @@ body.role-student .nav-link {
 .p1-jd-upload-divider {
   margin-top: 22px !important;
 }
-@media (max-width: 520px) {
+@media (max-width: 767.98px) {
   .p1-job-grid {
     grid-template-columns: 1fr;
   }
@@ -13162,7 +13057,7 @@ body.role-student .nav-link {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
   gap: 16px;
 }
-.p1-job-card {
+.p1-job-card-legacy-v2 {
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -13171,23 +13066,23 @@ body.role-student .nav-link {
   border-radius: 16px;
   overflow: hidden;
 }
-.p1-job-card-head {
+.p1-job-card-legacy-v2-head {
   min-width: 0;
   align-items: flex-start;
   gap: 11px;
 }
-.p1-job-card-head > div {
+.p1-job-card-legacy-v2-head > div {
   min-width: 0;
   flex: 1;
 }
-.p1-job-company-mark {
+.p1-job-company-mark-legacy-v2 {
   flex-basis: 40px;
   width: 40px;
   height: 40px;
   border-radius: 11px;
   font-size: 11px;
 }
-.p1-job-card h4 {
+.p1-job-card-legacy-v2 h4 {
   display: -webkit-box;
   overflow: hidden;
   margin: 0;
@@ -13201,7 +13096,7 @@ body.role-student .nav-link {
   -webkit-line-clamp: 2;
   overflow-wrap: anywhere;
 }
-.p1-job-card p {
+.p1-job-card-legacy-v2 p {
   overflow: hidden;
   margin-top: 4px;
   color: #607184;
@@ -13210,32 +13105,32 @@ body.role-student .nav-link {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.p1-job-meta {
+.p1-job-card-legacy-v2-meta {
   min-height: 17px;
   margin: 15px 0 12px;
   gap: 6px 10px;
 }
-.p1-job-meta span + span::before {
+.p1-job-card-legacy-v2-meta span + span::before {
   content: '·';
   margin-right: 10px;
   color: #a8b2ae;
 }
-.p1-job-skills {
+.p1-job-card-legacy-v2-skills {
   max-height: 48px;
   overflow: hidden;
   gap: 6px;
 }
-.p1-job-skills span {
+.p1-job-card-legacy-v2-skills span {
   padding: 5px 8px;
   font-size: 11px;
 }
-.p1-job-card button {
+.p1-job-card-legacy-v2 button {
   margin-top: auto;
   padding-top: 15px;
   text-align: right;
 }
-.p1-job-card:hover button,
-.p1-job-card:focus-within button {
+.p1-job-card-legacy-v2:hover button,
+.p1-job-card-legacy-v2:focus-within button {
   color: #087b4d;
 }
 .p1-job-list-heading {
@@ -13255,15 +13150,7 @@ body.role-student .nav-link {
   font-size: 13px;
   text-align: left;
 }
-@media (max-width: 1279px) and (min-width: 1024px) {
-  .p1-workflow-grid {
-    grid-template-columns: minmax(300px, 0.8fr) minmax(0, 1.2fr);
-  }
-  .p1-job-grid {
-    grid-template-columns: 1fr;
-  }
-}
-@media (max-width: 767px) {
+@media (max-width: 767.98px) {
   .p1-wrapper {
     width: min(100% - 32px, 1360px);
     padding-top: 28px;
@@ -13284,443 +13171,6 @@ body.role-student .nav-link {
   }
 }
 
-/* ── Candidate auth: aligned with the warm Career Buddy product surface ── */
-#modal-overlay {
-  background: rgba(20, 38, 47, 0.42);
-  backdrop-filter: blur(7px);
-  -webkit-backdrop-filter: blur(7px);
-}
-#modal-card.auth-modal-card {
-  max-width: 450px;
-  max-height: min(92vh, 680px);
-  padding: 24px 28px 22px;
-  background: #fff;
-  border: 1px solid #dce8e2;
-  border-radius: 22px;
-  box-shadow: 0 24px 64px rgba(24, 52, 43, 0.2);
-  color: var(--buddy-navy);
-  scrollbar-width: none !important;
-  -ms-overflow-style: none !important;
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-#modal-card.auth-modal-card::-webkit-scrollbar {
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
-}
-#modal-card.auth-modal-card::before {
-  display: none;
-}
-#modal-card.auth-modal-card .modal-close {
-  top: 12px;
-  right: 12px;
-  width: 32px;
-  height: 32px;
-  border-color: #e0ebe5;
-  border-radius: 10px;
-  color: #607184;
-  background: #f8fbf9;
-}
-#modal-card.auth-modal-card .modal-close:hover {
-  color: #315b4a;
-  border-color: #b8d9c8;
-  background: #eef8f2;
-}
-#modal-card.auth-modal-card .modal-header {
-  margin: 0 0 14px;
-  text-align: center;
-}
-.auth-welcome-mark {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  margin: 0 auto 6px;
-  border-radius: 11px;
-  color: var(--buddy-emerald);
-  background: #eaf7ef;
-}
-.auth-welcome-mark span {
-  font-size: 17px;
-}
-.auth-eyebrow {
-  margin: 0 0 4px;
-  color: var(--buddy-emerald);
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.11em;
-}
-.auth-modal-card .modal-title {
-  margin: 0 0 4px;
-  color: var(--buddy-navy);
-  font-size: 22px;
-  letter-spacing: -0.03em;
-}
-.auth-modal-card .modal-sub {
-  margin: 0 auto;
-  max-width: 330px;
-  color: #607184;
-  font-size: 12.5px;
-}
-#modal-card.auth-modal-card .google-auth-wrap {
-  margin-bottom: 12px;
-}
-.auth-modal-card .google-signin-button {
-  min-height: 44px;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none !important;
-  border-radius: 999px;
-  background: transparent !important;
-  box-shadow: none !important;
-  padding: 0 !important;
-}
-.auth-modal-card .google-signin-button > div,
-.auth-modal-card .google-signin-button iframe {
-  margin: 0 auto !important;
-  border-radius: 999px !important;
-  width: 100% !important;
-  max-width: 100% !important;
-}
-.auth-modal-card .auth-divider {
-  margin: 12px 0 0;
-  color: #8a9995;
-}
-.auth-modal-card .auth-divider::before,
-.auth-modal-card .auth-divider::after {
-  background: #e4ece8;
-}
-.auth-tabs {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4px;
-  margin: 0 0 14px;
-  padding: 4px;
-  border-radius: 12px;
-  background: #f0f5f2;
-}
-.auth-tabs .tab {
-  min-height: 36px;
-  border: 0;
-  border-radius: 9px;
-  color: #6b7c76;
-  background: transparent;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-}
-.auth-tabs .tab.active {
-  color: var(--buddy-navy) !important;
-  background: #fff;
-  box-shadow: 0 1px 5px rgba(30, 70, 51, 0.1);
-}
-.auth-modal-card .login-form {
-  gap: 11px;
-}
-.auth-modal-card .form-group {
-  margin: 0;
-}
-.auth-modal-card .form-label {
-  margin-bottom: 5px;
-  color: #385348;
-  font-size: 12px;
-  font-weight: 700;
-}
-.auth-modal-card .form-input {
-  min-height: 44px;
-  border-color: #d8e5df;
-  border-radius: 11px;
-  color: var(--buddy-navy);
-  background: #fbfdfc;
-}
-.auth-modal-card .form-input::placeholder {
-  color: #a2aea9;
-}
-.auth-modal-card .form-input:focus {
-  border-color: var(--buddy-emerald);
-  box-shadow: 0 0 0 3px rgba(30, 143, 101, 0.11);
-}
-
-/* Password visibility toggle */
-.password-input-wrap {
-  position: relative;
-  display: flex;
-  align-items: center;
-  width: 100%;
-}
-.password-input-wrap .form-input {
-  width: 100%;
-  padding-right: 44px !important;
-}
-.btn-toggle-password {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: #8a9995;
-  cursor: pointer;
-  border-radius: 8px;
-  transition:
-    color 0.15s ease,
-    background-color 0.15s ease;
-  z-index: 10;
-  pointer-events: auto !important;
-}
-.btn-toggle-password svg {
-  pointer-events: none;
-}
-.btn-toggle-password:hover {
-  color: var(--buddy-emerald, #087d4e);
-  background: rgba(8, 125, 78, 0.08);
-}
-.btn-toggle-password:focus-visible {
-  outline: 2px solid var(--buddy-emerald, #087d4e);
-  outline-offset: 1px;
-}
-.password-input-wrap .eye-icon-show {
-  display: block;
-}
-.password-input-wrap .eye-icon-hide {
-  display: none;
-}
-.password-input-wrap.is-visible .eye-icon-show {
-  display: none !important;
-}
-.password-input-wrap.is-visible .eye-icon-hide {
-  display: block !important;
-}
-
-.auth-modal-card .btn-submit {
-  min-height: 44px;
-  margin-top: 4px;
-  border-radius: 11px;
-  background: var(--buddy-emerald);
-  box-shadow: none;
-  font-size: 14px;
-}
-.auth-modal-card .btn-submit:hover {
-  background: #087d4e;
-  transform: translateY(-1px);
-  box-shadow: 0 7px 16px rgba(8, 125, 78, 0.16);
-}
-.auth-modal-card .auth-forgot-password {
-  display: block;
-  width: max-content;
-  margin: 10px auto 0;
-  color: #4f7463;
-  font-size: 12px;
-  font-weight: 700;
-  background: none;
-  border: none;
-  cursor: pointer;
-  transition: color 0.15s ease;
-}
-.auth-modal-card .auth-forgot-password:hover {
-  color: var(--buddy-emerald);
-  text-decoration: underline;
-}
-.auth-modal-card .auth-role-trigger,
-#modal-card .auth-role-trigger {
-  min-height: 44px;
-  border: 1px solid #d8e5df !important;
-  border-radius: 11px !important;
-  background: #fbfdfc !important;
-  color: var(--buddy-navy) !important;
-}
-.auth-modal-card .auth-role-current strong,
-.auth-modal-card .auth-role-option-copy strong,
-#modal-card .auth-role-current strong,
-#modal-card .auth-role-option-copy strong {
-  color: var(--buddy-navy) !important;
-  font-size: 13.5px;
-  font-weight: 600;
-}
-.auth-modal-card .auth-role-current small,
-.auth-modal-card .auth-role-option-copy small,
-#modal-card .auth-role-current small,
-#modal-card .auth-role-option-copy small {
-  color: #72827c !important;
-  font-size: 11px;
-}
-.auth-modal-card .auth-role-chevron,
-#modal-card .auth-role-chevron {
-  color: #72827c !important;
-}
-.auth-modal-card .auth-role-menu,
-#modal-card .auth-role-menu {
-  border: 1px solid #d8e5df !important;
-  background: #fff !important;
-  box-shadow: 0 14px 30px rgba(27, 61, 45, 0.14) !important;
-}
-.auth-modal-card .auth-role-option,
-#modal-card .auth-role-option {
-  color: var(--buddy-navy) !important;
-}
-.auth-modal-card .auth-role-option:hover,
-.auth-modal-card .auth-role-option:focus-visible,
-#modal-card .auth-role-option:hover,
-#modal-card .auth-role-option:focus-visible {
-  background: #f0f8f3 !important;
-}
-
-/* ── Password Reset Modal: Harmonized with Career Buddy UI ── */
-#password-reset-overlay {
-  background: rgba(20, 38, 47, 0.42);
-  backdrop-filter: blur(7px);
-  -webkit-backdrop-filter: blur(7px);
-}
-.password-reset-card {
-  max-width: 450px;
-  max-height: min(92vh, 640px);
-  padding: 24px 28px 22px;
-  background: #fff;
-  border: 1px solid #dce8e2;
-  border-radius: 22px;
-  box-shadow: 0 24px 64px rgba(24, 52, 43, 0.2);
-  color: var(--buddy-navy);
-  overflow-y: auto;
-  overflow-x: hidden;
-  scrollbar-width: none !important;
-  -ms-overflow-style: none !important;
-}
-.password-reset-card::-webkit-scrollbar {
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
-}
-.password-reset-card::before {
-  display: none;
-}
-.password-reset-card .modal-close {
-  top: 12px;
-  right: 12px;
-  width: 32px;
-  height: 32px;
-  border-color: #e0ebe5;
-  border-radius: 10px;
-  color: #607184;
-  background: #f8fbf9;
-}
-.password-reset-card .modal-close:hover {
-  color: #315b4a;
-  border-color: #b8d9c8;
-  background: #eef8f2;
-}
-.password-reset-card .modal-header {
-  margin: 0 0 14px;
-  text-align: center;
-}
-.password-reset-card .modal-title {
-  margin: 0 0 4px;
-  color: var(--buddy-navy);
-  font-size: 22px;
-  letter-spacing: -0.03em;
-}
-.password-reset-card .modal-sub {
-  margin: 0 auto;
-  max-width: 330px;
-  color: #607184;
-  font-size: 12.5px;
-}
-.password-reset-card .login-form {
-  gap: 11px;
-}
-.password-reset-card .form-group {
-  margin: 0 0 11px;
-}
-.password-reset-card .form-label {
-  margin-bottom: 5px;
-  color: #385348;
-  font-size: 12px;
-  font-weight: 700;
-}
-.password-reset-card .form-input {
-  min-height: 44px;
-  border-color: #d8e5df;
-  border-radius: 11px;
-  color: var(--buddy-navy);
-  background: #fbfdfc;
-}
-.password-reset-card .form-input::placeholder {
-  color: #a2aea9;
-}
-.password-reset-card .form-input:focus {
-  border-color: var(--buddy-emerald);
-  box-shadow: 0 0 0 3px rgba(30, 143, 101, 0.11);
-}
-.password-reset-card #reset-otp {
-  font-size: 1.5rem !important;
-  letter-spacing: 0.4em !important;
-  text-align: center !important;
-  font-weight: 800 !important;
-  color: var(--buddy-navy) !important;
-  background: #f8fbf9 !important;
-  border: 1.5px dashed #bfe7d0 !important;
-}
-.password-reset-card #reset-otp:focus {
-  border-style: solid !important;
-  border-color: var(--buddy-emerald) !important;
-  background: #fff !important;
-}
-.password-reset-card .auth-reset-timer {
-  color: var(--buddy-emerald) !important;
-  font-size: 13px !important;
-  font-weight: 600;
-  margin: 8px 0 12px !important;
-  text-align: center;
-}
-.password-reset-card .btn-submit {
-  min-height: 44px;
-  margin-top: 4px;
-  border-radius: 11px;
-  background: var(--buddy-emerald);
-  box-shadow: none;
-  font-size: 14px;
-}
-.password-reset-card .btn-submit:hover {
-  background: #087d4e;
-  transform: translateY(-1px);
-  box-shadow: 0 7px 16px rgba(8, 125, 78, 0.16);
-}
-.password-reset-card .auth-forgot-password {
-  display: block;
-  width: max-content;
-  margin: 10px auto 0;
-  color: #4f7463;
-  font-size: 12.5px;
-  font-weight: 700;
-  background: none;
-  border: none;
-  cursor: pointer;
-  transition: color 0.15s ease;
-}
-.password-reset-card .auth-forgot-password:hover {
-  color: var(--buddy-emerald);
-  text-decoration: underline;
-}
-@media (max-width: 520px) {
-  #modal-card.auth-modal-card,
-  .password-reset-card {
-    max-width: 100%;
-    padding: 22px 18px 18px;
-    border-radius: 18px;
-  }
-  .auth-modal-card .modal-title,
-  .password-reset-card .modal-title {
-    font-size: 20px;
-  }
-}
 .p1-analysis-heading {
   max-width: 600px;
   margin: 0 auto;
@@ -13866,9 +13316,12 @@ body.role-student .nav-link {
   color: var(--buddy-navy);
   font-weight: 700;
 }
+/* Timeline phân tích: trước đây "đang chạy" và "đã xong" dùng CÙNG một màu
+   (`--buddy-emerald`) nên màu sắc không mang thông tin gì. Theo §8: đang xử lý
+   → Blue, đã hoàn tất → Green, lỗi → Red (xem `li.is-error` bên dưới). */
 .p1-analysis-stages li.is-active::before {
   content: '✦';
-  color: var(--buddy-emerald);
+  color: var(--status-info-fg);
   animation: p1-core-pulse 1.6s ease-in-out infinite;
 }
 .p1-analysis-stages li.is-done {
@@ -13876,16 +13329,16 @@ body.role-student .nav-link {
 }
 .p1-analysis-stages li.is-done::before {
   content: '✓';
-  color: var(--buddy-emerald);
+  color: var(--status-success-fg);
   font-weight: 800;
 }
 .p1-analysis-stages li.is-error {
-  color: #b45309;
+  color: var(--status-danger-fg);
   font-weight: 700;
 }
 .p1-analysis-stages li.is-error::before {
   content: '!';
-  color: #b45309;
+  color: var(--status-danger-fg);
   font-weight: 800;
 }
 .p1-analysis-discovery {
@@ -14032,7 +13485,7 @@ body.role-student .nav-link {
     background-position: -50% 0;
   }
 }
-@media (max-width: 760px) {
+@media (max-width: 767.98px) {
   .p1-analysis-journey {
     padding: 24px 18px;
   }
@@ -14283,7 +13736,7 @@ body.role-student .nav-link {
 }
 
 /* ── Responsive tweaks ── */
-@media (max-width: 600px) {
+@media (max-width: 767.98px) {
   .p1-wrapper {
     padding-top: 28px;
   }
@@ -14658,24 +14111,41 @@ body.role-student .nav-link {
 .career-versions-section {
   margin-bottom: 42px;
 }
+/* Ô tìm kiếm CV (`#view-cv`): icon là flex item nên `align-items: center` đủ
+   để canh trục dọc. Chiều cao lấy `--ui-control-h` (trước ~37px do padding
+   dọc 9px) và viền lấy `--ui-border` thay cho `#dce7e1` riêng. */
 .career-search {
   display: flex;
   align-items: center;
-  gap: 7px;
-  min-width: 180px;
-  padding: 9px 11px;
-  border: 1px solid #dce7e1;
-  border-radius: 10px;
-  background: #fff;
-  color: #72827d;
+  gap: 8px;
+  min-width: 200px;
+  height: var(--ui-control-h);
+  padding: 0 12px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius);
+  background: var(--ui-surface);
+  color: var(--ui-text-subtle);
+  box-sizing: border-box;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+.career-search:focus-within {
+  border-color: var(--ui-primary);
+  box-shadow: var(--ui-ring);
+}
+.career-search > svg {
+  flex: 0 0 auto;
 }
 .career-search input {
   width: 100%;
+  height: 100%;
+  padding: 0;
   border: 0;
   outline: 0;
-  color: #1d3840;
+  color: var(--ui-text);
   background: transparent;
-  font-size: 13px;
+  font-size: 14px;
 }
 .career-cv-grid {
   display: grid;
@@ -14876,7 +14346,7 @@ body.role-student .nav-link {
 .career-empty-state .career-upload-link {
   margin: 14px auto 0;
 }
-@media (max-width: 900px) {
+@media (max-width: 1199.98px) {
   .career-portfolio-workspace {
     width: min(100% - 32px, 760px);
     padding-top: 32px;
@@ -14906,7 +14376,7 @@ body.role-student .nav-link {
     margin-bottom: 45px;
   }
 }
-@media (max-width: 600px) {
+@media (max-width: 767.98px) {
   .career-portfolio-workspace {
     width: calc(100% - 28px);
     padding: 24px 0 58px;
@@ -15133,7 +14603,7 @@ body.role-student .nav-link {
 .intent-card-paper i:last-child {
   width: 68%;
 }
-@media (max-width: 720px) {
+@media (max-width: 767.98px) {
   .intent-workspace {
     padding: 25px 16px 8px;
   }
@@ -15526,7 +14996,7 @@ body.role-student .nav-link {
   border: 1px solid #d7e5de;
   border-radius: 9px;
 }
-@media (max-width: 760px) {
+@media (max-width: 767.98px) {
   .match-workspace,
   .gap-detail-workspace {
     width: calc(100% - 30px);
@@ -15640,14 +15110,46 @@ body.role-student .nav-link {
   font-size: 11px;
 }
 .career-table-status {
-  color: #177356;
-  font-size: 12px;
-  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 750;
+  padding: 4px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
 }
 .career-table-status::before {
-  content: '●';
-  margin-right: 5px;
-  font-size: 8px;
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-right: 2px;
+}
+.career-table-status.is-raw {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+}
+.career-table-status.is-raw::before {
+  background: #64748b;
+}
+.career-table-status.is-matched {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+.career-table-status.is-matched::before {
+  background: #2563eb;
+}
+.career-table-status.is-optimized {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+.career-table-status.is-optimized::before {
+  background: #059669;
 }
 .career-table-actions-cell {
   display: flex;
@@ -15674,7 +15176,7 @@ body.role-student .nav-link {
   color: #75858c !important;
   padding: 35px !important;
 }
-@media (max-width: 700px) {
+@media (max-width: 767.98px) {
   .career-table-header {
     align-items: flex-start;
     flex-direction: column;
@@ -15891,8 +15393,15 @@ body.role-student .nav-link {
   width: 30px;
   height: 30px;
   border-radius: 9px;
+}
+.dashboard-float-icon {
   color: #13765a;
   background: #e8f5ed;
+}
+/* Xem ghi chú ở theme.css: chấm "hoàn tất" theo họ Green của §8. */
+.dashboard-success-dot {
+  color: var(--status-success-fg);
+  background: var(--status-success-bg);
 }
 .dashboard-success-dot {
   width: 17px;
@@ -16456,7 +15965,7 @@ body.role-student .nav-link {
   background: transparent;
   color: #fff;
 }
-@media (max-width: 820px) {
+@media (max-width: 1199.98px) {
   .dashboard-hero,
   .dashboard-ecosystem-section,
   .dashboard-transform-section,
@@ -16479,7 +15988,7 @@ body.role-student .nav-link {
     grid-template-columns: repeat(2, 1fr);
   }
 }
-@media (max-width: 520px) {
+@media (max-width: 767.98px) {
   .dashboard-hero,
   .dashboard-intent-section,
   .dashboard-ecosystem-section,
@@ -16619,7 +16128,7 @@ body.role-student .nav-link {
     transform: translateY(-6px);
   }
 }
-@media (max-width: 700px) {
+@media (max-width: 767.98px) {
   .buddy-tour {
     gap: 8px;
   }

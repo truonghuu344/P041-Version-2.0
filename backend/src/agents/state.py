@@ -35,8 +35,7 @@ class GapAnalysisState(TypedDict, total=False):
     jd_requirements: str
     jd_parsed_json: dict[str, Any]
     rubric: dict[str, Any]
-    # Match flow can explicitly force the latency-safe deterministic path.
-    allow_llm: bool | None
+    on_progress: Any
     evidence: dict[str, Any]
     draft_result: dict[str, Any]
     explanation_provider: str
@@ -83,7 +82,7 @@ class CVParserAgentState(TypedDict, total=False):
 
 
 class CareerAssistantState(TypedDict, total=False):
-    """State cho trợ lý nghề nghiệp hội thoại chạy bằng Gemini."""
+    """State cho trợ lý nghề nghiệp hội thoại chạy bằng Gemini và Cascading RAG."""
 
     message: str
     history: list[dict[str, str]]
@@ -93,6 +92,9 @@ class CareerAssistantState(TypedDict, total=False):
     suggested_actions: list[dict[str, str]]
     weather_context: dict[str, Any]
     datetime_context: dict[str, Any]
+    rag_context: list[dict[str, Any]]
+    rag_tier: str
+    rag_evidence: list[dict[str, Any]]
     tools_used: list[str]
     response: str
     provider: str

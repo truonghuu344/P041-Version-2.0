@@ -127,7 +127,7 @@
   color: #fff;
 }
 
-@media (max-width: 920px) {
+@media (max-width: 1199.98px) {
   .candidate-flow-guide {
     align-items: flex-start;
     flex-wrap: wrap;
@@ -140,7 +140,7 @@
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 767.98px) {
   :root {
     --candidate-gutter: 16px;
   }

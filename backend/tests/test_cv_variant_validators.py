@@ -1,4 +1,4 @@
-from src.services.cv_variant_service import validate_claim_contract
+from src.services.cv_variant_service import extract_atomic_claims, is_meaningful_evidence, validate_claim_contract
 
 
 def test_exact_candidate_fact_maps_to_snapshot_span():
@@ -51,3 +51,25 @@ def test_controlled_user_confirmation_is_auditable_evidence():
     )
     assert result["status"] == "SUPPORTED_USER_CONFIRMED"
     assert result["evidence_ids"][0].startswith("user-confirmed:")
+
+
+def test_personal_identifiers_are_not_evaluated_as_professional_claims():
+    claims = extract_atomic_claims(
+        {
+            "personal_info": {"full_name": "Evidence Owner", "email": "owner@example.com"},
+            "summary": "Backend developer using Python",
+        }
+    )
+    assert claims == [("summary.0", "Backend developer using Python")]
+
+
+def test_placeholder_text_is_not_candidate_evidence_or_a_verified_claim():
+    assert not is_meaningful_evidence("fff\nff")
+    result = validate_claim_contract(
+        claim="Built a DevOps CI/CD pipeline using Docker",
+        source_text="fff\nff",
+        evidence_text="fff",
+        jd_text="Docker, Kubernetes and CI/CD are required",
+    )
+    assert result["status"] == "INSUFFICIENT_EVIDENCE"
+    assert result["evidence_ids"] == []

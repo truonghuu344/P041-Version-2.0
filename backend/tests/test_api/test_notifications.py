@@ -16,12 +16,12 @@ async def test_notifications_crud_and_preferences(client: AsyncClient):
         role="student",
     )
 
-    # 2. Check initial unread count
+    # 2. Check initial unread count (seed notifications initialized)
     resp = await client.get("/api/v1/notifications/unread-count", headers=headers)
     assert resp.status_code == 200
     data = resp.json()
-    assert data["unread_count"] == 0
-    assert data["total_count"] == 0
+    assert data["unread_count"] == 3
+    assert data["total_count"] == 3
 
     # 3. Trigger domain event notification
     async with TestingSessionLocal() as session:

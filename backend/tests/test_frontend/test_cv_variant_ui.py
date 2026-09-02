@@ -41,4 +41,26 @@ def test_wizard_has_accessible_feedback_and_mobile_layout():
     assert 'aria-live="polite"' in WIZARD
     assert 'aria-label="Chọn cách tạo CV"' in WIZARD
     assert "button:focus-visible" in STYLE
-    assert "@media(max-width:760px)" in STYLE
+    assert "@media (max-width: 760px)" in STYLE
+
+
+def test_jd_picker_is_searchable_and_keyboard_accessible():
+    for contract in (
+        'role="combobox"',
+        'role="listbox"',
+        'role="option"',
+        'aria-label="Tìm kiếm JD"',
+        "normalizeSearchValue",
+        "ArrowDown",
+        "ArrowUp",
+        "Escape",
+        "Không tìm thấy JD",
+    ):
+        assert contract in WIZARD
+    for class_name in (
+        ".cv-jd-combobox-menu",
+        ".cv-jd-combobox-search",
+        ".cv-jd-combobox-option",
+        ".cv-jd-combobox-empty",
+    ):
+        assert class_name in STYLE

@@ -16,6 +16,7 @@ MAGIC_HEADERS = {
     ".jpg": (b"\xff\xd8\xff",),
     ".jpeg": (b"\xff\xd8\xff",),
     ".png": (b"\x89PNG\r\n\x1a\n",),
+    ".webp": (b"RIFF",),
 }
 
 

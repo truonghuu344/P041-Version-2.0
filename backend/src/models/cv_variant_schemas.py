@@ -109,6 +109,8 @@ class CVVariantValidationOut(BaseModel):
     claims_total: int
     claims_supported: int
     claims_blocked: int
+    ats_score: float = 0.0
+    verification_status: str = "Insufficient evidence"
     render: dict[str, Any]
     trace_id: str
 

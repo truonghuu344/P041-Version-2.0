@@ -1,5 +1,7 @@
+import asyncio
 import hashlib
 import json
+import logging
 from time import perf_counter
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -8,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config import get_settings
 from src.core.security import get_current_user
-from src.db.database import get_db
+from src.db.database import AsyncSessionLocal, get_db
 from src.db.models import CV, CVAnalysis, CVOptimizationDecision, JobDescription, UsageEvent, User
 from src.models.schemas import (
     CVOptimizationDecisionOut,
@@ -23,7 +25,29 @@ from src.services.match_persistence import persist_match_artifacts
 from src.services.pipeline_context import PIPELINE_VERSION, get_or_create_cv_snapshot, get_or_create_jd_snapshot
 from src.services.resume_optimization_service import optimize_resume_for_jd, validate_resume_change
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/analysis", tags=["CV Match & Gap Analysis"])
+_artifact_tasks: set[asyncio.Task[None]] = set()
+
+
+async def _persist_match_artifacts_background(
+    *, user_id: str, cv_id: str, jd_id: str, analysis_id: str, result: dict
+) -> None:
+    """Persist traceability off the response path using an isolated session."""
+    try:
+        async with AsyncSessionLocal() as session:
+            await persist_match_artifacts(
+                session,
+                user_id=user_id,
+                cv_id=cv_id,
+                jd_id=jd_id,
+                analysis_id=analysis_id,
+                result=result,
+            )
+            await session.commit()
+    except Exception:
+        logger.exception("Không thể ghi artifacts nền cho analysis_id=%s", analysis_id)
 
 
 def _gap_cache_key(*, user_id: str, cv_snapshot_id: str, jd_snapshot_id: str) -> str:
@@ -83,15 +107,24 @@ async def analyze_cv_jd_gap(
         )
 
     # Fetch JD
+    jd_id = payload.jd_id.removeprefix("catalog:") if payload.jd_id else ""
     stmt_jd = select(JobDescription).where(
-        JobDescription.id == payload.jd_id,
+        JobDescription.id == jd_id,
         or_(
             JobDescription.is_system.is_(True),
+            JobDescription.is_published.is_(True),
             JobDescription.created_by_user_id == current_user.id,
         ),
     )
     res_jd = await db.execute(stmt_jd)
     jd = res_jd.scalar_one_or_none()
+    if not jd and jd_id:
+        existing_system = await db.execute(select(JobDescription).where(JobDescription.is_system.is_(True)))
+        for existing in existing_system.scalars().all():
+            normalized = existing.normalized_json or {}
+            if str(normalized.get("source_id") or "").casefold() == jd_id.casefold():
+                jd = existing
+                break
     if not jd:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -217,6 +250,12 @@ async def analyze_cv_jd_gap(
             "cv_section_recommendations": analysis_result.get("cv_section_recommendations", []),
             "score_breakdown": analysis_result.get("score_breakdown", {}),
             "integrity_guardrail": analysis_result.get("integrity_guardrail", "passed"),
+            "eligibility_status": analysis_result.get("eligibility_status", "ELIGIBLE"),
+            "eligibility_details": analysis_result.get("eligibility_details", []),
+            "eligibility_reason": analysis_result.get("eligibility_reason"),
+            "required_coverage": analysis_result.get("required_coverage"),
+            "preferred_coverage": analysis_result.get("preferred_coverage"),
+            "groups": analysis_result.get("groups", []),
             "cache": {
                 "key": cache_key,
                 "version": settings.gap_analysis_cache_version,
@@ -227,14 +266,6 @@ async def analyze_cv_jd_gap(
     )
     db.add(new_analysis)
     await db.flush()
-    await persist_match_artifacts(
-        db,
-        user_id=current_user.id,
-        cv_id=cv.id,
-        jd_id=jd.id,
-        analysis_id=new_analysis.id,
-        result=analysis_result,
-    )
     db.add(
         UsageEvent(
             user_id=current_user.id,
@@ -245,6 +276,20 @@ async def analyze_cv_jd_gap(
     )
     await db.commit()
     await db.refresh(new_analysis)
+    # The API response and evidence/report endpoints use CVAnalysis as their
+    # source of truth. The larger audit graph is durable but need not delay UI.
+    artifact_task = asyncio.create_task(
+        _persist_match_artifacts_background(
+            user_id=current_user.id,
+            cv_id=cv.id,
+            jd_id=jd.id,
+            analysis_id=new_analysis.id,
+            result=dict(analysis_result),
+        ),
+        name=f"persist-match-artifacts-{new_analysis.id}",
+    )
+    _artifact_tasks.add(artifact_task)
+    artifact_task.add_done_callback(_artifact_tasks.discard)
 
     return GapAnalysisResponse(
         id=new_analysis.id,
@@ -295,6 +340,12 @@ async def analyze_cv_jd_gap(
         cv_section_recommendations=analysis_result.get("cv_section_recommendations", []),
         score_breakdown=analysis_result.get("score_breakdown", {}),
         integrity_guardrail=analysis_result.get("integrity_guardrail", "passed"),
+        eligibility_status=analysis_result.get("eligibility_status", "ELIGIBLE"),
+        eligibility_details=analysis_result.get("eligibility_details", []),
+        eligibility_reason=analysis_result.get("eligibility_reason"),
+        required_coverage=analysis_result.get("required_coverage"),
+        preferred_coverage=analysis_result.get("preferred_coverage"),
+        groups=analysis_result.get("groups", []),
         cache_hit=False,
         cache_key_version=settings.gap_analysis_cache_version,
         created_at=new_analysis.created_at,
@@ -364,6 +415,12 @@ async def get_analysis_history(
                 cv_section_recommendations=gap_data.get("cv_section_recommendations", []),
                 score_breakdown=gap_data.get("score_breakdown", {}),
                 integrity_guardrail=gap_data.get("integrity_guardrail", "passed"),
+                eligibility_status=gap_data.get("eligibility_status", "ELIGIBLE"),
+                eligibility_details=gap_data.get("eligibility_details", []),
+                eligibility_reason=gap_data.get("eligibility_reason"),
+                required_coverage=gap_data.get("required_coverage"),
+                preferred_coverage=gap_data.get("preferred_coverage"),
+                groups=gap_data.get("groups", []),
                 created_at=item.created_at,
             )
         )
@@ -435,7 +492,11 @@ async def optimize_analysis_resume(
     jd_result = await db.execute(
         select(JobDescription).where(
             JobDescription.id == analysis.jd_id,
-            or_(JobDescription.is_system.is_(True), JobDescription.created_by_user_id == current_user.id),
+            or_(
+                JobDescription.is_system.is_(True),
+                JobDescription.is_published.is_(True),
+                JobDescription.created_by_user_id == current_user.id,
+            ),
         )
     )
     jd = jd_result.scalar_one_or_none()

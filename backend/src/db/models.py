@@ -56,8 +56,15 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
     full_name: Mapped[str] = mapped_column(String(255), nullable=False)
-    role: Mapped[str] = mapped_column(String(50), default="student", nullable=False)  # student, counselor, enterprise
+    role: Mapped[str] = mapped_column(String(50), default="student", nullable=False)  # student, counselor, admin
     avatar_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    phone: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    major: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    university: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    cohort: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    gpa: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    target_role: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    skills_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
@@ -96,6 +103,7 @@ class CV(Base):
     file_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
     raw_text: Mapped[str | None] = mapped_column(Text, nullable=True)
     parsed_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+    cv_status: Mapped[str] = mapped_column(String(30), default="pending", nullable=False)  # pending, verified, needs_task
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
@@ -131,7 +139,16 @@ class CVSnapshot(Base):
     """Immutable normalized CV version used by matching, optimization and interviews."""
 
     __tablename__ = "cv_snapshots"
-    __table_args__ = (Index("uq_cv_snapshot_version", "cv_id", "version_number", unique=True),)
+    __table_args__ = (
+        Index("uq_cv_snapshot_version", "cv_id", "version_number", unique=True),
+        # Một snapshot cho mỗi (nguồn, nội dung). Ràng buộc theo version ở trên
+        # chỉ chặn được khi hai request song song cùng tính ra MỘT số version;
+        # nếu bên kia kịp ghi xong trước khi mình đọc max() thì mình tính ra số
+        # kế tiếp và INSERT trót lọt, sinh hàng trùng hệt nội dung. Snapshot là
+        # ranh giới cache nên hàng trùng làm hỏng việc tái dùng.
+        # Migration: backend/migrations/20260823_10_uq_snapshot_source_hash.sql
+        Index("uq_cv_snapshot_source", "cv_id", "source_hash", unique=True),
+    )
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
     cv_id: Mapped[str] = mapped_column(String(36), ForeignKey("cvs.id", ondelete="CASCADE"), nullable=False, index=True)
@@ -154,7 +171,11 @@ class JDSnapshot(Base):
     """Immutable normalized JD version used by matching, optimization and interviews."""
 
     __tablename__ = "jd_snapshots"
-    __table_args__ = (Index("uq_jd_snapshot_version", "jd_id", "version_number", unique=True),)
+    __table_args__ = (
+        Index("uq_jd_snapshot_version", "jd_id", "version_number", unique=True),
+        # Xem chú thích ở CVSnapshot.
+        Index("uq_jd_snapshot_source", "jd_id", "source_hash", unique=True),
+    )
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
     jd_id: Mapped[str] = mapped_column(String(36), ForeignKey("job_descriptions.id", ondelete="CASCADE"), nullable=False, index=True)
@@ -526,6 +547,53 @@ class MatchResultArtifact(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
+class InterviewAgenda(Base):
+    """Bộ câu hỏi phỏng vấn sinh sẵn cho một cặp (CV snapshot, JD snapshot).
+
+    Khoá tái dùng cố ý là cặp *snapshot* chứ không phải cặp `cv_id`/`jd_id`:
+    `get_or_create_cv_snapshot()` và `get_or_create_jd_snapshot()` trong
+    src/services/pipeline_context.py đã băm theo nội dung, nên CV/JD sửa nội
+    dung sẽ sinh snapshot mới và kéo theo agenda mới, còn nội dung không đổi
+    thì dùng lại agenda cũ mà không tốn thêm một lời gọi LLM.
+
+    `questions_json` là danh sách câu hỏi kèm metadata; xem
+    src/services/interview_agenda.py để biết schema từng phần tử. Mỗi câu mang
+    trường `evidence` trích nguyên văn từ CV hoặc JD đã sinh ra nó, cùng khuôn
+    với `evidence_quote` mà parse_job_description() dùng cho yêu cầu JD.
+    """
+
+    __tablename__ = "interview_agendas"
+    __table_args__ = (
+        Index(
+            "uq_interview_agenda_pair",
+            "user_id",
+            "cv_snapshot_id",
+            "jd_snapshot_id",
+            unique=True,
+        ),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    cv_snapshot_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("cv_snapshots.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    jd_snapshot_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("jd_snapshots.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    questions_json: Mapped[Any] = mapped_column(JSON, nullable=False)
+    # Tên model đã sinh agenda, hoặc "fallback" khi rơi xuống bộ câu hỏi tĩnh.
+    generated_by: Mapped[str] = mapped_column(String(64), nullable=False, default="fallback")
+    # Tăng mỗi lần ứng viên bấm "Sinh lại"; giữ để đối chiếu giữa các lần luyện.
+    revision_no: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+
 class InterviewSession(Base):
     __tablename__ = "interview_sessions"
 
@@ -563,6 +631,18 @@ class InterviewQuestion(Base):
     follow_up_question: Mapped[str | None] = mapped_column(Text, nullable=True)
     follow_up_answer: Mapped[str | None] = mapped_column(Text, nullable=True)
     star_score_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+    # Id của mục agenda đã sinh ra câu hỏi này (phần tử trong
+    # interview_agendas.questions_json). NULL với câu hỏi của phiên cũ hoặc
+    # phiên không dùng agenda. Không phải khoá ngoại vì đích tham chiếu nằm
+    # bên trong một cột JSON chứ không phải một hàng riêng.
+    #
+    # Không có khoá ngoại nghĩa là không có gì bảo vệ liên kết này, nên id phải
+    # tự mang danh tính: interview_agenda.py::_new_question_id cấp id ngẫu
+    # nhiên, không tái sử dụng giữa các agenda cũng như giữa các lần "Sinh lại".
+    # Nhờ vậy một id đã ghi hoặc tra ra ĐÚNG câu hỏi đã hỏi, hoặc không tra ra
+    # gì — không bao giờ tra ra một câu hỏi khác. Nội dung câu hỏi vẫn được lưu
+    # nguyên văn ở question_text nên không phụ thuộc vào liên kết này.
+    agenda_question_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships
@@ -823,6 +903,13 @@ class CVVariantRevision(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
+# Origin of a job application. Kept as plain strings (not a DB enum) so new
+# channels can be added without a type migration, mirroring `status`.
+APPLICATION_SOURCE_SELF = "self"
+APPLICATION_SOURCE_COUNSELOR_REFERRAL = "counselor_referral"
+APPLICATION_SOURCES = (APPLICATION_SOURCE_SELF, APPLICATION_SOURCE_COUNSELOR_REFERRAL)
+
+
 class JobApplication(Base):
     __tablename__ = "job_applications"
     __table_args__ = (
@@ -840,6 +927,19 @@ class JobApplication(Base):
     )
     match_score: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
     status: Mapped[str] = mapped_column(String(30), default="submitted", nullable=False)
+    # Where the application came from: "self" (student applied directly) or
+    # "counselor_referral". Existing rows predate this column and are backfilled
+    # to "self" by migration 20260822_08.
+    source: Mapped[str] = mapped_column(
+        String(30),
+        default=APPLICATION_SOURCE_SELF,
+        server_default=text("'self'"),
+        nullable=False,
+        index=True,
+    )
+    referred_by_counselor_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
     shared_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
@@ -905,7 +1005,7 @@ class Notification(Base):
     recipient_user_id: Mapped[str] = mapped_column(
         String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    recipient_role: Mapped[str] = mapped_column(String(50), nullable=False)  # student, enterprise, counselor, admin
+    recipient_role: Mapped[str] = mapped_column(String(50), nullable=False)  # student, counselor, admin
     actor_user_id: Mapped[str | None] = mapped_column(
         String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
     )
@@ -953,6 +1053,180 @@ class NotificationPreference(Base):
     email_advisor_messages: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     inapp_job_alerts: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     inapp_advisor_updates: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class CounselorProfile(Base):
+    """Thông tin hồ sơ và thiết lập của Cố vấn học tập."""
+
+    __tablename__ = "counselor_profiles"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True, index=True
+    )
+    academic_title: Mapped[str] = mapped_column(String(100), default="Thạc sĩ", nullable=False)
+    faculty: Mapped[str] = mapped_column(String(255), default="Khoa Công nghệ Thông tin", nullable=False)
+    department: Mapped[str] = mapped_column(String(255), default="Bộ môn Công nghệ Phần mềm", nullable=False)
+    phone_ext: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    office_location: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    role_title: Mapped[str] = mapped_column(String(255), default="Cố vấn học tập & Hướng nghiệp", nullable=False)
+    active_cohorts_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+    specializations_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+    office_hours: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    bio: Mapped[str | None] = mapped_column(Text, nullable=True)
+    notification_preferences_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class EnterpriseProfile(Base):
+    """Hồ sơ doanh nghiệp và trạng thái kiểm duyệt."""
+
+    __tablename__ = "enterprise_profiles"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True, index=True
+    )
+    company_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    logo_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    legal_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    tax_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    industry: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    company_size: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    founded_year: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    company_type: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    headquarters: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    other_offices: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+    website: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    linkedin: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    facebook: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    career_page: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    mission: Mapped[str | None] = mapped_column(Text, nullable=True)
+    products_services: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+    work_environment: Mapped[str | None] = mapped_column(Text, nullable=True)
+    core_values: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+    benefits: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+    workplace_models: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+    workplace_photos: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+    why_join_us: Mapped[str | None] = mapped_column(Text, nullable=True)
+    hiring_steps: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+    recruiting_email: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    recruiting_website: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    verification_status: Mapped[str] = mapped_column(String(30), default="pending", nullable=False)
+    verification_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class PartnerOrganization(Base):
+    """Mạng lưới doanh nghiệp đối tác."""
+
+    __tablename__ = "partner_organizations"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    code: Mapped[str | None] = mapped_column(String(100), nullable=True, unique=True)
+    logo: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    banner: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    industry: Mapped[str] = mapped_column(String(255), nullable=False)
+    location: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    contact_email: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    contact_phone: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    contact_person: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    mou_status: Mapped[str] = mapped_column(String(50), default="active", nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class StudentInternship(Base):
+    """Giám sát và đánh giá thực tập của sinh viên tại doanh nghiệp."""
+
+    __tablename__ = "student_internships"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    student_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    partner_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("partner_organizations.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    company_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    position: Mapped[str] = mapped_column(String(255), nullable=False)
+    location: Mapped[str] = mapped_column(String(255), nullable=False)
+    mentor_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    mentor_title: Mapped[str] = mapped_column(String(255), nullable=False)
+    mentor_email: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    current_week: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    total_weeks: Mapped[int] = mapped_column(Integer, default=12, nullable=False)
+    progress_percent: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    last_report_status: Mapped[str] = mapped_column(String(50), default="pending", nullable=False)  # submitted, reviewed, pending, delayed
+    status_label: Mapped[str] = mapped_column(String(100), default="Đang thực tập", nullable=False)
+    weekly_reports_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+    final_evaluation_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+    status: Mapped[str] = mapped_column(String(50), default="ongoing", nullable=False)  # ongoing, completed, cancelled
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class AssistantDocumentEmbedding(Base):
+    """Section-level semantic embeddings for CVs, JDs, and analysis artifacts used by Chatbot RAG."""
+
+    __tablename__ = "assistant_document_embeddings"
+    __table_args__ = (
+        Index("ix_assistant_embeddings_user_source", "user_id", "source_type", "source_id"),
+        Index("ix_assistant_embeddings_source", "source_id", "source_type"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    source_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    source_type: Mapped[str] = mapped_column(String(32), nullable=False)
+    source_title: Mapped[str] = mapped_column(String(255), default="", nullable=False)
+    section_name: Mapped[str] = mapped_column(String(64), nullable=False)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    content_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    embedding_provider: Mapped[str] = mapped_column(String(255), nullable=False)
+    embedding: Mapped[list[float]] = mapped_column(EmbeddingVector(), nullable=False)
+    metadata_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class CVChunkEmbedding(Base):
+    """Child chunk semantic embeddings for CVs used in hybrid matching."""
+
+    __tablename__ = "cv_chunk_embeddings"
+    __table_args__ = (
+        Index(
+            "ix_cv_chunk_embeddings_lookup",
+            "cv_id",
+            "chunk_id",
+            "content_hash",
+            "embedding_model",
+            "embedding_version",
+            unique=True,
+        ),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    cv_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    chunk_id: Mapped[str] = mapped_column(String(64), nullable=False)
+    content_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    chunk_text: Mapped[str] = mapped_column(Text, nullable=False)
+    section: Mapped[str] = mapped_column(String(64), default="", nullable=False)
+    parent_title: Mapped[str] = mapped_column(String(255), default="", nullable=False)
+    metadata_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+    embedding: Mapped[list[float]] = mapped_column(EmbeddingVector(), nullable=False)
+    embedding_model: Mapped[str] = mapped_column(String(128), nullable=False)
+    embedding_version: Mapped[str] = mapped_column(String(32), default="1.0", nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 

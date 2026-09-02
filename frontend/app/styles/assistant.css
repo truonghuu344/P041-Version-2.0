@@ -1,7 +1,12 @@
 /* Floating assistant: a clear, circular entry point kept separate from page actions. */
 .ai-companion {
+  position: fixed;
   right: 24px;
   bottom: 24px;
+  left: auto;
+  top: auto;
+  /* Keep Nova above the fixed app header (10,002), but below dialogs. */
+  z-index: 11000;
   width: 50px;
   height: 50px;
 }
@@ -99,8 +104,15 @@
 }
 
 .ai-companion-chat {
+  position: fixed;
   right: 24px;
   bottom: 24px;
+  left: auto;
+  top: auto;
+  /* One layer below its launcher; still above the fixed app header. */
+  z-index: 10999;
+  display: flex;
+  flex-direction: column;
   width: min(420px, calc(100vw - 32px));
   height: min(620px, calc(100dvh - 48px));
   min-height: 440px;
@@ -215,6 +227,128 @@
 .ai-chat-message.user .ai-chat-message-name {
   color: #d8f3e6;
 }
+.ai-chat-quote {
+  margin: 6px 0;
+  padding: 6px 10px;
+  border-left: 3px solid var(--primary, #10b981);
+  background: rgba(16, 185, 129, 0.08);
+  border-radius: 0 8px 8px 0;
+  font-style: italic;
+  font-size: 12.5px;
+  color: inherit;
+}
+.ai-chat-code {
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.06);
+  font-family: monospace;
+  font-size: 11.5px;
+}
+.ai-chat-message strong {
+  font-weight: 600;
+}
+.ai-chat-message-body {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+.ai-chat-message-body p {
+  margin: 0;
+}
+.ai-chat-section-title {
+  margin-top: 3px;
+  color: #087a5b;
+  font-size: 12px;
+  font-weight: 750;
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+}
+.ai-chat-section-title:first-child {
+  margin-top: 0;
+}
+.ai-chat-list {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding-left: 18px;
+}
+.ai-chat-list li::marker {
+  color: var(--primary, #10b981);
+}
+.ai-chat-response-meta {
+  width: fit-content;
+  margin-top: 8px;
+  padding: 2px 7px;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 999px;
+  background: rgba(16, 185, 129, 0.08);
+  color: #087a5b;
+  font-size: 9.5px;
+  font-weight: 650;
+  letter-spacing: 0.03em;
+}
+
+.ai-chat-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+  width: 100%;
+}
+
+.ai-chat-evidence {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 10px;
+  background: rgba(16, 185, 129, 0.05);
+  font-size: 11.5px;
+  margin-top: 4px;
+}
+
+.ai-chat-evidence summary {
+  color: var(--primary, #10b981);
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ai-chat-source {
+  display: grid;
+  gap: 3px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.ai-chat-source strong {
+  font-size: 12px;
+  color: var(--text-primary);
+}
+
+.ai-chat-source small {
+  color: var(--text-secondary, #6b7280);
+  font-size: 10.5px;
+}
+
+.ai-chat-source-quote,
+.ai-chat-source blockquote {
+  margin: 4px 0 0;
+  padding: 5px 8px;
+  border-left: 3px solid var(--primary, #10b981);
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 0 6px 6px 0;
+  font-style: italic;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--text-primary);
+  max-height: 75px;
+  overflow-y: auto;
+  word-break: break-word;
+}
 
 .ai-chat-actions button,
 .ai-chat-quick-prompts button {
@@ -284,7 +418,7 @@
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 767.98px) {
   .ai-companion {
     right: 16px;
     bottom: 76px;

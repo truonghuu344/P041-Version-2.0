@@ -15,9 +15,11 @@ async def test_career_assistant_calls_gemini_and_returns_navigation_action(monke
         llm_max_retries=0,
     )
     captured_messages = []
+    captured_config = {}
 
     class FakeGemini:
         def __init__(self, **kwargs):
+            captured_config.update(kwargs)
             assert kwargs["api_key"] == "test-gemini-key"
             assert kwargs["model"] == "gemini-test"
 
@@ -38,6 +40,9 @@ async def test_career_assistant_calls_gemini_and_returns_navigation_action(monke
     assert result["provider"] == "google_gemini"
     assert result["suggested_actions"] == [{"label": "Mở CV Upload", "page": "cv"}]
     assert any("Test User" in message.content for message in captured_messages)
+    assert captured_config["max_output_tokens"] == 768
+    assert captured_config["request_timeout"] == 20.0
+    assert captured_config["retries"] == 0
 
 
 @pytest.mark.asyncio

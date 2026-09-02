@@ -2,19 +2,20 @@ import {
   BarChart3,
   BriefcaseBusiness,
   Check,
-  Ear,
   FileText,
   Languages,
+  ListChecks,
   MessageSquareText,
   Mic,
   Play,
+  RefreshCw,
   Send,
   Sparkles,
   Star,
   Target,
   Upload,
-  Volume2,
 } from 'lucide-react';
+
 
 export default function InterviewView() {
   return (
@@ -88,12 +89,13 @@ export default function InterviewView() {
               </div>
 
               <div className="interview-setup-note">
-                <Sparkles size={15} />
+                <Target size={15} />
                 <span>
                   Voice được chuyển thành transcript. Bạn luôn có thể chỉnh sửa câu trả lời trước
                   khi gửi.
                 </span>
               </div>
+
               <button id="page-btn-start-interview" className="interview-start-button">
                 <Mic size={18} /> Bắt đầu phỏng vấn
               </button>
@@ -102,30 +104,54 @@ export default function InterviewView() {
               </p>
             </section>
 
-            <section className="interview-guide-card" aria-labelledby="interview-guide-title">
-              <h3 id="interview-guide-title">Hướng dẫn nhanh</h3>
-              <ul>
-                <li>
-                  <span>
-                    <Volume2 size={16} />
-                  </span>
-                  AI đọc câu hỏi bằng giọng nói.
-                </li>
-                <li>
-                  <span>
-                    <Mic size={16} />
-                  </span>
-                  Bạn trả lời bằng giọng nói hoặc nhập text.
-                </li>
-                <li>
-                  <span>
-                    <Ear size={16} />
-                  </span>
-                  AI lắng nghe và đặt câu hỏi tiếp theo.
-                </li>
-              </ul>
-            </section>
+          <section
+            className="interview-agenda-card"
+            id="page-interview-agenda"
+            aria-labelledby="interview-agenda-title"
+            hidden
+          >
+            <header className="interview-agenda-header">
+              <div className="interview-agenda-heading">
+                <span className="interview-icon">
+                  <ListChecks size={18} />
+                </span>
+                <div>
+                  <h3 id="interview-agenda-title">Bộ câu hỏi cho vị trí này</h3>
+                  <p id="page-interview-agenda-meta">—</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                id="page-interview-agenda-regenerate-btn"
+                className="interview-agenda-regenerate-btn"
+                hidden
+              >
+                <RefreshCw size={14} /> Sinh lại
+              </button>
+            </header>
+
+            <div id="page-interview-agenda-create-row" className="interview-agenda-create-row" hidden>
+              <p>Chưa có bộ câu hỏi cho cặp CV và JD này.</p>
+              <button
+                type="button"
+                id="page-interview-agenda-create-btn"
+                className="interview-agenda-create-btn"
+              >
+                <Sparkles size={15} /> Tạo bộ câu hỏi
+              </button>
+            </div>
+
+            <div id="page-interview-agenda-loading" className="interview-agenda-loading" hidden>
+              <span className="interview-agenda-spinner" aria-hidden="true" />
+              <span>Đang sinh bộ câu hỏi, có thể mất vài giây...</span>
+            </div>
+
+            <div id="page-interview-agenda-filters" className="interview-agenda-filters" hidden></div>
+
+            <ul id="page-interview-agenda-list" className="interview-agenda-list" hidden></ul>
+          </section>
           </aside>
+
 
           <section className="interview-live-card" id="page-interview-chat">
             <header className="interview-live-header">
@@ -191,7 +217,6 @@ export default function InterviewView() {
             </form>
           </section>
         </div>
-
         <section className="interview-report-card" id="page-interview-report">
           <header>
             <span className="interview-icon">
@@ -249,10 +274,11 @@ export default function InterviewView() {
           </div>
           <article className="interview-recommendations">
             <h4>
-              <Sparkles size={16} /> Gợi ý luyện tập tiếp
+              <Target size={16} /> Gợi ý luyện tập tiếp
             </h4>
             <ul id="page-report-recommendations-list" />
           </article>
+
           <form id="page-interview-csat-form" className="interview-feedback-form">
             <select id="page-interview-csat" required>
               <option value="">Đánh giá phiên này</option>

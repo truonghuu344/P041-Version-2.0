@@ -1,0 +1,1002 @@
+/* ============================================================
+   AUTH MODAL — một modal duy nhất cho Đăng nhập | Đăng ký | Quên mật khẩu.
+
+   Token/typography/spacing lấy đúng từ phân hệ Cố vấn (`counselor.css`):
+   tab 44px underline 2px · input 46px radius 12px · primary #006948
+   radius 12px · viền #e2e8f0 · ring rgba(5,150,105,.15).
+
+   Prefix `authx-*` tách hoàn toàn khỏi hệ `.modal-overlay` legacy. Ba nơi
+   từng ép style vào đây đã được loại trừ TẠI GỐC (không stack override):
+     · shared-ui.css §7  – `[role=dialog]:not(.authx-card)`  → bỏ overflow-y:auto
+     · responsive.css §3 – `[role=dialog]:not(.authx-card)`  → bỏ max-width !important
+     · counselor.css §6.1 / enterprise.css – `div[role=dialog]:not(.authx-card) button`
+       → bỏ viền 1px + ring ép lên tab / link / CTA.
+   Nhờ vậy file này KHÔNG cần một `!important` nào cho layout.
+   ============================================================ */
+
+:root {
+  --authx-primary: #006948;
+  --authx-primary-hover: #047857;
+  --authx-primary-soft: #ecfdf5;
+  --authx-emerald: #059669;
+  --authx-focus: var(--authx-emerald);
+  --authx-ring: 0 0 0 2px rgba(5, 150, 105, 0.15);
+  --authx-text: #171d19;
+  --authx-text-secondary: #475569;
+  --authx-text-muted: #64748b;
+  --authx-placeholder: #94a3b8;
+  --authx-border: #e2e8f0;
+  --authx-border-hover: #cbd5e1;
+  --authx-surface-soft: #f8fafc;
+  /* 12px = `--radius-md` của theme.css. Dùng CHUNG cho input, CTA, nút phụ
+     (Google / Đăng nhập của Cố vấn) và ghi chú — một bán kính duy nhất nên
+     không có góc 10px cạnh góc 12px trong cùng một khung. */
+  --authx-radius: 12px;
+  /* Thang nhịp DỌC — mọi khoảng cách dọc trong modal phải là một trong bốn
+     bậc này (trước đây trộn 4/5/6/7/8/9/10/12/14/16/20px nên nhịp lệch):
+       xs  label→input, input→lỗi, thu cụm tiêu đề
+       sm  khối phụ: feedback, ghi chú xếp chồng
+       md  nhịp chính: field→field, khối→khối  (= --authx-gap)
+       lg  mốc ngắt: sau thanh tab, trước CTA, đáy thân thẻ
+     Padding của khung (head/body 24px, mobile 16px) là chuyện khác — nó
+     thuộc lề trong của thẻ, không tham gia nhịp dọc. */
+  --authx-space-xs: 6px;
+  --authx-space-sm: 10px;
+  --authx-space-md: 14px;
+  --authx-space-lg: 18px;
+  --authx-gap: var(--authx-space-md);
+}
+
+/* ══ 1. Overlay ═══════════════════════════════════════════════ */
+.authx-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(15, 23, 42, 0.46);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.2s ease,
+    visibility 0.2s ease;
+}
+
+.authx-overlay.is-open {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* ══ 2. Card — vừa khít desktop, KHÔNG thanh cuộn nội bộ ══════ */
+/* Cột flex: đầu thẻ (logo + tab) cố định, thân co giãn. Card `overflow:
+   hidden` nên không bao giờ tự sinh scrollbar; chỉ khi cửa sổ quá thấp thì
+   `.authx-body` mới cuộn — desktop 900px+ luôn hiển thị đủ. */
+.authx-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(500px, 100%);
+  max-height: 90vh;
+  max-height: 90dvh;
+  overflow: hidden;
+  padding: 0;
+  border: 1px solid var(--authx-border);
+  border-radius: 14px;
+  background: #ffffff;
+  color: var(--authx-text);
+  font-family:
+    'Inter',
+    -apple-system,
+    blinkmacsystemfont,
+    'Segoe UI',
+    roboto,
+    sans-serif;
+  box-shadow:
+    0 16px 36px rgba(15, 23, 42, 0.08),
+    0 32px 80px rgba(15, 23, 42, 0.14);
+  transform: translateY(8px) scale(0.99);
+  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.authx-overlay.is-open .authx-card {
+  transform: translateY(0) scale(1);
+}
+
+.authx-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--authx-text-muted);
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.authx-close:hover {
+  color: var(--authx-text);
+  background: #f1f5f9;
+}
+
+.authx-close:focus-visible {
+  outline: 2px solid var(--authx-focus);
+  outline-offset: 2px;
+}
+
+/* ══ 3. Đầu thẻ: logo + thanh tab ═════════════════════════════ */
+.authx-head {
+  flex: 0 0 auto;
+  padding: 14px 24px 0;
+}
+
+.authx-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: var(--authx-space-sm);
+}
+
+.authx-brand span {
+  color: var(--authx-text);
+  font-size: 13.5px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+/* Đúng MỘT thanh tab 2 cột — không phải hai nút bo viền riêng.
+   Active = chữ Emerald + gạch chân 2px, không nền/viền/pill. */
+.authx-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  border-bottom: 1px solid var(--authx-border);
+}
+
+.authx-tab {
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  background: transparent;
+  color: var(--authx-text-secondary);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.authx-tab:hover {
+  color: var(--authx-primary);
+}
+
+.authx-tab.is-active {
+  color: var(--authx-primary);
+  border-bottom-color: var(--authx-primary);
+}
+
+.authx-tab:focus-visible {
+  outline: 2px solid var(--authx-focus);
+  outline-offset: -3px;
+  border-radius: 8px;
+}
+
+/* ══ 4. Thân thẻ + chuyển cảnh giữa Login/Register ════════════ */
+/* Card cao tối đa 90dvh nên chỉ khi cửa sổ quá thấp thân thẻ mới cuộn. Lúc đó
+   dùng thanh cuộn mảnh DÙNG CHUNG `.ui-scroll-thin` (shared-ui.css §6, thêm
+   trực tiếp trên class của phần tử) thay vì thanh native dày của Windows —
+   không khai báo lại quy ước, cũng không phải nới selector của file khác.
+   CHỦ Ý không dùng `scrollbar-gutter: stable`: nó chiếm 8px vĩnh viễn, làm lề
+   trái/phải lệch 24px/32px chỉ để phục vụ tình huống gần như không xảy ra. */
+.authx-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 24px var(--authx-space-lg);
+}
+
+/* min-height giữ chiều cao modal không nhảy bậc khi đổi tab / đổi vai trò.
+   192px = chiều cao TỰ NHIÊN của panel cao nhất trong hai màn ngắn (đo thật:
+   chọn vai trò 159.4px · kích hoạt Cố vấn 188px), làm tròn theo bậc 6px. Trước
+   đây để 240px nên màn chọn vai trò dư ~80px khoảng trống chia đôi trên/dưới. */
+.authx-panel-host {
+  display: grid;
+  min-height: 192px;
+}
+
+.authx-panel,
+.authx-pane {
+  display: flex;
+  flex-direction: column;
+  padding-top: var(--authx-space-lg);
+  animation: authx-view-in-tab 0.2s ease both;
+}
+
+/* Panel được focus bằng code khi màn không có input (chọn vai trò, kích hoạt
+   Cố vấn) để Tab không rơi ra trang phía sau. Tiêu đề + hiệu ứng vào đã là
+   chỉ báo đủ rõ nên không vẽ thêm outline quanh cả panel. */
+.authx-panel:focus {
+  outline: none;
+}
+
+/* Hai loại chuyển cảnh khác nhau để người dùng đọc được hướng đi:
+     · đổi TAB      → mờ dần + trượt DỌC 6px (như cũ)
+     · chọn vai trò → trượt NGANG vào từ phải
+     · quay lại     → trượt NGANG vào từ trái
+   `overflow-x: hidden` của thân thẻ cắt phần tràn nên không sinh cuộn ngang. */
+.authx-panel-host.is-fwd>.authx-panel {
+  animation-name: authx-view-in-fwd;
+}
+
+.authx-panel-host.is-back>.authx-panel {
+  animation-name: authx-view-in-back;
+}
+
+@keyframes authx-view-in-tab {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes authx-view-in-fwd {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes authx-view-in-back {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ══ 5. Tiêu đề ═══════════════════════════════════════════════ */
+.authx-pane-head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+  margin-bottom: var(--authx-gap);
+}
+
+.authx-title {
+  margin: 0 0 var(--authx-gap);
+  color: var(--authx-text);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.3;
+  text-align: center;
+}
+
+/* Tiêu đề + phụ đề là MỘT cụm chữ → thu về bậc xs. Thay cho margin âm -6px
+   trước đây (hack cấn vào margin của tiêu đề, khó đọc và dễ vỡ). */
+.authx-title:has(+ .authx-subtitle) {
+  margin-bottom: var(--authx-space-xs);
+}
+
+.authx-pane-head .authx-title {
+  margin: 0;
+  padding: 0 34px;
+}
+
+/* Quay lại chọn loại tài khoản — nút gọn cùng dòng tiêu đề, không thêm hàng */
+.authx-back {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--authx-text-muted);
+  cursor: pointer;
+  transform: translateY(-50%);
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.authx-back:hover {
+  color: var(--authx-primary);
+  background: var(--authx-primary-soft);
+}
+
+.authx-back:focus-visible {
+  outline: 2px solid var(--authx-focus);
+  outline-offset: 1px;
+}
+
+.authx-subtitle {
+  max-width: 380px;
+  margin: 0 auto var(--authx-gap);
+  color: var(--authx-text-secondary);
+  font-size: 13px;
+  line-height: 1.45;
+  text-align: center;
+}
+
+/* Phụ đề + đồng hồ OTP cũng là một cụm (thay margin âm -6px của .authx-otp-timer) */
+.authx-subtitle:has(+ .authx-otp-timer) {
+  margin-bottom: var(--authx-space-xs);
+}
+
+/* ══ 6. Google — ĐÚNG MỘT viền bo tròn ════════════════════════ */
+.authx-google-zone {
+  margin-bottom: var(--authx-gap);
+}
+
+.authx-google-host {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 46px;
+  overflow: hidden;
+  border: 1px solid var(--authx-border);
+  border-radius: var(--authx-radius);
+  background: #ffffff;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease;
+}
+
+.authx-google-host:hover {
+  border-color: var(--authx-border-hover);
+}
+
+/* GIS renderButton tự vẽ viền 1px + bo góc riêng bên trong host → gỡ hết để
+   không bị viền lồng viền; host giữ vai trò duy nhất vẽ khung nút. */
+/* Kéo cả `[role=button]` (nút thật GIS dựng bên trong), không chỉ wrapper: GIS
+   chốt chiều rộng ở 400px trong khi host rộng tới 452px, nên nếu chỉ kéo wrapper
+   thì phần khung dôi ra bên phải không thuộc vùng bấm của nút. */
+.authx-google-host>div,
+.authx-google-host>iframe,
+.authx-google-host [role='button'] {
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 44px !important;
+  margin: 0 !important;
+}
+
+.authx-google-host div,
+.authx-google-host iframe,
+.authx-google-host [role='button'] {
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.authx-google-host>div,
+.authx-google-host [role='button'] {
+  background-color: transparent !important;
+}
+
+.authx-google-loading {
+  color: var(--authx-text-muted);
+  font-size: 12.5px;
+}
+
+.authx-google-retry {
+  width: 100%;
+  height: 44px;
+  padding: 0 16px;
+  border: 0;
+  background: transparent;
+  color: var(--authx-text-secondary);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.authx-google-retry:hover {
+  color: var(--authx-primary);
+}
+
+.authx-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: var(--authx-gap);
+  color: var(--authx-text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.authx-divider::before,
+.authx-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--authx-border);
+}
+
+/* ══ 7. Trường nhập ═══════════════════════════════════════════ */
+.authx-field {
+  margin: 0 0 var(--authx-gap);
+}
+
+.authx-label {
+  display: block;
+  margin-bottom: var(--authx-space-xs);
+  color: var(--authx-text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+/* `Mật khẩu` và `Quên mật khẩu?` cùng MỘT hàng, canh giữa theo trục dọc */
+.authx-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: var(--authx-space-xs);
+}
+
+.authx-label-row .authx-label {
+  margin-bottom: 0;
+}
+
+/* Chữ xanh thuần: không viền, không nền, không pill, không badge */
+.authx-inline-link {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--authx-primary);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: right;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.authx-inline-link:hover {
+  color: var(--authx-primary-hover);
+  text-decoration: underline;
+}
+
+.authx-inline-link:focus-visible {
+  outline: 2px solid var(--authx-focus);
+  outline-offset: 2px;
+}
+
+.authx-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.authx-input-icon {
+  position: absolute;
+  top: 50%;
+  left: 13px;
+  z-index: 1;
+  color: var(--authx-placeholder);
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.authx-input {
+  width: 100%;
+  height: 46px;
+  padding: 0 13px;
+  border: 1px solid var(--authx-border);
+  border-radius: var(--authx-radius);
+  background: #ffffff;
+  color: var(--authx-text);
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 44px;
+  box-sizing: border-box;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.authx-input.has-icon {
+  padding-left: 38px;
+}
+
+.authx-input.has-trailing {
+  padding-right: 42px;
+}
+
+.authx-input::placeholder {
+  color: var(--authx-placeholder);
+  line-height: normal;
+}
+
+.authx-input:hover {
+  border-color: #cbd5e1;
+}
+
+.authx-input:focus {
+  outline: none;
+  border-color: var(--authx-focus);
+  box-shadow: var(--authx-ring);
+}
+
+.authx-input:focus-visible {
+  outline: none;
+}
+
+.authx-otp {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.45em;
+  text-align: center;
+  background: var(--authx-surface-soft);
+}
+
+.authx-toggle-password {
+  position: absolute;
+  right: 8px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--authx-placeholder);
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.authx-toggle-password:hover {
+  color: var(--authx-text-secondary);
+  background: #f1f5f9;
+}
+
+.authx-toggle-password:focus-visible {
+  outline: 2px solid var(--authx-focus);
+  outline-offset: 1px;
+}
+
+.authx-toggle-password svg {
+  pointer-events: none;
+}
+
+.authx-field-error {
+  margin: var(--authx-space-xs) 0 0;
+  color: #b91c1c;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+/* ══ 8. Feedback ══════════════════════════════════════════════ */
+.authx-feedback {
+  margin: 0 0 var(--authx-space-sm);
+  padding: 8px 10px;
+  border-radius: var(--authx-radius);
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.authx-feedback[hidden] {
+  display: none;
+}
+
+.authx-feedback-error {
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.authx-feedback-success {
+  border: 1px solid #a7f3d0;
+  background: var(--authx-primary-soft);
+  color: #047857;
+}
+
+.authx-feedback-info {
+  border: 1px solid var(--authx-border);
+  background: var(--authx-surface-soft);
+  color: var(--authx-text-secondary);
+}
+
+/* ══ 9. CTA — mỗi form đúng MỘT nút xanh full-width ═══════════ */
+/* Nhịp dọc bên trong form do `gap` của chính form quyết định, không rắc margin
+   lẻ lên từng khối. Nhờ vậy khối feedback ẩn/hiện (`hidden` → display:none)
+   không kéo nhịp lệch, và không còn cộng dồn margin của hai khối kề nhau. */
+.authx-panel>form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--authx-gap);
+}
+
+.authx-panel>form>.authx-field,
+.authx-panel>form>.authx-feedback {
+  margin: 0;
+}
+
+/* Ghi chú "chờ xác minh" nằm NGOÀI form (sau CTA) nên `gap` không với tới —
+   trước đây `.authx-note { margin: 0 }` khiến nó dán sát đáy nút. */
+.authx-panel>form+.authx-note {
+  margin-top: var(--authx-gap);
+}
+
+.authx-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 46px;
+  /* Trước CTA lùi thêm đúng một bậc: nhịp md của khối trước + phần bù = lg. */
+  margin-top: calc(var(--authx-space-lg) - var(--authx-gap));
+  padding: 0 16px;
+  border: 0;
+  border-radius: var(--authx-radius);
+  background: var(--authx-primary);
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition:
+    background-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.authx-submit:hover:not(:disabled) {
+  background: var(--authx-primary-hover);
+  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.22);
+}
+
+.authx-submit:focus-visible {
+  outline: 2px solid var(--authx-focus);
+  outline-offset: 2px;
+}
+
+.authx-submit:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Dòng gợi ý dưới CTA Đăng nhập: `Chưa có tài khoản?` slate mờ + `Đăng ký ngay`
+   Emerald. Chỉ là chữ bấm được — không viền, không pill, không badge. Khoảng
+   cách so với nút = `gap` md của form (14px, nằm trong dải yêu cầu 12–16px). */
+.authx-helper {
+  margin: 0;
+  color: var(--authx-text-muted);
+  font-size: 12.5px;
+  font-weight: 400;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.authx-helper-link {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--authx-emerald);
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: 500;
+  line-height: inherit;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.authx-helper-link:hover {
+  color: var(--authx-primary-hover);
+  text-decoration: underline;
+}
+
+.authx-helper-link:focus-visible {
+  outline: 2px solid var(--authx-focus);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.authx-text-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  align-self: center;
+  min-height: 30px;
+  margin-top: var(--authx-space-sm);
+  padding: 0 6px;
+  border: 0;
+  background: none;
+  color: var(--authx-text-secondary);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.authx-text-link:hover {
+  color: var(--authx-primary);
+}
+
+.authx-text-link:focus-visible {
+  outline: 2px solid var(--authx-focus);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.authx-otp-timer {
+  margin: 0 0 var(--authx-gap);
+  color: var(--authx-primary);
+  font-size: 12.5px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.authx-otp-timer.is-expired {
+  color: #b91c1c;
+}
+
+/* ══ 10. Đăng ký — hai vai trò công khai ═══════════════════════ */
+.authx-choice-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin: 4px 0 0;
+}
+
+.authx-choice-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 142px;
+  padding: 18px 14px;
+  border: 1px solid #cfe7dc;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #ffffff 0%, #f7fcf9 100%);
+  color: var(--authx-text);
+  font-family: inherit;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
+}
+
+.authx-choice-card:hover {
+  border-color: #70c8aa;
+  background: #effaf5;
+  box-shadow: 0 10px 22px rgba(0, 105, 72, 0.12);
+  transform: translateY(-2px);
+}
+
+.authx-choice-card:focus-visible {
+  outline: 2px solid var(--authx-focus);
+  outline-offset: 2px;
+}
+
+.authx-choice-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+}
+
+.authx-choice-icon.is-student {
+  color: var(--authx-primary);
+  background: var(--authx-primary-soft);
+}
+
+.authx-choice-icon.is-counselor {
+  color: #006948;
+  background: #e8f7f0;
+}
+
+.authx-choice-icon.is-enterprise {
+  color: var(--authx-text-secondary);
+  background: #f1f5f9;
+}
+
+/* Nhãn + mô tả nằm trong MỘT bọc để card là flex 2 phần (icon | chữ). Để hai
+   thẻ chữ trần cạnh nhau thì ở layout hàng (mobile) flexbox tách thành 3 cột. */
+.authx-choice-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.authx-choice-label {
+  color: var(--authx-text);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+/* Điều kiện của từng vai trò nói NGAY trên card — thay cho một câu gộp cả ba
+   vai trò bên dưới (thứ tự trong câu đó lại không khớp thứ tự card). */
+.authx-choice-desc {
+  color: var(--authx-text-muted);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.3;
+}
+
+/* ══ 11. Ghi chú ══════════════════════════════════════════════ */
+.authx-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin: 0;
+  padding: 9px 11px;
+  border: 1px solid var(--authx-border);
+  border-radius: var(--authx-radius);
+  background: var(--authx-surface-soft);
+  color: var(--authx-text-secondary);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.authx-note svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+  color: var(--authx-primary);
+}
+
+/* Toàn bộ phần chữ nằm trong MỘT `<span>` → một flex item duy nhất. Nếu để
+   text node trần cạnh `<strong>`, flexbox tách thành nhiều item ẩn và câu bị
+   xé thành các cột lởm chởm (thấy rõ ở mobile). */
+.authx-note>span {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.authx-note strong {
+  font-weight: 600;
+  color: var(--authx-text);
+}
+
+.authx-note+.authx-note {
+  margin-top: var(--authx-space-sm);
+}
+
+.authx-activation-panel .authx-note-stack {
+  display: grid;
+  gap: var(--authx-space-sm);
+  margin: auto 0;
+}
+
+/* ══ 12. Responsive ═══════════════════════════════════════════ */
+@media (max-width: 767.98px) {
+  .authx-overlay {
+    padding: 10px;
+  }
+
+  .authx-card {
+    width: 100%;
+    max-height: calc(100dvh - 20px);
+    border-radius: 12px;
+  }
+
+  .authx-head {
+    padding: 14px 16px 0;
+  }
+
+  .authx-body {
+    padding: 0 16px var(--authx-space-md);
+  }
+
+  /* Mobile: xếp dọc, chiều cao theo nội dung (không giữ min-height desktop) */
+  .authx-panel-host {
+    min-height: 0;
+  }
+
+  .authx-choice-list {
+    grid-template-columns: 1fr;
+    margin: 0;
+  }
+
+  .authx-choice-card {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 10px;
+    min-height: 64px;
+    padding: 10px 12px;
+    text-align: left;
+  }
+
+  /* Hàng ngang: icon bên trái, nhãn + mô tả xếp dọc và canh trái */
+  .authx-choice-text {
+    align-items: flex-start;
+  }
+
+  .authx-title {
+    font-size: 17px;
+  }
+}
+
+@media (max-width: 359.98px) {
+  .authx-head {
+    padding: 12px 14px 0;
+  }
+
+  .authx-body {
+    padding: 0 14px var(--authx-space-md);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .authx-overlay,
+  .authx-card,
+  .authx-panel,
+  .authx-pane,
+  .authx-tab {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+

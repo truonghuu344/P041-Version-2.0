@@ -1,0 +1,54 @@
+{
+  "annotation_version": "1.0",
+  "description": "Ground truth annotations for Layer A (Retrieval) and Layer B (Requirement Classification).",
+  "requirement_level_truth": {
+    "JD-BE-001": {
+      "CV-BE-01": {
+        "REQ_PY": {"expected_status": "MATCHED", "expected_match_class": "EXACT_MATCH"},
+        "REQ_FASTAPI": {"expected_status": "MATCHED", "expected_match_class": "EXACT_MATCH"},
+        "REQ_PG": {"expected_status": "MATCHED", "expected_match_class": "EXACT_MATCH"},
+        "REQ_DOCKER": {"expected_status": "MATCHED", "expected_match_class": "EXACT_MATCH"},
+        "REQ_EXP": {"expected_status": "MATCHED", "expected_match_class": "EXACT_MATCH"},
+        "REQ_ARCH": {"expected_status": "MATCHED", "expected_match_class": "SEMANTIC_MATCH"},
+        "PREF_REDIS": {"expected_status": "MATCHED", "expected_match_class": "EXACT_MATCH"},
+        "PREF_KAFKA": {"expected_status": "MATCHED", "expected_match_class": "EXACT_MATCH"},
+        "PREF_AWS": {"expected_status": "MATCHED", "expected_match_class": "EXACT_MATCH"},
+        "REQ_EDU": {"expected_status": "MATCHED", "expected_match_class": "EXACT_MATCH"}
+      },
+      "CV-BE-02": {
+        "REQ_PY": {"expected_status": "MATCHED", "expected_match_class": "EXACT_MATCH"},
+        "REQ_FASTAPI": {"expected_status": "MATCHED", "expected_match_class": "EXACT_MATCH"},
+        "REQ_PG": {"expected_status": "MATCHED", "expected_match_class": "EXACT_MATCH"},
+        "REQ_DOCKER": {"expected_status": "MATCHED", "expected_match_class": "EXACT_MATCH"},
+        "REQ_EXP": {"expected_status": "MATCHED", "expected_match_class": "EXACT_MATCH"},
+        "PREF_REDIS": {"expected_status": "MATCHED", "expected_match_class": "EXACT_MATCH"},
+        "PREF_KAFKA": {"expected_status": "NOT_FOUND", "expected_match_class": "NOT_FOUND"},
+        "PREF_AWS": {"expected_status": "NOT_FOUND", "expected_match_class": "NOT_FOUND"}
+      },
+      "CV-BE-05": {
+        "REQ_PY": {"expected_status": "NOT_FOUND", "expected_match_class": "NOT_FOUND"},
+        "REQ_FASTAPI": {"expected_status": "NOT_FOUND", "expected_match_class": "NOT_FOUND"},
+        "REQ_PG": {"expected_status": "NOT_FOUND", "expected_match_class": "NOT_FOUND"},
+        "REQ_DOCKER": {"expected_status": "NOT_FOUND", "expected_match_class": "NOT_FOUND"}
+      }
+    },
+    "JD-DO-001": {
+      "CV-DO-01": {
+        "REQ_AWS": {"expected_status": "MATCHED", "expected_match_class": "EXACT_MATCH"},
+        "REQ_K8S": {"expected_status": "MATCHED", "expected_match_class": "EXACT_MATCH"},
+        "REQ_DOCKER": {"expected_status": "MATCHED", "expected_match_class": "EXACT_MATCH"},
+        "REQ_TERRAFORM": {"expected_status": "MATCHED", "expected_match_class": "EXACT_MATCH"},
+        "REQ_CICD": {"expected_status": "MATCHED", "expected_match_class": "EXACT_MATCH"},
+        "HARD_WORK_PERMIT": {"expected_status": "MATCHED", "expected_match_class": "EXACT_MATCH"}
+      },
+      "CV-DO-03": {
+        "REQ_AWS": {"expected_status": "MATCHED", "expected_match_class": "EXACT_MATCH"},
+        "REQ_K8S": {"expected_status": "MATCHED", "expected_match_class": "EXACT_MATCH"},
+        "HARD_WORK_PERMIT": {"expected_status": "CONFLICT", "expected_match_class": "CONFLICT"}
+      },
+      "CV-DO-04": {
+        "HARD_WORK_PERMIT": {"expected_status": "NOT_FOUND", "expected_match_class": "NOT_FOUND"}
+      }
+    }
+  }
+}

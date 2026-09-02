@@ -12,12 +12,14 @@ dependencies = [
     "python-dotenv>=1.0.0",
     "python-multipart>=0.0.12",
     "google-auth>=2.35.0",
+    "elevenlabs>=2.0.0,<3.0.0",
 
     "pyjwt>=2.8.0",
     "passlib[bcrypt]>=1.7.4",
     "bcrypt>=4.1.0",
 
     "sqlalchemy>=2.0.0",
+    "greenlet>=3.0.0",
     "alembic>=1.14.0",
     "psycopg2-binary>=2.9.0",
     "asyncpg>=0.29.0",
@@ -39,16 +41,22 @@ dependencies = [
 
     "httpx>=0.28.0",
     "reportlab>=4.2.0",
-
-    # Object storage R2/S3. Chi duoc dung khi STORAGE_PROVIDER=r2, nhung
-    # phai khai bao o day: thieu no thi `uv sync` dung env ma moi thao tac
-    # upload deu chet bang ModuleNotFoundError.
-    "boto3>=1.35.0",
-
-    # Voice interview: Gemini Live STT, ElevenLabs TTS (gTTS fallback).
-    # Bắt buộc có ở đây, nếu không `uv sync` sẽ dựng env câm.
-    "elevenlabs>=2.0.0,<3.0.0",
-    "gTTS>=2.5.0",
+    "pypdf>=4.0.0",
+    "python-docx>=1.1.0",
+    "Jinja2>=3.1.6",
+    "markdown>=3.10.2",
+    "phonenumbers>=9.0.24",
+    "pydantic-extra-types>=2.11.0",
+    "ruamel.yaml>=0.19.1",
+    "typst>=0.14.8",
+    "rendercv-fonts>=0.5.1",
+    "packaging>=26.0",
 ]
 [project.scripts]
 app = "src.main:app"
+
+[tool.pyright]
+extraPaths = ["src", "."]
+
+[tool.pyrefly]
+search-paths = ["src", "."]

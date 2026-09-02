@@ -2,7 +2,11 @@ from types import SimpleNamespace
 
 import pytest
 
-from src.agents.career_assistant_agent import _plan_assistant_action, career_assistant_agent
+from src.agents.career_assistant_agent import (
+    _nova_llm_timeout_seconds,
+    _plan_assistant_action,
+    career_assistant_agent,
+)
 
 
 def test_nova_understands_unaccented_operational_intents():
@@ -10,6 +14,31 @@ def test_nova_understands_unaccented_operational_intents():
     assert _plan_assistant_action({"message": "chay gap analysis"})["intent"] == "prepare_gap_analysis"
     assert _plan_assistant_action({"message": "bat dau phong van voi cv nay"})["intent"] == "prepare_interview"
     assert _plan_assistant_action({"message": "so sanh cac vi tri"})["intent"] == "compare_positions"
+    assert _plan_assistant_action({"message": "Tôi muốn tối ưu CV"})["intent"] == "open_cv"
+    assert _plan_assistant_action({"message": "So khớp JD"})["intent"] == "prepare_gap_analysis"
+    assert _plan_assistant_action({"message": "Luyện STAR"})["intent"] == "prepare_interview"
+
+
+def test_nova_caps_interactive_llm_timeout():
+    assert _nova_llm_timeout_seconds(SimpleNamespace(llm_timeout_seconds=45)) == 30.0
+    assert _nova_llm_timeout_seconds(SimpleNamespace(llm_timeout_seconds=2)) == 5.0
+
+
+@pytest.mark.asyncio
+async def test_nova_routes_cv_quick_action_without_gemini(monkeypatch):
+    class ForbiddenGemini:
+        def __init__(self, **_kwargs):
+            raise AssertionError("Quick navigation must not call Gemini")
+
+    monkeypatch.setattr("src.agents.career_assistant_agent.ChatGoogleGenerativeAI", ForbiddenGemini)
+    result = await career_assistant_agent.run(
+        message="Tôi muốn tối ưu CV",
+        history=[],
+        user_context={"_resources": {"cvs": [], "jds": [], "analyses": []}},
+    )
+
+    assert result["provider"] == "nova_orchestrator"
+    assert result["suggested_actions"] == [{"label": "Mở CV Upload", "page": "cv"}]
 
 
 @pytest.mark.asyncio

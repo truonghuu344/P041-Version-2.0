@@ -1,15 +1,59 @@
 from datetime import datetime
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
+
+from src.services.interview_agenda import (
+    COMPETENCIES,
+    DEFAULT_NUM_QUESTIONS,
+    MAX_NUM_QUESTIONS,
+    MIN_NUM_QUESTIONS,
+)
+
+
+class CandidateProfilePayload(BaseModel):
+    """Durable, user-owned settings used by the candidate profile surface."""
+
+    profile: dict[str, Any] = Field(default_factory=dict)
 
 
 # --- Auth Schemas ---
 class UserRegister(BaseModel):
+    """Public self-registration payload.
+
+    SECURITY CONTRACT: the client never picks a privileged role. Public
+    registration only creates STUDENT or COUNSELOR accounts. Admin accounts
+    remain provisioned by the system.
+    """
+
     email: EmailStr
     password: str = Field(..., min_length=6, description="Mật khẩu tối thiểu 6 ký tự")
     full_name: str = Field(..., min_length=2, description="Họ và tên người dùng")
-    role: str = Field(default="student", description="student | counselor | enterprise")
+    role: Literal["student", "counselor"] = Field(
+        default="student",
+        description="Chỉ chấp nhận 'student' hoặc 'counselor'.",
+    )
+    company_name: str | None = Field(
+        default=None,
+        max_length=255,
+        description="Trường tương thích cũ, không dùng cho đăng ký công khai.",
+    )
+
+
+class AdminUserCreate(BaseModel):
+    """Admin-only account creation payload (POST /admin/users).
+
+    Allows provisioning STUDENT / COUNSELOR / ENTERPRISE accounts; creating a
+    second Admin remains forbidden in the endpoint itself.
+    """
+
+    email: EmailStr
+    password: str = Field(..., min_length=6, description="Mật khẩu tối thiểu 6 ký tự")
+    full_name: str = Field(..., min_length=2, description="Họ và tên người dùng")
+    role: Literal["student", "counselor"] = Field(
+        default="student",
+        description="Vai trò do Admin cấp: student | counselor.",
+    )
 
 
 class UserUpdate(BaseModel):
@@ -47,7 +91,6 @@ class PasswordResetConfirm(BaseModel):
 
 class GoogleAuthRequest(BaseModel):
     credential: str = Field(..., min_length=20, description="Google Identity Services ID token")
-    role: str = Field(default="student", description="Role requested for sign in / registration")
 
 
 class UserOut(BaseModel):
@@ -100,6 +143,7 @@ class JDCreate(BaseModel):
     company: str | None = None
     location: str | None = None
     requirements_text: str = Field(..., min_length=10, description="Mô tả chi tiết JD")
+    metadata: dict[str, Any] | None = None
 
 
 class JDOut(BaseModel):
@@ -127,7 +171,22 @@ class JobCatalogItem(BaseModel):
     domain: str
     skills: list[str] = Field(default_factory=list)
     description: str
+    # Candidate-facing details used by the job brief.  These are deliberately
+    # readable job facts, not pipeline diagnostics or internal identifiers.
+    responsibilities: list[str] = Field(default_factory=list)
+    requirements: list[str] = Field(default_factory=list)
     source_url: str | None = None
+    source_name: str | None = None
+    seniority: str | None = None
+    salary: str | None = None
+    salary_range: str | None = None
+    openings: int | None = None
+    deadline: str | None = None
+    posted_at: str | None = None
+    applicant_count: int | None = None
+    company_logo: str | None = None
+    required_skills: list[str] = Field(default_factory=list)
+    preferred_skills: list[str] = Field(default_factory=list)
     match_score: float | None = None
     matched_skills: list[str] = Field(default_factory=list)
     missing_skills: list[str] = Field(default_factory=list)
@@ -252,8 +311,28 @@ class RequirementEvidenceItem(BaseModel):
         None
     )
     match_classification: (
-        Literal["EXACT_MATCH", "NORMALIZED_MATCH", "SEMANTIC_MATCH", "PARTIAL_MATCH", "NOT_FOUND"] | None
+        Literal[
+            "DIRECT",
+            "EQUIVALENT",
+            "INFERRED",
+            "ADJACENT",
+            "NO_EVIDENCE",
+            "EXACT_MATCH",
+            "NORMALIZED_MATCH",
+            "SEMANTIC_MATCH",
+            "PARTIAL_MATCH",
+            "NOT_FOUND",
+        ]
+        | str
+        | None
     ) = None
+    group: str | None = None
+    type: str | None = None
+    match_status: str | None = None
+    match_score: float | None = None
+    jd_text: str | None = None
+    cv_text: str | None = None
+    comparison: str | None = None
 
 
 class CriterionEvaluationOut(BaseModel):
@@ -320,6 +399,12 @@ class GapAnalysisResponse(BaseModel):
     integrity_guardrail: str = "passed"
     cache_hit: bool = False
     cache_key_version: str = ""
+    eligibility_status: str = "ELIGIBLE"
+    eligibility_details: list[dict[str, Any]] = []
+    eligibility_reason: str | None = None
+    required_coverage: dict[str, Any] | None = None
+    preferred_coverage: dict[str, Any] | None = None
+    groups: list[dict[str, Any]] = []
     created_at: datetime
 
 
@@ -437,6 +522,15 @@ class AnswerSubmitRequest(BaseModel):
     user_answer: str = Field(..., min_length=2, description="Câu trả lời của sinh viên")
 
 
+class InterviewQAOut(BaseModel):
+    question_index: int
+    question_text: str
+    user_answer: str | None = None
+    follow_up_question: str | None = None
+    follow_up_answer: str | None = None
+    star_score: dict[str, float] = {}
+
+
 class InterviewReportOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -448,6 +542,11 @@ class InterviewReportOut(BaseModel):
     improvements: list[str] = []
     recommendations: list[str] = []
     created_at: datetime
+    qa_history: list[InterviewQAOut] = []
+    jd_title: str = ""
+    cv_title: str = ""
+    mode: str = "text"  # "text" | "voice"
+    language: str = "vi"
 
 
 # --- Legacy / Chat Schemas ---
@@ -516,6 +615,8 @@ class AssistantChatResponse(BaseModel):
     conversation_id: str
     user_message_id: str
     assistant_message_id: str
+    rag_tier: str = "none"
+    latency_ms: int = 0
 
 
 class AssistantStatusResponse(BaseModel):
@@ -566,6 +667,10 @@ class InterviewFeedbackOut(BaseModel):
 
     id: str
     session_id: str
+    rating: int
+    comment: str | None = None
+    created_at: datetime
+
     rating: int
     comment: str | None = None
     created_at: datetime
@@ -624,6 +729,184 @@ class CounselorStudentOverview(BaseModel):
     interviews: list[InterviewSessionSummaryOut] = Field(default_factory=list)
 
 
+class CounselorDashboardOut(BaseModel):
+    total_students: int
+    pending_cv_review: int
+    partner_companies: int
+    open_talent_requests: int
+    upcoming_interviews: int
+    interviewing_students: list[dict[str, Any]] = Field(default_factory=list)
+    urgent_actions: list[dict[str, Any]] = Field(default_factory=list)
+
+
+class CounselorStudentListItem(BaseModel):
+    id: str
+    name: str
+    email: str
+    major: str
+    cohort: str
+    target_role: str
+    avatar: str | None = None
+    initials: str | None = None
+    cv_status: str
+    gpa: str
+    skills: list[str] = Field(default_factory=list)
+    match_rate: int = 0
+    last_active: str
+
+
+class CounselorStudentListResponse(BaseModel):
+    items: list[CounselorStudentListItem]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
+
+
+class CounselorVerifyProfileRequest(BaseModel):
+    feedback: str | None = None
+    referral_note: str | None = None
+
+
+class CounselorTaskCreate(BaseModel):
+    title: str = Field(..., min_length=2, max_length=255)
+    description: str = Field(..., min_length=2, max_length=2000)
+    due_date: str | None = None
+    priority: str = "medium"
+    target_role: str | None = None
+
+
+class CounselorOpportunityItem(BaseModel):
+    id: str
+    company: str
+    logo: str | None = None
+    position: str
+    location: str
+    slots: int = 1
+    match_rate: int = 0
+    type: str = "Thực tập"
+    field: str = "it"
+    allowance: str | None = None
+    must_have: list[str] = Field(default_factory=list)
+    nice_to_have: list[str] = Field(default_factory=list)
+    deadline: str | None = None
+    desc: str = ""
+    is_talent_request: bool = False
+
+
+class CounselorCandidateMatchItem(BaseModel):
+    id: str
+    name: str
+    university: str
+    avatar: str | None = None
+    initials: str | None = None
+    match_score: int
+    rating_label: str
+    matched_skills: list[str] = Field(default_factory=list)
+    missing_skills: list[str] = Field(default_factory=list)
+    cv_status: str
+    availability: str
+    cv_id: str | None = None
+
+
+class CounselorReferralCreate(BaseModel):
+    student_id: str
+    jd_id: str
+    cv_id: str | None = None
+    notes: str | None = None
+
+
+class CounselorReferralItemOut(BaseModel):
+    id: str
+    student_id: str
+    student_name: str
+    student_major: str
+    student_avatar: str | None = None
+    position: str
+    company: str
+    match_score: int
+    skills: list[str] = Field(default_factory=list)
+    date: str
+    last_updated: str
+    stage: str
+    stage_label: str
+    notes: str
+
+
+class CounselorReferralUpdate(BaseModel):
+    stage: str | None = None
+    stage_label: str | None = None
+    notes: str | None = None
+
+
+class CounselorInternshipItemOut(BaseModel):
+    id: str
+    student_id: str
+    student_name: str
+    student_major: str
+    student_avatar: str | None = None
+    initials: str | None = None
+    company: str
+    location: str
+    position: str
+    mentor_name: str
+    mentor_title: str
+    mentor_email: str | None = None
+    current_week: int
+    total_weeks: int
+    last_report_status: str
+    status_label: str
+    progress_percent: int
+    weekly_reports: list[dict[str, Any]] = Field(default_factory=list)
+
+
+class CounselorPartnerItemOut(BaseModel):
+    id: str
+    name: str
+    logo: str | None = None
+    banner: str | None = None
+    industry: str
+    location: str
+    description: str
+    interns_count: int = 0
+    open_talent_requests: int = 0
+    contact_person: str | None = None
+    contact_email: str | None = None
+    contact_phone: str | None = None
+
+
+class CounselorProfileDataOut(BaseModel):
+    full_name: str
+    academic_title: str
+    faculty: str
+    department: str
+    work_email: str
+    phone_ext: str
+    office_location: str
+    role_title: str
+    assigned_students_count: int
+    active_cohorts: list[str] = Field(default_factory=list)
+    specializations: list[str] = Field(default_factory=list)
+    office_hours: str
+    bio: str
+    notification_preferences: dict[str, Any] = Field(default_factory=dict)
+
+
+class CounselorProfileUpdate(BaseModel):
+    full_name: str | None = None
+    academic_title: str | None = None
+    faculty: str | None = None
+    department: str | None = None
+    phone_ext: str | None = None
+    office_location: str | None = None
+    role_title: str | None = None
+    active_cohorts: list[str] | None = None
+    specializations: list[str] | None = None
+    office_hours: str | None = None
+    bio: str | None = None
+    notification_preferences: dict[str, Any] | None = None
+
+
 # --- Enterprise Schemas ---
 class JobApplicationCreate(BaseModel):
     jd_id: str
@@ -648,6 +931,13 @@ class JobApplicationOut(BaseModel):
     status: str
     shared_at: datetime
     decided_at: datetime | None = None
+    # Where the candidate came from. "self" = the student applied directly,
+    # "counselor_referral" = a counselor referred them. Typed as a plain str so
+    # an unexpected legacy value degrades gracefully instead of failing
+    # serialization; both writers use the APPLICATION_SOURCE_* constants.
+    source: str = Field(default="self", description="self | counselor_referral")
+    referred_by_counselor_id: str | None = None
+    referred_by_counselor_name: str | None = None
 
 
 class ApplicationStatusNotificationOut(BaseModel):
@@ -827,6 +1117,73 @@ class AdminAILogStatsOut(BaseModel):
     unique_users: int
 
 
+# --- Admin portal schemas ---
+class AdminUserPageOut(BaseModel):
+    """Paginated account list for the /admin/users console.
+
+    `GET /admin/users` keeps returning a plain list for the legacy controller;
+    the React admin console reads this envelope instead.
+    """
+
+    items: list[UserOut]
+    total: int
+    limit: int
+    offset: int
+
+
+class AdminAuditLogOut(BaseModel):
+    id: str
+    event_name: str
+    user_id: str | None = None
+    user_name: str | None = None
+    duration_ms: int | None = None
+    metadata_json: dict[str, Any] | None = None
+    created_at: datetime
+
+
+class AdminAuditLogListOut(BaseModel):
+    items: list[AdminAuditLogOut]
+    total: int
+    limit: int
+    offset: int
+
+
+class AdminNotificationOut(BaseModel):
+    id: str
+    recipient_user_id: str
+    recipient_name: str | None = None
+    recipient_role: str
+    type: str
+    category: str
+    title: str
+    message: str
+    is_read: bool
+    priority: str
+    created_at: datetime
+
+
+class AdminNotificationListOut(BaseModel):
+    items: list[AdminNotificationOut]
+    total: int
+    limit: int
+    offset: int
+
+
+class AdminBroadcastRequest(BaseModel):
+    title: str = Field(..., min_length=4, max_length=255)
+    message: str = Field(..., min_length=4, max_length=4000)
+    target_roles: list[Literal["student", "counselor"]] = Field(
+        ..., min_length=1, max_length=2
+    )
+    priority: Literal["normal", "important", "high"] = "normal"
+
+
+class AdminBroadcastOut(BaseModel):
+    delivered: int
+    target_roles: list[str]
+    title: str
+
+
 # --- Compatibility & Workflow Request Schemas ---
 class CVAnalyzeRequest(BaseModel):
     cv_id: str = Field(..., min_length=1, description="ID của CV đã upload")
@@ -847,3 +1204,84 @@ class InterviewAnswerRequest(BaseModel):
         if self.user_answer is not None:
             return self.user_answer
         return ""
+
+
+# --- Interview Agenda Schemas ---
+class AgendaQuestionOut(BaseModel):
+    id: str
+    question_vi: str
+    question_en: str = ""
+    competency: str
+    phase: str
+    linked_skills: list[str] = Field(default_factory=list)
+    star_dimensions: list[str] = Field(default_factory=list)
+    follow_up_prompts: list[str] = Field(default_factory=list)
+    good_answer_signals: list[str] = Field(default_factory=list)
+    red_flags: list[str] = Field(default_factory=list)
+    evidence: str = ""
+    source: str = "generic"
+    is_enabled: bool = True
+
+
+class InterviewAgendaOut(BaseModel):
+    id: str
+    revision_no: int
+    generated_by: str
+    questions: list[AgendaQuestionOut]
+    coverage: dict[str, int]
+    created_at: datetime
+    updated_at: datetime
+
+
+class InterviewAgendaCreateRequest(BaseModel):
+    cv_id: str = Field(..., min_length=1, description="ID của CV đã upload")
+    jd_id: str = Field(..., min_length=1, description="ID của Job Description")
+    num_questions: int = Field(
+        default=DEFAULT_NUM_QUESTIONS,
+        ge=MIN_NUM_QUESTIONS,
+        le=MAX_NUM_QUESTIONS,
+        description="Tổng số câu hỏi cần sinh",
+    )
+    competency_focus: str | None = Field(
+        default=None, description="Nhóm năng lực muốn nhấn mạnh, hoặc bỏ trống"
+    )
+
+    @field_validator("competency_focus")
+    @classmethod
+    def _validate_competency_focus(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        if value not in COMPETENCIES:
+            raise ValueError(
+                f"competency_focus không hợp lệ. Phải thuộc: {', '.join(sorted(COMPETENCIES))}"
+            )
+        return value
+
+
+class InterviewAgendaRegenerateRequest(BaseModel):
+    num_questions: int = Field(
+        default=DEFAULT_NUM_QUESTIONS,
+        ge=MIN_NUM_QUESTIONS,
+        le=MAX_NUM_QUESTIONS,
+        description="Tổng số câu hỏi cần sinh lại",
+    )
+    competency_focus: str | None = Field(
+        default=None, description="Nhóm năng lực muốn nhấn mạnh, hoặc bỏ trống"
+    )
+
+    @field_validator("competency_focus")
+    @classmethod
+    def _validate_competency_focus(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        if value not in COMPETENCIES:
+            raise ValueError(
+                f"competency_focus không hợp lệ. Phải thuộc: {', '.join(sorted(COMPETENCIES))}"
+            )
+        return value
+
+
+class InterviewAgendaEnabledUpdateRequest(BaseModel):
+    enabled: dict[str, bool] = Field(
+        ..., min_length=1, description="Ánh xạ id câu hỏi -> trạng thái bật/tắt"
+    )

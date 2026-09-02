@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import HistoryView from '../HistoryView';
+import HistoryView from '@/components/candidate/HistoryView';
 
 describe('HistoryView Component (Redesigned)', () => {
   test('renders header with proper title and description', () => {

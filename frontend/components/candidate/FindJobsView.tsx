@@ -1,4 +1,4 @@
-import { BriefcaseBusiness, Database, Plus, Search, ShieldCheck } from 'lucide-react';
+import { BriefcaseBusiness, Database, Plus, Search, ShieldCheck, X } from 'lucide-react';
 
 export default function FindJobsView() {
   return (
@@ -27,6 +27,8 @@ export default function FindJobsView() {
           className="top-jobs-console-card"
           onSubmit={(event) => event.preventDefault()}
         >
+          {/* Upload progress is inserted here so it stays above all filters. */}
+          <div id="find-jobs-upload-progress-anchor" className="find-jobs-upload-progress-anchor" />
           <div className="top-jobs-control-grid">
             {/* Chọn CV */}
             <div className="control-group cv-select-group">
@@ -187,7 +189,7 @@ export default function FindJobsView() {
               <div className="filter-header-label-wrap">
                 <span className="filter-group-title">Bộ lọc tùy chọn</span>
                 <span className="filter-group-hint">
-                  Không chọn gì → tự động xếp hạng toàn diện theo CV
+                  Không chọn gì → xem Top 10 theo CV. Chọn bộ lọc hoặc từ khoá → tìm trong toàn bộ JD.
                 </span>
               </div>
               <div className="filter-items-row">
@@ -233,6 +235,35 @@ export default function FindJobsView() {
               </div>
             </div>
 
+            {/* Thanh tìm kiếm nhanh dưới bộ lọc */}
+            <div className="control-group job-search-keyword-group">
+              <label htmlFor="job-search-keyword-input">
+                <span className="control-label-title">Tìm kiếm từ khóa</span>
+                <span className="control-label-hint">
+                  Tìm nhanh theo chức danh, công ty hoặc từ khóa công nghệ (ví dụ: Fullstack, Python, React, Hà Nội...)
+                </span>
+              </label>
+              <div className="job-keyword-search-box">
+                <Search size={16} className="job-keyword-search-icon" aria-hidden="true" />
+                <input
+                  type="text"
+                  id="job-search-keyword-input"
+                  className="job-keyword-search-input"
+                  placeholder="Nhập tên công việc, công ty, kỹ năng (ví dụ: Fullstack, Python, React, Hà Nội)..."
+                  autoComplete="off"
+                />
+                <button
+                  type="button"
+                  id="btn-clear-job-search"
+                  className="btn-clear-job-search"
+                  title="Xóa từ khóa"
+                  hidden
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            </div>
+
             {/* Submit Action */}
             <div className="control-group action-group">
               <div className="top-jobs-submit-copy">
@@ -253,7 +284,7 @@ export default function FindJobsView() {
         <div className="top-jobs-results-header">
           <div className="results-title-wrap">
             <span className="pulse-dot green" />
-            <h3 id="job-results-summary">Top 10 dành cho bạn</h3>
+            <h3 id="job-results-summary">Top 10 theo CV</h3>
           </div>
           <div className="job-results-view-switch" role="tablist" aria-label="Chế độ xem việc làm">
             <button
@@ -287,16 +318,12 @@ export default function FindJobsView() {
               <div className="ai-activity-title-group">
                 <div className="ai-activity-icon-orb" aria-hidden="true"><Search size={17} /></div>
                 <div className="ai-activity-titles">
-                  <h4 className="ai-activity-title">Sẵn sàng tìm việc theo CV</h4>
-                  <p className="ai-activity-subtitle">Chọn CV rồi hệ thống sẽ hiển thị rõ từng bước xử lý và loại kết quả.</p>
+                  <h4 className="ai-activity-title">Sẵn sàng tìm việc phù hợp</h4>
+                  <p className="ai-activity-subtitle">Chọn CV để xem các cơ hội phù hợp với hồ sơ của bạn.</p>
                 </div>
               </div>
               <span className="ai-activity-badge">Chờ chọn CV</span>
             </header>
-            <div className="top-jobs-initial-legend">
-              <span><i className="is-retrieval" />Gợi ý phù hợp: dựa trên hồ sơ của bạn</span>
-              <span><i className="has-evidence" />Đã phân tích: có đánh giá mức độ phù hợp</span>
-            </div>
           </article>
         </div>
 

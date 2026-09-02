@@ -1,0 +1,35 @@
+-- Migration: Create enterprise_profiles table
+CREATE TABLE IF NOT EXISTS enterprise_profiles (
+    id VARCHAR(36) PRIMARY KEY,
+    user_id VARCHAR(36) NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+    company_name VARCHAR(255),
+    logo_url VARCHAR(500),
+    legal_name VARCHAR(255),
+    tax_id VARCHAR(100),
+    industry VARCHAR(255),
+    company_size VARCHAR(100),
+    founded_year VARCHAR(50),
+    company_type VARCHAR(100),
+    headquarters VARCHAR(255),
+    other_offices JSON,
+    website VARCHAR(500),
+    linkedin VARCHAR(500),
+    facebook VARCHAR(500),
+    career_page VARCHAR(500),
+    description TEXT,
+    mission TEXT,
+    products_services JSON,
+    work_environment TEXT,
+    core_values JSON,
+    benefits JSON,
+    workplace_models JSON,
+    workplace_photos JSON,
+    why_join_us TEXT,
+    hiring_steps JSON,
+    recruiting_email VARCHAR(255),
+    recruiting_website VARCHAR(500),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_enterprise_profiles_user_id ON enterprise_profiles(user_id);

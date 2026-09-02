@@ -1,6 +1,5 @@
 services:
   db:
-    container_name: db
     image: pgvector/pgvector:pg16
     ports:
       - "5432:5432"
@@ -18,7 +17,6 @@ services:
     restart: unless-stopped
 
   clamav:
-    container_name: clamav
     image: clamav/clamav:1.4
     volumes:
       - clamav_data:/var/lib/clamav
@@ -31,10 +29,9 @@ services:
     restart: unless-stopped
 
   backend:
-    container_name: backend
     build:
       context: .
-      dockerfile: backend/Dockerfile
+      dockerfile: Dockerfile
     env_file:
       - .env
     environment:
@@ -56,14 +53,8 @@ services:
       MALWARE_SCAN_MODE: required
       CLAMAV_HOST: clamav
       CLAMAV_PORT: 3310
-      LANGCHAIN_TRACING_V2: ${LANGCHAIN_TRACING_V2:-true}
-      LANGSMITH_TRACING: ${LANGSMITH_TRACING:-true}
-      LANGCHAIN_API_KEY: ${LANGCHAIN_API_KEY:-}
-      LANGSMITH_API_KEY: ${LANGSMITH_API_KEY:-}
-      LANGCHAIN_PROJECT: ${LANGCHAIN_PROJECT:-ai20k-agent}
-      LANGSMITH_PROJECT: ${LANGSMITH_PROJECT:-ai20k-agent}
-      LANGSMITH_ENDPOINT: ${LANGSMITH_ENDPOINT:-https://api.smith.langchain.com}
     volumes:
+      - ./backend/src:/app/src
       - app_uploads:/app/data/uploads
     depends_on:
       db:

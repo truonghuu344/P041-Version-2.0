@@ -1,26 +1,40 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useEffect, useState } from 'react';
-import dynamic from 'next/dynamic';
-import { PencilLine, Plus, Search, Sparkles, Trash2, Upload } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { Check, FileText, PencilLine, Plus, Search, Upload } from 'lucide-react';
 
-const CVVariantWizard = dynamic(() => import('./CVVariantWizard'));
+import CVVariantWizard from './CVVariantWizard';
 
-export default function CVView({ selectedCVTemplate, setIsTemplateGalleryOpen }: any) {
-  const [hasOpenedCVView, setHasOpenedCVView] = useState(false);
+export type CVTemplateName = 'modern' | 'classic' | 'elegant' | 'compact' | 'creative';
 
+interface CVViewProps {
+  selectedCVTemplate?: CVTemplateName | null;
+  isTemplateGalleryOpen?: boolean;
+  setIsTemplateGalleryOpen?: (isOpen: boolean) => void;
+  selectCVTemplate?: (templateName: CVTemplateName) => void;
+}
+
+export default function CVView({ selectedCVTemplate, setIsTemplateGalleryOpen }: CVViewProps) {
   useEffect(() => {
-    const syncActiveView = (event?: Event) => {
-      const requestedView = (event as CustomEvent<{ view?: string }>)?.detail?.view;
-      if (
-        requestedView === 'cv' ||
-        document.getElementById('view-cv')?.classList.contains('active')
-      ) {
-        setHasOpenedCVView(true);
+    const triggerLoad = () => {
+      const win = typeof window !== 'undefined' ? (window as unknown as { loadSpaceshipCVList?: () => void }) : null;
+      if (win?.loadSpaceshipCVList) {
+        void win.loadSpaceshipCVList();
       }
     };
-    syncActiveView();
-    window.addEventListener('career:view-changed', syncActiveView);
-    return () => window.removeEventListener('career:view-changed', syncActiveView);
+
+    triggerLoad();
+    const timer = setTimeout(triggerLoad, 300);
+
+    const onAuthChanged = () => {
+      triggerLoad();
+    };
+
+    window.addEventListener('auth-state-changed', onAuthChanged);
+    window.addEventListener('auth:changed', onAuthChanged);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('auth-state-changed', onAuthChanged);
+      window.removeEventListener('auth:changed', onAuthChanged);
+    };
   }, []);
 
   return (
@@ -29,7 +43,7 @@ export default function CVView({ selectedCVTemplate, setIsTemplateGalleryOpen }:
         <header className="career-table-header">
           <div>
             <p className="career-portfolio-eyebrow">
-              <Sparkles size={13} /> MY CV
+              <FileText size={13} /> MY CV
             </p>
             <h2>
               Quản lý <span>CV của bạn</span>
@@ -37,26 +51,27 @@ export default function CVView({ selectedCVTemplate, setIsTemplateGalleryOpen }:
             <p>Lưu, tìm kiếm và chọn nhanh phiên bản CV phù hợp cho từng công việc.</p>
           </div>
           <div className="career-table-actions">
+            <label className="career-upload-button">
+              <Upload size={16} /> Tải CV
+              <input
+                id="portfolio-cv-upload-input"
+                type="file"
+                accept=".pdf,.docx,.jpg,.jpeg,.png"
+                hidden
+              />
+            </label>
             <button
               type="button"
               id="btn-open-template-gallery"
               className="career-create-button"
-              onClick={() => setIsTemplateGalleryOpen(true)}
+              onClick={() => setIsTemplateGalleryOpen?.(true)}
             >
               <Plus size={17} /> Tạo CV mới
             </button>
-            <label className="career-upload-button">
-              <Upload size={15} /> Tải CV lên
-              <input id="portfolio-cv-upload-input" type="file" accept=".pdf,.docx" hidden />
-            </label>
           </div>
         </header>
-        <div
-          id="career-portfolio-snapshot"
-          className="career-snapshot"
-          hidden
-          aria-label="Tổng quan CV"
-        ></div>
+        <CVVariantWizard />
+
         <section className="career-table-section" id="career-versions-section" hidden>
           <div className="career-section-heading career-versions-heading">
             <div>
@@ -93,7 +108,7 @@ export default function CVView({ selectedCVTemplate, setIsTemplateGalleryOpen }:
             <i></i>
             <i></i>
             <i>
-              <Sparkles size={18} />
+              <FileText size={18} />
             </i>
           </div>
           <h3>Hồ sơ đầu tiên của bạn bắt đầu từ đây.</h3>
@@ -104,9 +119,9 @@ export default function CVView({ selectedCVTemplate, setIsTemplateGalleryOpen }:
           <button
             type="button"
             className="career-create-button"
-            onClick={() => setIsTemplateGalleryOpen(true)}
+            onClick={() => setIsTemplateGalleryOpen?.(true)}
           >
-            <Sparkles size={16} /> Tạo CV đầu tiên
+            <FileText size={16} /> Tạo CV đầu tiên
           </button>
           <label className="career-upload-link">
             hoặc tải CV hiện có
@@ -115,10 +130,10 @@ export default function CVView({ selectedCVTemplate, setIsTemplateGalleryOpen }:
         </section>
         <aside id="career-buddy-insight" className="career-buddy-insight" hidden>
           <div>
-            <Sparkles size={16} />
+            <Check size={16} />
           </div>
           <p>
-            <strong>Career Buddy</strong>
+            <strong>Career Assistant</strong>
             <span>Chọn một CV để đối chiếu với công việc bạn quan tâm khi bạn đã sẵn sàng.</span>
           </p>
           <button type="button" data-career-start-match>
@@ -183,64 +198,6 @@ export default function CVView({ selectedCVTemplate, setIsTemplateGalleryOpen }:
               Lưu CV
             </button>
           </form>
-        </div>
-        {/* Keep the wizard mounted after its first visit so in-progress edits survive navigation. */}
-        {hasOpenedCVView && <CVVariantWizard />}
-
-        {/* Modal Xem Chi Tiết CV */}
-        <div
-          id="career-cv-detail-modal"
-          className="cv-modal-overlay career-cv-detail-modal"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="career-cv-detail-title"
-          style={{ display: 'none' }}
-        >
-          <div className="cv-modal-card career-cv-detail-modal-card">
-            <button
-              type="button"
-              className="cv-modal-close"
-              id="career-cv-detail-close-btn"
-              aria-label="Đóng"
-            >
-              &times;
-            </button>
-            <div className="cv-modal-header career-cv-detail-modal-header">
-              <div className="career-cv-detail-header-left">
-                <span className="cv-detail-badge" id="career-cv-detail-badge">
-                  CV Gốc
-                </span>
-                <h3 id="career-cv-detail-title">Chi tiết CV</h3>
-                <p id="career-cv-detail-meta" className="career-cv-detail-meta">
-                  Cập nhật: --/--/----
-                </p>
-              </div>
-            </div>
-            <div
-              className="cv-modal-body career-cv-detail-modal-body"
-              id="career-cv-detail-content"
-            />
-            <div className="cv-modal-footer career-cv-detail-modal-footer">
-              <button type="button" className="cv-btn-delete-item" id="career-cv-detail-delete-btn">
-                <Trash2 size={15} /> Xóa CV
-              </button>
-              <div className="career-cv-detail-footer-right">
-                <button type="button" className="cv-modal-cancel" id="career-cv-detail-cancel-btn">
-                  Đóng
-                </button>
-                <button
-                  type="button"
-                  className="cv-modal-find-jobs"
-                  id="career-cv-detail-find-jobs-btn"
-                >
-                  Việc phù hợp
-                </button>
-                <button type="button" className="cv-modal-select" id="career-cv-detail-match-btn">
-                  Match với Job
-                </button>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </section>

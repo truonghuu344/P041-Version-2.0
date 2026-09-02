@@ -1,3 +1,4 @@
+import logging
 from collections.abc import Sequence
 from datetime import UTC, datetime
 
@@ -13,6 +14,9 @@ from src.models.schemas import (
     NotificationCreate,
     NotificationPreferenceUpdate,
 )
+
+logger = logging.getLogger(__name__)
+
 
 
 class NotificationService:
@@ -46,7 +50,100 @@ class NotificationService:
         db.add(notification)
         await db.commit()
         await db.refresh(notification)
+        logger.info("Notification dispatched: recipient=%s, type=%s, title=%s", notification.recipient_user_id, notification.type, notification.title)
         return notification
+
+    @staticmethod
+    async def ensure_seed_notifications(db: AsyncSession, user_id: str) -> None:
+        """Tự động khởi tạo thông báo ban đầu cho tài khoản nếu chưa có thông báo nào."""
+        try:
+            total_stmt = select(func.count(Notification.id)).where(Notification.recipient_user_id == user_id)
+            count = await db.scalar(total_stmt) or 0
+            if count > 0:
+                return
+
+            user = await db.scalar(select(User).where(User.id == user_id))
+            if not user:
+                return
+
+            role = user.role or "student"
+            seeds = []
+            if role == "student":
+                seeds = [
+                    Notification(
+                        recipient_user_id=user_id,
+                        recipient_role="student",
+                        actor_role="system",
+                        type="WELCOME",
+                        category="message",
+                        title="Chào mừng bạn đến với Career Assistant!",
+                        message="Hãy hoàn thiện hồ sơ và tải lên CV để nhận diện kỹ năng, so khớp việc làm và nhận gợi ý lộ trình phù hợp.",
+                        priority="HIGH",
+                        action_url="/student/profile",
+                        is_read=False,
+                    ),
+                    Notification(
+                        recipient_user_id=user_id,
+                        recipient_role="student",
+                        actor_role="enterprise",
+                        type="JOB_MATCHED",
+                        category="job",
+                        title="Vị trí tuyển dụng mới phù hợp với bạn",
+                        message="Nhiều cơ hội việc làm AI & Software Engineering vừa được doanh nghiệp đối tác đăng tuyển.",
+                        priority="MEDIUM",
+                        action_url="/student/find-jobs",
+                        is_read=False,
+                    ),
+                    Notification(
+                        recipient_user_id=user_id,
+                        recipient_role="student",
+                        actor_role="counselor",
+                        type="ADVISOR_FEEDBACK",
+                        category="advisor",
+                        title="Cố vấn học tập sẵn sàng hỗ trợ bạn",
+                        message="Cố vấn nghề nghiệp luôn sẵn sàng hỗ trợ đánh giá CV và giới thiệu các cơ hội thực tập doanh nghiệp.",
+                        priority="LOW",
+                        action_url="/student/internship",
+                        is_read=False,
+                    ),
+                ]
+            elif role == "counselor":
+                seeds = [
+                    Notification(
+                        recipient_user_id=user_id,
+                        recipient_role="counselor",
+                        actor_role="system",
+                        type="WELCOME",
+                        category="message",
+                        title="Chào mừng Cố vấn nghề nghiệp!",
+                        message="Xem danh sách sinh viên cần định hướng và các cơ hội thực tập từ doanh nghiệp liên kết.",
+                        priority="HIGH",
+                        action_url="/counselor/students",
+                        is_read=False,
+                    ),
+                ]
+            elif role == "admin":
+                seeds = [
+                    Notification(
+                        recipient_user_id=user_id,
+                        recipient_role="admin",
+                        actor_role="system",
+                        type="SYSTEM_ALERT",
+                        category="system",
+                        title="Hệ thống Career Assistant vận hành ổn định",
+                        message="Toàn bộ hệ thống AI Matching, Phân tích CV và Cổng doanh nghiệp đang hoạt động tốt.",
+                        priority="MEDIUM",
+                        action_url="/admin",
+                        is_read=False,
+                    ),
+                ]
+
+            for s in seeds:
+                db.add(s)
+            await db.commit()
+        except Exception as exc:
+            logger.warning("ensure_seed_notifications error: %s", exc)
+            await db.rollback()
 
     @staticmethod
     async def get_user_notifications(
@@ -57,6 +154,7 @@ class NotificationService:
         limit: int = 50,
         offset: int = 0,
     ) -> Sequence[Notification]:
+        await NotificationService.ensure_seed_notifications(db, user_id)
         query = select(Notification).where(Notification.recipient_user_id == user_id)
         if category and category != "all":
             query = query.where(Notification.category == category)
@@ -69,6 +167,7 @@ class NotificationService:
 
     @staticmethod
     async def get_unread_count(db: AsyncSession, user_id: str) -> tuple[int, int]:
+        await NotificationService.ensure_seed_notifications(db, user_id)
         unread_stmt = select(func.count(Notification.id)).where(
             Notification.recipient_user_id == user_id,
             Notification.is_read.is_(False),
@@ -172,15 +271,15 @@ class NotificationService:
             "location": job_location or "Toàn quốc",
         }
 
-        # Query candidates who opted in
+        # Gửi thông báo tới tất cả sinh viên
         stmt = (
             select(User.id)
             .join(NotificationPreference, NotificationPreference.user_id == User.id, isouter=True)
             .where(
-                User.role == "student",
+                func.lower(User.role) == "student",
                 (NotificationPreference.inapp_job_alerts.is_(True) | NotificationPreference.inapp_job_alerts.is_(None)),
             )
-            .limit(20)  # limit batch size
+            .limit(500)
         )
         candidate_ids = (await db.scalars(stmt)).all()
 
@@ -617,7 +716,7 @@ class NotificationService:
         job_id: str,
         job_title: str,
     ) -> Notification:
-        """Advisor refers candidate to Recruiter (permission-based)."""
+        """Advisor refers candidate to Recruiter (permission-based, after Student consent)."""
         notif = Notification(
             recipient_user_id=enterprise_user_id,
             recipient_role="enterprise",
@@ -630,11 +729,427 @@ class NotificationService:
             job_id=job_id,
             candidate_id=student_id,
             advisor_id=advisor_id,
-            title="Cố vấn đã giới thiệu ứng viên",
-            message=f"Cố vấn {advisor_name} đã giới thiệu {student_name} cho vị trí {job_title}.",
+            title="Ứng viên được Cố vấn tiến cử",
+            message=f"{advisor_name} đã tiến cử {student_name} cho vị trí {job_title}.",
             priority="important",
             action_url=f"/jobs/{job_id}/candidates/{student_id}",
         )
         db.add(notif)
         await db.commit()
         return notif
+
+    # ─────────────────────────────────────────────────────────────
+    # CV & Task Triggers
+    # ─────────────────────────────────────────────────────────────
+
+    @staticmethod
+    async def trigger_cv_confirmed(
+        db: AsyncSession,
+        advisor_id: str,
+        advisor_name: str,
+        student_id: str,
+        cv_title: str,
+        cv_id: str,
+    ) -> Notification:
+        """Counselor confirms/validates Student CV -> Student gets notified."""
+        notif = Notification(
+            recipient_user_id=student_id,
+            recipient_role="student",
+            actor_user_id=advisor_id,
+            actor_role="counselor",
+            type="CV_CONFIRMED",
+            category="advisor",
+            entity_type="cv",
+            entity_id=cv_id,
+            advisor_id=advisor_id,
+            title="CV đã được Cố vấn xác nhận",
+            message=f"Cố vấn {advisor_name} đã xác nhận CV {cv_title} đạt chuẩn ứng tuyển.",
+            priority="normal",
+            action_url=f"/cv/{cv_id}",
+        )
+        db.add(notif)
+        await db.commit()
+        return notif
+
+    @staticmethod
+    async def trigger_counselor_task_assigned(
+        db: AsyncSession,
+        advisor_id: str,
+        advisor_name: str,
+        student_id: str,
+        task_title: str,
+        task_id: str,
+    ) -> Notification:
+        """Counselor creates an improvement task for Student -> Student gets notified."""
+        notif = Notification(
+            recipient_user_id=student_id,
+            recipient_role="student",
+            actor_user_id=advisor_id,
+            actor_role="counselor",
+            type="COUNSELOR_TASK_ASSIGNED",
+            category="advisor",
+            entity_type="task",
+            entity_id=task_id,
+            advisor_id=advisor_id,
+            title="Nhiệm vụ mới từ Cố vấn",
+            message=task_title,
+            priority="normal",
+            action_url=f"/cv?task={task_id}",
+        )
+        db.add(notif)
+        await db.commit()
+        return notif
+
+    @staticmethod
+    async def trigger_student_task_completed(
+        db: AsyncSession,
+        student_id: str,
+        student_name: str,
+        advisor_id: str,
+        task_title: str,
+        task_id: str,
+    ) -> Notification:
+        """Student finishes improvement task -> Counselor gets notified."""
+        notif = Notification(
+            recipient_user_id=advisor_id,
+            recipient_role="counselor",
+            actor_user_id=student_id,
+            actor_role="student",
+            type="STUDENT_TASK_COMPLETED",
+            category="advisor",
+            entity_type="task",
+            entity_id=task_id,
+            candidate_id=student_id,
+            title=f"{student_name} đã hoàn thành nhiệm vụ",
+            message=f"Sinh viên đã hoàn thành nhiệm vụ: {task_title}.",
+            priority="normal",
+            action_url=f"/counselor/students/{student_id}",
+        )
+        db.add(notif)
+        await db.commit()
+        return notif
+
+    # ─────────────────────────────────────────────────────────────
+    # Referral Consent Triggers
+    # ─────────────────────────────────────────────────────────────
+
+    @staticmethod
+    async def trigger_referral_consent_requested(
+        db: AsyncSession,
+        advisor_id: str,
+        advisor_name: str,
+        student_id: str,
+        company_name: str,
+        job_title: str,
+        job_id: str,
+    ) -> Notification:
+        """Counselor asks Student for referral consent -> Student receives HIGH PRIORITY notification."""
+        notif = Notification(
+            recipient_user_id=student_id,
+            recipient_role="student",
+            actor_user_id=advisor_id,
+            actor_role="counselor",
+            type="REFERRAL_CONSENT_REQUESTED",
+            category="advisor",
+            entity_type="job",
+            entity_id=job_id,
+            job_id=job_id,
+            advisor_id=advisor_id,
+            title="Yêu cầu đồng ý tiến cử",
+            message=f"{advisor_name} muốn tiến cử bạn vào vị trí {job_title} tại {company_name}.",
+            priority="high",
+            action_url=f"/history?job_id={job_id}",
+            metadata_json={"company": company_name, "job_title": job_title},
+        )
+        db.add(notif)
+        await db.commit()
+        return notif
+
+    @staticmethod
+    async def trigger_referral_consent_response(
+        db: AsyncSession,
+        student_id: str,
+        student_name: str,
+        advisor_id: str,
+        company_name: str,
+        job_id: str,
+        accepted: bool = True,
+    ) -> Notification:
+        """Student accepts/declines referral consent -> Counselor gets notified."""
+        if accepted:
+            title = "Sinh viên đã đồng ý tiến cử"
+            message = f"{student_name} đã đồng ý chia sẻ hồ sơ với {company_name}."
+            event_type = "REFERRAL_CONSENT_ACCEPTED"
+            priority = "important"
+        else:
+            title = "Sinh viên từ chối tiến cử"
+            message = f"{student_name} từ chối chia sẻ hồ sơ với {company_name}."
+            event_type = "REFERRAL_CONSENT_DECLINED"
+            priority = "normal"
+
+        notif = Notification(
+            recipient_user_id=advisor_id,
+            recipient_role="counselor",
+            actor_user_id=student_id,
+            actor_role="student",
+            type=event_type,
+            category="advisor",
+            entity_type="job",
+            entity_id=job_id,
+            job_id=job_id,
+            candidate_id=student_id,
+            title=title,
+            message=message,
+            priority=priority,
+            action_url=f"/counselor/referrals?student_id={student_id}&job_id={job_id}",
+        )
+        db.add(notif)
+        await db.commit()
+        return notif
+
+    # ─────────────────────────────────────────────────────────────
+    # Talent Request Triggers
+    # ─────────────────────────────────────────────────────────────
+
+    @staticmethod
+    async def trigger_talent_request_created(
+        db: AsyncSession,
+        enterprise_user_id: str,
+        company_name: str,
+        counselor_ids: list[str],
+        role_name: str,
+        quantity: int,
+        deadline: str,
+        request_id: str,
+    ) -> list[Notification]:
+        """Enterprise creates Talent Request -> Assigned Counselors receive notification."""
+        notifications = []
+        for c_id in counselor_ids:
+            notif = Notification(
+                recipient_user_id=c_id,
+                recipient_role="counselor",
+                actor_user_id=enterprise_user_id,
+                actor_role="enterprise",
+                type="TALENT_REQUEST_CREATED",
+                category="candidate",
+                entity_type="talent_request",
+                entity_id=request_id,
+                title="Yêu cầu nhân lực mới",
+                message=f"{company_name} cần tuyển {quantity} vị trí {role_name}. Hạn chót: {deadline}.",
+                priority="normal",
+                action_url="/counselor/opportunities",
+                metadata_json={"company": company_name, "role": role_name, "quantity": quantity, "deadline": deadline},
+            )
+            db.add(notif)
+            notifications.append(notif)
+        if notifications:
+            await db.commit()
+        return notifications
+
+    @staticmethod
+    async def trigger_talent_request_matched(
+        db: AsyncSession,
+        counselor_id: str,
+        counselor_name: str,
+        enterprise_user_id: str,
+        department_name: str,
+        candidate_count: int,
+        role_name: str,
+        request_id: str,
+    ) -> Notification:
+        """Counselor submits matched candidates for Talent Request -> Enterprise gets notified."""
+        notif = Notification(
+            recipient_user_id=enterprise_user_id,
+            recipient_role="enterprise",
+            actor_user_id=counselor_id,
+            actor_role="counselor",
+            type="TALENT_REQUEST_MATCHED",
+            category="candidate",
+            entity_type="talent_request",
+            entity_id=request_id,
+            title="Đã có ứng viên cho yêu cầu nhân lực",
+            message=f"{department_name} đã giới thiệu {candidate_count} sinh viên cho yêu cầu {role_name}.",
+            priority="important",
+            action_url="/enterprise/referrals",
+        )
+        db.add(notif)
+        await db.commit()
+        return notif
+
+    # ─────────────────────────────────────────────────────────────
+    # Internship Event Triggers
+    # ─────────────────────────────────────────────────────────────
+
+    @staticmethod
+    async def trigger_internship_report_submitted(
+        db: AsyncSession,
+        student_id: str,
+        student_name: str,
+        mentor_user_id: str,
+        counselor_user_id: str,
+        week_num: int,
+        internship_id: str,
+    ) -> tuple[Notification, Notification]:
+        """Student submits weekly internship report -> Enterprise Mentor and Counselor get notified."""
+        # 1. Mentor Notification
+        mentor_notif = Notification(
+            recipient_user_id=mentor_user_id,
+            recipient_role="enterprise",
+            actor_user_id=student_id,
+            actor_role="student",
+            type="INTERNSHIP_REPORT_SUBMITTED",
+            category="application",
+            entity_type="internship_report",
+            entity_id=internship_id,
+            candidate_id=student_id,
+            title="Có báo cáo tuần mới cần đánh giá",
+            message=f"{student_name} đã nộp báo cáo tuần {week_num}.",
+            priority="normal",
+            action_url=f"/enterprise/internships/{internship_id}",
+        )
+        db.add(mentor_notif)
+
+        # 2. Counselor Notification
+        counselor_notif = Notification(
+            recipient_user_id=counselor_user_id,
+            recipient_role="counselor",
+            actor_user_id=student_id,
+            actor_role="student",
+            type="INTERNSHIP_REPORT_SUBMITTED",
+            category="advisor",
+            entity_type="internship_report",
+            entity_id=internship_id,
+            candidate_id=student_id,
+            title="Sinh viên đã nộp báo cáo tuần",
+            message=f"{student_name} đã nộp báo cáo tuần {week_num}.",
+            priority="normal",
+            action_url=f"/counselor/internships/{internship_id}",
+        )
+        db.add(counselor_notif)
+
+        await db.commit()
+        return mentor_notif, counselor_notif
+
+    @staticmethod
+    async def trigger_internship_report_evaluated(
+        db: AsyncSession,
+        mentor_user_id: str,
+        mentor_name: str,
+        student_id: str,
+        counselor_user_id: str,
+        student_name: str,
+        week_num: int,
+        internship_id: str,
+    ) -> tuple[Notification, Notification]:
+        """Mentor evaluates weekly report -> Student and Counselor get notified."""
+        # 1. Student Notification
+        student_notif = Notification(
+            recipient_user_id=student_id,
+            recipient_role="student",
+            actor_user_id=mentor_user_id,
+            actor_role="enterprise",
+            type="INTERNSHIP_REPORT_EVALUATED",
+            category="application",
+            entity_type="internship_report",
+            entity_id=internship_id,
+            title=f"Mentor đã nhận xét báo cáo tuần {week_num}",
+            message=f"Mentor {mentor_name} đã gửi đánh giá và nhận xét cho báo cáo tuần {week_num} của bạn.",
+            priority="normal",
+            action_url="/history",
+        )
+        db.add(student_notif)
+
+        # 2. Counselor Notification
+        counselor_notif = Notification(
+            recipient_user_id=counselor_user_id,
+            recipient_role="counselor",
+            actor_user_id=mentor_user_id,
+            actor_role="enterprise",
+            type="INTERNSHIP_MENTOR_EVALUATED",
+            category="advisor",
+            entity_type="internship_report",
+            entity_id=internship_id,
+            candidate_id=student_id,
+            title=f"Doanh nghiệp đã gửi đánh giá tuần {week_num}",
+            message=f"Mentor {mentor_name} đã hoàn tất đánh giá tuần {week_num} cho {student_name}.",
+            priority="normal",
+            action_url=f"/counselor/internships/{internship_id}",
+        )
+        db.add(counselor_notif)
+
+        await db.commit()
+        return student_notif, counselor_notif
+
+    @staticmethod
+    async def trigger_internship_report_reminder(
+        db: AsyncSession,
+        student_id: str,
+        student_name: str,
+        counselor_user_id: str | None,
+        week_num: int,
+        status_type: str,  # 'due_soon' | 'overdue'
+        internship_id: str,
+    ) -> list[Notification]:
+        """System/Cron triggers internship report deadline reminders."""
+        notifications = []
+        if status_type == "overdue":
+            # Student Warning/Danger
+            st_notif = Notification(
+                recipient_user_id=student_id,
+                recipient_role="student",
+                actor_user_id=None,
+                actor_role=None,
+                type="INTERNSHIP_REPORT_OVERDUE",
+                category="application",
+                entity_type="internship_report",
+                entity_id=internship_id,
+                title=f"Báo cáo tuần {week_num} đã quá hạn",
+                message=f"Hạn chót nộp báo cáo tuần {week_num} đã qua. Vui lòng nộp ngay để không bị ảnh hưởng đánh giá.",
+                priority="high",
+                action_url=f"/student/internship/{internship_id}",
+            )
+            db.add(st_notif)
+            notifications.append(st_notif)
+
+            # Counselor Danger alert
+            if counselor_user_id:
+                co_notif = Notification(
+                    recipient_user_id=counselor_user_id,
+                    recipient_role="counselor",
+                    actor_user_id=None,
+                    actor_role=None,
+                    type="INTERNSHIP_STUDENT_OVERDUE",
+                    category="advisor",
+                    entity_type="internship_report",
+                    entity_id=internship_id,
+                    candidate_id=student_id,
+                    title="Báo cáo thực tập quá hạn",
+                    message=f"{student_name} chưa nộp báo cáo tuần {week_num}.",
+                    priority="high",
+                    action_url=f"/counselor/internships/{internship_id}",
+                )
+                db.add(co_notif)
+                notifications.append(co_notif)
+        else:
+            # Student Due Soon Warning
+            st_notif = Notification(
+                recipient_user_id=student_id,
+                recipient_role="student",
+                actor_user_id=None,
+                actor_role=None,
+                type="INTERNSHIP_REPORT_DUE_SOON",
+                category="application",
+                entity_type="internship_report",
+                entity_id=internship_id,
+                title=f"Báo cáo tuần {week_num} sắp đến hạn",
+                message=f"Báo cáo thực tập tuần {week_num} cần được nộp trước hạn chót.",
+                priority="normal",
+                action_url=f"/student/internship/{internship_id}",
+            )
+            db.add(st_notif)
+            notifications.append(st_notif)
+
+        if notifications:
+            await db.commit()
+        return notifications
+

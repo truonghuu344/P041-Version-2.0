@@ -4,17 +4,7 @@
     return node.innerHTML;
   }
 
-  /* ── Toast Notification Helper ── */
-  export function showToast(msg, type = 'info') {
-    const old = document.querySelector('.toast');
-    if (old) old.remove();
-    const t = document.createElement('div');
-    t.className = `toast ${type}`;
-    t.textContent = msg;
-    document.body.appendChild(t);
-    requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add('show')));
-    setTimeout(() => {
-      t.classList.remove('show');
-      setTimeout(() => t.remove(), 350);
-    }, 3200);
+  /* ── Toast Notification Helper (UI notification disabled) ── */
+  export function showToast(_msg, _type = 'info') {
+    // Toast UI notification disabled globally
   }

@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import copy
+import logging
 import uuid
 from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import APIRouter, Depends, Header, Query, Request, Response, status
 from fastapi.responses import StreamingResponse
+from pydantic import ValidationError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -46,6 +48,7 @@ from src.services.cv_variant_service import (
 from src.services.object_storage import ObjectStorageError, get_bytes_async
 
 router = APIRouter(prefix="/cv-variants", tags=["CV Variants v2"])
+logger = logging.getLogger(__name__)
 
 
 def _trace_id(request: Request) -> str:
@@ -215,7 +218,17 @@ async def list_cv_variants(
     if variant_status:
         query = query.where(CVVariant.status == variant_status)
     items = list((await db.scalars(query.order_by(CVVariant.created_at.desc()).limit(limit))).all())
-    return {"items": [await _serialize(db, item, include_history=False) for item in items], "total": len(items)}
+    serialized_items: list[dict] = []
+    for item in items:
+        try:
+            # Validate each legacy revision here so one malformed historic row
+            # cannot turn the whole CV optimizer workspace into a 500 response.
+            serialized_items.append(
+                CVVariantOut.model_validate(await _serialize(db, item, include_history=False)).model_dump(mode="json")
+            )
+        except (KeyError, TypeError, ValueError, ValidationError):
+            logger.warning("Skipping malformed CV variant %s while loading history.", item.id, exc_info=True)
+    return {"items": serialized_items, "total": len(serialized_items)}
 
 
 @router.get("/{variant_id}", response_model=CVVariantOut)
@@ -274,6 +287,18 @@ async def decide_cv_variant_suggestion(
     suggestion = next((item for item in suggestions if item.get("id") == suggestion_id), None)
     if not suggestion:
         _error("CV_SUGGESTION_NOT_FOUND", "Không tìm thấy đề xuất tối ưu.", request, 404)
+    if suggestion.get("is_actionable") is False:
+        # Informational suggestion: accepting/rejecting it is a harmless no-op.
+        # Its only purpose is to disclose why the original evidence is retained.
+        await save_revision(
+            db,
+            variant=variant,
+            content=content,
+            user_id=current_user.id,
+            editor_type="user",
+            change_summary=f"Acknowledged no-safe-rewrite suggestion {suggestion_id}",
+        )
+        return await _serialize(db, variant)
     if payload.decision == "reject":
         if suggestion.get("decision") in {"accept", "edit"} and suggestion.get("original"):
             patched, applied, _ = apply_cv_block_patches(
@@ -392,8 +417,7 @@ async def export_cv_variant(
             _error("CV_VARIANT_ASSET_UNAVAILABLE", "Không thể đọc file CV Variant đã publish.", request, 503)
     elif preview:
         report, pdf_bytes = await validate_variant(db, variant, trace_id=_trace_id(request))
-        if not report["passed"]:
-            _error("CV_VARIANT_PREVIEW_BLOCKED", "Hãy sửa lỗi validator trước khi xem PDF.", request, 422)
+        # Preview remains available for diagnostic review even if publishing is blocked.
     else:
         _error("CV_VARIANT_NOT_PUBLISHED", "Chỉ CV Variant đã publish mới được tải xuống.", request, 409)
     disposition = "inline" if preview else "attachment"

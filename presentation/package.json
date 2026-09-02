@@ -1,0 +1,13 @@
+{
+  "name": "career-assistant-presentation",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Pitch deck + PDF export for Career Assistant X (P-041). Standalone — does not affect the app.",
+  "type": "module",
+  "scripts": {
+    "presentation:pdf": "node export-pdf.mjs"
+  },
+  "devDependencies": {
+    "puppeteer-core": "^24.15.0"
+  }
+}

@@ -97,7 +97,7 @@ async def init_db() -> None:
             if len(settings.secret_key) < 32 or settings.secret_key == "super-secret-jwt-key-ai20k-p041-career-assistant":
                 raise RuntimeError("A unique SECRET_KEY of at least 32 characters is required in production.")
             if settings.cors_origins.strip() == "*":
-                logger.warning("CORS_ORIGINS is set to wildcard '*' in production; specify explicit origins for enhanced security.")
+                raise RuntimeError("CORS_ORIGINS must be explicit in production.")
         # Import models trước create_all để Base.metadata luôn có đủ bảng, kể cả
         # khi init_db được gọi độc lập ngoài luồng import API router.
         from src.db.models import User
@@ -121,6 +121,14 @@ async def init_db() -> None:
                 await conn.execute(text("ALTER TABLE cv_chunks ADD COLUMN IF NOT EXISTS embedding_json JSON"))
                 for statement in (
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url VARCHAR(500)",
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(50)",
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS major VARCHAR(255)",
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS university VARCHAR(255)",
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS cohort VARCHAR(100)",
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS gpa VARCHAR(20)",
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS target_role VARCHAR(255)",
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS skills_json JSON",
+                    "ALTER TABLE cvs ADD COLUMN IF NOT EXISTS cv_status VARCHAR(30) NOT NULL DEFAULT 'pending'",
                     "ALTER TABLE cv_analyses ADD COLUMN IF NOT EXISTS cv_snapshot_id VARCHAR(36)",
                     "ALTER TABLE cv_analyses ADD COLUMN IF NOT EXISTS jd_snapshot_id VARCHAR(36)",
                     "ALTER TABLE cv_analyses ADD COLUMN IF NOT EXISTS pipeline_version VARCHAR(40) NOT NULL DEFAULT '1.0'",
@@ -138,6 +146,18 @@ async def init_db() -> None:
                     "ALTER TABLE interview_sessions ADD COLUMN IF NOT EXISTS match_id VARCHAR(64)",
                     "ALTER TABLE interview_sessions ADD COLUMN IF NOT EXISTS language VARCHAR(16) NOT NULL DEFAULT 'vi'",
                     "ALTER TABLE interview_sessions ADD COLUMN IF NOT EXISTS mode VARCHAR(16) NOT NULL DEFAULT 'text'",
+                    # Candidate application source (migration 20260822_08). Existing
+                    # rows are direct student applications.
+                    "ALTER TABLE job_applications ADD COLUMN IF NOT EXISTS source VARCHAR(30) NOT NULL DEFAULT 'self'",
+                    "ALTER TABLE job_applications ADD COLUMN IF NOT EXISTS referred_by_counselor_id VARCHAR(36)",
+                    "UPDATE job_applications SET source = 'self' WHERE source IS NULL",
+                    # Admin verification workflow (migration 20260823_09). Existing
+                    # enterprise profiles enter the review queue as pending.
+                    "ALTER TABLE enterprise_profiles ADD COLUMN IF NOT EXISTS verification_status VARCHAR(30) NOT NULL DEFAULT 'pending'",
+                    "ALTER TABLE enterprise_profiles ADD COLUMN IF NOT EXISTS verification_note TEXT",
+                    "ALTER TABLE enterprise_profiles ADD COLUMN IF NOT EXISTS verified_at TIMESTAMPTZ",
+                    "UPDATE enterprise_profiles SET verification_status = 'pending' WHERE verification_status IS NULL",
+                    "CREATE INDEX IF NOT EXISTS ix_enterprise_profiles_verification_status ON enterprise_profiles (verification_status)",
                 ):
                     await conn.execute(text(statement))
             # create_all không thêm index mới vào bảng đã tồn tại. Lệnh này
@@ -160,6 +180,25 @@ async def init_db() -> None:
                 text(
                     "CREATE INDEX IF NOT EXISTS ix_job_recommendation_runs_cache "
                     "ON job_recommendation_runs (user_id, cv_snapshot_id, trace_id, status, completed_at DESC)"
+                )
+            )
+            # Một snapshot cho mỗi (nguồn, nội dung). create_all() tạo index
+            # này cho database mới nhưng không thêm index vào bảng đã tồn tại.
+            #
+            # Là index UNIQUE nên nó sẽ fail trên database đã lỡ tích luỹ
+            # snapshot trùng — dọn bằng
+            # backend/migrations/20260823_10_uq_snapshot_source_hash.sql trước
+            # khi khởi động. Safe cho cả PostgreSQL và SQLite.
+            await conn.execute(
+                text(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS uq_cv_snapshot_source "
+                    "ON cv_snapshots (cv_id, source_hash)"
+                )
+            )
+            await conn.execute(
+                text(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS uq_jd_snapshot_source "
+                    "ON jd_snapshots (jd_id, source_hash)"
                 )
             )
         logger.info("Database tables initialized successfully.")
@@ -201,6 +240,25 @@ async def init_db() -> None:
                 existing_admin.hashed_password = get_password_hash(settings.initial_admin_password)
                 await session.commit()
                 logger.info("System Admin password synchronized from environment.")
+
+            # Seed demo accounts if not existing
+            demo_accounts = [
+                ("counselor@cva.com", "counselor123", "Demo Counselor", "counselor"),
+                ("student@cva.com", "student123", "Demo Student", "student"),
+            ]
+            for d_email, d_pass, d_name, d_role in demo_accounts:
+                res_demo = await session.execute(select(User).where(User.email == d_email))
+                if not res_demo.scalar_one_or_none():
+                    session.add(
+                        User(
+                            email=d_email,
+                            hashed_password=get_password_hash(d_pass),
+                            full_name=d_name,
+                            role=d_role,
+                        )
+                    )
+                    await session.commit()
+                    logger.info("Demo user seeded: %s (%s)", d_email, d_role)
     except Exception:
         logger.exception("Database initialization failed; application startup aborted")
         raise

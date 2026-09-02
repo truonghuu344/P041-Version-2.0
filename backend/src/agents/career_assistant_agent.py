@@ -21,6 +21,8 @@ logger = logging.getLogger(__name__)
 
 _CACHE_TTL_SECONDS = 900  # 15 phút
 _CHAT_RESPONSE_CACHE: dict[str, tuple[float, dict[str, Any]]] = {}
+_NOVA_LLM_MAX_OUTPUT_TOKENS = 768
+_NOVA_LLM_TIMEOUT_CAP_SECONDS = 30.0
 
 
 def _get_cached_response(cache_key: str) -> dict[str, Any] | None:
@@ -67,6 +69,14 @@ def _contains_any(message: str, phrases: tuple[str, ...]) -> bool:
     return any(phrase in message for phrase in phrases)
 
 
+def _nova_llm_timeout_seconds(settings: Any) -> float:
+    """Keep interactive chat responsive even when a provider is slow."""
+    return min(
+        _NOVA_LLM_TIMEOUT_CAP_SECONDS,
+        max(5.0, float(settings.llm_timeout_seconds)),
+    )
+
+
 def _plan_assistant_action(state: CareerAssistantState) -> dict[str, Any]:
     message = state.get("message", "").casefold()
     normalized = _normalize_intent_text(message)
@@ -102,6 +112,15 @@ def _plan_assistant_action(state: CareerAssistantState) -> dict[str, Any]:
                 {"label": "Mở Thư viện Jobs", "page": "jobs"},
             ],
         }
+
+    # These short, action-oriented messages are emitted by the UI quick
+    # actions.  Route them locally instead of waiting for an LLM response.
+    if normalized in {"toi muon toi uu cv", "toi uu cv", "cai thien cv", "mo cv", "upload cv"}:
+        return {"intent": "open_cv", "suggested_actions": [{"label": "Mở CV Upload", "page": "cv"}]}
+    if normalized in {"so khop jd", "so khop cv voi jd", "gap analysis"}:
+        return {"intent": "prepare_gap_analysis", "suggested_actions": []}
+    if normalized in {"luyen star", "luyen phong van", "phong van voice"}:
+        return {"intent": "prepare_interview", "suggested_actions": []}
 
     if _contains_any(normalized, ("liet ke cv", "danh sach cv", "cac cv cua toi", "toi co nhung cv")):
         return {"intent": "list_cvs", "suggested_actions": []}
@@ -189,6 +208,13 @@ async def _respond_with_orchestration(state: CareerAssistantState) -> dict[str, 
         "tools_used": ["verified_user_database"],
         "suggested_actions": [],
     }
+
+    if intent == "open_cv":
+        return {
+            **result,
+            "response": "Hãy tải CV của bạn lên để Nova hỗ trợ tối ưu theo chuẩn ATS và STAR.",
+            "suggested_actions": [{"label": "Mở CV Upload", "page": "cv"}],
+        }
 
     if intent == "greeting":
         return {
@@ -514,10 +540,10 @@ async def _respond_with_gemini(state: CareerAssistantState) -> dict[str, Any]:
             model=settings.model_name,
             api_key=settings.google_genai_api_key,
             temperature=0.6,
-            max_output_tokens=2048,
-            request_timeout=max(60.0, float(settings.llm_timeout_seconds)),
-            timeout=max(60.0, float(settings.llm_timeout_seconds)),
-            retries=settings.llm_max_retries,
+            max_output_tokens=_NOVA_LLM_MAX_OUTPUT_TOKENS,
+            request_timeout=_nova_llm_timeout_seconds(settings),
+            timeout=_nova_llm_timeout_seconds(settings),
+            retries=0,
         )
         answer = await llm.ainvoke(messages)
         response_text = _content_to_text(answer.content)
@@ -536,31 +562,126 @@ async def _respond_with_gemini(state: CareerAssistantState) -> dict[str, Any]:
         }
 
 
+async def _load_rag_context(state: CareerAssistantState) -> dict[str, Any]:
+    """Route high-confidence factual RAG matches without an LLM call."""
+    from src.services.assistant_rag import get_assistant_rag_service
+
+    def value(chunk: Any, key: str, default: Any = None) -> Any:
+        if isinstance(chunk, dict):
+            return chunk.get(key, default)
+        return getattr(chunk, key, default)
+
+    resources = state.get("resource_context", {})
+    raw_chunks = state.get("rag_context") or resources.get("rag_chunks") or []
+    decision, direct_answer = get_assistant_rag_service().evaluate_cascading_decision(
+        query=state.get("message", ""),
+        retrieved_chunks=raw_chunks,
+    )
+    formatted_chunks = [
+        {
+            "id": value(chunk, "id"),
+            "source_id": value(chunk, "source_id", ""),
+            "source_type": value(chunk, "source_type", "document"),
+            "source_title": value(chunk, "source_title", "Tài liệu"),
+            "section_name": value(chunk, "section_name", "Nội dung"),
+            "content": value(chunk, "content", ""),
+            "score": value(chunk, "score", 0.0),
+        }
+        for chunk in raw_chunks
+    ]
+    if decision == "tier2_extractive" and direct_answer:
+        sources = [
+            {
+                "source_type": chunk["source_type"],
+                "source_id": chunk["source_id"],
+                "title": chunk["source_title"],
+                "quote": chunk["content"],
+                "score": chunk["score"],
+                "provenance": (
+                    "user_data"
+                    if chunk["source_type"] == "cv"
+                    else "system_data"
+                ),
+            }
+            for chunk in formatted_chunks[:2]
+        ]
+        return {
+            "response": direct_answer,
+            "rag_tier": "tier2_extractive",
+            "rag_context": formatted_chunks,
+            "tools_used": ["rag_retrieval", "extractive_rag"],
+            "suggested_actions": [_source_action(sources)],
+            "llm_succeeded": True,
+            "provider": "extractive_rag",
+            "model": "cascading-v1",
+        }
+    return {
+        "rag_tier": "tier3_generative" if raw_chunks else "none",
+        "rag_context": formatted_chunks,
+        "tools_used": ["rag_retrieval"] if raw_chunks else [],
+    }
+
+
 def _build_career_assistant_graph():
     graph = StateGraph(CareerAssistantState)
     graph.add_node("plan", _plan_assistant_action)
     graph.add_node("weather", _load_weather_context)
     graph.add_node("datetime", _respond_with_current_datetime)
+    graph.add_node("rag", _load_rag_context)
     graph.add_node("respond", _respond_with_gemini)
     graph.add_node("orchestrate", _respond_with_orchestration)
     graph.set_entry_point("plan")
+
+    def route_after_plan(state: CareerAssistantState) -> str:
+        intent = state.get("intent")
+        if intent in {"weather", "datetime", "security_refusal"}:
+            return "orchestrate" if intent == "security_refusal" else str(intent)
+        resources = state.get("resource_context", {})
+        rag_chunks = state.get("rag_context") or resources.get("rag_chunks") or []
+        if intent == "grounded_cv_request":
+            return "rag" if rag_chunks else "orchestrate"
+        if intent in {
+            "list_cvs",
+            "list_jds",
+            "prepare_gap_analysis",
+            "prepare_interview",
+            "latest_analysis",
+            "explain_analysis",
+            "action_plan",
+            "compare_positions",
+            "greeting",
+            "introduction",
+            "help",
+            "open_cv",
+        }:
+            return "orchestrate"
+        if rag_chunks:
+            return "rag"
+        return "respond"
+
     graph.add_conditional_edges(
         "plan",
-        lambda state: (
-            state.get("intent")
-            if state.get("intent") in {"weather", "datetime"}
-            else "orchestrate"
-            if state.get("intent") in {
-                "security_refusal", "list_cvs", "list_jds", "prepare_gap_analysis", "prepare_interview",
-                "grounded_cv_request", "latest_analysis", "explain_analysis", "action_plan", "compare_positions",
-                "greeting", "introduction", "help",
-            }
-            else "respond"
-        ),
-        {"weather": "weather", "datetime": "datetime", "respond": "respond", "orchestrate": "orchestrate"},
+        route_after_plan,
+        {
+            "weather": "weather",
+            "datetime": "datetime",
+            "rag": "rag",
+            "respond": "respond",
+            "orchestrate": "orchestrate",
+        },
     )
     graph.add_edge("weather", "respond")
     graph.add_edge("datetime", END)
+    graph.add_conditional_edges(
+        "rag",
+        lambda state: (
+            "done"
+            if state.get("rag_tier") == "tier2_extractive"
+            and state.get("response")
+            else "respond"
+        ),
+        {"done": END, "respond": "respond"},
+    )
     graph.add_edge("respond", END)
     graph.add_edge("orchestrate", END)
     return graph.compile()
@@ -584,6 +705,7 @@ class CareerAssistantAgent:
                 "history": history,
                 "user_context": user_context,
                 "resource_context": user_context.get("_resources", {}),
+                "rag_context": user_context.get("rag_context", []),
             }
         )
 
@@ -609,7 +731,7 @@ class CareerAssistantAgent:
         if intent in {
             "security_refusal", "list_cvs", "list_jds", "prepare_gap_analysis", "prepare_interview",
             "grounded_cv_request", "latest_analysis", "explain_analysis", "action_plan", "compare_positions",
-            "greeting", "introduction", "help",
+            "greeting", "introduction", "help", "open_cv",
         }:
             orchestrate_result = await _respond_with_orchestration(state)
             resp_text = orchestrate_result.get("response", "")
@@ -727,10 +849,10 @@ class CareerAssistantAgent:
             model=settings.model_name,
             api_key=settings.google_genai_api_key,
             temperature=0.6,
-            max_output_tokens=2048,
-            request_timeout=max(60.0, float(settings.llm_timeout_seconds)),
-            timeout=max(60.0, float(settings.llm_timeout_seconds)),
-            retries=settings.llm_max_retries,
+            max_output_tokens=_NOVA_LLM_MAX_OUTPUT_TOKENS,
+            request_timeout=_nova_llm_timeout_seconds(settings),
+            timeout=_nova_llm_timeout_seconds(settings),
+            retries=0,
         )
 
         full_content_parts: list[str] = []

@@ -23,7 +23,8 @@ export interface VariantSuggestion {
   jd_alignment?: string[];
   source_evidence_ids?: string[];
   source_spans?: Array<{ text: string; start?: number; end?: number }>;
-  decision: 'pending' | 'accept' | 'reject' | 'edit';
+  decision: 'pending' | 'accept' | 'reject' | 'edit' | 'unavailable';
+  is_actionable?: boolean;
   validator_status: string;
 }
 
@@ -36,18 +37,20 @@ export interface VariantGapAnalysis {
     description: string;
     deliverables: string[];
     draft_bullet: string;
-  };
+  } | null;
+  insufficient_evidence?: boolean;
 }
 
 export interface VariantContent {
   personal_info: Record<string, string>;
+  headline?: string;
   summary: string;
   skills: string[];
   experience: Array<Record<string, unknown>>;
   projects: Array<Record<string, unknown>>;
   education: Array<Record<string, unknown>>;
   certifications?: Array<Record<string, unknown>>;
-  template_name?: 'classic' | 'modern' | 'compact';
+  template_name?: 'classic' | 'modern' | 'elegant' | 'compact' | 'creative';
   _suggestions?: VariantSuggestion[];
   _confirmed_claims?: string[];
   _match_scores?: { before: number; after_preview: number };
@@ -64,6 +67,10 @@ export interface VariantValidation {
   claims_total: number;
   claims_supported: number;
   claims_blocked: number;
+  ats_score?: number;
+  ats_content_coverage?: number;
+  jd_keyword_coverage?: number;
+  verification_status?: 'Verified source = 100%' | 'Partially verified' | 'Insufficient evidence';
   render: { pages: number; bytes: number; template: string };
   trace_id: string;
 }
@@ -74,7 +81,7 @@ export interface CVVariant {
   mode: VariantMode;
   status: VariantStatus;
   content: VariantContent;
-  template: { id: string; name: 'classic' | 'modern' | 'compact'; version: number };
+  template: { id: string; name: 'classic' | 'modern' | 'elegant' | 'compact' | 'creative'; version: number };
   ai_metadata: {
     provider?: string;
     model?: string;
@@ -106,25 +113,42 @@ function safeApiError(status: number): string {
   return 'Đã xảy ra sự cố. Vui lòng thử lại sau.';
 }
 
+async function responseError(response: Response, parsedBody?: { detail?: unknown; message?: unknown } | null): Promise<string> {
+  const fallback = safeApiError(response.status);
+  const body = parsedBody ?? (await response.json().catch(() => null)) as { detail?: unknown; message?: unknown } | null;
+  const detail = body?.detail ?? body?.message;
+  if (typeof detail === 'string' && detail.trim()) return detail;
+  return fallback;
+}
+
+const API_ORIGIN = process.env.NEXT_PUBLIC_API_BASE_URL || '';
+
+const API_BASE_URL = API_ORIGIN
+  ? `${API_ORIGIN}/api/v1`
+  : '/api/v1';
+
+const API_V2_BASE_URL = API_ORIGIN
+  ? `${API_ORIGIN}/api/v2`
+  : '/api/v2';
+
+function resolveApiUrl(path: string): string {
+  if (/^https?:\/\//i.test(path)) return path;
+  if (path.startsWith('/api/v2')) {
+    return `${API_V2_BASE_URL}${path.slice('/api/v2'.length)}`;
+  }
+  if (path.startsWith('/api/v1')) {
+    return `${API_BASE_URL}${path.slice('/api/v1'.length)}`;
+  }
+  return `${API_BASE_URL}${path}`;
+}
+
 function authHeaders(extra: Record<string, string> = {}): Record<string, string> {
   const token = typeof window === 'undefined' ? null : window.localStorage.getItem('access_token');
   return token ? { ...extra, Authorization: `Bearer ${token}` } : extra;
 }
 
-function resolveApiUrl(endpoint: string): string {
-  if (!endpoint || /^https?:\/\//i.test(endpoint)) return endpoint || '';
-  const root = 'https://p041-version-2-0.onrender.com';
-  const customV1 = (typeof window !== 'undefined' && window.__CAREER_API_BASE_URL__) || `${root}/api/v1`;
-  const customV2 = (typeof window !== 'undefined' && window.__CAREER_API_V2_BASE_URL__) || `${root}/api/v2`;
-  const clean = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-  if (clean.startsWith('/api/v2/')) return `${customV2.replace(/\/api\/v2\/?$/, '')}${clean}`;
-  if (clean.startsWith('/api/v1/')) return `${customV1.replace(/\/api\/v1\/?$/, '')}${clean}`;
-  return `${customV1.replace(/\/$/, '')}${clean}`;
-}
-
 async function requestJson<T>(url: string, init: RequestInit = {}): Promise<T> {
-  const targetUrl = resolveApiUrl(url);
-  const response = await fetch(targetUrl, {
+  const response = await fetch(resolveApiUrl(url), {
     ...init,
     credentials: 'include',
     headers: authHeaders({
@@ -134,7 +158,7 @@ async function requestJson<T>(url: string, init: RequestInit = {}): Promise<T> {
   });
   const body = (await response.json().catch(() => ({}))) as Record<string, unknown>;
   if (!response.ok) {
-    throw new Error(safeApiError(response.status));
+    throw new Error(await responseError(response, body));
   }
   return body as T;
 }
@@ -230,14 +254,14 @@ export const cvVariantsApi = {
 
   async pdf(id: string, preview = false): Promise<Blob> {
     const response = await fetch(
-      `/api/v2/cv-variants/${encodeURIComponent(id)}/export${preview ? '?preview=true' : ''}`,
+      resolveApiUrl(`/api/v2/cv-variants/${encodeURIComponent(id)}/export${preview ? '?preview=true' : ''}`),
       {
         credentials: 'include',
         headers: authHeaders(),
       },
     );
     if (!response.ok) {
-      throw new Error(safeApiError(response.status));
+      throw new Error(await responseError(response));
     }
     return response.blob();
   },

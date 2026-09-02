@@ -99,6 +99,7 @@ async def extract_gap_evidence(state: GapAnalysisState) -> dict[str, Any]:
         jd_requirements=state["jd_requirements"],
         jd_parsed=state.get("jd_parsed_json", {}),
         rubric=state.get("rubric", {}),
+        on_progress=state.get("on_progress"),
     )
     return {"evidence": evidence}
 
@@ -123,11 +124,8 @@ async def draft_gap_analysis(state: GapAnalysisState) -> dict[str, Any]:
     }
     settings = get_settings()
     needs_llm, decision_reason = _match_explanation_needs_llm(evidence)
-    configured_llm_enabled = getattr(settings, "match_explanation_llm_enabled", False)
-    allow_llm = state.get("allow_llm")
-    llm_enabled = configured_llm_enabled if allow_llm is None else bool(allow_llm)
     if (
-        not llm_enabled
+        not getattr(settings, "match_explanation_llm_enabled", False)
         or not getattr(settings, "google_genai_api_key", "")
         or not needs_llm
     ):
@@ -175,13 +173,14 @@ Confidence score: {evidence.get("confidence_score", 0)}
             model=settings.model_name,
             temperature=0.2,
             api_key=settings.google_genai_api_key,
-            request_timeout=settings.llm_timeout_seconds,
+            request_timeout=settings.llm_timeout_seconds or 20.0,
             retries=settings.llm_max_retries,
         )
         structured_llm = llm.with_structured_output(GapCareerPlanDraft, method="json_schema", strict=True)
-        response = await structured_llm.ainvoke(
-            [SystemMessage(content=system_prompt), HumanMessage(content=user_prompt)]
-        )
+        async with asyncio.timeout(float(settings.llm_timeout_seconds or 20.0)):
+            response = await structured_llm.ainvoke(
+                [SystemMessage(content=system_prompt), HumanMessage(content=user_prompt)]
+            )
         value = response.model_dump() if isinstance(response, BaseModel) else dict(response)
         return {
             "draft_result": value,
@@ -409,6 +408,14 @@ async def enforce_gap_integrity(state: GapAnalysisState) -> dict[str, Any]:
         "jd_parsed": evidence.get("jd_parsed", {}),
         "strengths": evidence.get("strengths", []),
         "risks": evidence.get("risks", []),
+        "blockers": evidence.get("blockers", evidence.get("risks", [])),
+        "structured_strengths": evidence.get("structured_strengths", []),
+        "structured_blockers": evidence.get("structured_blockers", []),
+        "score_explanation": evidence.get("score_explanation", {}),
+        "category_score_explanation": evidence.get("category_score_explanation", []),
+        "requirement_summary": evidence.get("requirement_summary", {}),
+        "category_summary": evidence.get("category_summary", {}),
+        "background_fit": evidence.get("background_fit", {}),
         "suggestions": accepted,
         "executive_summary": fallback_plan.get("executive_summary", ""),
         "priority_actions": priority_actions or fallback_plan.get("priority_actions", []),
@@ -418,6 +425,12 @@ async def enforce_gap_integrity(state: GapAnalysisState) -> dict[str, Any]:
         ),
         "project_recommendations": project_recommendations or fallback_plan.get("project_recommendations", []),
         "cv_section_recommendations": cv_section_recommendations or fallback_plan.get("cv_section_recommendations", []),
+        "eligibility_status": evidence.get("eligibility_status", "ELIGIBLE"),
+        "eligibility_details": evidence.get("eligibility_details", []),
+        "eligibility_reason": evidence.get("eligibility_reason"),
+        "required_coverage": evidence.get("required_coverage"),
+        "preferred_coverage": evidence.get("preferred_coverage"),
+        "groups": evidence.get("groups", []),
         "score_breakdown": evidence.get("score_breakdown", {}),
         "integrity_guardrail": "passed",
         "explanation_provider": state.get("explanation_provider", "deterministic"),

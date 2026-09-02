@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, Check, Sparkles, Target } from 'lucide-react';
+import { ArrowRight, Check, FileText, Target } from 'lucide-react';
 
 export default function GapView() {
   return (
@@ -59,7 +59,7 @@ export default function GapView() {
               <option value="2">2 trang</option>
             </select>
             <button id="page-btn-optimize-cv" type="button">
-              <Sparkles size={16} /> Tối ưu CV
+              <FileText size={16} /> Tối ưu CV
             </button>
           </section>
           <div id="page-optimization-results" hidden>

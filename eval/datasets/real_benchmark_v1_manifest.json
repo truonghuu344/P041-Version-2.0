@@ -1,0 +1,802 @@
+[
+  {
+    "case_id": "CASE_JD-001_CV-KAG-12635195",
+    "cv_id": "CV-KAG-12635195",
+    "jd_id": "JD-001",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "Backend",
+    "sampling_stratum": "STRONG_CANDIDATE",
+    "sampling_reason": "Direct backend match: Python/Java developer with core database and REST API stack.",
+    "possible_test_leakage": true
+  },
+  {
+    "case_id": "CASE_JD-004_CV-KAG-13405733",
+    "cv_id": "CV-KAG-13405733",
+    "jd_id": "JD-004",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "Backend",
+    "sampling_stratum": "STRONG_CANDIDATE",
+    "sampling_reason": "Direct backend match: Python/Java developer with core database and REST API stack.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-005_CV-KAG-20674668",
+    "cv_id": "CV-KAG-20674668",
+    "jd_id": "JD-005",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "Backend",
+    "sampling_stratum": "STRONG_CANDIDATE",
+    "sampling_reason": "Direct backend match: Python/Java developer with core database and REST API stack.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-006_CV-KAG-83816738",
+    "cv_id": "CV-KAG-83816738",
+    "jd_id": "JD-006",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "Backend",
+    "sampling_stratum": "STRONG_CANDIDATE",
+    "sampling_reason": "Direct backend match: Python/Java developer with core database and REST API stack.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-007_CV-KAG-20824105",
+    "cv_id": "CV-KAG-20824105",
+    "jd_id": "JD-007",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "Backend",
+    "sampling_stratum": "STRONG_CANDIDATE",
+    "sampling_reason": "Direct backend match: Python/Java developer with core database and REST API stack.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-002_CV-KAG-36856210",
+    "cv_id": "CV-KAG-36856210",
+    "jd_id": "JD-002",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "Frontend",
+    "sampling_stratum": "STRONG_CANDIDATE",
+    "sampling_reason": "Direct frontend match: React/TypeScript developer matching modern web UI requirements.",
+    "possible_test_leakage": true
+  },
+  {
+    "case_id": "CASE_JD-003_CV-KAG-25990239",
+    "cv_id": "CV-KAG-25990239",
+    "jd_id": "JD-003",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "Frontend",
+    "sampling_stratum": "STRONG_CANDIDATE",
+    "sampling_reason": "Direct frontend match: React/TypeScript developer matching modern web UI requirements.",
+    "possible_test_leakage": true
+  },
+  {
+    "case_id": "CASE_JD-010_CV-KAG-36434348",
+    "cv_id": "CV-KAG-36434348",
+    "jd_id": "JD-010",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "Frontend",
+    "sampling_stratum": "STRONG_CANDIDATE",
+    "sampling_reason": "Direct frontend match: React/TypeScript developer matching modern web UI requirements.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-011_CV-KAG-12635195",
+    "cv_id": "CV-KAG-12635195",
+    "jd_id": "JD-011",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "Frontend",
+    "sampling_stratum": "STRONG_CANDIDATE",
+    "sampling_reason": "Direct frontend match: React/TypeScript developer matching modern web UI requirements.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-013_CV-KAG-20024870",
+    "cv_id": "CV-KAG-20024870",
+    "jd_id": "JD-013",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "Frontend",
+    "sampling_stratum": "STRONG_CANDIDATE",
+    "sampling_reason": "Direct frontend match: React/TypeScript developer matching modern web UI requirements.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-012_CV-KAG-36856210",
+    "cv_id": "CV-KAG-36856210",
+    "jd_id": "JD-012",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "AI/Data",
+    "sampling_stratum": "STRONG_CANDIDATE",
+    "sampling_reason": "Direct AI/Data match: Machine learning / ETL pipeline developer matching data engineering role.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-026_CV-KAG-21780877",
+    "cv_id": "CV-KAG-21780877",
+    "jd_id": "JD-026",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "AI/Data",
+    "sampling_stratum": "STRONG_CANDIDATE",
+    "sampling_reason": "Direct AI/Data match: Machine learning / ETL pipeline developer matching data engineering role.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-044_CV-KAG-33241454",
+    "cv_id": "CV-KAG-33241454",
+    "jd_id": "JD-044",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "AI/Data",
+    "sampling_stratum": "STRONG_CANDIDATE",
+    "sampling_reason": "Direct AI/Data match: Machine learning / ETL pipeline developer matching data engineering role.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-045_CV-KAG-25990239",
+    "cv_id": "CV-KAG-25990239",
+    "jd_id": "JD-045",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "AI/Data",
+    "sampling_stratum": "STRONG_CANDIDATE",
+    "sampling_reason": "Direct AI/Data match: Machine learning / ETL pipeline developer matching data engineering role.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-036_CV-KAG-91697974",
+    "cv_id": "CV-KAG-91697974",
+    "jd_id": "JD-036",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "DevOps",
+    "sampling_stratum": "STRONG_CANDIDATE",
+    "sampling_reason": "Direct DevOps match: Cloud engineer matching Docker, Kubernetes, CI/CD infrastructure requirements.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-038_CV-KAG-29051656",
+    "cv_id": "CV-KAG-29051656",
+    "jd_id": "JD-038",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "DevOps",
+    "sampling_stratum": "STRONG_CANDIDATE",
+    "sampling_reason": "Direct DevOps match: Cloud engineer matching Docker, Kubernetes, CI/CD infrastructure requirements.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-039_CV-KAG-83816738",
+    "cv_id": "CV-KAG-83816738",
+    "jd_id": "JD-039",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "DevOps",
+    "sampling_stratum": "STRONG_CANDIDATE",
+    "sampling_reason": "Direct DevOps match: Cloud engineer matching Docker, Kubernetes, CI/CD infrastructure requirements.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-027_CV-KAG-91635250",
+    "cv_id": "CV-KAG-91635250",
+    "jd_id": "JD-027",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "QA/QC",
+    "sampling_stratum": "STRONG_CANDIDATE",
+    "sampling_reason": "Direct QA match: Test automation engineer matching Selenium, API testing specifications.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-028_CV-KAG-19796840",
+    "cv_id": "CV-KAG-19796840",
+    "jd_id": "JD-028",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "QA/QC",
+    "sampling_stratum": "STRONG_CANDIDATE",
+    "sampling_reason": "Direct QA match: Test automation engineer matching Selenium, API testing specifications.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-029_CV-KAG-12045067",
+    "cv_id": "CV-KAG-12045067",
+    "jd_id": "JD-029",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "QA/QC",
+    "sampling_stratum": "STRONG_CANDIDATE",
+    "sampling_reason": "Direct QA match: Test automation engineer matching Selenium, API testing specifications.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-002_CV-KAG-10265057",
+    "cv_id": "CV-KAG-10265057",
+    "jd_id": "JD-002",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "Frontend",
+    "sampling_stratum": "MEDIUM_CANDIDATE",
+    "sampling_reason": "Partial stack: Backend developer applying for Fullstack/Frontend role.",
+    "possible_test_leakage": true
+  },
+  {
+    "case_id": "CASE_JD-003_CV-KAG-18067556",
+    "cv_id": "CV-KAG-18067556",
+    "jd_id": "JD-003",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "Frontend",
+    "sampling_stratum": "MEDIUM_CANDIDATE",
+    "sampling_reason": "Partial stack: Backend developer applying for Fullstack/Frontend role.",
+    "possible_test_leakage": true
+  },
+  {
+    "case_id": "CASE_JD-010_CV-KAG-26480367",
+    "cv_id": "CV-KAG-26480367",
+    "jd_id": "JD-010",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "Frontend",
+    "sampling_stratum": "MEDIUM_CANDIDATE",
+    "sampling_reason": "Partial stack: Backend developer applying for Fullstack/Frontend role.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-011_CV-KAG-12635195",
+    "cv_id": "CV-KAG-12635195",
+    "jd_id": "JD-011",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "Frontend",
+    "sampling_stratum": "MEDIUM_CANDIDATE",
+    "sampling_reason": "Partial stack: Backend developer applying for Fullstack/Frontend role.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-013_CV-KAG-13405733",
+    "cv_id": "CV-KAG-13405733",
+    "jd_id": "JD-013",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "Frontend",
+    "sampling_stratum": "MEDIUM_CANDIDATE",
+    "sampling_reason": "Partial stack: Backend developer applying for Fullstack/Frontend role.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-001_CV-KAG-90867631",
+    "cv_id": "CV-KAG-90867631",
+    "jd_id": "JD-001",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "Backend",
+    "sampling_stratum": "MEDIUM_CANDIDATE",
+    "sampling_reason": "Partial stack: Frontend developer with JavaScript applying for Backend/Node.js context.",
+    "possible_test_leakage": true
+  },
+  {
+    "case_id": "CASE_JD-004_CV-KAG-17641670",
+    "cv_id": "CV-KAG-17641670",
+    "jd_id": "JD-004",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "Backend",
+    "sampling_stratum": "MEDIUM_CANDIDATE",
+    "sampling_reason": "Partial stack: Frontend developer with JavaScript applying for Backend/Node.js context.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-005_CV-KAG-17987433",
+    "cv_id": "CV-KAG-17987433",
+    "jd_id": "JD-005",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "Backend",
+    "sampling_stratum": "MEDIUM_CANDIDATE",
+    "sampling_reason": "Partial stack: Frontend developer with JavaScript applying for Backend/Node.js context.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-006_CV-KAG-70089206",
+    "cv_id": "CV-KAG-70089206",
+    "jd_id": "JD-006",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "Backend",
+    "sampling_stratum": "MEDIUM_CANDIDATE",
+    "sampling_reason": "Partial stack: Frontend developer with JavaScript applying for Backend/Node.js context.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-007_CV-KAG-27770859",
+    "cv_id": "CV-KAG-27770859",
+    "jd_id": "JD-007",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "Backend",
+    "sampling_stratum": "MEDIUM_CANDIDATE",
+    "sampling_reason": "Partial stack: Frontend developer with JavaScript applying for Backend/Node.js context.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-005_CV-KAG-36434348",
+    "cv_id": "CV-KAG-36434348",
+    "jd_id": "JD-005",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "Backend",
+    "sampling_stratum": "MEDIUM_CANDIDATE",
+    "sampling_reason": "Adjacent role: Data engineer with SQL/ETL applying for Backend developer.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-006_CV-KAG-27536013",
+    "cv_id": "CV-KAG-27536013",
+    "jd_id": "JD-006",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "Backend",
+    "sampling_stratum": "MEDIUM_CANDIDATE",
+    "sampling_reason": "Adjacent role: Data engineer with SQL/ETL applying for Backend developer.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-007_CV-KAG-18301617",
+    "cv_id": "CV-KAG-18301617",
+    "jd_id": "JD-007",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "Backend",
+    "sampling_stratum": "MEDIUM_CANDIDATE",
+    "sampling_reason": "Adjacent role: Data engineer with SQL/ETL applying for Backend developer.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-008_CV-KAG-41344156",
+    "cv_id": "CV-KAG-41344156",
+    "jd_id": "JD-008",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "Backend",
+    "sampling_stratum": "MEDIUM_CANDIDATE",
+    "sampling_reason": "Adjacent role: Data engineer with SQL/ETL applying for Backend developer.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-036_CV-KAG-16899268",
+    "cv_id": "CV-KAG-16899268",
+    "jd_id": "JD-036",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "DevOps",
+    "sampling_stratum": "MEDIUM_CANDIDATE",
+    "sampling_reason": "Transferable tools: Python AI engineer with Docker knowledge applying for DevOps.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-038_CV-KAG-91635250",
+    "cv_id": "CV-KAG-91635250",
+    "jd_id": "JD-038",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "DevOps",
+    "sampling_stratum": "MEDIUM_CANDIDATE",
+    "sampling_reason": "Transferable tools: Python AI engineer with Docker knowledge applying for DevOps.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-039_CV-KAG-19796840",
+    "cv_id": "CV-KAG-19796840",
+    "jd_id": "JD-039",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "DevOps",
+    "sampling_stratum": "MEDIUM_CANDIDATE",
+    "sampling_reason": "Transferable tools: Python AI engineer with Docker knowledge applying for DevOps.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-020_CV-KAG-15651486",
+    "cv_id": "CV-KAG-15651486",
+    "jd_id": "JD-020",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "Mobile",
+    "sampling_stratum": "MEDIUM_CANDIDATE",
+    "sampling_reason": "Mobile developer matching cross-platform mobile / UI requirements.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-020_CV-KAG-52246737",
+    "cv_id": "CV-KAG-52246737",
+    "jd_id": "JD-020",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "Mobile",
+    "sampling_stratum": "MEDIUM_CANDIDATE",
+    "sampling_reason": "Mobile developer matching cross-platform mobile / UI requirements.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-020_CV-KAG-25959103",
+    "cv_id": "CV-KAG-25959103",
+    "jd_id": "JD-020",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "Mobile",
+    "sampling_stratum": "MEDIUM_CANDIDATE",
+    "sampling_reason": "Mobile developer matching cross-platform mobile / UI requirements.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-002_CV-KAG-37058472",
+    "cv_id": "CV-KAG-37058472",
+    "jd_id": "JD-002",
+    "cv_category": "DESIGNER",
+    "jd_domain": "Frontend",
+    "sampling_stratum": "WEAK_CANDIDATE",
+    "sampling_reason": "Transferable: UI/UX Designer with basic HTML/CSS applying for Frontend Engineer.",
+    "possible_test_leakage": true
+  },
+  {
+    "case_id": "CASE_JD-003_CV-KAG-68240723",
+    "cv_id": "CV-KAG-68240723",
+    "jd_id": "JD-003",
+    "cv_category": "DESIGNER",
+    "jd_domain": "Frontend",
+    "sampling_stratum": "WEAK_CANDIDATE",
+    "sampling_reason": "Transferable: UI/UX Designer with basic HTML/CSS applying for Frontend Engineer.",
+    "possible_test_leakage": true
+  },
+  {
+    "case_id": "CASE_JD-010_CV-KAG-76010167",
+    "cv_id": "CV-KAG-76010167",
+    "jd_id": "JD-010",
+    "cv_category": "DESIGNER",
+    "jd_domain": "Frontend",
+    "sampling_stratum": "WEAK_CANDIDATE",
+    "sampling_reason": "Transferable: UI/UX Designer with basic HTML/CSS applying for Frontend Engineer.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-011_CV-KAG-19164410",
+    "cv_id": "CV-KAG-19164410",
+    "jd_id": "JD-011",
+    "cv_category": "DESIGNER",
+    "jd_domain": "Frontend",
+    "sampling_stratum": "WEAK_CANDIDATE",
+    "sampling_reason": "Transferable: UI/UX Designer with basic HTML/CSS applying for Frontend Engineer.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-013_CV-KAG-29147100",
+    "cv_id": "CV-KAG-29147100",
+    "jd_id": "JD-013",
+    "cv_category": "DESIGNER",
+    "jd_domain": "Frontend",
+    "sampling_stratum": "WEAK_CANDIDATE",
+    "sampling_reason": "Transferable: UI/UX Designer with basic HTML/CSS applying for Frontend Engineer.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-001_CV-KAG-14206561",
+    "cv_id": "CV-KAG-14206561",
+    "jd_id": "JD-001",
+    "cv_category": "ENGINEERING",
+    "jd_domain": "Backend",
+    "sampling_stratum": "WEAK_CANDIDATE",
+    "sampling_reason": "Transferable: Mechanical/Hardware engineer with basic C/C++ applying for Backend Engineer.",
+    "possible_test_leakage": true
+  },
+  {
+    "case_id": "CASE_JD-004_CV-KAG-15139979",
+    "cv_id": "CV-KAG-15139979",
+    "jd_id": "JD-004",
+    "cv_category": "ENGINEERING",
+    "jd_domain": "Backend",
+    "sampling_stratum": "WEAK_CANDIDATE",
+    "sampling_reason": "Transferable: Mechanical/Hardware engineer with basic C/C++ applying for Backend Engineer.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-005_CV-KAG-44624796",
+    "cv_id": "CV-KAG-44624796",
+    "jd_id": "JD-005",
+    "cv_category": "ENGINEERING",
+    "jd_domain": "Backend",
+    "sampling_stratum": "WEAK_CANDIDATE",
+    "sampling_reason": "Transferable: Mechanical/Hardware engineer with basic C/C++ applying for Backend Engineer.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-006_CV-KAG-54227873",
+    "cv_id": "CV-KAG-54227873",
+    "jd_id": "JD-006",
+    "cv_category": "ENGINEERING",
+    "jd_domain": "Backend",
+    "sampling_stratum": "WEAK_CANDIDATE",
+    "sampling_reason": "Transferable: Mechanical/Hardware engineer with basic C/C++ applying for Backend Engineer.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-007_CV-KAG-28005884",
+    "cv_id": "CV-KAG-28005884",
+    "jd_id": "JD-007",
+    "cv_category": "ENGINEERING",
+    "jd_domain": "Backend",
+    "sampling_stratum": "WEAK_CANDIDATE",
+    "sampling_reason": "Transferable: Mechanical/Hardware engineer with basic C/C++ applying for Backend Engineer.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-012_CV-KAG-27372171",
+    "cv_id": "CV-KAG-27372171",
+    "jd_id": "JD-012",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "AI/Data",
+    "sampling_stratum": "WEAK_CANDIDATE",
+    "sampling_reason": "Weak match: QA Manual tester applying for Data/AI Engineer.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-026_CV-KAG-25959103",
+    "cv_id": "CV-KAG-25959103",
+    "jd_id": "JD-026",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "AI/Data",
+    "sampling_stratum": "WEAK_CANDIDATE",
+    "sampling_reason": "Weak match: QA Manual tester applying for Data/AI Engineer.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-044_CV-KAG-32959732",
+    "cv_id": "CV-KAG-32959732",
+    "jd_id": "JD-044",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "AI/Data",
+    "sampling_stratum": "WEAK_CANDIDATE",
+    "sampling_reason": "Weak match: QA Manual tester applying for Data/AI Engineer.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-045_CV-KAG-90867631",
+    "cv_id": "CV-KAG-90867631",
+    "jd_id": "JD-045",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "AI/Data",
+    "sampling_stratum": "WEAK_CANDIDATE",
+    "sampling_reason": "Weak match: QA Manual tester applying for Data/AI Engineer.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-046_CV-KAG-17641670",
+    "cv_id": "CV-KAG-17641670",
+    "jd_id": "JD-046",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "AI/Data",
+    "sampling_stratum": "WEAK_CANDIDATE",
+    "sampling_reason": "Weak match: QA Manual tester applying for Data/AI Engineer.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-001_CV-KAG-65708020",
+    "cv_id": "CV-KAG-65708020",
+    "jd_id": "JD-001",
+    "cv_category": "BUSINESS-DEVELOPMENT",
+    "jd_domain": "Backend",
+    "sampling_stratum": "NEGATIVE_CANDIDATE",
+    "sampling_reason": "Cross-domain negative: Business Development candidate applying for Backend Engineer.",
+    "possible_test_leakage": true
+  },
+  {
+    "case_id": "CASE_JD-004_CV-KAG-36805025",
+    "cv_id": "CV-KAG-36805025",
+    "jd_id": "JD-004",
+    "cv_category": "BUSINESS-DEVELOPMENT",
+    "jd_domain": "Backend",
+    "sampling_stratum": "NEGATIVE_CANDIDATE",
+    "sampling_reason": "Cross-domain negative: Business Development candidate applying for Backend Engineer.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-005_CV-KAG-13080868",
+    "cv_id": "CV-KAG-13080868",
+    "jd_id": "JD-005",
+    "cv_category": "BUSINESS-DEVELOPMENT",
+    "jd_domain": "Backend",
+    "sampling_stratum": "NEGATIVE_CANDIDATE",
+    "sampling_reason": "Cross-domain negative: Business Development candidate applying for Backend Engineer.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-006_CV-KAG-20748929",
+    "cv_id": "CV-KAG-20748929",
+    "jd_id": "JD-006",
+    "cv_category": "BUSINESS-DEVELOPMENT",
+    "jd_domain": "Backend",
+    "sampling_stratum": "NEGATIVE_CANDIDATE",
+    "sampling_reason": "Cross-domain negative: Business Development candidate applying for Backend Engineer.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-007_CV-KAG-26581830",
+    "cv_id": "CV-KAG-26581830",
+    "jd_id": "JD-007",
+    "cv_category": "BUSINESS-DEVELOPMENT",
+    "jd_domain": "Backend",
+    "sampling_stratum": "NEGATIVE_CANDIDATE",
+    "sampling_reason": "Cross-domain negative: Business Development candidate applying for Backend Engineer.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-012_CV-KAG-13837784",
+    "cv_id": "CV-KAG-13837784",
+    "jd_id": "JD-012",
+    "cv_category": "DIGITAL-MEDIA",
+    "jd_domain": "AI/Data",
+    "sampling_stratum": "NEGATIVE_CANDIDATE",
+    "sampling_reason": "Cross-domain negative: Digital Media candidate applying for AI/ML Engineer.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-026_CV-KAG-16509761",
+    "cv_id": "CV-KAG-16509761",
+    "jd_id": "JD-026",
+    "cv_category": "DIGITAL-MEDIA",
+    "jd_domain": "AI/Data",
+    "sampling_stratum": "NEGATIVE_CANDIDATE",
+    "sampling_reason": "Cross-domain negative: Digital Media candidate applying for AI/ML Engineer.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-044_CV-KAG-29915354",
+    "cv_id": "CV-KAG-29915354",
+    "jd_id": "JD-044",
+    "cv_category": "DIGITAL-MEDIA",
+    "jd_domain": "AI/Data",
+    "sampling_stratum": "NEGATIVE_CANDIDATE",
+    "sampling_reason": "Cross-domain negative: Digital Media candidate applying for AI/ML Engineer.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-045_CV-KAG-82929064",
+    "cv_id": "CV-KAG-82929064",
+    "jd_id": "JD-045",
+    "cv_category": "DIGITAL-MEDIA",
+    "jd_domain": "AI/Data",
+    "sampling_stratum": "NEGATIVE_CANDIDATE",
+    "sampling_reason": "Cross-domain negative: Digital Media candidate applying for AI/ML Engineer.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-046_CV-KAG-10515955",
+    "cv_id": "CV-KAG-10515955",
+    "jd_id": "JD-046",
+    "cv_category": "DIGITAL-MEDIA",
+    "jd_domain": "AI/Data",
+    "sampling_stratum": "NEGATIVE_CANDIDATE",
+    "sampling_reason": "Cross-domain negative: Digital Media candidate applying for AI/ML Engineer.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-036_CV-KAG-25061645",
+    "cv_id": "CV-KAG-25061645",
+    "jd_id": "JD-036",
+    "cv_category": "DESIGNER",
+    "jd_domain": "DevOps",
+    "sampling_stratum": "NEGATIVE_CANDIDATE",
+    "sampling_reason": "Cross-domain negative: Graphic Designer applying for DevOps Cloud Engineer.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-038_CV-KAG-11919526",
+    "cv_id": "CV-KAG-11919526",
+    "jd_id": "JD-038",
+    "cv_category": "DESIGNER",
+    "jd_domain": "DevOps",
+    "sampling_stratum": "NEGATIVE_CANDIDATE",
+    "sampling_reason": "Cross-domain negative: Graphic Designer applying for DevOps Cloud Engineer.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-039_CV-KAG-81011612",
+    "cv_id": "CV-KAG-81011612",
+    "jd_id": "JD-039",
+    "cv_category": "DESIGNER",
+    "jd_domain": "DevOps",
+    "sampling_stratum": "NEGATIVE_CANDIDATE",
+    "sampling_reason": "Cross-domain negative: Graphic Designer applying for DevOps Cloud Engineer.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-040_CV-KAG-11722421",
+    "cv_id": "CV-KAG-11722421",
+    "jd_id": "JD-040",
+    "cv_category": "DESIGNER",
+    "jd_domain": "DevOps",
+    "sampling_stratum": "NEGATIVE_CANDIDATE",
+    "sampling_reason": "Cross-domain negative: Graphic Designer applying for DevOps Cloud Engineer.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-041_CV-KAG-13774329",
+    "cv_id": "CV-KAG-13774329",
+    "jd_id": "JD-041",
+    "cv_category": "DESIGNER",
+    "jd_domain": "DevOps",
+    "sampling_stratum": "NEGATIVE_CANDIDATE",
+    "sampling_reason": "Cross-domain negative: Graphic Designer applying for DevOps Cloud Engineer.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-001_CV-KAG-13836471",
+    "cv_id": "CV-KAG-13836471",
+    "jd_id": "JD-001",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "Backend",
+    "sampling_stratum": "EDGE_CASE",
+    "sampling_reason": "Alias/Equivalent: Candidate uses 'Amazon Web Services' / 'Postgres' vs JD 'AWS' / 'PostgreSQL'.",
+    "possible_test_leakage": true
+  },
+  {
+    "case_id": "CASE_JD-003_CV-KAG-14789139",
+    "cv_id": "CV-KAG-14789139",
+    "jd_id": "JD-003",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "Frontend",
+    "sampling_stratum": "EDGE_CASE",
+    "sampling_reason": "Alias/Equivalent: Candidate uses 'ReactJS' / 'NextJS' vs JD 'React' / 'Next.js'.",
+    "possible_test_leakage": true
+  },
+  {
+    "case_id": "CASE_JD-044_CV-KAG-36434348",
+    "cv_id": "CV-KAG-36434348",
+    "jd_id": "JD-044",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "AI/Data",
+    "sampling_stratum": "EDGE_CASE",
+    "sampling_reason": "Semantic Inferred: Candidate mentions building semantic search pipeline vs JD 'RAG'.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-006_CV-KAG-27536013",
+    "cv_id": "CV-KAG-27536013",
+    "jd_id": "JD-006",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "Backend",
+    "sampling_stratum": "EDGE_CASE",
+    "sampling_reason": "Adjacent skill: Candidate has MySQL knowledge vs JD requiring PostgreSQL.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-007_CV-KAG-18301617",
+    "cv_id": "CV-KAG-18301617",
+    "jd_id": "JD-007",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "Backend",
+    "sampling_stratum": "EDGE_CASE",
+    "sampling_reason": "Duration gap: Candidate has matching stack but 1 yr experience vs senior requirement.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-014_CV-KAG-24913648",
+    "cv_id": "CV-KAG-24913648",
+    "jd_id": "JD-014",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "Frontend",
+    "sampling_stratum": "EDGE_CASE",
+    "sampling_reason": "Skills-only: Skill listed in summary but without project backing.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-009_CV-KAG-26801767",
+    "cv_id": "CV-KAG-26801767",
+    "jd_id": "JD-009",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "Backend",
+    "sampling_stratum": "EDGE_CASE",
+    "sampling_reason": "Bilingual match: Vietnamese Job Description matched against English CV.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-010_CV-KAG-27372171",
+    "cv_id": "CV-KAG-27372171",
+    "jd_id": "JD-010",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "Frontend",
+    "sampling_stratum": "EDGE_CASE",
+    "sampling_reason": "Bilingual match: Vietnamese Job Description with technical terms vs English CV.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-017_CV-KAG-91697974",
+    "cv_id": "CV-KAG-91697974",
+    "jd_id": "JD-017",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "Backend",
+    "sampling_stratum": "EDGE_CASE",
+    "sampling_reason": "Boolean Group ANY_OF: Alternative database choice between PostgreSQL and MySQL.",
+    "possible_test_leakage": false
+  },
+  {
+    "case_id": "CASE_JD-078_CV-KAG-28672970",
+    "cv_id": "CV-KAG-28672970",
+    "jd_id": "JD-078",
+    "cv_category": "INFORMATION-TECHNOLOGY",
+    "jd_domain": "DevOps",
+    "sampling_stratum": "EDGE_CASE",
+    "sampling_reason": "Hard gate test: Mandatory cloud certification / seniority blocker.",
+    "possible_test_leakage": false
+  }
+]

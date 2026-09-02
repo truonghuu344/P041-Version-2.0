@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>header-probe</title>
+    <style>
+      body {
+        margin: 0;
+        font: 12px monospace;
+      }
+      /* The iframe is its own viewport, so its width drives the media queries
+         exactly — no dependence on the OS window size or Chrome's minimum. */
+      #frame {
+        display: block;
+        border: 0;
+        height: 120px;
+      }
+    </style>
+  </head>
+  <body>
+    <iframe id="frame" src="header-frame.html" title="header under test"></iframe>
+    <pre id="probe-out">pending</pre>
+    <script>
+      const WIDTHS = new URLSearchParams(location.search).get('w')
+        ? decodeURIComponent(new URLSearchParams(location.search).get('w')).split(',').map(Number)
+        : [1440, 1366, 1200, 1024, 768, 430];
+
+      const frame = document.getElementById('frame');
+      const raf = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+      async function run() {
+        const results = [];
+        for (const w of WIDTHS) {
+          frame.style.width = w + 'px';
+          await raf();
+          // Second settle pass: media-query driven relayout can land a frame late.
+          await raf();
+          results.push({ requested: w, ...frame.contentWindow.report() });
+        }
+        document.getElementById('probe-out').textContent = 'PROBE_JSON:' + JSON.stringify(results);
+      }
+
+      if (frame.contentWindow && frame.contentWindow.report) run();
+      else frame.addEventListener('load', run);
+    </script>
+  </body>
+</html>

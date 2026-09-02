@@ -1,18 +1,21 @@
 """MinerU-only document extraction and deterministic CV structuring."""
 from __future__ import annotations
 
+import logging
 import re
 from typing import Any, Literal
 
 from src.agents.tools.career_tools import SOFT_SKILLS, TECH_SKILLS, extract_known_terms
 from src.config import get_settings
 
+logger = logging.getLogger(__name__)
+
 _ALIASES = {
     "education": ("education", "học vấn", "đào tạo", "academic"),
-    "experience": ("experience", "kinh nghiệm", "work history", "employment"),
-    "projects": ("projects", "project", "dự án"),
-    "summary": ("summary", "profile", "objective", "mục tiêu", "giới thiệu"),
-    "skills": ("skills", "technical skills", "kỹ năng"),
+    "experience": ("experience", "kinh nghiệm", "work history", "employment", "kinh nghiệm làm việc"),
+    "projects": ("projects", "project", "dự án", "featured projects", "dự án tiêu biểu"),
+    "summary": ("summary", "profile", "objective", "mục tiêu", "giới thiệu", "strengths", "điểm mạnh", "thế mạnh", "professional summary", "about me", "giới thiệu bản thân"),
+    "skills": ("skills", "technical skills", "kỹ năng", "core competencies", "chuyên môn"),
     "certifications": ("certifications", "certificates", "chứng chỉ"),
     "languages": ("languages", "language", "ngoại ngữ"),
     "awards": ("awards", "award", "giải thưởng"),
@@ -28,32 +31,103 @@ def sanitize_extracted_text(text: str) -> str:
     return "\n".join(line.rstrip() for line in text.replace("\r\n", "\n").replace("\r", "\n").split("\n")).strip()
 
 
-async def extract_text_from_document(file_bytes: bytes, filename: str, content_type: str = "") -> str:
-    """Extract PDF/DOCX/image content exclusively via MinerU."""
-    del content_type
-    suffix = filename.casefold().rsplit(".", 1)[-1] if "." in filename else ""
-    if suffix not in {"pdf", "docx", "jpg", "jpeg", "png"}:
-        raise ValueError("UPLOAD_002: Định dạng file không hỗ trợ.")
-    from src.services.mineru_ocr import MinerUError, extract_text_with_mineru
+def extract_text_from_pdf_local(file_bytes: bytes) -> str:
+    """Fast local PDF text extraction via pypdf (instant <50ms)."""
     try:
+        import io
+
+        import pypdf
+
+        reader = pypdf.PdfReader(io.BytesIO(file_bytes))
+        pages_text = []
+        for page in reader.pages:
+            t = page.extract_text()
+            if t:
+                pages_text.append(t)
+        return "\n".join(pages_text).strip()
+    except Exception:
+        return ""
+
+
+def extract_text_from_docx_local(file_bytes: bytes) -> str:
+    """Fast local DOCX text extraction (instant <10ms)."""
+    try:
+        import io
+
+        import docx
+
+        doc = docx.Document(io.BytesIO(file_bytes))
+        return "\n".join(p.text for p in doc.paragraphs if p.text.strip()).strip()
+    except Exception:
+        pass
+    try:
+        import io
+        import xml.etree.ElementTree as ET
+        import zipfile
+
+        with zipfile.ZipFile(io.BytesIO(file_bytes)) as zf:
+            xml_content = zf.read("word/document.xml")
+            tree = ET.fromstring(xml_content)
+            texts = [node.text for node in tree.iter() if node.text]
+            return " ".join(texts).strip()
+    except Exception:
+        return ""
+
+
+async def extract_text_from_document(file_bytes: bytes, filename: str, content_type: str = "") -> str:
+    """Extract PDF/DOCX/image content via MinerU OCR (primary)."""
+    suffix = filename.casefold().rsplit(".", 1)[-1] if "." in filename else ""
+    if suffix not in {"pdf", "docx", "jpg", "jpeg", "png", "webp"}:
+        raise ValueError("UPLOAD_002: Định dạng file không hỗ trợ.")
+
+    # 1. MinerU OCR là bộ trích xuất CHÍNH (không dùng quota Gemini)
+    mineru_err: Exception | None = None
+    try:
+        from src.services.mineru_ocr import extract_text_with_mineru
+
         text = sanitize_extracted_text(await extract_text_with_mineru(file_bytes, filename))
-    except MinerUError as exc:
-        raise ValueError(str(exc)) from exc
-    if not text:
-        raise ValueError("OCR_002: MinerU không trả về văn bản có thể sử dụng.")
-    return text
+        if text and len(text) >= 10:
+            return text
+    except Exception as exc:
+        mineru_err = exc
+        logger.warning("MinerU OCR extraction failed: %s", exc)
+
+    # 2. Local extractors fallback cho file DOCX/PDF
+    if suffix == "docx":
+        docx_text = sanitize_extracted_text(extract_text_from_docx_local(file_bytes))
+        if docx_text and len(docx_text) >= 10:
+            return docx_text
+
+    if suffix == "pdf":
+        pdf_text = sanitize_extracted_text(extract_text_from_pdf_local(file_bytes))
+        if pdf_text and len(pdf_text) >= 30:
+            return pdf_text
+
+    # 3. Chỉ dự phòng sang Gemini Vision khi MinerU hoàn toàn không khả dụng
+    try:
+        from src.services.gemini_ocr import extract_text_with_gemini
+
+        gemini_text = sanitize_extracted_text(await extract_text_with_gemini(file_bytes, filename, content_type))
+        if gemini_text and len(gemini_text) >= 10:
+            return gemini_text
+    except Exception:
+        pass
+
+    if mineru_err:
+        raise ValueError(str(mineru_err)) from mineru_err
+    raise ValueError("OCR_002: Không thể trích xuất văn bản từ tệp.")
 
 
 def _lines(text: str) -> list[str]:
     text = re.sub(r"[\ue000-\uf8ff]", " ", text)
-    return [re.sub(r"\s+", " ", line).strip(" •●▪-\t") for line in text.splitlines() if line.strip()]
+    return [re.sub(r"\s+", " ", line).strip() for line in text.splitlines() if line.strip()]
 
 
 def _sections(lines: list[str]) -> dict[str, list[str]]:
     result = {key: [] for key in _ALIASES}
     current: str | None = None
     for line in lines:
-        normalized = line.casefold().strip(" :|#-")
+        normalized = re.sub(r"^[#*•\-\s]+|[#*•\-\s]+$", "", line).casefold().strip(" :|#-")
         section = next((key for key, aliases in _ALIASES.items() if normalized in aliases), None)
         if section:
             current = section
@@ -63,7 +137,44 @@ def _sections(lines: list[str]) -> dict[str, list[str]]:
 
 
 def _records(lines: list[str]) -> list[dict[str, str]]:
-    return [{"title": line[:120], "organization": "", "period": "", "description": line, "evidence_quote": line} for line in lines[:4]]
+    if not lines:
+        return []
+    records: list[dict[str, str]] = []
+    current_record_lines: list[str] = []
+    for line in lines:
+        clean = line.strip()
+        if not clean:
+            continue
+        is_header = clean.startswith("##") or (
+            current_record_lines
+            and not clean.startswith(("-", "•", "*", "\\", "Description:", "Technologies:", "GPA:", "In Progress", "Period:"))
+            and any(k in clean.lower() for k in ("github", "website", "system", "platform", "research", "chat platform", "bookstore", "university", "trường", "đại học", "cao đẳng"))
+            and len(clean) < 120
+        )
+        if is_header and current_record_lines:
+            full_text = " ".join(current_record_lines).strip()
+            title = current_record_lines[0].lstrip("#-•*\\ ").strip()
+            records.append({
+                "title": title[:120],
+                "organization": "",
+                "period": "",
+                "description": full_text,
+                "evidence_quote": full_text,
+            })
+            current_record_lines = [clean]
+        else:
+            current_record_lines.append(clean)
+    if current_record_lines:
+        full_text = " ".join(current_record_lines).strip()
+        title = current_record_lines[0].lstrip("#-•*\\ ").strip()
+        records.append({
+            "title": title[:120],
+            "organization": "",
+            "period": "",
+            "description": full_text,
+            "evidence_quote": full_text,
+        })
+    return records
 
 
 def _repair_fragmented_vietnamese(value: str) -> str:
@@ -87,7 +198,7 @@ def _is_name_candidate(line: str) -> bool:
     excluded = {
         "soft skills", "technical skills", "skills", "interests", "summary", "profile",
         "objective", "education", "experience", "work history", "projects", "languages",
-        "teamwork", "teamwork & collaboration", "learning new things",
+        "teamwork", "teamwork & collaboration", "learning new things", "strengths",
     }
     return (
         normalized not in excluded
@@ -108,7 +219,15 @@ def parse_cv_locally(raw_text: str) -> dict[str, Any]:
         "",
     )
     personal = {"full_name": name, "email": email.group(0) if email else "", "phone": phone.group(0).strip() if phone else "", "location": location}
-    result: dict[str, Any] = {"personal_info": personal, "summary": " ".join(sections["summary"][:3] or lines[:3])[:500], "hard_skills": hard, "soft_skills": soft, "skills": list(dict.fromkeys([*hard, *soft])), "parser_mode": "local"}
+    summary_val = " ".join(sections["summary"])[:1000] if sections["summary"] else " ".join(lines[:3])[:500]
+    result: dict[str, Any] = {
+        "personal_info": personal,
+        "summary": summary_val,
+        "hard_skills": hard,
+        "soft_skills": soft,
+        "skills": list(dict.fromkeys([*hard, *soft])),
+        "parser_mode": "local",
+    }
     for section in ("education", "experience", "projects", "certifications", "languages", "awards", "publications", "volunteer", "other"):
         result[section] = _records(sections[section])
     result["missing_information"] = [label for key, label in (("email", "Email"), ("phone", "Số điện thoại")) if not personal[key]]

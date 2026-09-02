@@ -5,8 +5,8 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   User,
   Shield,
-  Bot,
-  Sparkles,
+  Mic,
+  Target,
   Lock,
   Users,
   CheckCircle2,
@@ -14,6 +14,7 @@ import {
   Briefcase,
   Layers,
   Languages,
+
   FileText,
   Plus,
   Trash2,
@@ -37,6 +38,7 @@ import {
   Search,
   X,
 } from 'lucide-react';
+import AppConfirmDialog from '@/components/shared/AppConfirmDialog';
 
 export interface EducationItem {
   id: string;
@@ -140,9 +142,6 @@ const POPULAR_DOMAINS = [
 export default function ProfileView() {
   const [activeTab, setActiveTab] = useState<'profile' | 'career' | 'security'>('profile');
   const [isEditingHeader, setIsEditingHeader] = useState(false);
-  const [saveToast, setSaveToast] = useState<{ message: string; type: 'success' | 'error' } | null>(
-    null,
-  );
 
   // 1. Personal Info
   const [personalInfo, setPersonalInfo] = useState<PersonalInfo>({
@@ -212,6 +211,7 @@ export default function ProfileView() {
   ]);
   const [langModalOpen, setLangModalOpen] = useState(false);
   const [langForm, setLangForm] = useState({ language: '', proficiency: 'Intermediate (B2)' });
+  const [showResetConfirmDialog, setShowResetConfirmDialog] = useState(false);
 
   // 6. CVs
   const [cvList, setCvList] = useState<CVItem[]>([
@@ -255,6 +255,25 @@ export default function ProfileView() {
       const storedUser = localStorage.getItem('user_info');
       if (storedUser) {
         const u = JSON.parse(storedUser);
+        if (u.role === 'enterprise' && typeof window !== 'undefined') {
+          if ((window as any).switchView) {
+            (window as any).switchView('enterprise');
+            window.dispatchEvent(new CustomEvent('navigate-enterprise', { detail: 'account' }));
+          }
+          return;
+        }
+        if (u.role === 'counselor' && typeof window !== 'undefined') {
+          if ((window as any).switchView) {
+            (window as any).switchView('counselor');
+          }
+          return;
+        }
+        if (u.role === 'admin' && typeof window !== 'undefined') {
+          if ((window as any).switchView) {
+            (window as any).switchView('admin');
+          }
+          return;
+        }
         setPersonalInfo((prev) => ({
           ...prev,
           fullName: u.full_name || prev.fullName,
@@ -287,6 +306,18 @@ export default function ProfileView() {
 
       // Fetch CVs from ApiClient if in browser
       if (typeof window !== 'undefined' && (window as any).ApiClient) {
+        (window as any).ApiClient.request('/candidates/profile')
+          .then((res: any) => {
+            const profile = res?.profile;
+            if (!profile || typeof profile !== 'object') return;
+            if (profile.personalInfo) setPersonalInfo((prev) => ({ ...prev, ...profile.personalInfo }));
+            if (Array.isArray(profile.educationList)) setEducationList(profile.educationList);
+            if (profile.careerGoals) setCareerGoals((prev) => ({ ...prev, ...profile.careerGoals }));
+            if (Array.isArray(profile.skills)) setSkills(profile.skills);
+            if (Array.isArray(profile.languages)) setLanguages(profile.languages);
+            if (profile.aiPreferences) setAiPreferences((prev) => ({ ...prev, ...profile.aiPreferences }));
+          })
+          .catch(() => {});
         (window as any).ApiClient.listCVs()
           .then((res: any[]) => {
             if (Array.isArray(res) && res.length > 0) {
@@ -311,9 +342,9 @@ export default function ProfileView() {
     }
   }, []);
 
-  const triggerToast = (message: string, type: 'success' | 'error' = 'success') => {
-    setSaveToast({ message, type });
-    setTimeout(() => setSaveToast(null), 3500);
+  const triggerToast = (_message?: string, _type?: 'success' | 'error') => {
+    void _message;
+    void _type;
   };
 
   // Persist Profile state to localStorage
@@ -330,6 +361,12 @@ export default function ProfileView() {
       localStorage.setItem('candidate_profile_data', JSON.stringify(payload));
       localStorage.setItem('crew_target_role', careerGoals.targetRole);
       localStorage.setItem('ai_persona', aiPreferences.aiPersona);
+      if (typeof window !== 'undefined' && (window as any).ApiClient) {
+        void (window as any).ApiClient.request('/candidates/profile', {
+          method: 'PUT',
+          body: JSON.stringify({ profile: payload }),
+        }).catch(() => {});
+      }
     } catch {
       // ignore
     }
@@ -643,18 +680,6 @@ export default function ProfileView() {
 
   return (
     <section className="app-view" id="view-profile">
-      {/* ===== FLOATING TOAST NOTIFICATION ===== */}
-      {saveToast && (
-        <div
-          className={`profile-toast ${saveToast.type === 'error' ? 'toast-error' : 'toast-success'}`}
-          role="status"
-          aria-live="polite"
-        >
-          {saveToast.type === 'error' ? <AlertTriangle size={16} /> : <CheckCircle2 size={16} />}
-          <span>{saveToast.message}</span>
-        </div>
-      )}
-
       <div className="profile-workspace-container">
         {/* ============================================================
             1. PROFILE HEADER
@@ -810,7 +835,7 @@ export default function ProfileView() {
               <p className="completion-tip">
                 {completionPercentage >= 90 ? (
                   <>
-                    <Sparkles size={14} className="inline-sparkle" />
+                    <CheckCircle2 size={14} className="inline-sparkle" />
                     <strong>Hồ sơ hoàn hảo!</strong> AI đã có đầy đủ dữ liệu nền để gợi ý việc làm,
                     tối ưu CV và tạo câu hỏi phỏng vấn chuẩn xác nhất.
                   </>
@@ -856,7 +881,7 @@ export default function ProfileView() {
             {/* AI Grounding Transparency Notice */}
             <div className="profile-grounding-notice">
               <div className="grounding-notice-header">
-                <Bot size={18} className="notice-icon" />
+                <Shield size={18} className="notice-icon" />
                 <h3 className="notice-title">Dữ liệu nền cho AI</h3>
               </div>
               <p className="notice-text">
@@ -883,7 +908,7 @@ export default function ProfileView() {
                   className="sidebar-shortcut-btn"
                   onClick={() => goTo('match')}
                 >
-                  <Sparkles size={16} />
+                  <Target size={16} />
                   <span>So khớp CV với JD</span>
                 </button>
                 <button
@@ -891,12 +916,13 @@ export default function ProfileView() {
                   className="sidebar-shortcut-btn"
                   onClick={() => goTo('interview')}
                 >
-                  <Bot size={16} />
+                  <Mic size={16} />
                   <span>Luyện phỏng vấn Voice</span>
                 </button>
               </div>
             </div>
           </aside>
+
 
           {/* ==========================================================
               RIGHT COLUMN: MAIN CONTENT (~70%)
@@ -1650,9 +1676,10 @@ export default function ProfileView() {
                     <div className="ai-consent-toggle-card">
                       <div className="consent-toggle-info">
                         <div className="consent-title-row">
-                          <Bot size={18} className="consent-icon" />
+                          <Shield size={18} className="consent-icon" />
                           <strong>Sử dụng Profile làm dữ liệu nền tảng cho AI</strong>
                         </div>
+
                         <p className="consent-desc">
                           Cho phép AI đọc thông tin học vấn, kỹ năng và định hướng ở trên để tự động
                           cá nhân hóa câu hỏi phỏng vấn và gợi ý công việc.
@@ -1692,7 +1719,6 @@ export default function ProfileView() {
                           onClick={() => {
                             setAiPreferences((prev) => ({ ...prev, aiPersona: 'mentor' }));
                             localStorage.setItem('ai_persona', 'mentor');
-                            triggerToast('Đã chọn phong cách: Friendly Mentor 🎓');
                             setTimeout(saveAllToLocal, 100);
                           }}
                         >
@@ -1718,7 +1744,6 @@ export default function ProfileView() {
                           onClick={() => {
                             setAiPreferences((prev) => ({ ...prev, aiPersona: 'recruiter' }));
                             localStorage.setItem('ai_persona', 'recruiter');
-                            triggerToast('Đã chọn phong cách: Strict Recruiter 🤖');
                             setTimeout(saveAllToLocal, 100);
                           }}
                         >
@@ -1744,7 +1769,6 @@ export default function ProfileView() {
                           onClick={() => {
                             setAiPreferences((prev) => ({ ...prev, aiPersona: 'techlead' }));
                             localStorage.setItem('ai_persona', 'techlead');
-                            triggerToast('Đã chọn phong cách: Technical Lead ⚡');
                             setTimeout(saveAllToLocal, 100);
                           }}
                         >
@@ -1944,18 +1968,7 @@ export default function ProfileView() {
                       <button
                         type="button"
                         className="btn-danger-outline"
-                        onClick={() => {
-                          if (
-                            window.confirm(
-                              'Bạn có chắc chắn muốn xóa toàn bộ thông tin Profile đã lưu không?',
-                            )
-                          ) {
-                            localStorage.removeItem('candidate_profile_data');
-                            setSkills([]);
-                            setLanguages([]);
-                            triggerToast('Đã làm mới dữ liệu Profile.');
-                          }
-                        }}
+                        onClick={() => setShowResetConfirmDialog(true)}
                       >
                         Xóa dữ liệu
                       </button>
@@ -2225,6 +2238,24 @@ export default function ProfileView() {
           </div>
         </div>
       )}
+
+      {/* Profile Data Reset Confirmation Dialog */}
+      <AppConfirmDialog
+        isOpen={showResetConfirmDialog}
+        title="Xác nhận xóa toàn bộ dữ liệu Profile"
+        description="Bạn có chắc chắn muốn đặt lại toàn bộ thông tin học vấn, kỹ năng và định hướng nghề nghiệp đã lưu về mặc định không? Thao tác này không thể hoàn tác."
+        confirmLabel="Xác nhận xóa dữ liệu"
+        cancelLabel="Hủy bỏ"
+        variant="danger"
+        onConfirm={() => {
+          localStorage.removeItem('candidate_profile_data');
+          setSkills([]);
+          setLanguages([]);
+          triggerToast('Đã làm mới dữ liệu Profile thành công.');
+          setShowResetConfirmDialog(false);
+        }}
+        onClose={() => setShowResetConfirmDialog(false)}
+      />
     </section>
   );
 }

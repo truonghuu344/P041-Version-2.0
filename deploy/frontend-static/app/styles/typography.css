@@ -1,0 +1,135 @@
+/* Shared hierarchy for candidate workspaces: home has the display scale; task pages use a compact page scale. */
+:root {
+  --page-title-size: clamp(30px, 3.6vw, 40px);
+  --page-title-line-height: 1.12;
+  --page-copy-size: 15px;
+}
+
+#view-cv .career-table-header h2,
+#view-jobs .buddy-section-heading h2,
+#view-history .buddy-section-heading h2,
+#view-profile #buddy-journey-title,
+#view-gap .gap-detail-hero h2,
+#view-interview .interview-page-header h2,
+#view-find-jobs .jobs-page-header h2 {
+  color: var(--text-primary) !important;
+  font-size: var(--page-title-size) !important;
+  font-weight: 800 !important;
+  line-height: var(--page-title-line-height) !important;
+  letter-spacing: -0.045em !important;
+}
+
+#view-cv .career-table-header h2 span,
+#view-jobs .buddy-section-heading h2 span,
+#view-history .buddy-section-heading h2 span,
+#view-profile #buddy-journey-title span,
+#view-gap .gap-detail-hero h2 span,
+#view-interview .interview-page-header h2 span,
+#view-find-jobs .jobs-page-header h2 span {
+  color: var(--primary) !important;
+}
+
+#view-cv .career-table-header > div > p:not(.career-portfolio-eyebrow),
+#view-jobs .buddy-section-heading > div:last-child span,
+#view-history .buddy-section-heading > div:last-child span,
+#view-profile #buddy-journey-title + p,
+#view-gap .gap-detail-hero > span,
+#view-interview .interview-page-header p,
+#view-find-jobs .jobs-page-header p {
+  color: var(--text-secondary) !important;
+  font-size: var(--page-copy-size) !important;
+  line-height: 1.6 !important;
+}
+
+#view-cv .career-portfolio-eyebrow,
+#view-jobs .buddy-kicker,
+#view-history .buddy-kicker,
+#view-profile .buddy-kicker,
+#view-interview .interview-eyebrow,
+#view-find-jobs .jobs-eyebrow {
+  display: none !important;
+}
+
+/* Remove repeated legacy top spacing from workspace headers. */
+#view-cv .career-portfolio-workspace {
+  padding-top: 24px !important;
+}
+#view-jobs .buddy-hero-shell,
+#view-history .buddy-hero-shell {
+  padding-top: 24px !important;
+}
+
+#view-history .history-workspace {
+  padding-bottom: 72px !important;
+}
+#view-history .history-heading {
+  margin-bottom: 20px !important;
+}
+#view-history .history-heading p {
+  max-width: 62ch;
+  margin: 8px 0 0;
+  color: var(--text-secondary);
+  font-size: 15px;
+  line-height: 1.55;
+}
+#view-history .history-archive {
+  padding: 22px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--card);
+}
+#view-history .archive-filters {
+  margin: 0 0 20px;
+}
+#view-history .archive-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+#view-history .archive-card[data-type='match'] .archive-tag {
+  color: var(--primary);
+  background: var(--primary-soft);
+}
+#view-history .archive-card[data-type='optimized'] .archive-tag {
+  color: #6d4cc4;
+  background: #f3efff;
+}
+#view-profile .buddy-hero-shell {
+  padding-top: 28px !important;
+}
+#view-gap .gap-detail-workspace {
+  padding-top: 20px !important;
+}
+#view-interview .interview-shell,
+#view-find-jobs .jobs-shell {
+  padding-top: 30px !important;
+}
+
+#view-interview .interview-shell {
+  padding-top: 12px !important;
+}
+
+#view-interview .interview-page-header {
+  max-width: 920px;
+}
+
+#view-interview .interview-page-header h2 {
+  max-width: none;
+}
+
+@media (max-width: 760px) {
+  :root {
+    --page-title-size: clamp(28px, 8vw, 36px);
+  }
+  #view-cv .career-portfolio-workspace,
+  #view-jobs .buddy-hero-shell,
+  #view-history .buddy-hero-shell,
+  #view-profile .buddy-hero-shell,
+  #view-gap .gap-detail-workspace,
+  #view-find-jobs .jobs-shell {
+    padding-top: 20px !important;
+  }
+  #view-interview .interview-shell {
+    padding-top: 16px !important;
+  }
+}

@@ -1,0 +1,329 @@
+/*
+ * ================================================================
+ *  SHARED APP HEADER — Single Source of Truth (all roles)
+ *  Student | Counselor | Enterprise | Admin dùng chung file này.
+ *
+ *  Breakpoint duy nhất: 1200px
+ *    >= 1200px → inline desktop nav   | hamburger ẨN hoàn toàn
+ *    <  1200px → hamburger + drawer   | inline nav ẨN hoàn toàn
+ *
+ *  File này được import CUỐI trong globals.css và là nơi DUY NHẤT
+ *  quyết định visibility của .nav-links / .hamburger / drawer.
+ *  Không thêm rule display cho các phần tử này ở file khác.
+ * ================================================================
+ */
+
+/* ── 1. Navbar shell ──────────────────────────────────────────── */
+.navbar.app-header-root {
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 64px !important;
+  z-index: 10000 !important;
+  overflow: visible !important;
+}
+
+.navbar.app-header-root .navbar-inner {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  height: 64px !important;
+  width: 100% !important;
+  max-width: 1440px !important;
+  margin-inline: auto !important;
+  padding-inline: 32px !important;
+  gap: 16px !important;
+  overflow: visible !important;
+  position: relative;
+}
+
+/* ── 2. Brand ─────────────────────────────────────────────────── */
+.navbar.app-header-root .brand {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex: 0 0 auto !important;
+  text-decoration: none !important;
+}
+
+/* ── 3. Desktop inline nav ───────────────────────────────────── */
+/* `display` KHÔNG khai ở đây — thuộc gate 1200px ở §6 (tránh 2 nguồn sự thật). */
+.navbar.app-header-root .nav-links {
+  position: static !important;
+  transform: none !important;
+  left: auto !important;
+  flex: 1 1 auto !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  flex-wrap: nowrap !important;
+  /* KHÔNG dùng overflow: hidden. Với `justify-content: center` + `nowrap`,
+     nội dung tràn ra CẢ HAI phía nên overflow:hidden sẽ cắt mất link ở hai đầu
+     → menu "biến mất" ở desktop. Thay vào đó cho phép co chữ (§6 hạ mật độ). */
+  overflow: visible !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.navbar.app-header-root .nav-link {
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  height: 64px !important;
+  min-height: 0 !important;
+  min-width: 0 !important;
+  padding: 0 14px !important;
+  margin: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--text-secondary, #a7b4b2) !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  white-space: nowrap !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+  transition: color 180ms ease !important;
+  transform: none !important;
+}
+
+.navbar.app-header-root .nav-link:hover {
+  color: var(--primary, #2d8c6f) !important;
+  background: transparent !important;
+  transform: none !important;
+}
+
+.navbar.app-header-root .nav-link.active {
+  color: var(--primary, #5cc6a5) !important;
+  font-weight: 600 !important;
+  background: transparent !important;
+}
+
+.navbar.app-header-root .nav-link::after {
+  content: '' !important;
+  display: block !important;
+  position: absolute !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100% !important;
+  height: 2px !important;
+  border-radius: 2px 2px 0 0 !important;
+  background: var(--primary, #5cc6a5) !important;
+  transform: scaleX(0) !important;
+  transform-origin: center !important;
+  transition: transform 200ms ease !important;
+  opacity: 1 !important;
+}
+
+.navbar.app-header-root .nav-link:not(.active)::after {
+  display: none !important;
+  transform: scaleX(0) !important;
+}
+
+.navbar.app-header-root .nav-link.active::after {
+  display: block !important;
+  transform: scaleX(1) !important;
+}
+
+html.light .navbar.app-header-root .nav-link,
+body.light-mode .navbar.app-header-root .nav-link,
+[data-theme='light'] .navbar.app-header-root .nav-link {
+  color: #667085 !important;
+}
+html.light .navbar.app-header-root .nav-link:hover,
+body.light-mode .navbar.app-header-root .nav-link:hover,
+[data-theme='light'] .navbar.app-header-root .nav-link:hover {
+  color: #14213d !important;
+}
+html.light .navbar.app-header-root .nav-link.active,
+body.light-mode .navbar.app-header-root .nav-link.active,
+[data-theme='light'] .navbar.app-header-root .nav-link.active {
+  color: #2d8c6f !important;
+}
+
+/* ── 4. Header utilities (bell / avatar / hamburger) ──────────── */
+.navbar.app-header-root .header-utilities {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex: 0 0 auto !important;
+  margin-left: auto !important;
+  overflow: visible !important;
+}
+
+/* Login button luôn hiển thị trong header (mọi width) */
+.navbar.app-header-root .btn-login {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* ── 5. Hamburger ─────────────────────────────────────────────── */
+/* `display` KHÔNG khai ở đây — thuộc gate 1200px ở §6. */
+.navbar.app-header-root .hamburger {
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 5px !important;
+  width: 40px !important;
+  height: 40px !important;
+  min-height: 0 !important;
+  min-width: 0 !important;
+  padding: 8px !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  color: #e2e8f0 !important;
+  flex-shrink: 0 !important;
+  transition: background 150ms ease !important;
+}
+
+html.light .navbar.app-header-root .hamburger,
+body.light-mode .navbar.app-header-root .hamburger,
+[data-theme='light'] .navbar.app-header-root .hamburger {
+  color: #334155 !important;
+}
+
+.navbar.app-header-root .hamburger:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+html.light .navbar.app-header-root .hamburger:hover,
+body.light-mode .navbar.app-header-root .hamburger:hover,
+[data-theme='light'] .navbar.app-header-root .hamburger:hover {
+  background: rgba(0, 0, 0, 0.06) !important;
+}
+
+.navbar.app-header-root .hamburger span {
+  display: block !important;
+  width: 20px !important;
+  height: 2px !important;
+  background: currentColor !important;
+  border-radius: 2px !important;
+  transition:
+    transform 250ms ease,
+    opacity 250ms ease !important;
+}
+
+.navbar.app-header-root .hamburger.is-active span:nth-child(1) {
+  transform: translateY(7px) rotate(45deg) !important;
+}
+.navbar.app-header-root .hamburger.is-active span:nth-child(2) {
+  opacity: 0 !important;
+  transform: scaleX(0) !important;
+}
+.navbar.app-header-root .hamburger.is-active span:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg) !important;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   6. GATE 1200px — breakpoint DUY NHẤT của cả app
+      NGUỒN SỰ THẬT DUY NHẤT cho `display` của #nav-links và #hamburger.
+
+      Dùng selector ID (#nav-links / #hamburger) → độ ưu tiên (1,1,0),
+      cao hơn MỌI rule dạng class trong toàn bộ codebase (tối đa (0,3,0)),
+      kể cả `.header-utilities button` hay `.navbar .nav-links` ở
+      theme.css / legacy.css. Nhờ vậy hai trạng thái loại trừ nhau tuyệt đối:
+      không bao giờ hiện đồng thời desktop nav và hamburger.
+
+      Bell + Avatar KHÔNG nằm trong gate → luôn hiện ở mọi breakpoint.
+   ══════════════════════════════════════════════════════════════ */
+
+/* ≥ 1200px (desktop): menu ngang đầy đủ, hamburger ẩn hoàn toàn */
+@media (min-width: 1200px) {
+  .app-header-root #nav-links {
+    display: flex !important;
+  }
+
+  .app-header-root #hamburger {
+    display: none !important;
+  }
+
+  /* Desktop must never retain the off-canvas dialog after a resize. This is
+     strictly a viewport-width rule: no user-agent or container heuristic. */
+  #app-mobile-nav-drawer,
+  .nav-drawer-backdrop {
+    display: none !important;
+  }
+}
+
+/* < 1200px (tablet + mobile): chỉ hamburger + drawer */
+@media (max-width: 1199.98px) {
+  .app-header-root #nav-links {
+    display: none !important;
+  }
+
+  .app-header-root #hamburger {
+    display: flex !important;
+  }
+
+  #app-mobile-nav-drawer {
+    display: flex !important;
+  }
+
+  .navbar.app-header-root .navbar-inner {
+    padding-inline: 20px !important;
+  }
+}
+
+/* 1200–1300px: hạ mật độ để 6 nhãn tiếng Việt vẫn nằm trọn 1 hàng,
+   không cần cắt (overflow) và không xuống dòng. */
+@media (min-width: 1200px) and (max-width: 1300px) {
+  .navbar.app-header-root .nav-links {
+    gap: 0 !important;
+  }
+  .navbar.app-header-root .nav-link {
+    padding: 0 8px !important;
+    font-size: 12.5px !important;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .navbar.app-header-root .navbar-inner {
+    padding-inline: 16px !important;
+  }
+}
+
+/* ── 7. Drawer & overlay — fixed, không ảnh hưởng layout ──────── */
+#app-mobile-nav-drawer {
+  position: fixed !important;
+  top: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 280px !important;
+  max-width: 85vw !important;
+  z-index: 10002 !important;
+}
+
+.nav-drawer-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 10001 !important;
+}
+
+/* Drawer item: KHÔNG viền, cùng ngôn ngữ style với menu desktop */
+#app-mobile-nav-drawer .app-drawer-item {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  text-decoration: none !important;
+}
+
+#app-mobile-nav-drawer .app-drawer-item:focus-visible {
+  outline: 2px solid var(--primary, #006948) !important;
+  outline-offset: -2px !important;
+}
+
+#app-mobile-nav-drawer button[aria-label='Đóng menu'] {
+  border: none !important;
+  box-shadow: none !important;
+}

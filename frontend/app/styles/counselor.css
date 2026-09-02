@@ -1,0 +1,1019 @@
+/* ============================================================
+   CAREER ASSISTANT X – COUNSELOR WORKSPACE DESIGN SYSTEM
+   Standardized Layout, Full-Width Edge Alignment, 44px Controls
+   ============================================================ */
+
+/* ── 1. CONTAINER & EDGE-TO-EDGE ALIGNMENT ── */
+#view-counselor,
+.counselor-workspace {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+  background: #ffffff !important;
+  min-height: calc(100vh - 68px);
+}
+
+.counselor-container {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 auto !important;
+  /* Horizontal gutter tiers (<768:16 / tablet:20 / ≥1200:24) owned by responsive.css */
+  padding-top: 24px !important;
+  padding-bottom: 32px !important;
+  box-sizing: border-box !important;
+}
+
+@media (max-width: 767.98px) {
+  .counselor-container {
+    padding-top: 16px !important;
+    padding-bottom: 24px !important;
+  }
+}
+
+/* Align Top Navbar left & right margins exactly with Counselor container */
+.actor-badge,
+#header-actor-badge {
+  display: none !important;
+}
+
+/* Navbar geometry (max-width/padding tiers) is owned EXCLUSIVELY by
+   styles/navbar.css — per-role navbar-inner overrides removed (dead rules). */
+
+/* ── 2. TOP NAVBAR ACTIVE LINK (CENTERED GREEN LINE DIRECTLY UNDER TEXT) ── */
+body.role-counselor .navbar .nav-link,
+body:has(#view-counselor.active) .navbar .nav-link,
+body:has(#view-counselor:not([style*='display: none'])) .navbar .nav-link,
+body:has(#view-counselor:not([hidden])) .navbar .nav-link,
+.navbar .nav-link.role-only-link {
+  position: relative !important;
+  height: 40px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 14px !important;
+  margin: 0 2px !important;
+  border-radius: 8px !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  color: #475569 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  text-decoration: none !important;
+  transform: none !important;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease !important;
+}
+
+body.role-counselor .navbar .nav-link:hover,
+body:has(#view-counselor.active) .navbar .nav-link:hover,
+body:has(#view-counselor:not([style*='display: none'])) .navbar .nav-link:hover,
+body:has(#view-counselor:not([hidden])) .navbar .nav-link:hover,
+.navbar .nav-link.role-only-link:hover {
+  color: #006948 !important;
+  background-color: #ecfdf5 !important;
+  transform: none !important;
+}
+
+body.role-counselor .navbar .nav-link.active,
+body:has(#view-counselor.active) .navbar .nav-link.active,
+body:has(#view-counselor:not([style*='display: none'])) .navbar .nav-link.active,
+body:has(#view-counselor:not([hidden])) .navbar .nav-link.active,
+.navbar .nav-link.role-only-link.active {
+  color: #006948 !important;
+  background-color: #ecfdf5 !important;
+  font-weight: 600 !important;
+  transform: none !important;
+}
+
+/* Green indicator line: directly under active text, centered, NOT touching navbar bottom */
+body.role-counselor .navbar .nav-link::after,
+body:has(#view-counselor.active) .navbar .nav-link::after,
+body:has(#view-counselor:not([style*='display: none'])) .navbar .nav-link::after,
+body:has(#view-counselor:not([hidden])) .navbar .nav-link::after,
+.navbar .nav-link.role-only-link::after {
+  content: '' !important;
+  position: absolute !important;
+  bottom: 4px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: 24px !important;
+  height: 2.5px !important;
+  background-color: #006948 !important;
+  border-radius: 9999px !important;
+  box-shadow: none !important;
+  display: block !important;
+  opacity: 0 !important;
+  transition:
+    opacity 0.15s ease,
+    width 0.15s ease !important;
+}
+
+body.role-counselor .navbar .nav-link.active::after,
+body:has(#view-counselor.active) .navbar .nav-link.active::after,
+body:has(#view-counselor:not([style*='display: none'])) .navbar .nav-link.active::after,
+body:has(#view-counselor:not([hidden])) .navbar .nav-link.active::after,
+.navbar .nav-link.role-only-link.active::after {
+  opacity: 1 !important;
+  width: 28px !important;
+}
+
+/* ── 3. SECTION GAPS & SPACING ── */
+#view-counselor .counselor-section-gap,
+#view-counselor .space-y-8,
+#view-counselor .space-y-6 {
+  gap: 20px !important;
+}
+
+#view-counselor .space-y-8 > :not([hidden]) ~ :not([hidden]),
+#view-counselor .space-y-6 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 20px !important;
+  margin-bottom: 0 !important;
+}
+
+#view-counselor .pb-12 {
+  padding-bottom: 16px !important;
+}
+
+/* ── 4. STANDARDIZED CARDS (ALIGNED WITH TOOLBAR & CONTROLS) ── */
+#view-counselor .counselor-card,
+#view-counselor .bg-white.border,
+#view-counselor .bg-white.rounded-xl,
+#view-counselor .bg-white.rounded-2xl {
+  border-radius: 12px !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+  box-sizing: border-box !important;
+}
+
+/* Base card padding 20px */
+#view-counselor .p-6,
+#view-counselor .p-5,
+#view-counselor .counselor-card-pad {
+  padding: 20px !important;
+}
+
+@media (max-width: 767.98px) {
+  #view-counselor .p-6,
+  #view-counselor .p-5,
+  #view-counselor .counselor-card-pad {
+    padding: 16px !important;
+  }
+}
+
+/* ── 5. STANDARDIZED TABS SYSTEM (HEIGHT: 44px) ── */
+#view-counselor .counselor-tabs-container {
+  border-bottom: 1px solid #e2e8f0 !important;
+  width: 100% !important;
+  margin: 0 0 4px 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+}
+
+#view-counselor .counselor-tabs-nav {
+  display: flex !important;
+  align-items: center !important;
+  gap: 20px !important;
+  overflow-x: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  scrollbar-width: none !important;
+}
+
+#view-counselor .counselor-tabs-nav::-webkit-scrollbar {
+  display: none !important;
+}
+
+#view-counselor .counselor-tab-item {
+  height: 44px !important;
+  min-height: 44px !important;
+  max-height: 44px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 6px !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  color: #475569 !important;
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 2px solid transparent !important;
+  border-radius: 0 !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease !important;
+  box-shadow: none !important;
+  margin-bottom: -1px !important;
+}
+
+#view-counselor .counselor-tab-item:hover {
+  color: #006948 !important;
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 2px solid transparent !important;
+}
+
+#view-counselor .counselor-tab-item.active,
+#view-counselor .counselor-tab-item[aria-selected='true'] {
+  color: #006948 !important;
+  border: none !important;
+  border-bottom: 2px solid #006948 !important;
+  background: transparent !important;
+  font-weight: 600 !important;
+}
+
+/* ── 6. STANDARDIZED CONTROLS & TOOLBAR (HEIGHT: 44px, GAP: 12px, 1 ROW ON DESKTOP) ── */
+#view-counselor .counselor-toolbar,
+#view-counselor .counselor-filter-row,
+#view-counselor header .counselor-toolbar,
+#view-counselor .counselor-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  flex-wrap: nowrap !important;
+  justify-content: flex-start !important;
+  box-sizing: border-box !important;
+}
+
+/* Prevent bloated wrapper separation */
+#view-counselor .counselor-toolbar.justify-between,
+#view-counselor .justify-between:has(.counselor-toolbar) {
+  justify-content: flex-start !important;
+  gap: 12px !important;
+}
+
+#view-counselor .counselor-toolbar > div,
+#view-counselor .counselor-filter-row > div {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  flex-wrap: nowrap !important;
+  width: auto !important;
+}
+
+/* Search input container: shared structure on all tiers */
+#view-counselor .counselor-search-wrapper,
+#view-counselor .counselor-toolbar .relative,
+#view-counselor header .relative,
+#view-counselor .counselor-filter-row .relative,
+#view-counselor .relative:has(input[type='text']),
+#view-counselor .relative:has(input[type='search']) {
+  position: relative !important;
+  height: 44px !important;
+  display: flex !important;
+  align-items: center !important;
+  margin: 0 !important;
+}
+
+/* Search input container: fixed 420px on desktop (≥1200) only */
+@media (min-width: 1200px) {
+  #view-counselor .counselor-search-wrapper,
+  #view-counselor .counselor-toolbar .relative,
+  #view-counselor header .relative,
+  #view-counselor .counselor-filter-row .relative,
+  #view-counselor .relative:has(input[type='text']),
+  #view-counselor .relative:has(input[type='search']) {
+    width: 420px !important;
+    min-width: 320px !important;
+    max-width: 420px !important;
+    flex: 0 0 420px !important;
+    position: relative !important;
+    height: 44px !important;
+    display: flex !important;
+    align-items: center !important;
+    margin: 0 !important;
+  }
+}
+
+/* Tablet (768–1199): search co giãn theo hàng toolbar, không ép px */
+@media (min-width: 768px) and (max-width: 1199.98px) {
+  #view-counselor .counselor-search-wrapper,
+  #view-counselor .counselor-toolbar .relative,
+  #view-counselor header .relative,
+  #view-counselor .counselor-filter-row .relative,
+  #view-counselor .relative:has(input[type='text']),
+  #view-counselor .relative:has(input[type='search']) {
+    width: auto !important;
+    min-width: 240px !important;
+    max-width: 100% !important;
+    flex: 1 1 auto !important;
+    position: relative !important;
+    height: 44px !important;
+    display: flex !important;
+    align-items: center !important;
+    margin: 0 !important;
+  }
+}
+
+/* Explicit vertical centering for search SVG icons */
+#view-counselor .relative > svg,
+#view-counselor .counselor-search-wrapper > svg,
+#view-counselor .counselor-toolbar .relative > svg,
+#view-counselor header .relative > svg,
+#view-counselor .counselor-filter-row .relative > svg {
+  position: absolute !important;
+  left: 12px !important;
+  top: 50% !important;
+  bottom: auto !important;
+  transform: translateY(-50%) !important;
+  width: 16px !important;
+  height: 16px !important;
+  color: #64748b !important;
+  pointer-events: none !important;
+  z-index: 2 !important;
+  margin: 0 !important;
+}
+
+/* Standard height 44px for text inputs and search */
+#view-counselor input[type='text'],
+#view-counselor input[type='email'],
+#view-counselor input[type='password'],
+#view-counselor input[type='search'],
+#view-counselor input[type='tel'],
+#view-counselor .counselor-input {
+  width: 100% !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  max-height: 44px !important;
+  border-radius: 10px !important;
+  padding-left: 14px !important;
+  padding-right: 14px !important;
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif !important;
+  font-size: 14px !important;
+  line-height: normal !important;
+  background-color: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #171d19 !important;
+  box-sizing: border-box !important;
+  display: block !important;
+  margin: 0 !important;
+  outline: none !important;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease !important;
+}
+
+/* Chỉ thụt lề cho input THỰC SỰ có icon phía trước. Trước đây mức 38px được
+   áp cho mọi input trong phân hệ nên các field trong form/modal (không có
+   icon) cũng bị thụt vào, trông như lỗi canh lề. */
+#view-counselor .counselor-search-wrapper > input,
+#view-counselor .counselor-toolbar .relative > input,
+#view-counselor header .relative > input,
+#view-counselor .counselor-filter-row .relative > input,
+#view-counselor .relative:has(> svg) > input {
+  padding-left: 38px !important;
+}
+
+#view-counselor input[type='text']:focus,
+#view-counselor input[type='search']:focus,
+#view-counselor input[type='email']:focus,
+#view-counselor input[type='tel']:focus,
+#view-counselor select:focus {
+  border-color: #059669 !important;
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.15) !important;
+}
+
+/* Select element height 44px, clean styling */
+#view-counselor select,
+#view-counselor .counselor-select {
+  height: 44px !important;
+  min-height: 44px !important;
+  max-height: 44px !important;
+  border-radius: 10px !important;
+  padding-left: 14px !important;
+  padding-right: 36px !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  background-color: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #171d19 !important;
+  box-sizing: border-box !important;
+  cursor: pointer !important;
+  outline: none !important;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease !important;
+}
+
+/* ── 6.1 GLOBAL BUTTON, LINK & TAB RESET IN COUNSELOR WORKSPACE (NO BLACK BORDER / NO BLACK OUTLINE) ── */
+#view-counselor button,
+#view-counselor a,
+#view-counselor [role='button'],
+#view-counselor [role='tab'],
+.counselor-workspace button,
+.counselor-workspace a,
+.counselor-workspace [role='tab'],
+.counselor-modal button,
+/* `.authx-card` (auth-modal.css) mang role="dialog" nhưng KHÔNG thuộc phân hệ
+   Cố vấn — nó tự quản viền/nút/tab của mình. Không loại trừ thì cả 3 rule 6.1
+   dưới đây ép viền + ring lên mọi nút trong modal Đăng nhập/Đăng ký. */
+div[role='dialog']:not(.authx-card) button {
+  outline: none !important;
+  outline-color: transparent !important;
+  box-sizing: border-box !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+/* Focus and focus-visible: light green ring, never default black outline/border */
+#view-counselor button:focus,
+#view-counselor button:focus-visible,
+#view-counselor a:focus,
+#view-counselor a:focus-visible,
+#view-counselor [role='button']:focus,
+#view-counselor [role='button']:focus-visible,
+#view-counselor [role='tab']:focus,
+#view-counselor [role='tab']:focus-visible,
+.counselor-workspace button:focus,
+.counselor-workspace button:focus-visible,
+.counselor-modal button:focus,
+.counselor-modal button:focus-visible,
+div[role='dialog']:not(.authx-card) button:focus,
+div[role='dialog']:not(.authx-card) button:focus-visible {
+  outline: none !important;
+  outline-color: transparent !important;
+  box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.15) !important;
+}
+
+/* Standard Buttons: 1px solid #E2E8F0, border-radius 10px */
+#view-counselor button:not(.counselor-tab-item):not(.navbar-inner *):not(footer button),
+#view-counselor .counselor-btn,
+#view-counselor .counselor-btn-secondary,
+.counselor-modal button:not([class*='bg-']),
+div[role='dialog']:not(.authx-card) button:not([class*='bg-']) {
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 10px !important;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease !important;
+}
+
+/* Standard Button Hover State */
+#view-counselor button:not(.counselor-tab-item):not(.navbar-inner *):not(footer button):hover,
+#view-counselor .counselor-btn-secondary:hover {
+  border-color: #cbd5e1 !important;
+  background-color: #f8fafc !important;
+  color: #006948 !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+}
+
+/* Primary Green Buttons */
+#view-counselor button.counselor-btn-primary,
+#view-counselor button.bg-\[\#006948\],
+#view-counselor button.bg-\[\#059669\],
+#view-counselor button.bg-emerald-600,
+#view-counselor button.bg-primary,
+#view-counselor button[type='submit']:not(.counselor-btn-secondary),
+.counselor-modal button.bg-\[\#006948\],
+.counselor-modal button.bg-\[\#059669\],
+div[role='dialog'] button.bg-\[\#006948\],
+div[role='dialog'] button.bg-\[\#059669\] {
+  border: 1px solid #006948 !important;
+  border-radius: 10px !important;
+  background-color: #006948 !important;
+  color: #ffffff !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+}
+
+#view-counselor button.counselor-btn-primary:hover,
+#view-counselor button.bg-\[\#006948\]:hover,
+#view-counselor button.bg-\[\#059669\]:hover,
+#view-counselor button.bg-emerald-600:hover,
+#view-counselor button.bg-primary:hover,
+#view-counselor button[type='submit']:not(.counselor-btn-secondary):hover,
+.counselor-modal button.bg-\[\#006948\]:hover,
+.counselor-modal button.bg-\[\#059669\]:hover,
+div[role='dialog'] button.bg-\[\#006948\]:hover,
+div[role='dialog'] button.bg-\[\#059669\]:hover {
+  background-color: #047857 !important;
+  border-color: #047857 !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 4px rgba(0, 105, 72, 0.15) !important;
+}
+
+/* Danger and Warning Buttons in Modals */
+#view-counselor button.bg-rose-600,
+.counselor-modal button.bg-rose-600,
+div[role='dialog'] button.bg-rose-600 {
+  border: 1px solid #e11d48 !important;
+  border-radius: 10px !important;
+}
+
+#view-counselor button.bg-amber-600,
+.counselor-modal button.bg-amber-600,
+div[role='dialog'] button.bg-amber-600 {
+  border: 1px solid #d97706 !important;
+  border-radius: 10px !important;
+}
+
+/* Height 44px standard for toolbar / header buttons */
+#view-counselor button.counselor-btn-primary,
+#view-counselor button.counselor-btn-secondary,
+#view-counselor header button:not(.modal-close),
+#view-counselor .counselor-toolbar button,
+#view-counselor .counselor-actions button {
+  height: 44px !important;
+  min-height: 44px !important;
+  max-height: 44px !important;
+  border-radius: 10px !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 16px !important;
+  box-sizing: border-box !important;
+  gap: 8px !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+}
+
+/* Square Icon buttons (44px x 44px or 40px x 40px) */
+#view-counselor button.counselor-btn-icon,
+#view-counselor button.min-h-\[42px\].min-w-\[42px\],
+#view-counselor button.min-h-\[44px\].min-w-\[44px\],
+#view-counselor button.h-10.w-10,
+#view-counselor button.h-9.w-9 {
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 10px !important;
+  outline: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+#view-counselor button.counselor-btn-icon,
+#view-counselor button.min-h-\[42px\].min-w-\[42px\],
+#view-counselor button.min-h-\[44px\].min-w-\[44px\] {
+  height: 44px !important;
+  min-height: 44px !important;
+  max-height: 44px !important;
+  width: 44px !important;
+  min-width: 44px !important;
+  max-width: 44px !important;
+  padding: 0 !important;
+}
+
+/* Pagination Controls in Counselor */
+#view-counselor div[aria-label='Phân trang danh sách'] button,
+#view-counselor nav[aria-label='Phân trang danh sách'] button,
+#view-counselor .pagination button {
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 10px !important;
+  outline: none !important;
+}
+
+#view-counselor div[aria-label='Phân trang danh sách'] button:hover:not(:disabled),
+#view-counselor nav[aria-label='Phân trang danh sách'] button:hover:not(:disabled),
+#view-counselor .pagination button:hover:not(:disabled) {
+  border-color: #cbd5e1 !important;
+  background-color: #f8fafc !important;
+  color: #006948 !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+}
+
+#view-counselor div[aria-label='Phân trang danh sách'] button[aria-current='page'],
+#view-counselor nav[aria-label='Phân trang danh sách'] button[aria-current='page'],
+#view-counselor .pagination button.active {
+  background-color: #006948 !important;
+  border-color: #006948 !important;
+  color: #ffffff !important;
+}
+
+/* Segmented / Pill Tabs inside pages */
+#view-counselor [role='tab']:not(.counselor-tab-item) {
+  border: 1px solid transparent !important;
+  border-radius: 10px !important;
+  outline: none !important;
+}
+
+#view-counselor [role='tab']:not(.counselor-tab-item):hover {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+#view-counselor [role='tab']:not(.counselor-tab-item)[aria-selected='true'],
+#view-counselor [role='tab']:not(.counselor-tab-item).active {
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 10px !important;
+  outline: none !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+}
+
+/* Links inside Counselor */
+#view-counselor a:not(.navbar-inner *):not(footer a) {
+  outline: none !important;
+  text-decoration: none !important;
+}
+
+#view-counselor a:focus,
+#view-counselor a:focus-visible {
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.15) !important;
+}
+
+/* Responsive Toolbar & Search — wrap từ tablet (menu đã collapse), full-width ở mobile */
+@media (max-width: 1199.98px) {
+  #view-counselor .counselor-toolbar,
+  #view-counselor .counselor-filter-row,
+  #view-counselor header .counselor-toolbar,
+  #view-counselor .counselor-actions {
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+
+  #view-counselor .counselor-toolbar > div,
+  #view-counselor .counselor-filter-row > div {
+    flex-wrap: wrap !important;
+    width: auto !important;
+    gap: 10px !important;
+  }
+}
+
+@media (max-width: 767.98px) {
+  /* Mobile: search + select stack full-width (width rules owned by responsive.css) */
+  #view-counselor select,
+  #view-counselor .counselor-select {
+    width: 100% !important;
+  }
+}
+
+/* ── 7. HOVER STABILITY (NO JUMPING / NO BORDER RESIZING) ── */
+#view-counselor button,
+#view-counselor a,
+#view-counselor .counselor-interactive-card,
+#view-counselor tr {
+  transform: none !important;
+}
+
+#view-counselor button:hover,
+#view-counselor .counselor-interactive-card:hover {
+  transform: none !important;
+}
+
+/* ── 8. FOOTER AND TRUST STRIP ── */
+#view-counselor .counselor-trust-strip {
+  width: 100% !important;
+  border-radius: 12px !important;
+  padding: 20px !important;
+  margin: 20px 0 0 0 !important;
+  box-sizing: border-box !important;
+}
+
+#view-counselor footer {
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+#view-counselor footer.counselor-footer-full,
+#view-counselor footer.counselor-footer-compact {
+  border-radius: 12px !important;
+  margin-top: 20px !important;
+}
+
+/* Reset buttons and links inside footer */
+#view-counselor footer button,
+#view-counselor footer a,
+#view-counselor .counselor-footer-full button,
+#view-counselor .counselor-footer-compact button {
+  border: 0 !important;
+  border-width: 0 !important;
+  outline: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  font-family: 'Inter', sans-serif !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+  transition: color 0.15s ease !important;
+}
+
+#view-counselor footer button:hover,
+#view-counselor footer a:hover,
+#view-counselor .counselor-footer-full button:hover,
+#view-counselor .counselor-footer-compact button:hover {
+  color: #006948 !important;
+  border: 0 !important;
+  border-width: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+  transform: none !important;
+  text-decoration: none !important;
+}
+
+#view-counselor footer button:focus-visible,
+#view-counselor footer a:focus-visible {
+  outline: 2px solid #006948 !important;
+  outline-offset: 2px !important;
+  border-radius: 4px !important;
+}
+
+/* ── 9. COUNSELOR PROFILE VIEW (GRID 2-COL, 24px GAPS & PADDING, 44px CONTROLS) ── */
+#view-counselor .counselor-profile-wrapper,
+.counselor-profile-wrapper {
+  width: 100% !important;
+  max-width: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 20px !important;
+}
+
+#view-counselor .counselor-profile-card,
+.counselor-profile-card {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  padding: 24px !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+  box-sizing: border-box !important;
+}
+
+@media (max-width: 767.98px) {
+  #view-counselor .counselor-profile-card,
+  .counselor-profile-card {
+    padding: 16px !important;
+  }
+}
+
+/* Profile Header Row */
+#view-counselor .counselor-profile-header-row,
+.counselor-profile-header-row {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+  gap: 24px !important;
+}
+
+@media (max-width: 767.98px) {
+  #view-counselor .counselor-profile-header-row,
+  .counselor-profile-header-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 16px !important;
+  }
+}
+
+#view-counselor .counselor-profile-header-actions,
+.counselor-profile-header-actions {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  flex-shrink: 0 !important;
+}
+
+@media (max-width: 767.98px) {
+  #view-counselor .counselor-profile-header-actions,
+  .counselor-profile-header-actions {
+    width: 100% !important;
+    justify-content: stretch !important;
+  }
+
+  #view-counselor .counselor-profile-header-actions button,
+  .counselor-profile-header-actions button {
+    width: 100% !important;
+  }
+}
+
+/* Profile Tabs Navigation */
+#view-counselor .counselor-profile-tabs,
+.counselor-profile-tabs {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  width: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+  overflow-x: auto !important;
+  scrollbar-width: none !important;
+}
+
+#view-counselor .counselor-profile-tabs::-webkit-scrollbar,
+.counselor-profile-tabs::-webkit-scrollbar {
+  display: none !important;
+}
+
+#view-counselor .counselor-profile-tab,
+.counselor-profile-tab {
+  height: 44px !important;
+  min-height: 44px !important;
+  max-height: 44px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 16px !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  color: #64748b !important;
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 2px solid transparent !important;
+  border-radius: 0 !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  gap: 8px !important;
+  box-sizing: border-box !important;
+  box-shadow: none !important;
+  margin-bottom: -1px !important;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease !important;
+}
+
+#view-counselor .counselor-profile-tab:hover,
+.counselor-profile-tab:hover {
+  color: #006948 !important;
+  border-bottom-color: transparent !important;
+  background: transparent !important;
+}
+
+#view-counselor .counselor-profile-tab.active,
+.counselor-profile-tab.active {
+  color: #006948 !important;
+  border-bottom: 2px solid #006948 !important;
+  background: transparent !important;
+  font-weight: 600 !important;
+}
+
+/* Profile 2-Column Grid Layout */
+#view-counselor .counselor-profile-grid-2col,
+.counselor-profile-grid-2col {
+  gap: 24px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Profile Form Elements */
+#view-counselor .counselor-profile-field,
+.counselor-profile-field {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;
+  width: 100% !important;
+}
+
+#view-counselor .counselor-profile-label,
+.counselor-profile-label {
+  display: block !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #475569 !important;
+  margin-bottom: 8px !important;
+  line-height: 1.25 !important;
+}
+
+#view-counselor .counselor-profile-input,
+.counselor-profile-input,
+#view-counselor .counselor-profile-select,
+.counselor-profile-select {
+  height: 44px !important;
+  min-height: 44px !important;
+  max-height: 44px !important;
+  border-radius: 8px !important;
+  padding: 0 14px !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 14px !important;
+  line-height: 44px !important;
+  color: #171d19 !important;
+  border: 1px solid #cbd5e1 !important;
+  background-color: #ffffff !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  outline: none !important;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease !important;
+}
+
+#view-counselor .counselor-profile-input:disabled,
+.counselor-profile-input:disabled,
+#view-counselor .counselor-profile-select:disabled,
+.counselor-profile-select:disabled {
+  background-color: #f8fafc !important;
+  color: #334155 !important;
+  cursor: default !important;
+}
+
+#view-counselor .counselor-profile-input:focus,
+.counselor-profile-input:focus,
+#view-counselor .counselor-profile-select:focus,
+.counselor-profile-select:focus,
+#view-counselor .counselor-profile-textarea:focus,
+.counselor-profile-textarea:focus {
+  border-color: #006948 !important;
+  box-shadow: 0 0 0 2px rgba(0, 105, 72, 0.15) !important;
+  outline: none !important;
+}
+
+#view-counselor .counselor-profile-textarea,
+.counselor-profile-textarea {
+  border-radius: 8px !important;
+  padding: 12px 14px !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+  color: #171d19 !important;
+  border: 1px solid #cbd5e1 !important;
+  background-color: #ffffff !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  outline: none !important;
+  min-height: 96px !important;
+  resize: vertical !important;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease !important;
+}
+
+#view-counselor .counselor-profile-textarea:disabled,
+.counselor-profile-textarea:disabled {
+  background-color: #f8fafc !important;
+  color: #334155 !important;
+  cursor: default !important;
+}
+
+/* JD upload modal: isolated from legacy modal/form selectors. */
+#view-counselor .counselor-jd-upload-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 1000 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 24px !important;
+}
+
+#view-counselor .counselor-jd-upload-dialog {
+  position: relative !important;
+  display: block !important;
+  width: min(100%, 560px) !important;
+  max-width: 560px !important;
+  max-height: calc(100dvh - 48px) !important;
+  margin: 0 !important;
+  padding: 24px !important;
+  overflow-y: auto !important;
+  box-sizing: border-box !important;
+  background: #ffffff !important;
+  border-radius: 16px !important;
+}
+
+#view-counselor .counselor-jd-upload-form {
+  position: static !important;
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+  margin: 0 !important;
+  gap: 16px !important;
+}
+
+#view-counselor .counselor-jd-upload-form > * {
+  position: static !important;
+  width: 100% !important;
+  margin: 0 !important;
+}
+
+#view-counselor .counselor-jd-upload-form .grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+}
+
+@media (max-width: 640px) {
+  #view-counselor .counselor-jd-upload-overlay {
+    align-items: flex-end !important;
+    padding: 12px !important;
+  }
+
+  #view-counselor .counselor-jd-upload-dialog {
+    max-height: calc(100dvh - 24px) !important;
+    padding: 20px !important;
+  }
+
+  #view-counselor .counselor-jd-upload-form .grid {
+    grid-template-columns: 1fr !important;
+  }
+}

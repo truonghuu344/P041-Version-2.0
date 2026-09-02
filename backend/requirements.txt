@@ -11,6 +11,16 @@ boto3>=1.35.0                   # Cloudflare R2 (S3-compatible object storage)
 email-validator>=2.2.0         # Validate EmailStr trong Pydantic
 google-auth>=2.35.0            # Google OAuth token verification
 reportlab>=4.0.0               # Tạo file PDF CV export
+pypdf>=4.0.0                   # Đọc và xử lý file PDF CV
+python-docx>=1.1.0             # Đọc file DOCX CV
+Jinja2>=3.1.6                  # RenderCV templates
+markdown>=3.10.2               # RenderCV Markdown conversion
+phonenumbers>=9.0.24           # RenderCV phone validation
+pydantic-extra-types>=2.11.0   # RenderCV schema types
+ruamel.yaml>=0.19.1            # RenderCV YAML parser
+typst>=0.14.8                  # RenderCV PDF compiler
+rendercv-fonts>=0.5.1          # RenderCV bundled fonts
+packaging>=26.0                # RenderCV runtime version handling
 
 
 # ==========================================
@@ -24,6 +34,7 @@ bcrypt>=4.1.0                   # Engine mã hóa bcrypt
 # 3. DATABASE & CACHING
 # ==========================================
 sqlalchemy>=2.0.0               # ORM quản lý Database
+greenlet>=3.0.0                 # Required by SQLAlchemy AsyncSession
 alembic>=1.14.0                 # DB Migration tool
 psycopg2-binary>=2.9.0          # Driver kết nối PostgreSQL
 asyncpg>=0.29.0                 # Async driver cho PostgreSQL (tùy chọn tối ưu tốc độ)
@@ -42,8 +53,9 @@ google-genai>=1.0.0
 # ==========================================
 # 5. VOICE INTERVIEW (Pipeline 3)
 # ==========================================
-elevenlabs>=2.0.0,<3.0.0        # ElevenLabs TTS (eleven_flash_v2_5, hỗ trợ tiếng Việt)
-gTTS>=2.5.0                      # Fallback TTS khi ElevenLabs lỗi/hết quota
+deepgram-sdk>=3.0.0,<4.0.0      # Deepgram Nova-3 STT (streaming WebSocket)
+gTTS>=2.5.0                      # Google Translate TTS (miễn phí, hỗ trợ tiếng Việt tốt)
+elevenlabs>=2.0.0,<3.0.0         # TTS chính; gTTS fallback
 
 # Vector stores: pgvector embeddings and Qdrant market-JD retrieval
 pgvector>=0.2.0

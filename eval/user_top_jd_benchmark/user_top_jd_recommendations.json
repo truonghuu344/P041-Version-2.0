@@ -1,0 +1,2402 @@
+{
+  "run_id": "b372545cb262433c958df3d4cf2d53eb",
+  "status": "COMPLETED",
+  "items": [
+    {
+      "rank": 1,
+      "job_id": "JD-072",
+      "title": "FullStack Engineer",
+      "company": "NeoX",
+      "location": "Hồ Chí Minh",
+      "work_mode": "On-site",
+      "display_fit_score": 34.8,
+      "raw_fit_score": 34.8,
+      "fit_label": "Cần cải thiện",
+      "evidence_confidence": "low",
+      "mandatory_requirement_failed": false,
+      "role_relevant": true,
+      "application_ready": true,
+      "retrieval_rank": 9,
+      "role_affinity_score": 100,
+      "ready_candidate_boost": 0.15,
+      "required_skills_coverage": 0.86,
+      "mandatory_requirements_matched": 6,
+      "total_mandatory_requirements": 9,
+      "score_breakdown": [
+        {
+          "criterion_id": "CRIT_REQUIRED_SKILL",
+          "raw_score": 75,
+          "weight": 38.9,
+          "weighted_score": 29.2,
+          "status": "PARTIALLY_SUPPORTED",
+          "reason": "6/8 requirement được hỗ trợ đầy đủ.",
+          "requirement_ids": [
+            "JD_REQ_001_DC4240E4",
+            "JD_REQ_002_8D342925",
+            "JD_REQ_003_313BDF88",
+            "JD_REQ_004_CD5254E1",
+            "JD_REQ_005_E997631B",
+            "JD_REQ_006_8DB306E0",
+            "JD_REQ_007_66D386E5",
+            "JD_REQ_012_420F0C05"
+          ],
+          "evidence_ids": [
+            "EVD_5142B7D3640D",
+            "EVD_BE12A5D898B8",
+            "EVD_53DF736802F7",
+            "EVD_ECAE581D5025",
+            "EVD_6B0950CD5112",
+            "EVD_D70E963730AE"
+          ]
+        },
+        {
+          "criterion_id": "CRIT_EXPERIENCE",
+          "raw_score": 16.7,
+          "weight": 33.3,
+          "weighted_score": 5.6,
+          "status": "PARTIALLY_SUPPORTED",
+          "reason": "0/3 requirement được hỗ trợ đầy đủ.",
+          "requirement_ids": [
+            "JD_REQ_009_C4D1482B",
+            "JD_REQ_010_F625267A",
+            "JD_REQ_011_42023BE7"
+          ],
+          "evidence_ids": [
+            "EVD_7C1818312F1E",
+            "EVD_9F25CD7F4E97"
+          ]
+        },
+        {
+          "criterion_id": "CRIT_PREFERRED_SKILL",
+          "raw_score": 0,
+          "weight": 11.1,
+          "weighted_score": 0,
+          "status": "NOT_FOUND",
+          "reason": "0/1 requirement được hỗ trợ đầy đủ.",
+          "requirement_ids": [
+            "JD_REQ_008_E5CD4D60"
+          ],
+          "evidence_ids": []
+        },
+        {
+          "criterion_id": "CRIT_DOMAIN",
+          "raw_score": 0,
+          "weight": 16.7,
+          "weighted_score": 0,
+          "status": "NOT_FOUND",
+          "reason": "0/1 requirement được hỗ trợ đầy đủ.",
+          "requirement_ids": [
+            "JD_REQ_013_37715608"
+          ],
+          "evidence_ids": []
+        }
+      ],
+      "top_strengths": [
+        "Đáp ứng tốt yêu cầu: MongoDB",
+        "Đáp ứng tốt yêu cầu: React",
+        "Đáp ứng tốt yêu cầu: Docker",
+        "Đáp ứng tốt yêu cầu: Go"
+      ],
+      "top_gaps": [
+        "Chưa tìm thấy evidence cho Microservices",
+        "Chưa tìm thấy evidence cho Qualifications At least 3 years of experience focusing on NodeJS, ReactJS Additional experience with Golang is a plus.Experience with web services and API integration, REST API, and technical documentation.",
+        "Chưa tìm thấy evidence cho en",
+        "Chưa tìm thấy evidence cho REST API"
+      ],
+      "user_explanation": {
+        "verdict": "Chưa phù hợp để ứng tuyển ngay — đây là vị trí gần nhất trong danh mục hiện có.",
+        "confidence_message": "Độ tin cậy thấp: CV chưa có đủ bằng chứng để xác nhận nhiều yêu cầu.",
+        "mandatory_summary": {
+          "matched": 6,
+          "total": 9,
+          "failed": false
+        },
+        "matched_requirements": [
+          {
+            "requirement_id": "JD_REQ_004_CD5254E1",
+            "requirement": "Docker",
+            "status": "SUPPORTED",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "CV có evidence hỗ trợ requirement này.",
+            "cv_evidence_quotes": [
+              "Spring Boot, JavaScript, SQL Server, MongoDB, Node.js, ReactJS, Docker, Python, Spring, MySQL, React, Java, AWS, SQL, AI, Go, communication"
+            ]
+          },
+          {
+            "requirement_id": "JD_REQ_005_E997631B",
+            "requirement": "Go",
+            "status": "SUPPORTED",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "CV có evidence hỗ trợ requirement này.",
+            "cv_evidence_quotes": [
+              "Spring Boot, JavaScript, SQL Server, MongoDB, Node.js, ReactJS, Docker, Python, Spring, MySQL, React, Java, AWS, SQL, AI, Go, communication"
+            ]
+          },
+          {
+            "requirement_id": "JD_REQ_002_8D342925",
+            "requirement": "MongoDB",
+            "status": "SUPPORTED",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "CV có evidence hỗ trợ requirement này.",
+            "cv_evidence_quotes": [
+              "Spring Boot, JavaScript, SQL Server, MongoDB, Node.js, ReactJS, Docker, Python, Spring, MySQL, React, Java, AWS, SQL, AI, Go, communication"
+            ]
+          },
+          {
+            "requirement_id": "JD_REQ_006_8DB306E0",
+            "requirement": "MySQL",
+            "status": "SUPPORTED",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "CV có evidence hỗ trợ requirement này.",
+            "cv_evidence_quotes": [
+              "Spring Boot, JavaScript, SQL Server, MongoDB, Node.js, ReactJS, Docker, Python, Spring, MySQL, React, Java, AWS, SQL, AI, Go, communication"
+            ]
+          }
+        ],
+        "priority_gaps": [
+          {
+            "requirement_id": "JD_REQ_012_420F0C05",
+            "requirement": "en",
+            "status": "NOT_FOUND",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "Không tìm thấy bằng chứng đáng tin cậy cho requirement này trong CV.",
+            "cv_evidence_quotes": []
+          },
+          {
+            "requirement_id": "JD_REQ_001_DC4240E4",
+            "requirement": "Microservices",
+            "status": "NOT_FOUND",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "Không tìm thấy bằng chứng đáng tin cậy cho requirement này trong CV.",
+            "cv_evidence_quotes": []
+          },
+          {
+            "requirement_id": "JD_REQ_011_42023BE7",
+            "requirement": "Qualifications At least 3 years of experience focusing on NodeJS, ReactJS Additional experience with Golang is a plus.Experience with web services and API integration, REST API, and technical documentation.",
+            "status": "NOT_FOUND",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "Không tìm thấy bằng chứng đáng tin cậy cho requirement này trong CV.",
+            "cv_evidence_quotes": [
+              "Technologies: NextJS, TailwindCSS, Node.js, DynamoDB, Cloudinary, AI"
+            ]
+          },
+          {
+            "requirement_id": "JD_REQ_019_4916E84C",
+            "requirement": "Analyze product requirements and specifications to create, communicate, and implement the technical design.",
+            "status": "NOT_FOUND",
+            "mandatory": false,
+            "priority": "low",
+            "reason": "Không tìm thấy bằng chứng đáng tin cậy cho requirement này trong CV.",
+            "cv_evidence_quotes": []
+          }
+        ],
+        "priority_actions": [
+          {
+            "requirement": "en",
+            "message": "Nếu bạn đã có kinh nghiệm về en, hãy bổ sung bằng chứng cụ thể vào CV; nếu chưa có, ưu tiên học hoặc thực hành trước khi ứng tuyển."
+          },
+          {
+            "requirement": "Microservices",
+            "message": "Nếu bạn đã có kinh nghiệm về Microservices, hãy bổ sung bằng chứng cụ thể vào CV; nếu chưa có, ưu tiên học hoặc thực hành trước khi ứng tuyển."
+          },
+          {
+            "requirement": "Qualifications At least 3 years of experience focusing on NodeJS, ReactJS Additional experience with Golang is a plus.Experience with web services and API integration, REST API, and technical documentation.",
+            "message": "Nếu bạn đã có kinh nghiệm về Qualifications At least 3 years of experience focusing on NodeJS, ReactJS Additional experience with Golang is a plus.Experience with web services and API integration, REST API, and technical documentation., hãy bổ sung bằng chứng cụ thể vào CV; nếu chưa có, ưu tiên học hoặc thực hành trước khi ứng tuyển."
+          }
+        ],
+        "score_breakdown": [
+          {
+            "criterion_id": "CRIT_REQUIRED_SKILL",
+            "label": "Kỹ năng bắt buộc",
+            "raw_score": 75,
+            "weight": 38.9,
+            "weighted_score": 29.2,
+            "status": "PARTIALLY_SUPPORTED",
+            "reason": "6/8 requirement được hỗ trợ đầy đủ."
+          },
+          {
+            "criterion_id": "CRIT_EXPERIENCE",
+            "label": "Kinh nghiệm liên quan",
+            "raw_score": 16.7,
+            "weight": 33.3,
+            "weighted_score": 5.6,
+            "status": "PARTIALLY_SUPPORTED",
+            "reason": "0/3 requirement được hỗ trợ đầy đủ."
+          },
+          {
+            "criterion_id": "CRIT_PREFERRED_SKILL",
+            "label": "Kỹ năng ưu tiên",
+            "raw_score": 0,
+            "weight": 11.1,
+            "weighted_score": 0,
+            "status": "NOT_FOUND",
+            "reason": "0/1 requirement được hỗ trợ đầy đủ."
+          },
+          {
+            "criterion_id": "CRIT_DOMAIN",
+            "label": "Lĩnh vực / trách nhiệm",
+            "raw_score": 0,
+            "weight": 16.7,
+            "weighted_score": 0,
+            "status": "NOT_FOUND",
+            "reason": "0/1 requirement được hỗ trợ đầy đủ."
+          }
+        ],
+        "role_relevant": true,
+        "application_ready": true
+      },
+      "match_id": "PREVIEW_JD-072"
+    },
+    {
+      "rank": 2,
+      "job_id": "JD-060",
+      "title": "New Product Development Engineer(Fullstack & English)",
+      "company": "Porters Asia Vietnam Co., Ltd.",
+      "location": "Ho Chi Minh",
+      "work_mode": "Remote",
+      "display_fit_score": 33.6,
+      "raw_fit_score": 33.6,
+      "fit_label": "Cần cải thiện",
+      "evidence_confidence": "low",
+      "mandatory_requirement_failed": false,
+      "role_relevant": true,
+      "application_ready": true,
+      "retrieval_rank": 8,
+      "role_affinity_score": 50,
+      "ready_candidate_boost": 0.15,
+      "required_skills_coverage": 0.75,
+      "mandatory_requirements_matched": 10,
+      "total_mandatory_requirements": 15,
+      "score_breakdown": [
+        {
+          "criterion_id": "CRIT_REQUIRED_SKILL",
+          "raw_score": 65.6,
+          "weight": 41.2,
+          "weighted_score": 27,
+          "status": "PARTIALLY_SUPPORTED",
+          "reason": "10/16 requirement được hỗ trợ đầy đủ.",
+          "requirement_ids": [
+            "JD_REQ_001_B75F0746",
+            "JD_REQ_002_C2129804",
+            "JD_REQ_003_3EC06B26",
+            "JD_REQ_004_9C0EF0C5",
+            "JD_REQ_005_223592A9",
+            "JD_REQ_006_EE5736D6",
+            "JD_REQ_007_B346ED51",
+            "JD_REQ_008_4A0D4E3E",
+            "JD_REQ_009_5AA676A2",
+            "JD_REQ_010_66ED0DA5",
+            "JD_REQ_011_026F1006",
+            "JD_REQ_012_917C03F0",
+            "JD_REQ_013_FE69F056",
+            "JD_REQ_014_3F9AE589",
+            "JD_REQ_026_7B010351",
+            "JD_REQ_027_65AB969B"
+          ],
+          "evidence_ids": [
+            "EVD_DDFF6AAB9D1E",
+            "EVD_16B615FD9821",
+            "EVD_49FBB8EA372D",
+            "EVD_F3B5E846B5EC",
+            "EVD_A33CCB1E7EC4",
+            "EVD_65A77DC0A4C5",
+            "EVD_B1A6DC458332",
+            "EVD_9AACBA969B14",
+            "EVD_1D39CBEC0EF0",
+            "EVD_A0017636322F",
+            "EVD_7C9E8BCF8851",
+            "EVD_F75A3FE9B6F7"
+          ]
+        },
+        {
+          "criterion_id": "CRIT_EXPERIENCE",
+          "raw_score": 18.8,
+          "weight": 35.3,
+          "weighted_score": 6.6,
+          "status": "PARTIALLY_SUPPORTED",
+          "reason": "0/8 requirement được hỗ trợ đầy đủ.",
+          "requirement_ids": [
+            "JD_REQ_015_2F9F555E",
+            "JD_REQ_016_FACE4004",
+            "JD_REQ_017_0BB42A11",
+            "JD_REQ_018_E1B3E9A0",
+            "JD_REQ_019_0F993B33",
+            "JD_REQ_020_6C026075",
+            "JD_REQ_021_9DC67B69",
+            "JD_REQ_022_CD163D29"
+          ],
+          "evidence_ids": [
+            "EVD_F0AB942C91E6",
+            "EVD_0CF46E85F8C8",
+            "EVD_EABB5B277E21"
+          ]
+        },
+        {
+          "criterion_id": "CRIT_EDUCATION",
+          "raw_score": 0,
+          "weight": 11.8,
+          "weighted_score": 0,
+          "status": "NOT_FOUND",
+          "reason": "0/1 requirement được hỗ trợ đầy đủ.",
+          "requirement_ids": [
+            "JD_REQ_023_8E1B0649"
+          ],
+          "evidence_ids": [
+            "EVD_ECA48316069B"
+          ]
+        },
+        {
+          "criterion_id": "CRIT_PREFERRED_SKILL",
+          "raw_score": 0,
+          "weight": 11.7,
+          "weighted_score": 0,
+          "status": "NOT_FOUND",
+          "reason": "0/2 requirement được hỗ trợ đầy đủ.",
+          "requirement_ids": [
+            "JD_REQ_024_C55CABC3",
+            "JD_REQ_025_9DF6DF2E"
+          ],
+          "evidence_ids": []
+        }
+      ],
+      "top_strengths": [
+        "Đáp ứng tốt yêu cầu: Spring Boot",
+        "Đáp ứng tốt yêu cầu: JavaScript",
+        "Đáp ứng tốt yêu cầu: React",
+        "Đáp ứng tốt yêu cầu: Docker"
+      ],
+      "top_gaps": [
+        "Chưa tìm thấy evidence cho TypeScript",
+        "Chưa tìm thấy evidence cho REST API",
+        "Chưa tìm thấy evidence cho Jenkins",
+        "Chưa tìm thấy evidence cho time management"
+      ],
+      "user_explanation": {
+        "verdict": "Chưa phù hợp để ứng tuyển ngay — vị trí này xếp hạng #2 trong danh sách hiện có.",
+        "confidence_message": "Độ tin cậy thấp: CV chưa có đủ bằng chứng để xác nhận nhiều yêu cầu.",
+        "mandatory_summary": {
+          "matched": 10,
+          "total": 16,
+          "failed": false
+        },
+        "matched_requirements": [
+          {
+            "requirement_id": "JD_REQ_014_3F9AE589",
+            "requirement": "AI",
+            "status": "SUPPORTED",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "CV có evidence hỗ trợ requirement này.",
+            "cv_evidence_quotes": [
+              "Technologies: NextJS, TailwindCSS, Node.js, DynamoDB, Cloudinary, AI",
+              "Spring Boot, JavaScript, SQL Server, MongoDB, Node.js, ReactJS, Docker, Python, Spring, MySQL, React, Java, AWS, SQL, AI, Go, communication"
+            ]
+          },
+          {
+            "requirement_id": "JD_REQ_012_917C03F0",
+            "requirement": "AWS",
+            "status": "SUPPORTED",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "CV có evidence hỗ trợ requirement này.",
+            "cv_evidence_quotes": [
+              "Spring Boot, JavaScript, SQL Server, MongoDB, Node.js, ReactJS, Docker, Python, Spring, MySQL, React, Java, AWS, SQL, AI, Go, communication"
+            ]
+          },
+          {
+            "requirement_id": "JD_REQ_007_B346ED51",
+            "requirement": "Docker",
+            "status": "SUPPORTED",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "CV có evidence hỗ trợ requirement này.",
+            "cv_evidence_quotes": [
+              "Spring Boot, JavaScript, SQL Server, MongoDB, Node.js, ReactJS, Docker, Python, Spring, MySQL, React, Java, AWS, SQL, AI, Go, communication"
+            ]
+          },
+          {
+            "requirement_id": "JD_REQ_011_026F1006",
+            "requirement": "Java",
+            "status": "SUPPORTED",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "CV có evidence hỗ trợ requirement này.",
+            "cv_evidence_quotes": [
+              "Spring Boot, JavaScript, SQL Server, MongoDB, Node.js, ReactJS, Docker, Python, Spring, MySQL, React, Java, AWS, SQL, AI, Go, communication"
+            ]
+          }
+        ],
+        "priority_gaps": [
+          {
+            "requirement_id": "JD_REQ_027_65AB969B",
+            "requirement": "communication",
+            "status": "NOT_FOUND",
+            "mandatory": true,
+            "priority": "medium",
+            "reason": "Chưa có đủ bằng chứng trong CV để kết luận.",
+            "cv_evidence_quotes": []
+          },
+          {
+            "requirement_id": "JD_REQ_005_223592A9",
+            "requirement": "Jenkins",
+            "status": "NOT_FOUND",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "Không tìm thấy bằng chứng đáng tin cậy cho requirement này trong CV.",
+            "cv_evidence_quotes": []
+          },
+          {
+            "requirement_id": "JD_REQ_004_9C0EF0C5",
+            "requirement": "REST API",
+            "status": "NOT_FOUND",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "Không tìm thấy bằng chứng đáng tin cậy cho requirement này trong CV.",
+            "cv_evidence_quotes": []
+          },
+          {
+            "requirement_id": "JD_REQ_026_7B010351",
+            "requirement": "time management",
+            "status": "NOT_FOUND",
+            "mandatory": true,
+            "priority": "medium",
+            "reason": "Chưa có đủ bằng chứng trong CV để kết luận.",
+            "cv_evidence_quotes": []
+          }
+        ],
+        "priority_actions": [
+          {
+            "requirement": "communication",
+            "message": "Nếu bạn đã có kinh nghiệm về communication, hãy bổ sung bằng chứng cụ thể vào CV; nếu chưa có, ưu tiên học hoặc thực hành trước khi ứng tuyển."
+          },
+          {
+            "requirement": "Jenkins",
+            "message": "Nếu bạn đã có kinh nghiệm về Jenkins, hãy bổ sung bằng chứng cụ thể vào CV; nếu chưa có, ưu tiên học hoặc thực hành trước khi ứng tuyển."
+          },
+          {
+            "requirement": "REST API",
+            "message": "Nếu bạn đã có kinh nghiệm về REST API, hãy bổ sung bằng chứng cụ thể vào CV; nếu chưa có, ưu tiên học hoặc thực hành trước khi ứng tuyển."
+          }
+        ],
+        "score_breakdown": [
+          {
+            "criterion_id": "CRIT_REQUIRED_SKILL",
+            "label": "Kỹ năng bắt buộc",
+            "raw_score": 65.6,
+            "weight": 41.2,
+            "weighted_score": 27,
+            "status": "PARTIALLY_SUPPORTED",
+            "reason": "10/16 requirement được hỗ trợ đầy đủ."
+          },
+          {
+            "criterion_id": "CRIT_EXPERIENCE",
+            "label": "Kinh nghiệm liên quan",
+            "raw_score": 18.8,
+            "weight": 35.3,
+            "weighted_score": 6.6,
+            "status": "PARTIALLY_SUPPORTED",
+            "reason": "0/8 requirement được hỗ trợ đầy đủ."
+          },
+          {
+            "criterion_id": "CRIT_EDUCATION",
+            "label": "Học vấn",
+            "raw_score": 0,
+            "weight": 11.8,
+            "weighted_score": 0,
+            "status": "NOT_FOUND",
+            "reason": "0/1 requirement được hỗ trợ đầy đủ."
+          },
+          {
+            "criterion_id": "CRIT_PREFERRED_SKILL",
+            "label": "Kỹ năng ưu tiên",
+            "raw_score": 0,
+            "weight": 11.7,
+            "weighted_score": 0,
+            "status": "NOT_FOUND",
+            "reason": "0/2 requirement được hỗ trợ đầy đủ."
+          }
+        ],
+        "role_relevant": true,
+        "application_ready": true
+      },
+      "match_id": "PREVIEW_JD-060"
+    },
+    {
+      "rank": 3,
+      "job_id": "JD-057",
+      "title": "Junior Fullstack Developer (PHP, Python, SQL, OOP)",
+      "company": "CÔNG TY TNHH VANFU SOFTWARE VIỆT NAM",
+      "location": "Ho Chi Minh",
+      "work_mode": "On-site",
+      "display_fit_score": 29.3,
+      "raw_fit_score": 29.3,
+      "fit_label": "Cần cải thiện",
+      "evidence_confidence": "low",
+      "mandatory_requirement_failed": false,
+      "role_relevant": true,
+      "application_ready": true,
+      "retrieval_rank": 3,
+      "role_affinity_score": 100,
+      "ready_candidate_boost": 0.15,
+      "required_skills_coverage": 0.78,
+      "mandatory_requirements_matched": 7,
+      "total_mandatory_requirements": 10,
+      "score_breakdown": [
+        {
+          "criterion_id": "CRIT_REQUIRED_SKILL",
+          "raw_score": 70,
+          "weight": 38.9,
+          "weighted_score": 27.2,
+          "status": "PARTIALLY_SUPPORTED",
+          "reason": "7/10 requirement được hỗ trợ đầy đủ.",
+          "requirement_ids": [
+            "JD_REQ_001_88A2034B",
+            "JD_REQ_002_874BDCDA",
+            "JD_REQ_003_6F742FDF",
+            "JD_REQ_004_63E8FE02",
+            "JD_REQ_005_5D8CEDB0",
+            "JD_REQ_006_3BBB38F5",
+            "JD_REQ_007_D9FBCC8D",
+            "JD_REQ_008_C2906B50",
+            "JD_REQ_009_A15C8146",
+            "JD_REQ_020_489317E4"
+          ],
+          "evidence_ids": [
+            "EVD_991D506E04DB",
+            "EVD_7C81A8E7C16B",
+            "EVD_B4408B40E610",
+            "EVD_93EB620B18E0",
+            "EVD_BABA4209D79A",
+            "EVD_F4095FAEB9AD",
+            "EVD_8FE26430EC6A"
+          ]
+        },
+        {
+          "criterion_id": "CRIT_EXPERIENCE",
+          "raw_score": 6.2,
+          "weight": 33.3,
+          "weighted_score": 2.1,
+          "status": "PARTIALLY_SUPPORTED",
+          "reason": "0/8 requirement được hỗ trợ đầy đủ.",
+          "requirement_ids": [
+            "JD_REQ_010_CE3E55A5",
+            "JD_REQ_011_E2F7CACF",
+            "JD_REQ_012_66936D9E",
+            "JD_REQ_013_15157CC0",
+            "JD_REQ_014_9032B532",
+            "JD_REQ_015_5EB078C0",
+            "JD_REQ_016_526553FD",
+            "JD_REQ_017_F56D03C1"
+          ],
+          "evidence_ids": [
+            "EVD_01F196CC2069",
+            "EVD_92F1CB3AC9A4"
+          ]
+        },
+        {
+          "criterion_id": "CRIT_PREFERRED_SKILL",
+          "raw_score": 0,
+          "weight": 11.1,
+          "weighted_score": 0,
+          "status": "NOT_FOUND",
+          "reason": "0/2 requirement được hỗ trợ đầy đủ.",
+          "requirement_ids": [
+            "JD_REQ_018_8353B9D1",
+            "JD_REQ_019_3F8A3F11"
+          ],
+          "evidence_ids": []
+        },
+        {
+          "criterion_id": "CRIT_DOMAIN",
+          "raw_score": 0,
+          "weight": 16.7,
+          "weighted_score": 0,
+          "status": "NOT_FOUND",
+          "reason": "0/1 requirement được hỗ trợ đầy đủ.",
+          "requirement_ids": [
+            "JD_REQ_021_B45EB54E"
+          ],
+          "evidence_ids": []
+        }
+      ],
+      "top_strengths": [
+        "Đáp ứng tốt yêu cầu: JavaScript",
+        "Đáp ứng tốt yêu cầu: Python",
+        "Đáp ứng tốt yêu cầu: React",
+        "Đáp ứng tốt yêu cầu: Java"
+      ],
+      "top_gaps": [
+        "Chưa tìm thấy evidence cho Linux",
+        "Chưa tìm thấy evidence cho Git",
+        "Chưa tìm thấy evidence cho time management",
+        "Chưa tìm thấy evidence cho Given our current team size, we are looking for versatile engineers who are ready to take on challenges in both Front-end and Back-end development to help build a solid foundation for the company."
+      ],
+      "user_explanation": {
+        "verdict": "Chưa phù hợp để ứng tuyển ngay — vị trí này xếp hạng #3 trong danh sách hiện có.",
+        "confidence_message": "Độ tin cậy thấp: CV chưa có đủ bằng chứng để xác nhận nhiều yêu cầu.",
+        "mandatory_summary": {
+          "matched": 7,
+          "total": 10,
+          "failed": false
+        },
+        "matched_requirements": [
+          {
+            "requirement_id": "JD_REQ_006_3BBB38F5",
+            "requirement": "AWS",
+            "status": "SUPPORTED",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "CV có evidence hỗ trợ requirement này.",
+            "cv_evidence_quotes": [
+              "Spring Boot, JavaScript, SQL Server, MongoDB, Node.js, ReactJS, Docker, Python, Spring, MySQL, React, Java, AWS, SQL, AI, Go, communication"
+            ]
+          },
+          {
+            "requirement_id": "JD_REQ_009_A15C8146",
+            "requirement": "Go",
+            "status": "SUPPORTED",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "CV có evidence hỗ trợ requirement này.",
+            "cv_evidence_quotes": [
+              "Spring Boot, JavaScript, SQL Server, MongoDB, Node.js, ReactJS, Docker, Python, Spring, MySQL, React, Java, AWS, SQL, AI, Go, communication"
+            ]
+          },
+          {
+            "requirement_id": "JD_REQ_005_5D8CEDB0",
+            "requirement": "Java",
+            "status": "SUPPORTED",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "CV có evidence hỗ trợ requirement này.",
+            "cv_evidence_quotes": [
+              "Spring Boot, JavaScript, SQL Server, MongoDB, Node.js, ReactJS, Docker, Python, Spring, MySQL, React, Java, AWS, SQL, AI, Go, communication"
+            ]
+          },
+          {
+            "requirement_id": "JD_REQ_001_88A2034B",
+            "requirement": "JavaScript",
+            "status": "SUPPORTED",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "CV có evidence hỗ trợ requirement này.",
+            "cv_evidence_quotes": [
+              "Spring Boot, JavaScript, SQL Server, MongoDB, Node.js, ReactJS, Docker, Python, Spring, MySQL, React, Java, AWS, SQL, AI, Go, communication"
+            ]
+          }
+        ],
+        "priority_gaps": [
+          {
+            "requirement_id": "JD_REQ_007_D9FBCC8D",
+            "requirement": "Git",
+            "status": "NOT_FOUND",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "Không tìm thấy bằng chứng đáng tin cậy cho requirement này trong CV.",
+            "cv_evidence_quotes": []
+          },
+          {
+            "requirement_id": "JD_REQ_003_6F742FDF",
+            "requirement": "Linux",
+            "status": "NOT_FOUND",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "Không tìm thấy bằng chứng đáng tin cậy cho requirement này trong CV.",
+            "cv_evidence_quotes": []
+          },
+          {
+            "requirement_id": "JD_REQ_020_489317E4",
+            "requirement": "time management",
+            "status": "NOT_FOUND",
+            "mandatory": true,
+            "priority": "medium",
+            "reason": "Chưa có đủ bằng chứng trong CV để kết luận.",
+            "cv_evidence_quotes": []
+          },
+          {
+            "requirement_id": "JD_REQ_034_F0EDE4E5",
+            "requirement": "Ability to work both independently and as part of a team.",
+            "status": "NOT_FOUND",
+            "mandatory": false,
+            "priority": "low",
+            "reason": "Không tìm thấy bằng chứng đáng tin cậy cho requirement này trong CV.",
+            "cv_evidence_quotes": []
+          }
+        ],
+        "priority_actions": [
+          {
+            "requirement": "Git",
+            "message": "Nếu bạn đã có kinh nghiệm về Git, hãy bổ sung bằng chứng cụ thể vào CV; nếu chưa có, ưu tiên học hoặc thực hành trước khi ứng tuyển."
+          },
+          {
+            "requirement": "Linux",
+            "message": "Nếu bạn đã có kinh nghiệm về Linux, hãy bổ sung bằng chứng cụ thể vào CV; nếu chưa có, ưu tiên học hoặc thực hành trước khi ứng tuyển."
+          },
+          {
+            "requirement": "time management",
+            "message": "Nếu bạn đã có kinh nghiệm về time management, hãy bổ sung bằng chứng cụ thể vào CV; nếu chưa có, ưu tiên học hoặc thực hành trước khi ứng tuyển."
+          }
+        ],
+        "score_breakdown": [
+          {
+            "criterion_id": "CRIT_REQUIRED_SKILL",
+            "label": "Kỹ năng bắt buộc",
+            "raw_score": 70,
+            "weight": 38.9,
+            "weighted_score": 27.2,
+            "status": "PARTIALLY_SUPPORTED",
+            "reason": "7/10 requirement được hỗ trợ đầy đủ."
+          },
+          {
+            "criterion_id": "CRIT_EXPERIENCE",
+            "label": "Kinh nghiệm liên quan",
+            "raw_score": 6.2,
+            "weight": 33.3,
+            "weighted_score": 2.1,
+            "status": "PARTIALLY_SUPPORTED",
+            "reason": "0/8 requirement được hỗ trợ đầy đủ."
+          },
+          {
+            "criterion_id": "CRIT_PREFERRED_SKILL",
+            "label": "Kỹ năng ưu tiên",
+            "raw_score": 0,
+            "weight": 11.1,
+            "weighted_score": 0,
+            "status": "NOT_FOUND",
+            "reason": "0/2 requirement được hỗ trợ đầy đủ."
+          },
+          {
+            "criterion_id": "CRIT_DOMAIN",
+            "label": "Lĩnh vực / trách nhiệm",
+            "raw_score": 0,
+            "weight": 16.7,
+            "weighted_score": 0,
+            "status": "NOT_FOUND",
+            "reason": "0/1 requirement được hỗ trợ đầy đủ."
+          }
+        ],
+        "role_relevant": true,
+        "application_ready": true
+      },
+      "match_id": "PREVIEW_JD-057"
+    },
+    {
+      "rank": 4,
+      "job_id": "JD-091",
+      "title": "JOB OPENING: FRESHER NODEJS (MERN STACK)",
+      "company": "Tinovation",
+      "location": "Hồ Chí Minh",
+      "work_mode": "On-site",
+      "display_fit_score": 49,
+      "raw_fit_score": 53.9,
+      "fit_label": "Cần cải thiện",
+      "evidence_confidence": "low",
+      "mandatory_requirement_failed": true,
+      "role_relevant": true,
+      "application_ready": false,
+      "retrieval_rank": 17,
+      "role_affinity_score": 50,
+      "ready_candidate_boost": 0.15,
+      "required_skills_coverage": 0.71,
+      "mandatory_requirements_matched": 5,
+      "total_mandatory_requirements": 7,
+      "score_breakdown": [
+        {
+          "criterion_id": "CRIT_REQUIRED_SKILL",
+          "raw_score": 71.4,
+          "weight": 53.8,
+          "weighted_score": 38.5,
+          "status": "PARTIALLY_SUPPORTED",
+          "reason": "5/7 requirement được hỗ trợ đầy đủ.",
+          "requirement_ids": [
+            "JD_REQ_001_5DDFC76E",
+            "JD_REQ_002_2C361816",
+            "JD_REQ_003_5E401BE4",
+            "JD_REQ_004_4D3F0E3B",
+            "JD_REQ_005_5D0D8EF1",
+            "JD_REQ_006_99203CF7",
+            "JD_REQ_007_129736A0"
+          ],
+          "evidence_ids": [
+            "EVD_673CC177948E",
+            "EVD_CCC43A0FF3B6",
+            "EVD_4FBF06F2CB00",
+            "EVD_C3D6818AD0CA",
+            "EVD_7C84D4E2DD36",
+            "EVD_C4911D2C1065"
+          ]
+        },
+        {
+          "criterion_id": "CRIT_EXPERIENCE",
+          "raw_score": 33.3,
+          "weight": 46.2,
+          "weighted_score": 15.4,
+          "status": "PARTIALLY_SUPPORTED",
+          "reason": "0/6 requirement được hỗ trợ đầy đủ.",
+          "requirement_ids": [
+            "JD_REQ_008_79CD34DA",
+            "JD_REQ_009_44732182",
+            "JD_REQ_010_200109E0",
+            "JD_REQ_011_8DD822F6",
+            "JD_REQ_012_896B4321",
+            "JD_REQ_013_E023A33B"
+          ],
+          "evidence_ids": [
+            "EVD_7696C5AE8696",
+            "EVD_2BC91A0AC8DC",
+            "EVD_FCA14E1C8C5C",
+            "EVD_D20CC022F17B",
+            "EVD_73CEC42D2217",
+            "EVD_6A9FBA005FBF"
+          ]
+        }
+      ],
+      "top_strengths": [
+        "Đáp ứng tốt yêu cầu: JavaScript",
+        "Đáp ứng tốt yêu cầu: MongoDB",
+        "Đáp ứng tốt yêu cầu: React",
+        "Đáp ứng tốt yêu cầu: AI"
+      ],
+      "top_gaps": [
+        "Chưa tìm thấy evidence cho Git",
+        "Chưa tìm thấy evidence cho NestJS",
+        "Chưa tìm thấy evidence cho Build and integrate RESTful APIs.",
+        "Chưa tìm thấy evidence cho Work with MongoDB (basic schema design and queries)."
+      ],
+      "user_explanation": {
+        "verdict": "Chưa phù hợp để ứng tuyển ngay — vị trí này xếp hạng #4 trong danh sách hiện có.",
+        "confidence_message": "Độ tin cậy thấp: CV chưa có đủ bằng chứng để xác nhận nhiều yêu cầu.",
+        "mandatory_summary": {
+          "matched": 5,
+          "total": 7,
+          "failed": true
+        },
+        "matched_requirements": [
+          {
+            "requirement_id": "JD_REQ_005_5D0D8EF1",
+            "requirement": "AI",
+            "status": "SUPPORTED",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "CV có evidence hỗ trợ requirement này.",
+            "cv_evidence_quotes": [
+              "Technologies: NextJS, TailwindCSS, Node.js, DynamoDB, Cloudinary, AI",
+              "Spring Boot, JavaScript, SQL Server, MongoDB, Node.js, ReactJS, Docker, Python, Spring, MySQL, React, Java, AWS, SQL, AI, Go, communication"
+            ]
+          },
+          {
+            "requirement_id": "JD_REQ_001_5DDFC76E",
+            "requirement": "JavaScript",
+            "status": "SUPPORTED",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "CV có evidence hỗ trợ requirement này.",
+            "cv_evidence_quotes": [
+              "Spring Boot, JavaScript, SQL Server, MongoDB, Node.js, ReactJS, Docker, Python, Spring, MySQL, React, Java, AWS, SQL, AI, Go, communication"
+            ]
+          },
+          {
+            "requirement_id": "JD_REQ_002_2C361816",
+            "requirement": "MongoDB",
+            "status": "SUPPORTED",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "CV có evidence hỗ trợ requirement này.",
+            "cv_evidence_quotes": [
+              "Spring Boot, JavaScript, SQL Server, MongoDB, Node.js, ReactJS, Docker, Python, Spring, MySQL, React, Java, AWS, SQL, AI, Go, communication"
+            ]
+          },
+          {
+            "requirement_id": "JD_REQ_006_99203CF7",
+            "requirement": "Node.js",
+            "status": "SUPPORTED",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "CV có evidence hỗ trợ requirement này.",
+            "cv_evidence_quotes": [
+              "Spring Boot, JavaScript, SQL Server, MongoDB, Node.js, ReactJS, Docker, Python, Spring, MySQL, React, Java, AWS, SQL, AI, Go, communication"
+            ]
+          }
+        ],
+        "priority_gaps": [
+          {
+            "requirement_id": "JD_REQ_004_4D3F0E3B",
+            "requirement": "Git",
+            "status": "NOT_FOUND",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "Không tìm thấy bằng chứng đáng tin cậy cho requirement này trong CV.",
+            "cv_evidence_quotes": []
+          },
+          {
+            "requirement_id": "JD_REQ_007_129736A0",
+            "requirement": "NestJS",
+            "status": "NOT_FOUND",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "Không tìm thấy bằng chứng đáng tin cậy cho requirement này trong CV.",
+            "cv_evidence_quotes": []
+          },
+          {
+            "requirement_id": "JD_REQ_020_025F1A80",
+            "requirement": "Basic knowledge of MERN stack: JavaScript / NodeJS, ExpressJS, MongoDB.",
+            "status": "PARTIALLY_SUPPORTED",
+            "mandatory": false,
+            "priority": "low",
+            "reason": "CV có evidence liên quan nhưng chưa đáp ứng đầy đủ requirement.",
+            "cv_evidence_quotes": [
+              "Technologies: NextJS, TailwindCSS, Node.js, DynamoDB, Cloudinary, AI"
+            ]
+          },
+          {
+            "requirement_id": "JD_REQ_021_B752CEBA",
+            "requirement": "Basic understanding of ReactJS.",
+            "status": "NOT_FOUND",
+            "mandatory": false,
+            "priority": "low",
+            "reason": "Không tìm thấy bằng chứng đáng tin cậy cho requirement này trong CV.",
+            "cv_evidence_quotes": []
+          }
+        ],
+        "priority_actions": [
+          {
+            "requirement": "Git",
+            "message": "Nếu bạn đã có kinh nghiệm về Git, hãy bổ sung bằng chứng cụ thể vào CV; nếu chưa có, ưu tiên học hoặc thực hành trước khi ứng tuyển."
+          },
+          {
+            "requirement": "NestJS",
+            "message": "Nếu bạn đã có kinh nghiệm về NestJS, hãy bổ sung bằng chứng cụ thể vào CV; nếu chưa có, ưu tiên học hoặc thực hành trước khi ứng tuyển."
+          }
+        ],
+        "score_breakdown": [
+          {
+            "criterion_id": "CRIT_REQUIRED_SKILL",
+            "label": "Kỹ năng bắt buộc",
+            "raw_score": 71.4,
+            "weight": 53.8,
+            "weighted_score": 38.5,
+            "status": "PARTIALLY_SUPPORTED",
+            "reason": "5/7 requirement được hỗ trợ đầy đủ."
+          },
+          {
+            "criterion_id": "CRIT_EXPERIENCE",
+            "label": "Kinh nghiệm liên quan",
+            "raw_score": 33.3,
+            "weight": 46.2,
+            "weighted_score": 15.4,
+            "status": "PARTIALLY_SUPPORTED",
+            "reason": "0/6 requirement được hỗ trợ đầy đủ."
+          }
+        ],
+        "role_relevant": true,
+        "application_ready": false
+      },
+      "match_id": "PREVIEW_JD-091"
+    },
+    {
+      "rank": 5,
+      "job_id": "JD-090",
+      "title": "JOB OPENING: NODEJS INTERN / FRESHER",
+      "company": "Tinovation",
+      "location": "Hồ Chí Minh",
+      "work_mode": "On-site",
+      "display_fit_score": 44.2,
+      "raw_fit_score": 44.2,
+      "fit_label": "Cần cải thiện",
+      "evidence_confidence": "low",
+      "mandatory_requirement_failed": true,
+      "role_relevant": true,
+      "application_ready": false,
+      "retrieval_rank": 22,
+      "role_affinity_score": 50,
+      "ready_candidate_boost": 0.14,
+      "required_skills_coverage": 0.5,
+      "mandatory_requirements_matched": 4,
+      "total_mandatory_requirements": 8,
+      "score_breakdown": [
+        {
+          "criterion_id": "CRIT_REQUIRED_SKILL",
+          "raw_score": 50,
+          "weight": 53.8,
+          "weighted_score": 26.9,
+          "status": "PARTIALLY_SUPPORTED",
+          "reason": "4/8 requirement được hỗ trợ đầy đủ.",
+          "requirement_ids": [
+            "JD_REQ_001_7CE7B039",
+            "JD_REQ_002_F3B1FA35",
+            "JD_REQ_003_E08D5CF2",
+            "JD_REQ_004_43B4C997",
+            "JD_REQ_005_92C13875",
+            "JD_REQ_006_C79C485A",
+            "JD_REQ_007_3162D00E",
+            "JD_REQ_008_93C7C23C"
+          ],
+          "evidence_ids": [
+            "EVD_A4E835B93A48",
+            "EVD_2F900FCE10B5",
+            "EVD_0D2FC713B761",
+            "EVD_72506FA1B222"
+          ]
+        },
+        {
+          "criterion_id": "CRIT_EXPERIENCE",
+          "raw_score": 37.5,
+          "weight": 46.2,
+          "weighted_score": 17.3,
+          "status": "PARTIALLY_SUPPORTED",
+          "reason": "0/4 requirement được hỗ trợ đầy đủ.",
+          "requirement_ids": [
+            "JD_REQ_009_C9111961",
+            "JD_REQ_010_738A182D",
+            "JD_REQ_011_1DB70C20",
+            "JD_REQ_012_0DCB3E6A"
+          ],
+          "evidence_ids": [
+            "EVD_4858C54CE3B1",
+            "EVD_E9A21B7F749D",
+            "EVD_A648E5A0776E",
+            "EVD_AFED9CDF1D6C",
+            "EVD_B3DEAC995784"
+          ]
+        }
+      ],
+      "top_strengths": [
+        "Đáp ứng tốt yêu cầu: JavaScript",
+        "Đáp ứng tốt yêu cầu: MongoDB",
+        "Đáp ứng tốt yêu cầu: SQL",
+        "Đáp ứng tốt yêu cầu: Node.js"
+      ],
+      "top_gaps": [
+        "Chưa tìm thấy evidence cho Git",
+        "Chưa tìm thấy evidence cho QA",
+        "Chưa tìm thấy evidence cho NestJS",
+        "Chưa tìm thấy evidence cho Software Engineering"
+      ],
+      "user_explanation": {
+        "verdict": "Chưa phù hợp để ứng tuyển ngay — vị trí này xếp hạng #5 trong danh sách hiện có.",
+        "confidence_message": "Độ tin cậy thấp: CV chưa có đủ bằng chứng để xác nhận nhiều yêu cầu.",
+        "mandatory_summary": {
+          "matched": 4,
+          "total": 8,
+          "failed": true
+        },
+        "matched_requirements": [
+          {
+            "requirement_id": "JD_REQ_001_7CE7B039",
+            "requirement": "JavaScript",
+            "status": "SUPPORTED",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "CV có evidence hỗ trợ requirement này.",
+            "cv_evidence_quotes": [
+              "Spring Boot, JavaScript, SQL Server, MongoDB, Node.js, ReactJS, Docker, Python, Spring, MySQL, React, Java, AWS, SQL, AI, Go, communication"
+            ]
+          },
+          {
+            "requirement_id": "JD_REQ_002_F3B1FA35",
+            "requirement": "MongoDB",
+            "status": "SUPPORTED",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "CV có evidence hỗ trợ requirement này.",
+            "cv_evidence_quotes": [
+              "Spring Boot, JavaScript, SQL Server, MongoDB, Node.js, ReactJS, Docker, Python, Spring, MySQL, React, Java, AWS, SQL, AI, Go, communication"
+            ]
+          },
+          {
+            "requirement_id": "JD_REQ_006_C79C485A",
+            "requirement": "Node.js",
+            "status": "SUPPORTED",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "CV có evidence hỗ trợ requirement này.",
+            "cv_evidence_quotes": [
+              "Spring Boot, JavaScript, SQL Server, MongoDB, Node.js, ReactJS, Docker, Python, Spring, MySQL, React, Java, AWS, SQL, AI, Go, communication"
+            ]
+          },
+          {
+            "requirement_id": "JD_REQ_004_43B4C997",
+            "requirement": "SQL",
+            "status": "SUPPORTED",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "CV có evidence hỗ trợ requirement này.",
+            "cv_evidence_quotes": [
+              "Spring Boot, JavaScript, SQL Server, MongoDB, Node.js, ReactJS, Docker, Python, Spring, MySQL, React, Java, AWS, SQL, AI, Go, communication"
+            ]
+          }
+        ],
+        "priority_gaps": [
+          {
+            "requirement_id": "JD_REQ_003_E08D5CF2",
+            "requirement": "Git",
+            "status": "NOT_FOUND",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "Không tìm thấy bằng chứng đáng tin cậy cho requirement này trong CV.",
+            "cv_evidence_quotes": []
+          },
+          {
+            "requirement_id": "JD_REQ_007_3162D00E",
+            "requirement": "NestJS",
+            "status": "NOT_FOUND",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "Không tìm thấy bằng chứng đáng tin cậy cho requirement này trong CV.",
+            "cv_evidence_quotes": []
+          },
+          {
+            "requirement_id": "JD_REQ_005_92C13875",
+            "requirement": "QA",
+            "status": "NOT_FOUND",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "Không tìm thấy bằng chứng đáng tin cậy cho requirement này trong CV.",
+            "cv_evidence_quotes": []
+          },
+          {
+            "requirement_id": "JD_REQ_008_93C7C23C",
+            "requirement": "Software Engineering",
+            "status": "NOT_FOUND",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "Không tìm thấy bằng chứng đáng tin cậy cho requirement này trong CV.",
+            "cv_evidence_quotes": []
+          }
+        ],
+        "priority_actions": [
+          {
+            "requirement": "Git",
+            "message": "Nếu bạn đã có kinh nghiệm về Git, hãy bổ sung bằng chứng cụ thể vào CV; nếu chưa có, ưu tiên học hoặc thực hành trước khi ứng tuyển."
+          },
+          {
+            "requirement": "NestJS",
+            "message": "Nếu bạn đã có kinh nghiệm về NestJS, hãy bổ sung bằng chứng cụ thể vào CV; nếu chưa có, ưu tiên học hoặc thực hành trước khi ứng tuyển."
+          },
+          {
+            "requirement": "QA",
+            "message": "Nếu bạn đã có kinh nghiệm về QA, hãy bổ sung bằng chứng cụ thể vào CV; nếu chưa có, ưu tiên học hoặc thực hành trước khi ứng tuyển."
+          }
+        ],
+        "score_breakdown": [
+          {
+            "criterion_id": "CRIT_REQUIRED_SKILL",
+            "label": "Kỹ năng bắt buộc",
+            "raw_score": 50,
+            "weight": 53.8,
+            "weighted_score": 26.9,
+            "status": "PARTIALLY_SUPPORTED",
+            "reason": "4/8 requirement được hỗ trợ đầy đủ."
+          },
+          {
+            "criterion_id": "CRIT_EXPERIENCE",
+            "label": "Kinh nghiệm liên quan",
+            "raw_score": 37.5,
+            "weight": 46.2,
+            "weighted_score": 17.3,
+            "status": "PARTIALLY_SUPPORTED",
+            "reason": "0/4 requirement được hỗ trợ đầy đủ."
+          }
+        ],
+        "role_relevant": true,
+        "application_ready": false
+      },
+      "match_id": "PREVIEW_JD-090"
+    },
+    {
+      "rank": 6,
+      "job_id": "JD-086",
+      "title": "SOFTWARE DEVELOPER INTERNSHIP",
+      "company": "WEALLNET",
+      "location": "Hồ Chí Minh",
+      "work_mode": "Hybrid",
+      "display_fit_score": 37.5,
+      "raw_fit_score": 37.5,
+      "fit_label": "Cần cải thiện",
+      "evidence_confidence": "low",
+      "mandatory_requirement_failed": true,
+      "role_relevant": true,
+      "application_ready": false,
+      "retrieval_rank": 25,
+      "role_affinity_score": 50,
+      "ready_candidate_boost": 0.15,
+      "required_skills_coverage": 0.57,
+      "mandatory_requirements_matched": 4,
+      "total_mandatory_requirements": 7,
+      "score_breakdown": [
+        {
+          "criterion_id": "CRIT_REQUIRED_SKILL",
+          "raw_score": 57.1,
+          "weight": 58.3,
+          "weighted_score": 33.3,
+          "status": "PARTIALLY_SUPPORTED",
+          "reason": "4/7 requirement được hỗ trợ đầy đủ.",
+          "requirement_ids": [
+            "JD_REQ_001_FFCD0875",
+            "JD_REQ_002_02765D3C",
+            "JD_REQ_003_241B45E3",
+            "JD_REQ_004_487074D1",
+            "JD_REQ_005_F54E6094",
+            "JD_REQ_006_BA2DA878",
+            "JD_REQ_007_1F9510B0"
+          ],
+          "evidence_ids": [
+            "EVD_E48B6CB1C607",
+            "EVD_0C98B562B596",
+            "EVD_B09F0CF1A24F",
+            "EVD_0C9553428C3B"
+          ]
+        },
+        {
+          "criterion_id": "CRIT_PREFERRED_SKILL",
+          "raw_score": 25,
+          "weight": 16.7,
+          "weighted_score": 4.2,
+          "status": "PARTIALLY_SUPPORTED",
+          "reason": "0/2 requirement được hỗ trợ đầy đủ.",
+          "requirement_ids": [
+            "JD_REQ_009_C12503BD",
+            "JD_REQ_008_9B45E771"
+          ],
+          "evidence_ids": [
+            "EVD_D2914B9A50D8"
+          ]
+        },
+        {
+          "criterion_id": "CRIT_DOMAIN",
+          "raw_score": 0,
+          "weight": 25,
+          "weighted_score": 0,
+          "status": "NOT_FOUND",
+          "reason": "0/1 requirement được hỗ trợ đầy đủ.",
+          "requirement_ids": [
+            "JD_REQ_010_EE8F2A2E"
+          ],
+          "evidence_ids": []
+        }
+      ],
+      "top_strengths": [
+        "Đáp ứng tốt yêu cầu: JavaScript",
+        "Đáp ứng tốt yêu cầu: Go",
+        "Đáp ứng tốt yêu cầu: Python",
+        "Đáp ứng tốt yêu cầu: SQL"
+      ],
+      "top_gaps": [
+        "Chưa tìm thấy evidence cho Git",
+        "Chưa tìm thấy evidence cho Next.js",
+        "Chưa tìm thấy evidence cho Software Engineering",
+        "Chưa tìm thấy evidence cho en"
+      ],
+      "user_explanation": {
+        "verdict": "Chưa phù hợp để ứng tuyển ngay — vị trí này xếp hạng #6 trong danh sách hiện có.",
+        "confidence_message": "Độ tin cậy thấp: CV chưa có đủ bằng chứng để xác nhận nhiều yêu cầu.",
+        "mandatory_summary": {
+          "matched": 4,
+          "total": 7,
+          "failed": true
+        },
+        "matched_requirements": [
+          {
+            "requirement_id": "JD_REQ_002_02765D3C",
+            "requirement": "Go",
+            "status": "SUPPORTED",
+            "mandatory": true,
+            "priority": "critical",
+            "reason": "CV có evidence hỗ trợ requirement này.",
+            "cv_evidence_quotes": [
+              "Spring Boot, JavaScript, SQL Server, MongoDB, Node.js, ReactJS, Docker, Python, Spring, MySQL, React, Java, AWS, SQL, AI, Go, communication"
+            ]
+          },
+          {
+            "requirement_id": "JD_REQ_001_FFCD0875",
+            "requirement": "JavaScript",
+            "status": "SUPPORTED",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "CV có evidence hỗ trợ requirement này.",
+            "cv_evidence_quotes": [
+              "Spring Boot, JavaScript, SQL Server, MongoDB, Node.js, ReactJS, Docker, Python, Spring, MySQL, React, Java, AWS, SQL, AI, Go, communication"
+            ]
+          },
+          {
+            "requirement_id": "JD_REQ_003_241B45E3",
+            "requirement": "Python",
+            "status": "SUPPORTED",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "CV có evidence hỗ trợ requirement này.",
+            "cv_evidence_quotes": [
+              "Spring Boot, JavaScript, SQL Server, MongoDB, Node.js, ReactJS, Docker, Python, Spring, MySQL, React, Java, AWS, SQL, AI, Go, communication"
+            ]
+          },
+          {
+            "requirement_id": "JD_REQ_005_F54E6094",
+            "requirement": "SQL",
+            "status": "SUPPORTED",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "CV có evidence hỗ trợ requirement này.",
+            "cv_evidence_quotes": [
+              "Spring Boot, JavaScript, SQL Server, MongoDB, Node.js, ReactJS, Docker, Python, Spring, MySQL, React, Java, AWS, SQL, AI, Go, communication"
+            ]
+          }
+        ],
+        "priority_gaps": [
+          {
+            "requirement_id": "JD_REQ_004_487074D1",
+            "requirement": "Git",
+            "status": "NOT_FOUND",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "Không tìm thấy bằng chứng đáng tin cậy cho requirement này trong CV.",
+            "cv_evidence_quotes": []
+          },
+          {
+            "requirement_id": "JD_REQ_006_BA2DA878",
+            "requirement": "Next.js",
+            "status": "NOT_FOUND",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "Không tìm thấy bằng chứng đáng tin cậy cho requirement này trong CV.",
+            "cv_evidence_quotes": []
+          },
+          {
+            "requirement_id": "JD_REQ_007_1F9510B0",
+            "requirement": "Software Engineering",
+            "status": "NOT_FOUND",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "Không tìm thấy bằng chứng đáng tin cậy cho requirement này trong CV.",
+            "cv_evidence_quotes": []
+          },
+          {
+            "requirement_id": "JD_REQ_019_67C30E0C",
+            "requirement": "And we’re looking for motivated, ambitious team players to join us.",
+            "status": "NOT_FOUND",
+            "mandatory": false,
+            "priority": "low",
+            "reason": "Không tìm thấy bằng chứng đáng tin cậy cho requirement này trong CV.",
+            "cv_evidence_quotes": []
+          }
+        ],
+        "priority_actions": [
+          {
+            "requirement": "Git",
+            "message": "Nếu bạn đã có kinh nghiệm về Git, hãy bổ sung bằng chứng cụ thể vào CV; nếu chưa có, ưu tiên học hoặc thực hành trước khi ứng tuyển."
+          },
+          {
+            "requirement": "Next.js",
+            "message": "Nếu bạn đã có kinh nghiệm về Next.js, hãy bổ sung bằng chứng cụ thể vào CV; nếu chưa có, ưu tiên học hoặc thực hành trước khi ứng tuyển."
+          },
+          {
+            "requirement": "Software Engineering",
+            "message": "Nếu bạn đã có kinh nghiệm về Software Engineering, hãy bổ sung bằng chứng cụ thể vào CV; nếu chưa có, ưu tiên học hoặc thực hành trước khi ứng tuyển."
+          }
+        ],
+        "score_breakdown": [
+          {
+            "criterion_id": "CRIT_REQUIRED_SKILL",
+            "label": "Kỹ năng bắt buộc",
+            "raw_score": 57.1,
+            "weight": 58.3,
+            "weighted_score": 33.3,
+            "status": "PARTIALLY_SUPPORTED",
+            "reason": "4/7 requirement được hỗ trợ đầy đủ."
+          },
+          {
+            "criterion_id": "CRIT_PREFERRED_SKILL",
+            "label": "Kỹ năng ưu tiên",
+            "raw_score": 25,
+            "weight": 16.7,
+            "weighted_score": 4.2,
+            "status": "PARTIALLY_SUPPORTED",
+            "reason": "0/2 requirement được hỗ trợ đầy đủ."
+          },
+          {
+            "criterion_id": "CRIT_DOMAIN",
+            "label": "Lĩnh vực / trách nhiệm",
+            "raw_score": 0,
+            "weight": 25,
+            "weighted_score": 0,
+            "status": "NOT_FOUND",
+            "reason": "0/1 requirement được hỗ trợ đầy đủ."
+          }
+        ],
+        "role_relevant": true,
+        "application_ready": false
+      },
+      "match_id": "PREVIEW_JD-086"
+    },
+    {
+      "rank": 7,
+      "job_id": "JD-056",
+      "title": "Senior Devops Platform Engineer (Linux, Git, Docker)",
+      "company": "CÔNG TY CỔ PHẦN CHỨNG KHOÁN VPS",
+      "location": "Ha Noi",
+      "work_mode": "Hybrid",
+      "display_fit_score": 35.7,
+      "raw_fit_score": 35.7,
+      "fit_label": "Cần cải thiện",
+      "evidence_confidence": "low",
+      "mandatory_requirement_failed": true,
+      "role_relevant": true,
+      "application_ready": false,
+      "retrieval_rank": 40,
+      "role_affinity_score": 50,
+      "ready_candidate_boost": 0.14,
+      "required_skills_coverage": 0.44,
+      "mandatory_requirements_matched": 3,
+      "total_mandatory_requirements": 7,
+      "score_breakdown": [
+        {
+          "criterion_id": "CRIT_REQUIRED_SKILL",
+          "raw_score": 44.4,
+          "weight": 46.7,
+          "weighted_score": 20.7,
+          "status": "PARTIALLY_SUPPORTED",
+          "reason": "3/9 requirement được hỗ trợ đầy đủ.",
+          "requirement_ids": [
+            "JD_REQ_001_3F7BFAED",
+            "JD_REQ_002_115615A1",
+            "JD_REQ_003_0B683E63",
+            "JD_REQ_004_64D95574",
+            "JD_REQ_005_08C9731F",
+            "JD_REQ_006_D773A6AD",
+            "JD_REQ_007_22FB5AA4",
+            "JD_REQ_008_A88BE182",
+            "JD_REQ_015_B95CE82D"
+          ],
+          "evidence_ids": [
+            "EVD_12EFE6BA9B86",
+            "EVD_C605FDCD636C",
+            "EVD_1EFAA39CB78A",
+            "EVD_EE7CB13B09A6",
+            "EVD_284F67C40A5D",
+            "EVD_233AB15CCB19"
+          ]
+        },
+        {
+          "criterion_id": "CRIT_EXPERIENCE",
+          "raw_score": 37.5,
+          "weight": 40,
+          "weighted_score": 15,
+          "status": "PARTIALLY_SUPPORTED",
+          "reason": "0/4 requirement được hỗ trợ đầy đủ.",
+          "requirement_ids": [
+            "JD_REQ_009_4290B770",
+            "JD_REQ_010_E371B77C",
+            "JD_REQ_011_5DAC2964",
+            "JD_REQ_012_903B5F63"
+          ],
+          "evidence_ids": [
+            "EVD_21E901B7D1DB",
+            "EVD_C009E72BB242",
+            "EVD_CCC30F9B23DB",
+            "EVD_E78CEC889A11",
+            "EVD_2A9201B7495B",
+            "EVD_3168E933E6C1"
+          ]
+        },
+        {
+          "criterion_id": "CRIT_PREFERRED_SKILL",
+          "raw_score": 0,
+          "weight": 13.3,
+          "weighted_score": 0,
+          "status": "NOT_FOUND",
+          "reason": "0/2 requirement được hỗ trợ đầy đủ.",
+          "requirement_ids": [
+            "JD_REQ_013_9D7193A8",
+            "JD_REQ_014_E11CBC05"
+          ],
+          "evidence_ids": []
+        }
+      ],
+      "top_strengths": [
+        "Đáp ứng tốt yêu cầu: Docker",
+        "Đáp ứng tốt yêu cầu: Go",
+        "Đáp ứng tốt yêu cầu: Python"
+      ],
+      "top_gaps": [
+        "Chưa tìm thấy evidence cho Microservices",
+        "Chưa tìm thấy evidence cho CI/CD",
+        "Chưa tìm thấy evidence cho Linux",
+        "Chưa tìm thấy evidence cho Git"
+      ],
+      "user_explanation": {
+        "verdict": "Chưa phù hợp để ứng tuyển ngay — vị trí này xếp hạng #7 trong danh sách hiện có.",
+        "confidence_message": "Độ tin cậy thấp: CV chưa có đủ bằng chứng để xác nhận nhiều yêu cầu.",
+        "mandatory_summary": {
+          "matched": 3,
+          "total": 9,
+          "failed": true
+        },
+        "matched_requirements": [
+          {
+            "requirement_id": "JD_REQ_003_0B683E63",
+            "requirement": "Docker",
+            "status": "SUPPORTED",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "CV có evidence hỗ trợ requirement này.",
+            "cv_evidence_quotes": [
+              "Spring Boot, JavaScript, SQL Server, MongoDB, Node.js, ReactJS, Docker, Python, Spring, MySQL, React, Java, AWS, SQL, AI, Go, communication"
+            ]
+          },
+          {
+            "requirement_id": "JD_REQ_004_64D95574",
+            "requirement": "Go",
+            "status": "SUPPORTED",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "CV có evidence hỗ trợ requirement này.",
+            "cv_evidence_quotes": [
+              "Spring Boot, JavaScript, SQL Server, MongoDB, Node.js, ReactJS, Docker, Python, Spring, MySQL, React, Java, AWS, SQL, AI, Go, communication"
+            ]
+          },
+          {
+            "requirement_id": "JD_REQ_005_08C9731F",
+            "requirement": "Python",
+            "status": "SUPPORTED",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "CV có evidence hỗ trợ requirement này.",
+            "cv_evidence_quotes": [
+              "Spring Boot, JavaScript, SQL Server, MongoDB, Node.js, ReactJS, Docker, Python, Spring, MySQL, React, Java, AWS, SQL, AI, Go, communication"
+            ]
+          }
+        ],
+        "priority_gaps": [
+          {
+            "requirement_id": "JD_REQ_006_D773A6AD",
+            "requirement": "CI/CD",
+            "status": "NOT_FOUND",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "Không tìm thấy bằng chứng đáng tin cậy cho requirement này trong CV.",
+            "cv_evidence_quotes": []
+          },
+          {
+            "requirement_id": "JD_REQ_008_A88BE182",
+            "requirement": "Git",
+            "status": "NOT_FOUND",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "Không tìm thấy bằng chứng đáng tin cậy cho requirement này trong CV.",
+            "cv_evidence_quotes": []
+          },
+          {
+            "requirement_id": "JD_REQ_002_115615A1",
+            "requirement": "Kubernetes",
+            "status": "PARTIALLY_SUPPORTED",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "CV có evidence liên quan nhưng chưa đáp ứng đầy đủ requirement.",
+            "cv_evidence_quotes": [
+              "Spring Boot, JavaScript, SQL Server, MongoDB, Node.js, ReactJS, Docker, Python, Spring, MySQL, React, Java, AWS, SQL, AI, Go, communication"
+            ]
+          },
+          {
+            "requirement_id": "JD_REQ_015_B95CE82D",
+            "requirement": "leadership",
+            "status": "PARTIALLY_SUPPORTED",
+            "mandatory": true,
+            "priority": "medium",
+            "reason": "CV có evidence liên quan nhưng chưa đáp ứng đầy đủ requirement.",
+            "cv_evidence_quotes": [
+              "## IVORA – Online Wedding Invitation Platform – Website-IVORA",
+              "Description: A digital platform for creating and sharing personalized wedding invitations, currently operating with real users and generating revenue. Description: A digital platform for creating and sharing personalized wedding invitations, currently operating with real"
+            ]
+          }
+        ],
+        "priority_actions": [
+          {
+            "requirement": "CI/CD",
+            "message": "Nếu bạn đã có kinh nghiệm về CI/CD, hãy bổ sung bằng chứng cụ thể vào CV; nếu chưa có, ưu tiên học hoặc thực hành trước khi ứng tuyển."
+          },
+          {
+            "requirement": "Git",
+            "message": "Nếu bạn đã có kinh nghiệm về Git, hãy bổ sung bằng chứng cụ thể vào CV; nếu chưa có, ưu tiên học hoặc thực hành trước khi ứng tuyển."
+          },
+          {
+            "requirement": "Kubernetes",
+            "message": "Nếu bạn đã có kinh nghiệm về Kubernetes, hãy bổ sung bằng chứng cụ thể vào CV; nếu chưa có, ưu tiên học hoặc thực hành trước khi ứng tuyển."
+          }
+        ],
+        "score_breakdown": [
+          {
+            "criterion_id": "CRIT_REQUIRED_SKILL",
+            "label": "Kỹ năng bắt buộc",
+            "raw_score": 44.4,
+            "weight": 46.7,
+            "weighted_score": 20.7,
+            "status": "PARTIALLY_SUPPORTED",
+            "reason": "3/9 requirement được hỗ trợ đầy đủ."
+          },
+          {
+            "criterion_id": "CRIT_EXPERIENCE",
+            "label": "Kinh nghiệm liên quan",
+            "raw_score": 37.5,
+            "weight": 40,
+            "weighted_score": 15,
+            "status": "PARTIALLY_SUPPORTED",
+            "reason": "0/4 requirement được hỗ trợ đầy đủ."
+          },
+          {
+            "criterion_id": "CRIT_PREFERRED_SKILL",
+            "label": "Kỹ năng ưu tiên",
+            "raw_score": 0,
+            "weight": 13.3,
+            "weighted_score": 0,
+            "status": "NOT_FOUND",
+            "reason": "0/2 requirement được hỗ trợ đầy đủ."
+          }
+        ],
+        "role_relevant": true,
+        "application_ready": false
+      },
+      "match_id": "PREVIEW_JD-056"
+    },
+    {
+      "rank": 8,
+      "job_id": "JD-073",
+      "title": "Full-stack Engineer (NextJS, Java, AI-native)",
+      "company": "HRS Group",
+      "location": "Hồ Chí Minh",
+      "work_mode": "Hybrid",
+      "display_fit_score": 33.9,
+      "raw_fit_score": 33.9,
+      "fit_label": "Cần cải thiện",
+      "evidence_confidence": "low",
+      "mandatory_requirement_failed": true,
+      "role_relevant": true,
+      "application_ready": false,
+      "retrieval_rank": 6,
+      "role_affinity_score": 100,
+      "ready_candidate_boost": 0.15,
+      "required_skills_coverage": 0.62,
+      "mandatory_requirements_matched": 5,
+      "total_mandatory_requirements": 9,
+      "score_breakdown": [
+        {
+          "criterion_id": "CRIT_REQUIRED_SKILL",
+          "raw_score": 55,
+          "weight": 38.9,
+          "weighted_score": 21.4,
+          "status": "PARTIALLY_SUPPORTED",
+          "reason": "5/10 requirement được hỗ trợ đầy đủ.",
+          "requirement_ids": [
+            "JD_REQ_001_47EDE802",
+            "JD_REQ_002_52A9433C",
+            "JD_REQ_003_B05399F9",
+            "JD_REQ_004_CE1560AE",
+            "JD_REQ_005_47DB1636",
+            "JD_REQ_006_2214C8B2",
+            "JD_REQ_007_E17B1326",
+            "JD_REQ_008_9EA86013",
+            "JD_REQ_018_6D7EBF40",
+            "JD_REQ_019_EAE7A9A1"
+          ],
+          "evidence_ids": [
+            "EVD_9E4E0D85B34E",
+            "EVD_425E5C8F42DF",
+            "EVD_8E9C48F62018",
+            "EVD_E098A9A09C96",
+            "EVD_425CA3E3913E",
+            "EVD_B44C166DB3C1",
+            "EVD_1ABBE293F6E6"
+          ]
+        },
+        {
+          "criterion_id": "CRIT_EXPERIENCE",
+          "raw_score": 37.5,
+          "weight": 33.3,
+          "weighted_score": 12.5,
+          "status": "PARTIALLY_SUPPORTED",
+          "reason": "0/8 requirement được hỗ trợ đầy đủ.",
+          "requirement_ids": [
+            "JD_REQ_009_EFF3B06D",
+            "JD_REQ_010_867BD635",
+            "JD_REQ_011_A66128A1",
+            "JD_REQ_012_6DB91176",
+            "JD_REQ_013_B5B1D846",
+            "JD_REQ_014_F234573D",
+            "JD_REQ_015_06CDFA78",
+            "JD_REQ_016_0F51D731"
+          ],
+          "evidence_ids": [
+            "EVD_501D83F9B1BC",
+            "EVD_A227CBDBA568",
+            "EVD_22D7A67FE4AC",
+            "EVD_171244077277",
+            "EVD_26A10542ED5C",
+            "EVD_EF36DFB236A7"
+          ]
+        },
+        {
+          "criterion_id": "CRIT_PREFERRED_SKILL",
+          "raw_score": 0,
+          "weight": 11.1,
+          "weighted_score": 0,
+          "status": "NOT_FOUND",
+          "reason": "0/1 requirement được hỗ trợ đầy đủ.",
+          "requirement_ids": [
+            "JD_REQ_017_F51CC6BF"
+          ],
+          "evidence_ids": []
+        },
+        {
+          "criterion_id": "CRIT_DOMAIN",
+          "raw_score": 0,
+          "weight": 16.7,
+          "weighted_score": 0,
+          "status": "NOT_FOUND",
+          "reason": "0/1 requirement được hỗ trợ đầy đủ.",
+          "requirement_ids": [
+            "JD_REQ_020_C506C522"
+          ],
+          "evidence_ids": []
+        }
+      ],
+      "top_strengths": [
+        "Đáp ứng tốt yêu cầu: Python",
+        "Đáp ứng tốt yêu cầu: React",
+        "Đáp ứng tốt yêu cầu: Java",
+        "Đáp ứng tốt yêu cầu: AI"
+      ],
+      "top_gaps": [
+        "Chưa tìm thấy evidence cho TypeScript",
+        "Chưa tìm thấy evidence cho Automation",
+        "Chưa tìm thấy evidence cho Next.js",
+        "Chưa tìm thấy evidence cho communication"
+      ],
+      "user_explanation": {
+        "verdict": "Chưa phù hợp để ứng tuyển ngay — vị trí này xếp hạng #8 trong danh sách hiện có.",
+        "confidence_message": "Độ tin cậy thấp: CV chưa có đủ bằng chứng để xác nhận nhiều yêu cầu.",
+        "mandatory_summary": {
+          "matched": 5,
+          "total": 10,
+          "failed": true
+        },
+        "matched_requirements": [
+          {
+            "requirement_id": "JD_REQ_005_47DB1636",
+            "requirement": "AI",
+            "status": "SUPPORTED",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "CV có evidence hỗ trợ requirement này.",
+            "cv_evidence_quotes": [
+              "Technologies: NextJS, TailwindCSS, Node.js, DynamoDB, Cloudinary, AI",
+              "Spring Boot, JavaScript, SQL Server, MongoDB, Node.js, ReactJS, Docker, Python, Spring, MySQL, React, Java, AWS, SQL, AI, Go, communication"
+            ]
+          },
+          {
+            "requirement_id": "JD_REQ_004_CE1560AE",
+            "requirement": "Java",
+            "status": "SUPPORTED",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "CV có evidence hỗ trợ requirement này.",
+            "cv_evidence_quotes": [
+              "Spring Boot, JavaScript, SQL Server, MongoDB, Node.js, ReactJS, Docker, Python, Spring, MySQL, React, Java, AWS, SQL, AI, Go, communication"
+            ]
+          },
+          {
+            "requirement_id": "JD_REQ_006_2214C8B2",
+            "requirement": "JavaScript",
+            "status": "SUPPORTED",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "CV có evidence hỗ trợ requirement này.",
+            "cv_evidence_quotes": [
+              "Spring Boot, JavaScript, SQL Server, MongoDB, Node.js, ReactJS, Docker, Python, Spring, MySQL, React, Java, AWS, SQL, AI, Go, communication"
+            ]
+          },
+          {
+            "requirement_id": "JD_REQ_002_52A9433C",
+            "requirement": "Python",
+            "status": "SUPPORTED",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "CV có evidence hỗ trợ requirement này.",
+            "cv_evidence_quotes": [
+              "Spring Boot, JavaScript, SQL Server, MongoDB, Node.js, ReactJS, Docker, Python, Spring, MySQL, React, Java, AWS, SQL, AI, Go, communication"
+            ]
+          }
+        ],
+        "priority_gaps": [
+          {
+            "requirement_id": "JD_REQ_007_E17B1326",
+            "requirement": "Automation",
+            "status": "NOT_FOUND",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "Không tìm thấy bằng chứng đáng tin cậy cho requirement này trong CV.",
+            "cv_evidence_quotes": []
+          },
+          {
+            "requirement_id": "JD_REQ_018_6D7EBF40",
+            "requirement": "communication",
+            "status": "NOT_FOUND",
+            "mandatory": true,
+            "priority": "medium",
+            "reason": "Chưa có đủ bằng chứng trong CV để kết luận.",
+            "cv_evidence_quotes": []
+          },
+          {
+            "requirement_id": "JD_REQ_019_EAE7A9A1",
+            "requirement": "leadership",
+            "status": "PARTIALLY_SUPPORTED",
+            "mandatory": true,
+            "priority": "medium",
+            "reason": "CV có evidence liên quan nhưng chưa đáp ứng đầy đủ requirement.",
+            "cv_evidence_quotes": [
+              "Technologies: NextJS, TailwindCSS, Node.js, DynamoDB, Cloudinary, AI"
+            ]
+          },
+          {
+            "requirement_id": "JD_REQ_008_9EA86013",
+            "requirement": "Next.js",
+            "status": "NOT_FOUND",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "Không tìm thấy bằng chứng đáng tin cậy cho requirement này trong CV.",
+            "cv_evidence_quotes": []
+          }
+        ],
+        "priority_actions": [
+          {
+            "requirement": "Automation",
+            "message": "Nếu bạn đã có kinh nghiệm về Automation, hãy bổ sung bằng chứng cụ thể vào CV; nếu chưa có, ưu tiên học hoặc thực hành trước khi ứng tuyển."
+          },
+          {
+            "requirement": "communication",
+            "message": "Nếu bạn đã có kinh nghiệm về communication, hãy bổ sung bằng chứng cụ thể vào CV; nếu chưa có, ưu tiên học hoặc thực hành trước khi ứng tuyển."
+          },
+          {
+            "requirement": "leadership",
+            "message": "Nếu bạn đã có kinh nghiệm về leadership, hãy bổ sung bằng chứng cụ thể vào CV; nếu chưa có, ưu tiên học hoặc thực hành trước khi ứng tuyển."
+          }
+        ],
+        "score_breakdown": [
+          {
+            "criterion_id": "CRIT_REQUIRED_SKILL",
+            "label": "Kỹ năng bắt buộc",
+            "raw_score": 55,
+            "weight": 38.9,
+            "weighted_score": 21.4,
+            "status": "PARTIALLY_SUPPORTED",
+            "reason": "5/10 requirement được hỗ trợ đầy đủ."
+          },
+          {
+            "criterion_id": "CRIT_EXPERIENCE",
+            "label": "Kinh nghiệm liên quan",
+            "raw_score": 37.5,
+            "weight": 33.3,
+            "weighted_score": 12.5,
+            "status": "PARTIALLY_SUPPORTED",
+            "reason": "0/8 requirement được hỗ trợ đầy đủ."
+          },
+          {
+            "criterion_id": "CRIT_PREFERRED_SKILL",
+            "label": "Kỹ năng ưu tiên",
+            "raw_score": 0,
+            "weight": 11.1,
+            "weighted_score": 0,
+            "status": "NOT_FOUND",
+            "reason": "0/1 requirement được hỗ trợ đầy đủ."
+          },
+          {
+            "criterion_id": "CRIT_DOMAIN",
+            "label": "Lĩnh vực / trách nhiệm",
+            "raw_score": 0,
+            "weight": 16.7,
+            "weighted_score": 0,
+            "status": "NOT_FOUND",
+            "reason": "0/1 requirement được hỗ trợ đầy đủ."
+          }
+        ],
+        "role_relevant": true,
+        "application_ready": false
+      },
+      "match_id": "PREVIEW_JD-073"
+    },
+    {
+      "rank": 9,
+      "job_id": "JD-005",
+      "title": "Lập trình viênJava",
+      "company": "CÔNG TY CỔ PHẦN ADVANCE TECH VIỆT NAM",
+      "location": "Hà Nội",
+      "work_mode": "On-site",
+      "display_fit_score": 32.4,
+      "raw_fit_score": 32.4,
+      "fit_label": "Cần cải thiện",
+      "evidence_confidence": "low",
+      "mandatory_requirement_failed": true,
+      "role_relevant": true,
+      "application_ready": false,
+      "retrieval_rank": 13,
+      "role_affinity_score": 100,
+      "ready_candidate_boost": 0.15,
+      "required_skills_coverage": 0.55,
+      "mandatory_requirements_matched": 5,
+      "total_mandatory_requirements": 9,
+      "score_breakdown": [
+        {
+          "criterion_id": "CRIT_REQUIRED_SKILL",
+          "raw_score": 55,
+          "weight": 46.7,
+          "weighted_score": 25.7,
+          "status": "PARTIALLY_SUPPORTED",
+          "reason": "5/10 requirement được hỗ trợ đầy đủ.",
+          "requirement_ids": [
+            "JD_REQ_001_4A2495E3",
+            "JD_REQ_002_BC39223C",
+            "JD_REQ_003_F0643AD8",
+            "JD_REQ_004_C0064B4C",
+            "JD_REQ_005_8C547FBE",
+            "JD_REQ_006_864CFD99",
+            "JD_REQ_007_1BD3B598",
+            "JD_REQ_008_86392275",
+            "JD_REQ_009_FDC9E80E",
+            "JD_REQ_010_03304E65"
+          ],
+          "evidence_ids": [
+            "EVD_8B949785F10F",
+            "EVD_C2EEDD294F03",
+            "EVD_908DB7D9B235",
+            "EVD_9FFA29E53D38",
+            "EVD_97D3A7C178E5",
+            "EVD_C32229BC52BE"
+          ]
+        },
+        {
+          "criterion_id": "CRIT_EXPERIENCE",
+          "raw_score": 0,
+          "weight": 40,
+          "weighted_score": 0,
+          "status": "NOT_FOUND",
+          "reason": "0/4 requirement được hỗ trợ đầy đủ.",
+          "requirement_ids": [
+            "JD_REQ_011_01F1D627",
+            "JD_REQ_012_DE03CFC8",
+            "JD_REQ_013_D7A4D7CF",
+            "JD_REQ_014_BD41DAC8"
+          ],
+          "evidence_ids": []
+        },
+        {
+          "criterion_id": "CRIT_PREFERRED_SKILL",
+          "raw_score": 50,
+          "weight": 13.3,
+          "weighted_score": 6.7,
+          "status": "PARTIALLY_SUPPORTED",
+          "reason": "0/2 requirement được hỗ trợ đầy đủ.",
+          "requirement_ids": [
+            "JD_REQ_015_D4B222C4",
+            "JD_REQ_016_D4B222C4"
+          ],
+          "evidence_ids": [
+            "EVD_3F2153A036A4",
+            "EVD_DA205EFF32DF"
+          ]
+        }
+      ],
+      "top_strengths": [
+        "Đáp ứng tốt yêu cầu: Spring Boot",
+        "Đáp ứng tốt yêu cầu: Spring",
+        "Đáp ứng tốt yêu cầu: MySQL",
+        "Đáp ứng tốt yêu cầu: Java"
+      ],
+      "top_gaps": [
+        "Chưa tìm thấy evidence cho REST API",
+        "Chưa tìm thấy evidence cho Algorithms",
+        "Chưa tìm thấy evidence cho DevOps",
+        "Chưa tìm thấy evidence cho Tester"
+      ],
+      "user_explanation": {
+        "verdict": "Chưa phù hợp để ứng tuyển ngay — vị trí này xếp hạng #9 trong danh sách hiện có.",
+        "confidence_message": "Độ tin cậy thấp: CV chưa có đủ bằng chứng để xác nhận nhiều yêu cầu.",
+        "mandatory_summary": {
+          "matched": 5,
+          "total": 10,
+          "failed": true
+        },
+        "matched_requirements": [
+          {
+            "requirement_id": "JD_REQ_006_864CFD99",
+            "requirement": "Java",
+            "status": "SUPPORTED",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "CV có evidence hỗ trợ requirement này.",
+            "cv_evidence_quotes": [
+              "Spring Boot, JavaScript, SQL Server, MongoDB, Node.js, ReactJS, Docker, Python, Spring, MySQL, React, Java, AWS, SQL, AI, Go, communication"
+            ]
+          },
+          {
+            "requirement_id": "JD_REQ_005_8C547FBE",
+            "requirement": "MySQL",
+            "status": "SUPPORTED",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "CV có evidence hỗ trợ requirement này.",
+            "cv_evidence_quotes": [
+              "Spring Boot, JavaScript, SQL Server, MongoDB, Node.js, ReactJS, Docker, Python, Spring, MySQL, React, Java, AWS, SQL, AI, Go, communication"
+            ]
+          },
+          {
+            "requirement_id": "JD_REQ_004_C0064B4C",
+            "requirement": "Spring",
+            "status": "SUPPORTED",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "CV có evidence hỗ trợ requirement này.",
+            "cv_evidence_quotes": [
+              "Spring Boot, JavaScript, SQL Server, MongoDB, Node.js, ReactJS, Docker, Python, Spring, MySQL, React, Java, AWS, SQL, AI, Go, communication"
+            ]
+          },
+          {
+            "requirement_id": "JD_REQ_002_BC39223C",
+            "requirement": "Spring Boot",
+            "status": "SUPPORTED",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "CV có evidence hỗ trợ requirement này.",
+            "cv_evidence_quotes": [
+              "Spring Boot, JavaScript, SQL Server, MongoDB, Node.js, ReactJS, Docker, Python, Spring, MySQL, React, Java, AWS, SQL, AI, Go, communication"
+            ]
+          }
+        ],
+        "priority_gaps": [
+          {
+            "requirement_id": "JD_REQ_008_86392275",
+            "requirement": "Algorithms",
+            "status": "NOT_FOUND",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "Không tìm thấy bằng chứng đáng tin cậy cho requirement này trong CV.",
+            "cv_evidence_quotes": []
+          },
+          {
+            "requirement_id": "JD_REQ_009_FDC9E80E",
+            "requirement": "DevOps",
+            "status": "NOT_FOUND",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "Không tìm thấy bằng chứng đáng tin cậy cho requirement này trong CV.",
+            "cv_evidence_quotes": []
+          },
+          {
+            "requirement_id": "JD_REQ_003_F0643AD8",
+            "requirement": "PostgreSQL",
+            "status": "PARTIALLY_SUPPORTED",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "CV có evidence liên quan nhưng chưa đáp ứng đầy đủ requirement.",
+            "cv_evidence_quotes": [
+              "Spring Boot, JavaScript, SQL Server, MongoDB, Node.js, ReactJS, Docker, Python, Spring, MySQL, React, Java, AWS, SQL, AI, Go, communication"
+            ]
+          },
+          {
+            "requirement_id": "JD_REQ_001_4A2495E3",
+            "requirement": "REST API",
+            "status": "NOT_FOUND",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "Không tìm thấy bằng chứng đáng tin cậy cho requirement này trong CV.",
+            "cv_evidence_quotes": []
+          }
+        ],
+        "priority_actions": [
+          {
+            "requirement": "Algorithms",
+            "message": "Nếu bạn đã có kinh nghiệm về Algorithms, hãy bổ sung bằng chứng cụ thể vào CV; nếu chưa có, ưu tiên học hoặc thực hành trước khi ứng tuyển."
+          },
+          {
+            "requirement": "DevOps",
+            "message": "Nếu bạn đã có kinh nghiệm về DevOps, hãy bổ sung bằng chứng cụ thể vào CV; nếu chưa có, ưu tiên học hoặc thực hành trước khi ứng tuyển."
+          },
+          {
+            "requirement": "PostgreSQL",
+            "message": "Nếu bạn đã có kinh nghiệm về PostgreSQL, hãy bổ sung bằng chứng cụ thể vào CV; nếu chưa có, ưu tiên học hoặc thực hành trước khi ứng tuyển."
+          }
+        ],
+        "score_breakdown": [
+          {
+            "criterion_id": "CRIT_REQUIRED_SKILL",
+            "label": "Kỹ năng bắt buộc",
+            "raw_score": 55,
+            "weight": 46.7,
+            "weighted_score": 25.7,
+            "status": "PARTIALLY_SUPPORTED",
+            "reason": "5/10 requirement được hỗ trợ đầy đủ."
+          },
+          {
+            "criterion_id": "CRIT_EXPERIENCE",
+            "label": "Kinh nghiệm liên quan",
+            "raw_score": 0,
+            "weight": 40,
+            "weighted_score": 0,
+            "status": "NOT_FOUND",
+            "reason": "0/4 requirement được hỗ trợ đầy đủ."
+          },
+          {
+            "criterion_id": "CRIT_PREFERRED_SKILL",
+            "label": "Kỹ năng ưu tiên",
+            "raw_score": 50,
+            "weight": 13.3,
+            "weighted_score": 6.7,
+            "status": "PARTIALLY_SUPPORTED",
+            "reason": "0/2 requirement được hỗ trợ đầy đủ."
+          }
+        ],
+        "role_relevant": true,
+        "application_ready": false
+      },
+      "match_id": "PREVIEW_JD-005"
+    },
+    {
+      "rank": 10,
+      "job_id": "JD-025",
+      "title": "Junior - MiddleFullstack Developer",
+      "company": "ISB Vietnam Company Limited",
+      "location": "Hà Nội",
+      "work_mode": "On-site",
+      "display_fit_score": 27.2,
+      "raw_fit_score": 27.2,
+      "fit_label": "Cần cải thiện",
+      "evidence_confidence": "low",
+      "mandatory_requirement_failed": true,
+      "role_relevant": true,
+      "application_ready": false,
+      "retrieval_rank": 29,
+      "role_affinity_score": 50,
+      "ready_candidate_boost": 0.14,
+      "required_skills_coverage": 0.7,
+      "mandatory_requirements_matched": 3,
+      "total_mandatory_requirements": 4,
+      "score_breakdown": [
+        {
+          "criterion_id": "CRIT_REQUIRED_SKILL",
+          "raw_score": 70,
+          "weight": 38.9,
+          "weighted_score": 27.2,
+          "status": "PARTIALLY_SUPPORTED",
+          "reason": "3/5 requirement được hỗ trợ đầy đủ.",
+          "requirement_ids": [
+            "JD_REQ_001_AA5E3079",
+            "JD_REQ_002_B9104C38",
+            "JD_REQ_003_ADE1A939",
+            "JD_REQ_004_AA3D242E",
+            "JD_REQ_005_7FF247BA"
+          ],
+          "evidence_ids": [
+            "EVD_318E8A280886",
+            "EVD_D01823E4C8F4",
+            "EVD_6A6A2A730D26",
+            "EVD_3C168D7EABAE"
+          ]
+        },
+        {
+          "criterion_id": "CRIT_EXPERIENCE",
+          "raw_score": 0,
+          "weight": 33.3,
+          "weighted_score": 0,
+          "status": "NOT_FOUND",
+          "reason": "0/8 requirement được hỗ trợ đầy đủ.",
+          "requirement_ids": [
+            "JD_REQ_006_B30D3B0E",
+            "JD_REQ_007_F481AF19",
+            "JD_REQ_008_C1840A77",
+            "JD_REQ_009_535F8B50",
+            "JD_REQ_010_88B9CCC2",
+            "JD_REQ_011_D222DB66",
+            "JD_REQ_012_7BA57B50",
+            "JD_REQ_013_66E7CCF5"
+          ],
+          "evidence_ids": []
+        },
+        {
+          "criterion_id": "CRIT_PREFERRED_SKILL",
+          "raw_score": 0,
+          "weight": 11.1,
+          "weighted_score": 0,
+          "status": "NOT_FOUND",
+          "reason": "0/2 requirement được hỗ trợ đầy đủ.",
+          "requirement_ids": [
+            "JD_REQ_014_35D94070",
+            "JD_REQ_015_0FF59D00"
+          ],
+          "evidence_ids": []
+        },
+        {
+          "criterion_id": "CRIT_DOMAIN",
+          "raw_score": 0,
+          "weight": 16.7,
+          "weighted_score": 0,
+          "status": "NOT_FOUND",
+          "reason": "0/1 requirement được hỗ trợ đầy đủ.",
+          "requirement_ids": [
+            "JD_REQ_016_EB4D4E31"
+          ],
+          "evidence_ids": []
+        }
+      ],
+      "top_strengths": [
+        "Đáp ứng tốt yêu cầu: React",
+        "Đáp ứng tốt yêu cầu: Docker",
+        "Đáp ứng tốt yêu cầu: Go"
+      ],
+      "top_gaps": [
+        "Chưa tìm thấy evidence cho TypeScript",
+        "Kỹ năng/kinh nghiệm PostgreSQL chỉ đáp ứng một phần",
+        "Chưa tìm thấy evidence cho Giới thiệu công ty Vị trí công việc này hiện tại đã hết hạn nộp hồ sơ, bạn có thể tham khảo thêm một số công việc liên quan phía dưới fullstack golang docker design Mô tả công việc Tóm tắt công việc Junior Fullstack Developer Focus: Learning, executing, and writing clean code under guidance.",
+        "Chưa tìm thấy evidence cho Develop and maintain features using Golang (backend) and [protected info] (frontend)."
+      ],
+      "user_explanation": {
+        "verdict": "Chưa phù hợp để ứng tuyển ngay — vị trí này xếp hạng #10 trong danh sách hiện có.",
+        "confidence_message": "Độ tin cậy thấp: CV chưa có đủ bằng chứng để xác nhận nhiều yêu cầu.",
+        "mandatory_summary": {
+          "matched": 3,
+          "total": 5,
+          "failed": true
+        },
+        "matched_requirements": [
+          {
+            "requirement_id": "JD_REQ_004_AA3D242E",
+            "requirement": "Docker",
+            "status": "SUPPORTED",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "CV có evidence hỗ trợ requirement này.",
+            "cv_evidence_quotes": [
+              "Spring Boot, JavaScript, SQL Server, MongoDB, Node.js, ReactJS, Docker, Python, Spring, MySQL, React, Java, AWS, SQL, AI, Go, communication"
+            ]
+          },
+          {
+            "requirement_id": "JD_REQ_005_7FF247BA",
+            "requirement": "Go",
+            "status": "SUPPORTED",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "CV có evidence hỗ trợ requirement này.",
+            "cv_evidence_quotes": [
+              "Spring Boot, JavaScript, SQL Server, MongoDB, Node.js, ReactJS, Docker, Python, Spring, MySQL, React, Java, AWS, SQL, AI, Go, communication"
+            ]
+          },
+          {
+            "requirement_id": "JD_REQ_003_ADE1A939",
+            "requirement": "React",
+            "status": "SUPPORTED",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "CV có evidence hỗ trợ requirement này.",
+            "cv_evidence_quotes": [
+              "Spring Boot, JavaScript, SQL Server, MongoDB, Node.js, ReactJS, Docker, Python, Spring, MySQL, React, Java, AWS, SQL, AI, Go, communication"
+            ]
+          }
+        ],
+        "priority_gaps": [
+          {
+            "requirement_id": "JD_REQ_001_AA5E3079",
+            "requirement": "PostgreSQL",
+            "status": "PARTIALLY_SUPPORTED",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "CV có evidence liên quan nhưng chưa đáp ứng đầy đủ requirement.",
+            "cv_evidence_quotes": [
+              "Spring Boot, JavaScript, SQL Server, MongoDB, Node.js, ReactJS, Docker, Python, Spring, MySQL, React, Java, AWS, SQL, AI, Go, communication"
+            ]
+          },
+          {
+            "requirement_id": "JD_REQ_002_B9104C38",
+            "requirement": "TypeScript",
+            "status": "NOT_FOUND",
+            "mandatory": true,
+            "priority": "high",
+            "reason": "Không tìm thấy bằng chứng đáng tin cậy cho requirement này trong CV.",
+            "cv_evidence_quotes": []
+          },
+          {
+            "requirement_id": "JD_REQ_035_D935E3A7",
+            "requirement": "A strict \"test-first\" or \"test-alongside\" mindset.",
+            "status": "NOT_FOUND",
+            "mandatory": false,
+            "priority": "low",
+            "reason": "Không tìm thấy bằng chứng đáng tin cậy cho requirement này trong CV.",
+            "cv_evidence_quotes": []
+          },
+          {
+            "requirement_id": "JD_REQ_021_1702E49D",
+            "requirement": "Assist in maintaining and improving GitLab CI pipelines and Docker configurations.",
+            "status": "NOT_FOUND",
+            "mandatory": false,
+            "priority": "low",
+            "reason": "Không tìm thấy bằng chứng đáng tin cậy cho requirement này trong CV.",
+            "cv_evidence_quotes": []
+          }
+        ],
+        "priority_actions": [
+          {
+            "requirement": "PostgreSQL",
+            "message": "Nếu bạn đã có kinh nghiệm về PostgreSQL, hãy bổ sung bằng chứng cụ thể vào CV; nếu chưa có, ưu tiên học hoặc thực hành trước khi ứng tuyển."
+          },
+          {
+            "requirement": "TypeScript",
+            "message": "Nếu bạn đã có kinh nghiệm về TypeScript, hãy bổ sung bằng chứng cụ thể vào CV; nếu chưa có, ưu tiên học hoặc thực hành trước khi ứng tuyển."
+          }
+        ],
+        "score_breakdown": [
+          {
+            "criterion_id": "CRIT_REQUIRED_SKILL",
+            "label": "Kỹ năng bắt buộc",
+            "raw_score": 70,
+            "weight": 38.9,
+            "weighted_score": 27.2,
+            "status": "PARTIALLY_SUPPORTED",
+            "reason": "3/5 requirement được hỗ trợ đầy đủ."
+          },
+          {
+            "criterion_id": "CRIT_EXPERIENCE",
+            "label": "Kinh nghiệm liên quan",
+            "raw_score": 0,
+            "weight": 33.3,
+            "weighted_score": 0,
+            "status": "NOT_FOUND",
+            "reason": "0/8 requirement được hỗ trợ đầy đủ."
+          },
+          {
+            "criterion_id": "CRIT_PREFERRED_SKILL",
+            "label": "Kỹ năng ưu tiên",
+            "raw_score": 0,
+            "weight": 11.1,
+            "weighted_score": 0,
+            "status": "NOT_FOUND",
+            "reason": "0/2 requirement được hỗ trợ đầy đủ."
+          },
+          {
+            "criterion_id": "CRIT_DOMAIN",
+            "label": "Lĩnh vực / trách nhiệm",
+            "raw_score": 0,
+            "weight": 16.7,
+            "weighted_score": 0,
+            "status": "NOT_FOUND",
+            "reason": "0/1 requirement được hỗ trợ đầy đủ."
+          }
+        ],
+        "role_relevant": true,
+        "application_ready": false
+      },
+      "match_id": "PREVIEW_JD-025"
+    }
+  ],
+  "cache_hit": false
+}

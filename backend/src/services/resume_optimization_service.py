@@ -31,13 +31,16 @@ QUY TẮC BẮT BUỘC:
 2. KHÔNG thay đổi hoặc phóng đại các số liệu đo lường (giữ nguyên 100% số liệu thực tế).
 3. MỖI block_id trong cv_blocks chỉ tạo ĐÚNG 1 OptimizationChangeDraft trong danh sách 'changes'.
 4. Đối với section 'experience' hoặc 'projects':
-   - Viết lại toàn bộ nội dung của block thành các bullet points mạch lạc (mỗi dòng 1 bullet •).
+   - Viết lại toàn bộ nội dung của block thành các bullet points mạch lạc (mỗi dòng bắt đầu bằng bullet •).
    - Nâng cấp câu chữ theo chuẩn: Action Verb mạnh mẽ + Công nghệ cốt lõi + Nhiệm vụ & Tác động kỹ thuật/hiệu năng.
-5. Đối với section 'summary': Viết lại thành đoạn tóm tắt chuyên nghiệp, làm nổi bật kinh nghiệm và mục tiêu phù hợp JD.
-6. Đối với section 'skills': Sắp xếp lại danh sách để đưa các kỹ năng trùng khớp với JD lên đầu.
-7. Giữ nguyên ngôn ngữ gốc của CV (CV tiếng Anh trả về tiếng Anh, CV tiếng Việt trả về tiếng Việt).
-
-8. Về 'project_blueprint': Hãy thiết kế 1 dự án portfolio thực tế, chuyên sâu và khả thi giải quyết bài toán của JD dựa trên các kỹ năng còn thiếu (missing_skills hoặc target_skills). Tuyệt đối không dùng cụm từ mẫu cứng nhắc (template generic).
+5. Đối với section 'certifications' hoặc 'education':
+   - Định dạng lại thành bullet point rõ ràng (bắt đầu bằng • ), phân cách thông tin mạch lạc, chuẩn hóa theo format hồ sơ chuyên nghiệp.
+6. Đối với section 'summary': Viết lại thành đoạn tóm tắt chuyên nghiệp, làm nổi bật kinh nghiệm và mục tiêu phù hợp JD.
+7. Đối với section 'skills': Sắp xếp lại danh sách để đưa các kỹ năng trùng khớp với JD lên đầu.
+8. Giữ nguyên ngôn ngữ gốc của CV (CV tiếng Anh trả về tiếng Anh, CV tiếng Việt trả về tiếng Việt).
+9. Chỉ tạo rewrite khi từng claim trong câu mới có evidence quote cụ thể trong block CV gốc. Nếu block trống, vô nghĩa hoặc placeholder (ví dụ fff/ff), trả về changes rỗng và yêu cầu ứng viên bổ sung thông tin thật.
+10. JD chỉ dùng để chọn thứ tự hoặc diễn đạt lại kỹ năng đã có evidence trong CV; không được biến yêu cầu JD thành kỹ năng, dự án, kinh nghiệm, trách nhiệm, công ty, ngày tháng hoặc chỉ số của ứng viên.
+11. Về 'project_blueprint': đây chỉ là Learning recommendation, không phải completed experience hay nội dung CV. Hãy thiết kế 1 dự án portfolio thực tế, chuyên sâu và khả thi giải quyết bài toán của JD dựa trên các kỹ năng còn thiếu (missing_skills hoặc target_skills). Tuyệt đối không dùng cụm từ mẫu cứng nhắc (template generic).
 
 Chỉ trả dữ liệu theo JSON schema được yêu cầu."""
 
@@ -81,6 +84,14 @@ def _as_strings(value: Any) -> list[str]:
     if not isinstance(value, list):
         return []
     return [str(item).strip() for item in value if str(item).strip()]
+
+
+def _has_meaningful_cv_evidence(text: str) -> bool:
+    """Reject OCR placeholders before any optimiser or LLM sees them."""
+    folded = re.sub(r"\s+", " ", (text or "").casefold()).strip()
+    words = re.findall(r"[^\W\d_]+", folded, flags=re.UNICODE)
+    placeholders = {"f", "ff", "fff", "test", "n/a", "na", "none", "null", "unknown"}
+    return bool(words) and not all(word in placeholders or len(set(word)) == 1 for word in words)
 
 
 def _unique(values: list[str]) -> list[str]:
@@ -219,6 +230,29 @@ _SCOPE_INFLATION_TERMS = (
     "kiến trúc sư",
 )
 
+_REWRITE_STOP_WORDS = {"a", "an", "and", "as", "at", "by", "for", "from", "in", "of", "on", "the", "to", "using", "with"}
+_SAFE_ACTION_REPHRASES = {
+    "built": {"developed", "created", "implemented", "engineered"},
+    "developed": {"built", "created", "implemented", "engineered"},
+    "created": {"built", "developed", "implemented"},
+    "implemented": {"built", "developed", "created"},
+}
+
+
+def _adds_unsupported_claim_words(optimized: str, original: str) -> bool:
+    """Fail closed on new responsibility/impact words, not just new technologies."""
+    original_words = set(re.findall(r"[^\W\d_]+", original.casefold(), flags=re.UNICODE))
+    optimized_words = set(re.findall(r"[^\W\d_]+", optimized.casefold(), flags=re.UNICODE))
+    allowed = set(original_words)
+    for source_word, replacements in _SAFE_ACTION_REPHRASES.items():
+        if source_word in original_words:
+            allowed.update(replacements)
+    introduced = {
+        word for word in optimized_words
+        if len(word) > 2 and word not in _REWRITE_STOP_WORDS and word not in allowed
+    }
+    return bool(introduced)
+
 
 def validate_resume_change(
     *,
@@ -244,6 +278,8 @@ def validate_resume_change(
         return "Câu tối ưu chèn công nghệ chưa được xác minh."
     if not _numbers_are_supported(optimized, original):
         return "Câu tối ưu chèn hoặc thay đổi số liệu."
+    if _adds_unsupported_claim_words(optimized, original):
+        return "Câu tối ưu thêm trách nhiệm, kết quả hoặc claim mới không có trong evidence gốc."
     original_lower = original.casefold()
     for term in _SCOPE_INFLATION_TERMS:
         if re.search(rf"(?<!\w){re.escape(term)}(?!\w)", optimized, flags=re.IGNORECASE) and not re.search(
@@ -347,6 +383,18 @@ async def optimize_resume_for_jd(
 ) -> dict[str, Any]:
     """Create a JD-guided optimization draft, then verify every CV change in code."""
     cv_blocks = public_cv_blocks(parsed_cv)
+    if not _has_meaningful_cv_evidence(cv_text):
+        return {
+            "status": "insufficient_evidence",
+            "changes": [],
+            "patches": [],
+            "optimized_resume": _build_optimized_resume(parsed_cv, [], []),
+            "project_blueprint": None,
+            "missing_skills_recommendations": [],
+            "warnings": ["Insufficient evidence: CV chỉ chứa dữ liệu trống/placeholder. Hãy thêm thông tin thực tế; hệ thống giữ nguyên nội dung và không tạo claim mới."],
+            "confirmation_questions": ["Vui lòng thay placeholder bằng kỹ năng, kinh nghiệm, dự án, học vấn hoặc kết quả thực tế trước khi tối ưu."],
+            "provider": "evidence_gate",
+        }
     block_lookup = {item["block_id"]: item for item in cv_blocks}
     fallback = _draft_fallback(cv_text, analysis, cv_blocks)
     draft = fallback
@@ -382,9 +430,8 @@ async def optimize_resume_for_jd(
             "missing_skills": _as_strings(analysis.get("hard_skills_missing"))[:5],
         }
         try:
-            model_target = settings.model_name if settings.model_name and settings.model_name not in ("gemini-3.5-flash", "gemini-2.0-flash") else "gemini-2.5-flash"
             llm = ChatGoogleGenerativeAI(
-                model=model_target,
+                model=settings.model_name,
                 temperature=0.2,
                 api_key=api_key,
                 request_timeout=settings.llm_timeout_seconds,
@@ -456,8 +503,10 @@ async def optimize_resume_for_jd(
         if len(accepted) >= 8:
             break
 
-    # If no LLM changes passed or LLM was unavailable, generate high quality deterministic suggestions
-    if not accepted and not analysis.get("suggestions"):
+    # Attempt a deterministic rewrite when there is no provider draft.  Unsafe
+    # drafts are instead returned as an explicit ``No safe rewrite available``
+    # result, never silently replaced or left with an empty proposed field.
+    if not accepted and not removed_claims:
         # 1. Skills reordering suggestion
         skills_block = block_lookup.get("skills-001")
         if skills_block and matched:
@@ -566,6 +615,28 @@ async def optimize_resume_for_jd(
         }
         for item in accepted
     ]
+    no_safe_rewrites = []
+    for removed in removed_claims:
+        block_id, _, reason = removed.partition(":")
+        block = block_lookup.get(block_id.strip())
+        if block:
+            no_safe_rewrites.append(
+                {
+                    "block_id": block_id.strip(),
+                    "section": block["section"],
+                    "original": block["text"],
+                    "reason": reason.strip() or "Không thể chứng minh rewrite này từ CV gốc.",
+                }
+            )
+    if not accepted and not no_safe_rewrites and cv_blocks:
+        no_safe_rewrites.append(
+            {
+                "block_id": "",
+                "section": "",
+                "original": "",
+                "reason": "Không có block nào đủ bằng chứng để viết lại an toàn; CV gốc được giữ nguyên.",
+            }
+        )
     return {
         "status": "completed",
         "target_job_title": jd_title,
@@ -608,6 +679,7 @@ async def optimize_resume_for_jd(
         "optimization_plan": safe_plan,
         "optimized_resume": _build_optimized_resume(parsed_cv, accepted, matched),
         "changes": accepted,
+        "no_safe_rewrites": no_safe_rewrites,
         "patches": patches,
         "project_blueprint": (
             draft.get("project_blueprint").model_dump()

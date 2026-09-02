@@ -23,11 +23,13 @@ from src.models.schemas import (
     AnswerSubmitRequest,
     InterviewFeedbackCreate,
     InterviewFeedbackOut,
+    InterviewQAOut,
     InterviewQuestionOut,
     InterviewReportOut,
     InterviewSessionSummaryOut,
     InterviewStartRequest,
 )
+from src.services.interview_agenda_service import enabled_questions, ensure_agenda
 from src.services.interview_service import (
     evaluate_answer_and_check_followup,
     generate_final_star_report,
@@ -74,12 +76,49 @@ async def start_interview_session(
         )
 
     # Generate questions
-    question_texts = await generate_interview_questions(
-        cv_text=cv.raw_text or "",
-        jd_title=jd.title,
-        jd_requirements=jd.requirements_text,
-        num_questions=payload.total_questions,
-    )
+    #
+    # Luồng voice KHÔNG dùng bộ câu hỏi sinh sẵn: VoiceInterviewOrchestrator tự
+    # dẫn dắt hội thoại và ws_interview.py ghi từng cặp hỏi–đáp thật vào DB.
+    # Sinh trước ở đây vừa tốn một lời gọi LLM mỗi phiên, vừa tạo ra các hàng
+    # InterviewQuestion không ai trả lời và trùng question_index với hàng thật.
+    #
+    # Luồng text lấy câu hỏi từ agenda của cặp (CV snapshot, JD snapshot) thay
+    # vì sinh mới mỗi phiên: agenda được tái dùng nên mỗi cặp CV+JD chỉ tốn một
+    # lời gọi LLM dù luyện bao nhiêu lần, và mỗi câu mang theo metadata
+    # (competency, evidence, rubric) để chấm điểm có căn cứ.
+    is_voice = payload.mode == "voice"
+    question_texts: list[str] = []
+    agenda_question_ids: list[str | None] = []
+    agenda_id: str | None = None
+    if not is_voice:
+        agenda, _was_generated = await ensure_agenda(
+            db,
+            user=current_user,
+            cv=cv,
+            jd=jd,
+            num_questions=payload.total_questions,
+        )
+        agenda_id = agenda.id
+        picked = enabled_questions(agenda)[: payload.total_questions]
+        prefer_en = str(payload.language or "vi").lower().startswith("en")
+        for item in picked:
+            text = str(item.get("question_en") or "") if prefer_en else ""
+            if not text.strip():
+                text = str(item.get("question_vi") or "")
+            if text.strip():
+                question_texts.append(text.strip())
+                agenda_question_ids.append(str(item.get("id")) if item.get("id") else None)
+
+        # Lưới an toàn: agenda rỗng bất thường (dữ liệu cũ, hoặc mọi câu bị tắt
+        # ngoài luồng UI) không được làm hỏng việc bắt đầu phỏng vấn.
+        if not question_texts:
+            question_texts = await generate_interview_questions(
+                cv_text=cv.raw_text or "",
+                jd_title=jd.title,
+                jd_requirements=jd.requirements_text,
+                num_questions=payload.total_questions,
+            )
+            agenda_question_ids = [None] * len(question_texts)
 
     # Create InterviewSession
     cv_snapshot = await get_or_create_cv_snapshot(db, cv)
@@ -103,7 +142,9 @@ async def start_interview_session(
         language=payload.language,
         mode=payload.mode,
         status="ongoing",
-        total_questions=len(question_texts),
+        # Voice chưa có câu hỏi nào ở thời điểm này; giữ con số người dùng chọn
+        # làm mốc hiển thị tiến độ, sẽ được ghi đè bằng số câu thật khi kết thúc.
+        total_questions=payload.total_questions if is_voice else len(question_texts),
         current_question_index=0,
     )
     db.add(session)
@@ -116,6 +157,7 @@ async def start_interview_session(
             session_id=session.id,
             question_index=idx,
             question_text=q_text,
+            agenda_question_id=agenda_question_ids[idx] if idx < len(agenda_question_ids) else None,
         )
         question_objs.append(q_obj)
         db.add(q_obj)
@@ -125,7 +167,11 @@ async def start_interview_session(
             user_id=current_user.id,
             event_name="interview_start",
             duration_ms=round((perf_counter() - started_at) * 1000),
-            metadata_json={"question_count": len(question_texts)},
+            metadata_json={
+                "question_count": len(question_texts),
+                "mode": payload.mode,
+                "agenda_id": agenda_id,
+            },
         )
     )
 
@@ -134,7 +180,9 @@ async def start_interview_session(
     return InterviewQuestionOut(
         session_id=session.id,
         question_index=0,
-        question_text=question_texts[0],
+        # Voice: chưa có câu hỏi nào tồn tại — frontend voice chỉ dùng session_id
+        # rồi mở WebSocket, nó không đọc field này.
+        question_text=question_texts[0] if question_texts else "",
         follow_up_question=None,
         # Frontend dùng cờ này như `session_completed`, không phải "đây là câu cuối".
         is_last_question=False,
@@ -234,7 +282,10 @@ async def submit_interview_answer(
             session.current_question_index += 1
 
     # Check if session is completed
-    if session.current_question_index >= session.total_questions:
+    # Phiên kết thúc khi đạt số câu đã định HOẶC khi hết hàng câu hỏi thật —
+    # hai con số này lệch nhau ở phiên voice đứt giữa chừng (total_questions
+    # giữ con số người dùng chọn, còn hàng thật do WebSocket ghi dần).
+    if session.current_question_index >= min(session.total_questions, len(questions)):
         session.status = "completed"
         session.completed_at = datetime.now(UTC)
 
@@ -350,6 +401,11 @@ async def resume_interview_session(
         raise HTTPException(status_code=404, detail="Không tìm thấy phiên phỏng vấn.")
     if session.status == "completed":
         raise HTTPException(status_code=409, detail="Phiên đã hoàn thành; hãy mở báo cáo STAR.")
+    if session.mode == "voice":
+        raise HTTPException(
+            status_code=409,
+            detail="Phiên phỏng vấn giọng nói phải được tiếp tục qua kênh WebSocket, không dùng luồng hỏi–đáp dạng văn bản.",
+        )
     questions = sorted(session.questions, key=lambda item: item.question_index)
     if session.current_question_index >= len(questions):
         raise HTTPException(status_code=409, detail="Phiên không còn câu hỏi để tiếp tục.")
@@ -374,6 +430,10 @@ async def get_interview_report(
         select(InterviewReport, InterviewSession)
         .join(InterviewSession, InterviewSession.id == InterviewReport.session_id)
         .where(InterviewReport.session_id == session_id)
+        .options(
+            selectinload(InterviewSession.jd),
+            selectinload(InterviewSession.cv),
+        )
     )
     result = await db.execute(stmt)
     row = result.first()
@@ -399,6 +459,23 @@ async def get_interview_report(
         else:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Không có quyền truy cập báo cáo này.")
 
+    questions_result = await db.execute(
+        select(InterviewQuestion)
+        .where(InterviewQuestion.session_id == session_id)
+        .order_by(InterviewQuestion.question_index)
+    )
+    qa_history = [
+        InterviewQAOut(
+            question_index=question.question_index,
+            question_text=question.question_text,
+            user_answer=question.user_answer,
+            follow_up_question=question.follow_up_question,
+            follow_up_answer=question.follow_up_answer,
+            star_score=question.star_score_json or {},
+        )
+        for question in questions_result.scalars().all()
+    ]
+
     return InterviewReportOut(
         id=report.id,
         session_id=report.session_id,
@@ -408,6 +485,11 @@ async def get_interview_report(
         improvements=report.improvements_json or [],
         recommendations=report.recommendations_json or [],
         created_at=report.created_at,
+        qa_history=qa_history,
+        jd_title=session.jd.title if session.jd else "",
+        cv_title=session.cv.title if session.cv else "",
+        mode=session.mode,
+        language=session.language,
     )
 
 

@@ -4,7 +4,7 @@ import pytest
 
 from src.db.models import CVAnalysis, InterviewReport, InterviewSession, JobDescription
 from tests.conftest import TestingSessionLocal
-from tests.helpers import create_admin, insert_cv, register_and_login
+from tests.helpers import create_admin, create_counselor, insert_cv, register_and_login
 
 
 @pytest.mark.asyncio
@@ -32,8 +32,8 @@ async def test_student_controls_counselor_consent_and_feedback(client):
     student, student_headers = await register_and_login(
         client, email="student-hitl@example.com", full_name="Student HITL"
     )
-    _counselor, counselor_headers = await register_and_login(
-        client, email="counselor-hitl@example.com", full_name="Counselor HITL", role="counselor"
+    _counselor, counselor_headers = await create_counselor(
+        client, email="counselor-hitl@example.com", full_name="Counselor HITL"
     )
 
     denied = await client.get(f"/api/v1/counselor/students/{student['id']}", headers=counselor_headers)
@@ -132,59 +132,6 @@ async def test_manual_cv_decisions_and_pdf_export(client):
     assert exported.status_code == 200, exported.text
     assert exported.headers["content-type"] == "application/pdf"
     assert exported.content.startswith(b"%PDF")
-
-
-@pytest.mark.asyncio
-async def test_enterprise_publishes_jd_and_human_decides_ranked_application(client):
-    enterprise, enterprise_headers = await register_and_login(
-        client, email="enterprise-prd@example.com", role="enterprise"
-    )
-    student, student_headers = await register_and_login(client, email="candidate-prd@example.com")
-    cv = await insert_cv(email=student["email"])
-
-    jd_response = await client.post(
-        "/api/v1/jds/custom",
-        headers=enterprise_headers,
-        json={"title": "Python Engineer", "company": "Enterprise", "requirements_text": "Python FastAPI Docker"},
-    )
-    assert jd_response.status_code == 201
-    jd_id = jd_response.json()["id"]
-    published = await client.patch(f"/api/v1/jds/{jd_id}/publish", headers=enterprise_headers)
-    assert published.status_code == 200
-    assert published.json()["is_published"] is True
-
-    applied = await client.post(
-        "/api/v1/enterprise/applications",
-        headers=student_headers,
-        json={"jd_id": jd_id, "cv_id": cv.id},
-    )
-    assert applied.status_code == 201, applied.text
-    application_id = applied.json()["id"]
-
-    candidates = await client.get(f"/api/v1/enterprise/jds/{jd_id}/candidates", headers=enterprise_headers)
-    assert candidates.status_code == 200
-    assert candidates.json()[0]["candidate_email"] == student["email"]
-    shared_cv = await client.get(
-        f"/api/v1/enterprise/applications/{application_id}/cv", headers=enterprise_headers
-    )
-    assert shared_cv.status_code == 200
-    assert shared_cv.json()["id"] == cv.id
-    decided = await client.patch(
-        f"/api/v1/enterprise/applications/{application_id}",
-        headers=enterprise_headers,
-        json={"status": "interview"},
-    )
-    assert decided.json()["status"] == "interview"
-
-    _other_enterprise, other_headers = await register_and_login(
-        client, email="other-enterprise@example.com", role="enterprise"
-    )
-    denied = await client.get(f"/api/v1/enterprise/jds/{jd_id}/candidates", headers=other_headers)
-    assert denied.status_code == 404
-    denied_cv = await client.get(
-        f"/api/v1/enterprise/applications/{application_id}/cv", headers=other_headers
-    )
-    assert denied_cv.status_code == 404
 
 
 @pytest.mark.asyncio

@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e ' *)",
+      "Bash(node --check frontend/app.js)",
+      "Bash(python -)",
+      "Bash(npx jest *)",
+      "Bash(grep -n \"^/\\\\* ──\\\\|^/\\\\* ==\\\\|^   [A-Z]\" \"D:/AITHUCCHIEN/PROJECT/P-041/frontend/app/styles/enterprise.css\")",
+      "Bash(npx --prefix frontend tsc --noEmit -p frontend/tsconfig.json)",
+      "Bash(echo \"EXIT=$?\")",
+      "Bash(node frontend/node_modules/typescript/bin/tsc --noEmit -p frontend/tsconfig.json)",
+      "Bash(echo \"TSC_EXIT=$?\")",
+      "Read(//tmp/**)",
+      "Bash(npx --prefix frontend jest --config frontend/jest.config.js --rootDir frontend components/enterprise)",
+      "Bash(echo \"JEST_EXIT=$?\")",
+      "Bash(npx --prefix frontend jest --config frontend/jest.config.js --rootDir frontend)",
+      "Bash(npm --prefix frontend run lint)",
+      "Bash(echo \"LINT_EXIT=$?\")",
+      "Bash(npx --prefix frontend prettier --config frontend/.prettierrc.json frontend/components/enterprise/EnterpriseDashboard.tsx)",
+      "Bash(npx --prefix frontend prettier --config frontend/.prettierrc.json frontend/app/styles/enterprise.css)",
+      "Bash(awk '{o+=gsub\\(/\\\\{/,\"{\"\\); c+=gsub\\(/\\\\}/,\"}\"\\)} END{print \"open=\"o\" close=\"c\" balanced=\"\\(o==c\\)}' frontend/app/styles/enterprise.css)",
+      "Bash(PYTHONIOENCODING=utf-8 python -)",
+      "Bash(node -e \"console.log\\(require\\('./frontend/node_modules/tailwindcss/package.json'\\).version\\)\")"
+    ]
+  }
+}

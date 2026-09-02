@@ -48,7 +48,7 @@ async def extract_text_with_mineru(file_bytes: bytes, filename: str) -> str:
         "language": settings.mineru_language,
         "enable_table": settings.mineru_enable_table,
         "enable_formula": settings.mineru_enable_formula,
-        "is_ocr": suffix == ".pdf",
+        "is_ocr": suffix in {".pdf", ".jpg", ".jpeg", ".png", ".webp", ".docx"},
     }
     timeout = httpx.Timeout(settings.mineru_timeout_seconds)
     try:
@@ -65,7 +65,7 @@ async def extract_text_with_mineru(file_bytes: bytes, filename: str) -> str:
 
             upload = await client.put(upload_url, content=file_bytes)
             upload.raise_for_status()
-            deadline = monotonic() + settings.mineru_poll_timeout_seconds
+            deadline = monotonic() + min(15.0, settings.mineru_poll_timeout_seconds)
             while monotonic() < deadline:
                 await asyncio.sleep(settings.mineru_poll_interval_seconds)
                 response = await client.get(f"{base_url}/parse/{task_id}")
@@ -118,7 +118,7 @@ async def _extract_text_with_precision_api(file_bytes: bytes, filename: str) -> 
     data_id = f"career-assistant-{uuid4().hex}"
     suffix = Path(filename).suffix.casefold()
     body = {
-        "files": [{"name": Path(filename).name, "data_id": data_id, "is_ocr": suffix == ".pdf"}],
+        "files": [{"name": Path(filename).name, "data_id": data_id, "is_ocr": suffix in {".pdf", ".jpg", ".jpeg", ".png", ".webp", ".docx"}}],
         "model_version": settings.mineru_model_version,
         "language": settings.mineru_language,
         "enable_table": settings.mineru_enable_table,

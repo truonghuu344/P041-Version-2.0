@@ -17,6 +17,7 @@ import os
 import sys
 import time
 from dataclasses import asdict, dataclass, field
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -54,6 +55,47 @@ from src.services.job_recommendations.rrf import weighted_rrf
 GOLDEN_SET_PATH = ROOT / "eval" / "top_k_benchmark" / "golden_dataset.json"
 REPORT_JSON_PATH = ROOT / "eval" / "results" / "top_k_benchmark_report.json"
 REPORT_MD_PATH = ROOT / "eval" / "results" / "top_k_benchmark_report.md"
+REPORT_HISTORY_DIR = ROOT / "eval" / "results" / "top_k_history"
+REPORT_HISTORY_INDEX_PATH = REPORT_HISTORY_DIR / "README.md"
+
+
+def _write_append_only_reports(
+    report_payload: dict[str, Any],
+    markdown_report: str,
+) -> tuple[Path, Path]:
+    """Store an immutable, timestamped benchmark report and append its index.
+
+    The latest report remains convenient for dashboards, while this history is
+    never replaced by later daily benchmark runs.
+    """
+    REPORT_HISTORY_DIR.mkdir(parents=True, exist_ok=True)
+    run_stamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H-%M-%SZ")
+    stem = f"top_k_benchmark_{run_stamp}"
+    json_path = REPORT_HISTORY_DIR / f"{stem}.json"
+    markdown_path = REPORT_HISTORY_DIR / f"{stem}.md"
+    suffix = 2
+    while json_path.exists() or markdown_path.exists():
+        json_path = REPORT_HISTORY_DIR / f"{stem}_{suffix}.json"
+        markdown_path = REPORT_HISTORY_DIR / f"{stem}_{suffix}.md"
+        suffix += 1
+
+    json_path.write_text(json.dumps(report_payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    markdown_path.write_text(markdown_report, encoding="utf-8")
+
+    if not REPORT_HISTORY_INDEX_PATH.exists():
+        REPORT_HISTORY_INDEX_PATH.write_text(
+            "# Lịch sử benchmark Top K\n\n"
+            "Mỗi lần chạy tạo report riêng; không ghi đè hoặc xóa kết quả cũ.\n\n"
+            "| UTC time | JSON | Markdown |\n"
+            "| --- | --- | --- |\n",
+            encoding="utf-8",
+        )
+    with REPORT_HISTORY_INDEX_PATH.open("a", encoding="utf-8") as index_file:
+        index_file.write(
+            f"| {report_payload['benchmark_timestamp']} | [{json_path.name}]({json_path.name}) | "
+            f"[{markdown_path.name}]({markdown_path.name}) |\n"
+        )
+    return json_path, markdown_path
 
 
 def _dcg_at_k(relevance_scores: list[float], k: int = 10) -> float:
@@ -431,17 +473,19 @@ def run_all_benchmarks(k_values: list[int] | None = None) -> dict[str, Any]:
         "details": all_details,
     }
 
-    # Write JSON report
+    # Write the convenient latest snapshot, then preserve this run under a
+    # timestamped filename so daily benchmark evidence is append-only.
     REPORT_JSON_PATH.parent.mkdir(parents=True, exist_ok=True)
     REPORT_JSON_PATH.write_text(json.dumps(report_payload, ensure_ascii=False, indent=2), encoding="utf-8")
-
-    # Generate Markdown report
     md_content = _build_markdown_report(report_payload, summaries)
     REPORT_MD_PATH.write_text(md_content, encoding="utf-8")
+    history_json_path, history_md_path = _write_append_only_reports(report_payload, md_content)
 
     print(f"\n[DONE] Benchmark report generated:")
     print(f"       JSON: {REPORT_JSON_PATH}")
     print(f"       Markdown: {REPORT_MD_PATH}")
+    print(f"       History JSON: {history_json_path}")
+    print(f"       History Markdown: {history_md_path}")
 
     return report_payload
 
@@ -487,16 +531,15 @@ def _build_markdown_report(payload: dict[str, Any], summaries: list[TopKMetricsS
         "",
         f"{rec.get('rationale', '')}",
         "",
-        "### Nhận xét chuyên sâu từng chỉ số:",
-        "1. **Recall@K & Độ bao phủ (Coverage)**:",
-        "   - Khi tăng từ $K=10$ lên $K=20$, Recall tăng vọt từ mức ~85% lên ~96%, hạn chế bỏ sót các việc làm phù hợp tiềm năng.",
-        "   - Khi tăng từ $K=20$ lên $K=30$, mức tăng Recall tiệm cận bão hòa (~97-98%), trong khi $K=50$ không cải thiện đáng kể nDCG@10.",
-        "2. **nDCG@10 & Precision@3**:",
+        "## Diễn giải kết quả",
+        "",
+        "Các chỉ số trong bảng là kết quả thực đo của lần chạy này; không suy diễn recall, độ trễ hoặc chất lượng gate từ một lần chạy khác.",
+        "",
         "   - Thứ hạng Top 10 duy trì độ chuẩn xác cao trên tất cả các mức $K \\ge 20$ nhờ thuật toán Hybrid RRF (BM25 + Semantic) kết hợp 5-level tie-breaking final ranking.",
-        "3. **Độ trễ xử lý (Latency)**:",
+        "",
         "   - $K=20$ và $K=30$ đều đáp ứng tốt SLA trải nghiệm (< 1.5s trong môi trường test), đảm bảo người dùng nhận kết quả gần như tức thì.",
         "4. **Bảo toàn Gate (Mandatory Gap False-Negative)**:",
-        "   - Tỷ lệ False-Negative đạt **0.0%** trên toàn bộ các mức K: 100% các công việc thiếu kỹ năng bắt buộc đều bị phát hiện chính xác, kích hoạt Gate cap điểm $\\le 49\\%$ và hiển thị banner cảnh báo.",
+        "   - Xem tỷ lệ đo thực tế trong bảng phía trên. Chỉ dùng benchmark làm bằng chứng phát hành khi tỷ lệ này bằng 0.0%.",
         "",
     ])
 

@@ -10,7 +10,6 @@ import {
   Moon,
   PencilLine,
   Search,
-  Sparkles,
   Sun,
   Target,
   Terminal,
@@ -18,6 +17,7 @@ import {
   X,
   Navigation,
 } from 'lucide-react';
+
 
 export default function JobsView(props: any) {
   return (
@@ -414,6 +414,11 @@ export default function JobsView(props: any) {
               </form>
             </div>
           </div>
+          <nav className="student-job-tabs" role="tablist" aria-label="Việc làm của tôi">
+            <button type="button" id="student-jobs-tab-discover" role="tab" aria-selected="true">Khám phá</button>
+            <button type="button" id="student-jobs-tab-saved" role="tab" aria-selected="false">Đã lưu</button>
+            <button type="button" id="student-jobs-tab-applied" role="tab" aria-selected="false">Đã ứng tuyển</button>
+          </nav>
           <section id="student-application-updates" className="application-updates-panel" hidden>
             <div className="application-updates-heading">
               <div>
@@ -429,7 +434,6 @@ export default function JobsView(props: any) {
             id="student-applications-panel"
             className="buddy-template-card"
             style={{ marginTop: '28px', padding: '28px', background: '#fff', borderRadius: '24px' }}
-            hidden
           >
             <h3 style={{ marginTop: 0 }}>Đơn ứng tuyển của bạn</h3>
             <p style={{ color: '#607184' }}>

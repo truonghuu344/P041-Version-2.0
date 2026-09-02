@@ -1,10 +1,14 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   ArrowUpRight,
   Bell,
   CheckCheck,
+  ChevronRight,
+  getNotificationCTA,
+  getNotificationSemantic,
   NotificationIcon,
 } from './notificationIcons';
 
@@ -30,6 +34,11 @@ export interface NotificationItem {
   candidate_id?: string | null;
   advisor_id?: string | null;
   metadata_json?: {
+    company?: string;
+    job_title?: string;
+    role?: string;
+    quantity?: number;
+    deadline?: string;
     tags?: string[];
     location?: string;
     interview_time?: string;
@@ -62,8 +71,9 @@ export function formatTimeAgo(isoString: string): string {
     if (diffSec < 60) return 'Vừa xong';
     if (diffSec < 3600) return `${Math.floor(diffSec / 60)} phút trước`;
     if (diffSec < 86400) return `${Math.floor(diffSec / 3600)} giờ trước`;
+    if (diffSec < 172800) return 'Hôm qua';
     if (diffSec < 604800) return `${Math.floor(diffSec / 86400)} ngày trước`;
-    return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+    return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
   } catch {
     return '';
   }
@@ -82,49 +92,99 @@ export default function NotificationPopover({
   userRole = 'student',
 }: NotificationPopoverProps) {
   const popoverRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
+  const [popoverPos, setPopoverPos] = useState<{ top: number; right: number }>({ top: 70, right: 70 });
 
-  // Close when clicking outside
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const updatePopoverPos = useCallback(() => {
+    const bellBtn = document.getElementById('btn-header-notification-bell');
+    if (bellBtn) {
+      const rect = bellBtn.getBoundingClientRect();
+      setPopoverPos({
+        top: rect.bottom + 8,
+        right: Math.max(12, window.innerWidth - rect.right),
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      updatePopoverPos();
+      window.addEventListener('resize', updatePopoverPos);
+      window.addEventListener('scroll', updatePopoverPos, true);
+      return () => {
+        window.removeEventListener('resize', updatePopoverPos);
+        window.removeEventListener('scroll', updatePopoverPos, true);
+      };
+    }
+  }, [isOpen, updatePopoverPos]);
+
+  // Close when clicking outside, excluding bell button trigger
   useEffect(() => {
     if (!isOpen) return;
 
     const handleClickOutside = (event: MouseEvent) => {
-      if (popoverRef.current && !popoverRef.current.contains(event.target as Node)) {
+      const bellBtn = document.getElementById('btn-header-notification-bell');
+      const target = event.target as Node;
+      if (bellBtn && bellBtn.contains(target)) {
+        return;
+      }
+      if (popoverRef.current && popoverRef.current.contains(target)) {
+        return;
+      }
+      console.log('[DEBUG Header] Notification Popover outside click closing popover', target);
+      onClose();
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
         onClose();
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    const timer = setTimeout(() => {
+      document.addEventListener('click', handleClickOutside);
+      document.addEventListener('keydown', handleKeyDown);
+    }, 10);
+
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      clearTimeout(timer);
+      document.removeEventListener('click', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
     };
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
   // Filter tabs configured per role
   const getTabsForRole = () => {
-    if (userRole === 'enterprise') {
-      return [
-        { id: 'all', label: 'Tất cả' },
-        { id: 'unread', label: 'Chưa đọc' },
-        { id: 'application', label: 'Ứng viên' },
-        { id: 'interview', label: 'Phỏng vấn' },
-      ];
-    }
     if (userRole === 'counselor') {
       return [
         { id: 'all', label: 'Tất cả' },
         { id: 'unread', label: 'Chưa đọc' },
-        { id: 'advisor', label: 'Ứng viên' },
-        { id: 'interview', label: 'Lịch' },
+        { id: 'advisor', label: 'Hồ sơ & CV' },
+        { id: 'candidate', label: 'Tiến cử' },
+        { id: 'application', label: 'Thực tập' },
       ];
     }
-    // Candidate default
+    if (userRole === 'admin') {
+      return [
+        { id: 'all', label: 'Tất cả' },
+        { id: 'unread', label: 'Chưa đọc' },
+        { id: 'system', label: 'Hệ thống' },
+        { id: 'candidate', label: 'Người dùng' },
+      ];
+    }
+    // Student default
     return [
       { id: 'all', label: 'Tất cả' },
       { id: 'unread', label: 'Chưa đọc' },
       { id: 'application', label: 'Ứng tuyển' },
       { id: 'advisor', label: 'Cố vấn' },
+      { id: 'job', label: 'Việc làm' },
     ];
   };
 
@@ -138,39 +198,47 @@ export default function NotificationPopover({
   });
 
   const getEmptyMessage = () => {
-    if (userRole === 'enterprise') {
-      return {
-        title: 'Chưa có thông báo',
-        desc: 'Hoạt động mới từ ứng viên sẽ xuất hiện tại đây.',
-      };
-    }
     if (userRole === 'counselor') {
       return {
         title: 'Chưa có thông báo',
-        desc: 'Các yêu cầu và cập nhật từ ứng viên sẽ xuất hiện tại đây.',
+        desc: 'Cập nhật tiến độ của sinh viên, yêu cầu nhân lực và xác nhận tiến cử sẽ xuất hiện tại đây.',
+      };
+    }
+    if (userRole === 'admin') {
+      return {
+        title: 'Chưa có thông báo',
+        desc: 'Các cảnh báo hệ thống, kiểm duyệt doanh nghiệp và báo cáo sẽ xuất hiện tại đây.',
       };
     }
     return {
       title: 'Chưa có thông báo',
-      desc: 'Cập nhật từ doanh nghiệp và cố vấn sẽ xuất hiện tại đây.',
+      desc: 'Cập nhật từ doanh nghiệp tuyển dụng và nhận xét từ cố vấn sẽ xuất hiện tại đây.',
     };
   };
 
   const emptyInfo = getEmptyMessage();
 
-  return (
+  return createPortal(
     <div
       ref={popoverRef}
       className="notification-popover-card"
       role="dialog"
       aria-label="Trung tâm thông báo"
+      aria-modal="true"
+      style={{
+        position: 'fixed',
+        top: `${popoverPos.top}px`,
+        right: `${popoverPos.right}px`,
+        zIndex: 1000000,
+        pointerEvents: 'auto',
+      }}
     >
       {/* Popover Header */}
       <div className="notification-popover-header">
         <div className="notification-popover-title-row">
           <h3 className="notification-popover-title">Thông báo</h3>
           <span className={`notification-count-tag ${unreadCount > 0 ? 'has-unread' : ''}`}>
-            {unreadCount > 0 ? `${unreadCount} mới` : 'Đã cập nhật'}
+            {unreadCount > 0 ? `${unreadCount > 9 ? '9+' : unreadCount} mới` : 'Đã cập nhật'}
           </span>
         </div>
         <button
@@ -181,12 +249,12 @@ export default function NotificationPopover({
           title="Đánh dấu tất cả đã đọc"
         >
           <CheckCheck size={16} />
-          <span>Đã đọc tất cả</span>
+          <span>Đánh dấu tất cả đã đọc</span>
         </button>
       </div>
 
       {/* Role Quick Filter Tabs */}
-      <div className="notification-popover-tabs" role="tablist">
+      <div className="notification-popover-tabs" role="tablist" aria-label="Bộ lọc thông báo">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -202,7 +270,7 @@ export default function NotificationPopover({
       </div>
 
       {/* Notification Items List */}
-      <div className="notification-popover-list">
+      <div className="notification-popover-list" tabIndex={0} aria-label="Danh sách thông báo">
         {filteredNotifications.length === 0 ? (
           <div className="notification-empty-state">
             <div className="notification-empty-icon">
@@ -215,12 +283,21 @@ export default function NotificationPopover({
           filteredNotifications.map((item) => {
             const timeAgo = formatTimeAgo(item.created_at);
             const metadata = item.metadata_json || {};
-            const tag = metadata.tags?.[0] || metadata.next_stage || metadata.location;
+            const tag =
+              metadata.company ||
+              metadata.role ||
+              metadata.interview_time ||
+              metadata.next_stage ||
+              metadata.tags?.[0] ||
+              metadata.location;
+
+            const semantic = getNotificationSemantic(item.type, item.category, item.priority);
+            const ctaLabel = getNotificationCTA(item.type, item.category, userRole);
 
             return (
               <div
                 key={item.id}
-                className={`notification-item-card ${!item.is_read ? 'unread' : ''}`}
+                className={`notification-item-card ${!item.is_read ? 'unread' : 'read'} notif-card-semantic-${semantic}`}
                 onClick={() => onNotificationClick(item)}
                 role="button"
                 tabIndex={0}
@@ -240,15 +317,36 @@ export default function NotificationPopover({
                 <div className="notif-content">
                   <div className="notif-title-row">
                     <h5 className="notif-title">{item.title}</h5>
-                    {!item.is_read && <span className="notif-unread-indicator" title="Chưa đọc" />}
+                    {!item.is_read && (
+                      <span className="notif-unread-indicator" title="Chưa đọc" aria-label="Chưa đọc" />
+                    )}
                   </div>
                   <p className="notif-message">{item.message}</p>
                   <div className="notif-meta-row">
-                    {item.priority === 'high' && (
-                      <span className="notif-tag priority-high">Ưu tiên</span>
+                    {semantic === 'warning' && (
+                      <span className="notif-tag priority-warning">Cần xử lý</span>
+                    )}
+                    {semantic === 'danger' && (
+                      <span className="notif-tag priority-danger">Quan trọng</span>
+                    )}
+                    {semantic === 'success' && (
+                      <span className="notif-tag priority-success">Hoàn thành</span>
                     )}
                     {tag && <span className="notif-tag">{tag}</span>}
                     {timeAgo && <span className="notif-time">{timeAgo}</span>}
+                  </div>
+                  <div className="notif-cta-container">
+                    <button
+                      type="button"
+                      className={`notif-inline-cta notif-cta-semantic-${semantic}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onNotificationClick(item);
+                      }}
+                    >
+                      <span>{ctaLabel}</span>
+                      <ChevronRight size={14} />
+                    </button>
                   </div>
                 </div>
               </div>
@@ -267,10 +365,11 @@ export default function NotificationPopover({
             onViewAllClick();
           }}
         >
-          <span>Xem tất cả thông báo</span>
-          <ArrowUpRight size={16} />
+          <span>Xem tất cả</span>
+          <ArrowUpRight size={15} />
         </button>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

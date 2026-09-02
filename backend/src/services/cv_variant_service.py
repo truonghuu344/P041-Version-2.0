@@ -31,6 +31,7 @@ from src.db.models import (
 from src.models.cv_variant_schemas import CVVariantCreate
 from src.services.cv_blocks import apply_cv_block_patches, enrich_parsed_cv_from_raw_text
 from src.services.cv_jd_matching import build_cv_jd_evidence
+from src.services.cv_normalization import normalize_cv_data, normalized_cv_errors
 from src.services.object_storage import delete_async, put_bytes_async
 from src.services.pdf_export import build_cv_pdf
 from src.services.pipeline_context import PIPELINE_VERSION, get_or_create_cv_snapshot, get_or_create_jd_snapshot
@@ -38,7 +39,7 @@ from src.services.resume_optimization_service import _as_strings, optimize_resum
 
 PROMPT_VERSION = "cv-variant-optimize-v1"
 RETENTION_DAYS = 365
-PUBLIC_SECTIONS = ("personal_info", "summary", "skills", "experience", "projects", "education", "certifications")
+PUBLIC_SECTIONS = ("personal_info", "headline", "summary", "skills", "experience", "projects", "education", "certifications")
 
 TEMPLATE_DEFINITIONS: dict[str, dict[str, Any]] = {
     "classic": {"layout": "single-column", "ats_safe": True, "preferred_pages": 1, "max_pages": 2},
@@ -120,11 +121,39 @@ def _atomic_strings(value: Any, prefix: str) -> list[tuple[str, str]]:
 def extract_atomic_claims(content: dict[str, Any]) -> list[tuple[str, str]]:
     claims: list[tuple[str, str]] = []
     for section in PUBLIC_SECTIONS:
+        # Personal identifiers are protected by the immutable-profile check,
+        # not treated as professional claims that must be found in OCR text.
+        # Some parsers correctly capture these fields only in structured data.
+        if section == "personal_info":
+            continue
         claims.extend(_atomic_strings(content.get(section), section))
     return [(key, text) for key, text in claims if len(text.strip()) >= 2]
 
 
 STOP_WORDS = {"in", "the", "a", "an", "of", "for", "and", "to", "is", "are", "with", "by", "on", "at", "as"}
+
+# OCR occasionally returns a few arbitrary characters (for example ``fff`` or
+# ``ff``).  Those strings are not candidate evidence.  This deliberately
+# conservative gate is shared by generation and validation: when it cannot
+# establish that the source contains meaningful human language, it must not
+# create a professional claim from it.
+_PLACEHOLDER_TOKENS = {"f", "ff", "fff", "test", "n/a", "na", "none", "null", "unknown", "-", "_"}
+
+
+def is_meaningful_evidence(value: str) -> bool:
+    normalized = _fold(value)
+    if not normalized or normalized in _PLACEHOLDER_TOKENS:
+        return False
+    words = re.findall(r"[^\W\d_]+", normalized, flags=re.UNICODE)
+    if not words:
+        return False
+    if all(word in _PLACEHOLDER_TOKENS or len(set(word)) == 1 for word in words):
+        return False
+    # Repeated single-token noise ("fff", "aaaa") and very short fragments
+    # cannot support skills, employment, education, dates, or responsibilities.
+    if len(words) == 1 and (len(words[0]) < 4 or len(set(words[0])) == 1):
+        return False
+    return len("".join(words)) >= 4 and any(len(word) >= 2 for word in words)
 
 
 def _match_token(token: str, source: str) -> bool:
@@ -140,6 +169,8 @@ def _match_token(token: str, source: str) -> bool:
 
 
 def _source_span(source_text: str, claim: str, snapshot_id: str) -> tuple[list[str], list[dict[str, Any]]]:
+    if not is_meaningful_evidence(source_text) or not is_meaningful_evidence(claim):
+        return [], []
     clean_claim = _fold(claim)
     if not clean_claim:
         return [], []
@@ -171,6 +202,8 @@ def validate_claim_contract(
     jd_text: str = "",
 ) -> dict[str, Any]:
     """Pure claim gate used by production validation and the 100-claim benchmark."""
+    if not is_meaningful_evidence(claim):
+        return {"status": "INSUFFICIENT_EVIDENCE", "evidence_ids": [], "spans": [], "reason": "Claim hoặc evidence là dữ liệu trống/placeholder; hãy bổ sung thông tin thực tế."}
     if confirmed:
         evidence_id = f"user-confirmed:{_hash(claim)[:24]}"
         return {
@@ -179,6 +212,8 @@ def validate_claim_contract(
             "spans": [{"evidence_id": evidence_id, "text": claim, "source": "user_confirmation"}],
             "reason": "Người dùng đã xác nhận trực tiếp claim mới.",
         }
+    if not is_meaningful_evidence(evidence_text or source_text):
+        return {"status": "INSUFFICIENT_EVIDENCE", "evidence_ids": [], "spans": [], "reason": "CV gốc không có bằng chứng đủ ý nghĩa để xác thực hoặc viết lại claim này."}
     if evidence_text:
         source_ids, source_spans = _source_span(source_text, evidence_text, snapshot_id)
         source_numbers = set(re.findall(r"\b\d+(?:[.,]\d+)?%?\b", evidence_text))
@@ -234,6 +269,22 @@ async def _generate_suggestions(
     started = perf_counter()
     content = enrich_parsed_cv_from_raw_text(content, snapshot.raw_text)
     before = _analysis_for(content, snapshot.raw_text, jd_snapshot, jd_title)
+    if not is_meaningful_evidence(snapshot.raw_text):
+        # Do not give an LLM a placeholder to elaborate, and do not manufacture
+        # a portfolio project from the JD.  The user needs to provide evidence
+        # first; preserving their original text is the safe output.
+        return [], {
+            "provider": "evidence_gate",
+            "model": "none",
+            "prompt_version": PROMPT_VERSION,
+            "fallback_used": True,
+            "latency_ms": round((perf_counter() - started) * 1000),
+        }, {"before": 0.0, "after_preview": 0.0}, {
+            "missing_skills": [],
+            "missing_sections": ["Insufficient evidence: hãy thay placeholder bằng kỹ năng, kinh nghiệm, dự án hoặc học vấn thực tế."],
+            "blueprint": None,
+            "insufficient_evidence": True,
+        }
     requirement_text = "\n".join(
         str(item.get("text") or item.get("requirement") or item.get("name") or "")
         for group in (before.get("requirements") or {}).values()
@@ -267,6 +318,27 @@ async def _generate_suggestions(
                 "source_spans": spans,
                 "decision": "pending",
                 "validator_status": "PENDING_USER_REVIEW",
+                "is_actionable": True,
+            }
+        )
+    for unavailable in result.get("no_safe_rewrites") or []:
+        original = str(unavailable.get("original") or "").strip()
+        evidence_ids, spans = _source_span(snapshot.raw_text, original, snapshot.id) if original else ([], [])
+        suggestions.append(
+            {
+                "id": f"unavailable-{len(suggestions) + 1}",
+                "block_id": unavailable.get("block_id") or "",
+                "section": unavailable.get("section") or "",
+                "original": original,
+                "proposed": "No safe rewrite available",
+                "final_text": "",
+                "reason": str(unavailable.get("reason") or "No evidence-backed rewrite is available."),
+                "jd_alignment": [],
+                "source_evidence_ids": evidence_ids,
+                "source_spans": spans,
+                "decision": "unavailable",
+                "validator_status": "NO_SAFE_REWRITE",
+                "is_actionable": False,
             }
         )
     preview_content = copy.deepcopy(content)
@@ -278,7 +350,7 @@ async def _generate_suggestions(
             "optimized_text": item["proposed"],
         }
         for item in suggestions
-        if item.get("block_id") and item.get("section")
+        if item.get("is_actionable") and item.get("block_id") and item.get("section")
     ]
     optimized_profile, _, _ = apply_cv_block_patches(_public_content(preview_content), patches)
     after = _analysis_for(optimized_profile, _content_to_raw_text("variant", optimized_profile), jd_snapshot, jd_title)
@@ -291,9 +363,9 @@ async def _generate_suggestions(
     }
     before_score = float(before.get("match_score") or 0)
     after_score = float(after.get("match_score") or 0)
-    if suggestions and after_score <= before_score:
-        after_score = min(92.0, round(before_score + min(35.0, len(suggestions) * 7.5 + 12.0), 1))
-    scores = {"before": before_score, "after_preview": max(before_score, after_score)}
+    # A rewrite cannot improve evidence coverage by itself.  Keep the score
+    # evidence-derived; presentation/formatting is reported independently.
+    scores = {"before": before_score, "after_preview": after_score}
 
     missing_skills = _as_strings(before.get("hard_skills_missing") or [])
     missing_sections = []
@@ -402,7 +474,9 @@ async def create_variant(
     jd = await db.scalar(
         select(JobDescription).where(
             JobDescription.id == payload.jd_id,
-            (JobDescription.is_system.is_(True)) | (JobDescription.created_by_user_id == user_id),
+            (JobDescription.is_system.is_(True))
+            | (JobDescription.is_published.is_(True))
+            | (JobDescription.created_by_user_id == user_id),
         )
     )
     if not jd:
@@ -430,8 +504,10 @@ async def create_variant(
         source_snapshot = await get_or_create_cv_snapshot(db, cv)
         content = _public_content(dict(source_snapshot.profile_json or {}))
         content = enrich_parsed_cv_from_raw_text(content, cv.raw_text or source_snapshot.raw_text)
+        content = normalize_cv_data(content, title=cv.title, source_text=cv.raw_text or source_snapshot.raw_text)
     else:
         content = _public_content(dict(payload.content or {}))
+        content = normalize_cv_data(content, title=payload.title)
         if payload.candidate_evidence_confirmed:
             cv = CV(
                 user_id=user_id,
@@ -538,6 +614,11 @@ async def save_revision(
 ) -> CVVariant:
     if variant.status == "PUBLISHED":
         raise ValueError("PUBLISHED_IMMUTABLE")
+    # User edits and accepted AI patches go through the identical structured
+    # contract as the initial snapshot and the PDF renderer.
+    private = {key: copy.deepcopy(value) for key, value in content.items() if str(key).startswith("_")}
+    content = normalize_cv_data(content, title=variant.title)
+    content.update(private)
     variant.revision_no += 1
     variant.content_json = copy.deepcopy(content)
     variant.status = "DRAFT"
@@ -588,15 +669,33 @@ def _accepted_suggestion_for(claim: str, content: dict[str, Any]) -> dict[str, A
 
 
 async def validate_variant(db: AsyncSession, variant: CVVariant, *, trace_id: str) -> tuple[dict[str, Any], bytes]:
-    content = dict(variant.content_json or {})
+    raw_content = dict(variant.content_json or {})
+    private = {key: copy.deepcopy(value) for key, value in raw_content.items() if str(key).startswith("_")}
+    content = normalize_cv_data(raw_content, title=variant.title)
+    content.update(private)
     source_snapshot = await db.get(CVSnapshot, variant.source_cv_snapshot_id) if variant.source_cv_snapshot_id else None
     jd_snapshot = await db.get(JDSnapshot, variant.target_jd_snapshot_id)
     template = await db.get(CVTemplate, variant.template_id)
-    source_text = source_snapshot.raw_text if source_snapshot else ""
     source_profile = dict(source_snapshot.profile_json or {}) if source_snapshot else {}
+    # A manually-entered CV can retain personal details in ``profile_json`` even
+    # when its OCR/raw text does not repeat them.  The structured snapshot is
+    # still immutable candidate evidence, so include it in the evidence corpus
+    # used by the claim gate.  Without this, valid fields such as ``full_name``
+    # are incorrectly reported as unsupported and prevent PDF export.
+    raw_source_text = source_snapshot.raw_text if source_snapshot else ""
+    source_text = raw_source_text
+    if source_profile:
+        source_text = "\n".join(
+            part for part in (source_text, _content_to_raw_text("Candidate profile", source_profile)) if part
+        )
     confirmed = {_fold(item) for item in content.get("_confirmed_claims") or []}
+    source_has_evidence = is_meaningful_evidence(raw_source_text) or any(
+        is_meaningful_evidence(value)
+        for _, value in extract_atomic_claims(source_profile)
+    )
 
     schema_errors = _schema_errors(content)
+    schema_errors.extend(normalized_cv_errors(source_profile, content))
     claim_rows: list[dict[str, Any]] = []
     entailment_errors: list[str] = []
     numeric_errors: list[str] = []
@@ -612,6 +711,13 @@ async def validate_variant(db: AsyncSession, variant: CVVariant, *, trace_id: st
             confirmed=_fold(claim) in confirmed,
             jd_text=jd_snapshot.raw_text if jd_snapshot else "",
         )
+        if not source_has_evidence:
+            result = {
+                "status": "INSUFFICIENT_EVIDENCE",
+                "evidence_ids": [],
+                "spans": [],
+                "reason": "CV gốc chỉ chứa dữ liệu trống/placeholder; không thể xác thực hoặc tạo claim.",
+            }
         if suggestion and source_snapshot:
             integrity_error = validate_resume_change(
                 original=evidence_text or "",
@@ -627,7 +733,7 @@ async def validate_variant(db: AsyncSession, variant: CVVariant, *, trace_id: st
             if integrity_error:
                 result = {**result, "status": "BLOCKED_ENTAILMENT", "reason": integrity_error}
         status = result["status"]
-        if status in {"BLOCKED_CONTRADICTION", "BLOCKED_ENTAILMENT", "BLOCKED_UNSUPPORTED"}:
+        if status in {"BLOCKED_CONTRADICTION", "BLOCKED_ENTAILMENT", "BLOCKED_UNSUPPORTED", "INSUFFICIENT_EVIDENCE"}:
             entailment_errors.append(f"{key}: {result['reason']}")
         if status == "BLOCKED_NUMERIC":
             numeric_errors.append(f"{key}: {result['reason']}")
@@ -639,23 +745,34 @@ async def validate_variant(db: AsyncSession, variant: CVVariant, *, trace_id: st
     for section in ("personal_info", "experience", "education"):
         if source_profile.get(section) and not content.get(section):
             protected_errors.append(f"Không được xóa toàn bộ section quan trọng: {section}.")
-    source_name = str((source_profile.get("personal_info") or {}).get("full_name") or "")
-    current_name = str((content.get("personal_info") or {}).get("full_name") or "")
-    if source_name and source_name != current_name:
-        protected_errors.append("Không được thay đổi họ tên ứng viên từ AI rewrite.")
+    source_personal_info = source_profile.get("personal_info") or {}
+    current_personal_info = content.get("personal_info") or {}
+    if isinstance(source_personal_info, dict) and isinstance(current_personal_info, dict):
+        protected_labels = {
+            "full_name": "họ tên ứng viên",
+            "email": "email",
+            "phone": "số điện thoại",
+            "location": "địa điểm",
+        }
+        for key, label in protected_labels.items():
+            source_value = str(source_personal_info.get(key) or "").strip()
+            current_value = str(current_personal_info.get(key) or "").strip()
+            if source_value and source_value != current_value:
+                protected_errors.append(f"Không được thay đổi {label} từ AI rewrite.")
 
     pdf_bytes = b""
     render_errors: list[str] = []
     render_meta: dict[str, Any] = {"pages": 0, "bytes": 0, "template": template.name if template else "unknown"}
     try:
+        active_tpl_name = str(content.get("template_name") or (template.name if template else "classic"))
         pdf_bytes = build_cv_pdf(
             title=variant.title,
             parsed=_public_content(content),
             accepted_suggestions=[],
-            template_name=template.name if template else "classic",
+            template_name=active_tpl_name,
         )
         page_count = len(re.findall(rb"/Type\s*/Page(?!s)", pdf_bytes))
-        render_meta = {"pages": page_count, "bytes": len(pdf_bytes), "template": template.name if template else "classic"}
+        render_meta = {"pages": page_count, "bytes": len(pdf_bytes), "template": active_tpl_name}
         if not pdf_bytes.startswith(b"%PDF") or page_count == 0:
             render_errors.append("PDF không hợp lệ hoặc không có trang.")
         if page_count > int((template.renderer_config if template else {}).get("max_pages", 2)):
@@ -663,20 +780,29 @@ async def validate_variant(db: AsyncSession, variant: CVVariant, *, trace_id: st
     except Exception as exc:
         render_errors.append(f"Không render được PDF: {exc}")
 
+    evidence_errors = [f"{row['key']}: {row['reason']}" for row in claim_rows if not row["status"].startswith("SUPPORTED")]
+    if not source_has_evidence:
+        evidence_errors.append("Insufficient evidence: CV gốc trống hoặc chỉ chứa placeholder. Hãy bổ sung thông tin thực tế trước khi tối ưu.")
     validators = [
         {"name": "schema", "passed": not schema_errors, "errors": schema_errors},
-        {"name": "atomic_claim", "passed": all(row["evidence_ids"] for row in claim_rows), "errors": [f"{row['key']}: {row['reason']}" for row in claim_rows if not row["evidence_ids"]]},
+        {"name": "atomic_claim", "passed": bool(claim_rows) and source_has_evidence and not evidence_errors, "errors": evidence_errors},
         {"name": "entailment", "passed": not entailment_errors, "errors": entailment_errors},
         {"name": "numeric_date", "passed": not numeric_errors, "errors": numeric_errors},
         {"name": "jd_leakage", "passed": not leakage_errors, "errors": leakage_errors},
         {"name": "protected_content", "passed": not protected_errors, "errors": protected_errors},
         {"name": "render_layout", "passed": not render_errors, "errors": render_errors},
     ]
-    passed = bool(source_snapshot) and all(item["passed"] for item in validators)
+    passed = bool(source_snapshot) and source_has_evidence and all(item["passed"] for item in validators)
     if not source_snapshot:
         validators[1]["passed"] = False
         validators[1]["errors"].append("Chưa có Candidate Evidence snapshot được người dùng xác nhận.")
     content_hash = _hash(_public_content(content))
+    evidence_coverage = 100 * sum(row["status"].startswith("SUPPORTED") for row in claim_rows) / len(claim_rows) if source_has_evidence and claim_rows else 0.0
+    jd_terms = list(dict.fromkeys(extract_known_terms(jd_snapshot.raw_text if jd_snapshot else "", TECH_SKILLS)))
+    jd_coverage = (
+        100 * sum(_fold(term) in _fold(source_text) for term in jd_terms) / len(jd_terms)
+        if jd_terms else evidence_coverage
+    )
     report = {
         "variant_id": variant.id,
         "status": "VALIDATED" if passed else "DRAFT_BLOCKED",
@@ -685,7 +811,13 @@ async def validate_variant(db: AsyncSession, variant: CVVariant, *, trace_id: st
         "validators": validators,
         "claims_total": len(claim_rows),
         "claims_supported": sum(row["status"].startswith("SUPPORTED") for row in claim_rows),
-        "claims_blocked": sum(row["status"].startswith("BLOCKED") for row in claim_rows),
+        "claims_blocked": sum(not row["status"].startswith("SUPPORTED") for row in claim_rows),
+        "ats_content_coverage": round(evidence_coverage, 1),
+        "jd_keyword_coverage": round(jd_coverage, 1),
+        # ATS is evidence coverage constrained by actual JD keyword coverage,
+        # never merely a successful PDF render or a rewrite count.
+        "ats_score": round(min(evidence_coverage, jd_coverage), 1),
+        "verification_status": "Verified source = 100%" if passed and claim_rows and all(row["status"].startswith("SUPPORTED") for row in claim_rows) else "Insufficient evidence" if not source_has_evidence else "Partially verified",
         "render": render_meta,
         "trace_id": trace_id,
         "validated_at": datetime.now(UTC).isoformat(),

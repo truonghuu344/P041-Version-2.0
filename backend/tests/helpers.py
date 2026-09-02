@@ -58,6 +58,44 @@ async def create_admin(
     return body["user"], {"Authorization": f"Bearer {body['access_token']}"}
 
 
+async def create_counselor(
+    client,
+    *,
+    email: str,
+    password: str = "Password123!",
+    full_name: str = "Test Counselor",
+) -> tuple[dict, dict[str, str]]:
+    """Counselors cannot self-register publicly anymore — provision like Admin does."""
+    async with TestingSessionLocal() as session:
+        counselor = User(
+            email=email.lower(),
+            hashed_password=get_password_hash(password),
+            full_name=full_name,
+            role="counselor",
+        )
+        session.add(counselor)
+        await session.commit()
+
+    login_response = await client.post(
+        "/api/v1/auth/login",
+        json={"email": email, "password": password},
+    )
+    assert login_response.status_code == 200, login_response.text
+    body = login_response.json()
+    return body["user"], {"Authorization": f"Bearer {body['access_token']}"}
+
+
+async def create_enterprise(
+    client,
+    *,
+    email: str,
+    password: str = "Password123!",
+    full_name: str = "Test Enterprise",
+) -> tuple[dict, dict[str, str]]:
+    """Enterprise accounts are retired — the recruiting party is now a Counselor."""
+    return await create_counselor(client, email=email, password=password, full_name=full_name)
+
+
 async def insert_cv(
     *,
     email: str,

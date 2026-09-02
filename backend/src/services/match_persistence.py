@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import re
 import uuid
 from datetime import UTC, datetime
@@ -32,12 +33,29 @@ from src.db.models import (
     RubricDefinition,
 )
 from src.services.cv_jd_pipeline import DEFAULT_RUBRIC
-from src.services.pipeline_context import PIPELINE_VERSION, get_or_create_cv_snapshot, get_or_create_jd_snapshot
+from src.services.pipeline_context import (
+    PIPELINE_VERSION,
+    get_or_create_cv_snapshot,
+    get_or_create_jd_snapshot,
+    insert_ignoring_conflict,
+)
+
+logger = logging.getLogger(__name__)
 
 
 def _evaluated_requirements(result: dict[str, Any]) -> list[dict[str, Any]]:
     groups = result.get("requirements") or {}
-    return [item for name in ("matched", "partial", "missing", "uncertain") for item in groups.get(name, [])]
+    items = [item for name in ("matched", "partial", "missing", "uncertain") for item in groups.get(name, [])]
+    seen: set[str] = set()
+    deduped: list[dict[str, Any]] = []
+    for item in items:
+        req_id = item.get("requirement_id")
+        if req_id and req_id in seen:
+            continue
+        if req_id:
+            seen.add(req_id)
+        deduped.append(item)
+    return deduped
 
 
 def _pages(raw_text: str) -> list[dict[str, Any]]:
@@ -77,6 +95,8 @@ def _pipeline_config_snapshot() -> dict[str, Any]:
         "evaluation": {
             "evidence_max_per_requirement": settings.cv_jd_evidence_max_per_requirement,
             "extraction_min_confidence": settings.cv_jd_extraction_min_confidence,
+            "declared_skill_score_cap": settings.cv_jd_declared_skill_score_cap,
+            "mandatory_failure_score_cap": settings.cv_jd_mandatory_failure_score_cap,
             "score_decimal_places": settings.cv_jd_score_decimal_places,
             "rating_thresholds": {
                 "poor_max": settings.cv_jd_rating_poor_max,
@@ -98,6 +118,7 @@ async def persist_match_artifacts(
     match: MatchRun | None = None,
 ) -> MatchRun:
     """Persist the complete score → criterion → requirement → evidence → chunk chain."""
+    logger.info("Staging match persistence match_id=%s", match.id if match else result.get("match_id"))
     result.setdefault("match_id", f"MATCH_{uuid.uuid4().hex.upper()[:12]}")
     result.setdefault("status", "COMPLETED")
     result.setdefault("final_score", float(result.get("match_score", 0.0)))
@@ -118,20 +139,31 @@ async def persist_match_artifacts(
     match.result_json = result
     match.completed_at = datetime.now(UTC) if result.get("status") == "COMPLETED" else None
     await db.flush()
+    logger.info("Match metadata staged match_id=%s", match.id)
 
     structured_cv = dict(result.get("structured_cv") or {})
     structured_jd = dict(result.get("structured_jd") or {})
     candidate_id = str(result.get("candidate_id") or structured_cv.get("candidate_id") or "")
-    if candidate_id and await db.get(CandidateArtifact, candidate_id) is None:
+    # Các artifact dưới đây có khoá TẤT ĐỊNH — hai lượt chấm điểm khác nhau
+    # tính ra cùng một khoá — nên "đọc xem có chưa rồi mới thêm" là một phép
+    # đọc-rồi-ghi: hai lượt song song cùng thấy "chưa có" rồi cùng INSERT.
+    # Ghi qua insert_ignoring_conflict để va chạm thành chuyện bình thường thay
+    # vì 500. Không rollback được ở đây: hàm này chạy trong transaction của
+    # caller (chỉ flush, không commit) nên rollback sẽ vứt luôn cả MatchRun và
+    # toàn bộ artifact đã ghi phía trên.
+    if candidate_id:
         profile = dict(structured_cv.get("candidate") or {})
-        db.add(
-            CandidateArtifact(
-                id=candidate_id,
-                user_id=user_id,
-                current_title=profile.get("current_title"),
-                location=profile.get("location"),
-                profile_json=profile,
-            )
+        await insert_ignoring_conflict(
+            db,
+            CandidateArtifact.__table__,
+            {
+                "id": candidate_id,
+                "user_id": user_id,
+                "current_title": profile.get("current_title"),
+                "location": profile.get("location"),
+                "profile_json": profile,
+            },
+            index_elements=["id"],
         )
 
     cv = await db.get(CV, cv_id)
@@ -143,80 +175,97 @@ async def persist_match_artifacts(
         match.jd_snapshot_id = jd_snapshot.id
         match.pipeline_version = PIPELINE_VERSION
     cv_document_id = f"DOC_CV_{match.cv_snapshot_id or cv_id}"
-    if await db.get(DocumentArtifact, cv_document_id) is None:
-        cv_raw_text = (cv_snapshot.raw_text if cv and jd else (cv.raw_text if cv else "")) or ""
-        db.add(
-            DocumentArtifact(
-                id=cv_document_id,
-                user_id=user_id,
-                document_type="CV",
-                source_entity_id=cv_id,
-                source_snapshot_id=match.cv_snapshot_id,
-                raw_text=cv_raw_text,
-                structured_json=(cv_snapshot.profile_json if cv and jd else (cv.parsed_json if cv else {})) or {},
-                normalized_json=structured_cv,
-                pages_json=(cv_snapshot.pages_json if cv and jd else _pages(cv_raw_text)),
-            )
-        )
+    cv_raw_text = (cv_snapshot.raw_text if cv and jd else (cv.raw_text if cv else "")) or ""
+    await insert_ignoring_conflict(
+        db,
+        DocumentArtifact.__table__,
+        {
+            "id": cv_document_id,
+            "user_id": user_id,
+            "document_type": "CV",
+            "source_entity_id": cv_id,
+            "source_snapshot_id": match.cv_snapshot_id,
+            "raw_text": cv_raw_text,
+            "structured_json": (cv_snapshot.profile_json if cv and jd else (cv.parsed_json if cv else {})) or {},
+            "normalized_json": structured_cv,
+            "pages_json": (cv_snapshot.pages_json if cv and jd else _pages(cv_raw_text)),
+        },
+        index_elements=["id"],
+    )
     jd_document_id = f"DOC_JD_{match.jd_snapshot_id or jd_id}"
-    if await db.get(DocumentArtifact, jd_document_id) is None:
-        jd_raw_text = (jd_snapshot.raw_text if cv and jd else (jd.requirements_text if jd else "")) or ""
-        db.add(
-            DocumentArtifact(
-                id=jd_document_id,
-                user_id=user_id,
-                document_type="JD",
-                source_entity_id=jd_id,
-                source_snapshot_id=match.jd_snapshot_id,
-                raw_text=jd_raw_text,
-                structured_json=(jd_snapshot.requirements_json if cv and jd else (jd.normalized_json if jd else {})) or {},
-                normalized_json=structured_jd,
-                pages_json=(jd_snapshot.pages_json if cv and jd else _pages(jd_raw_text)),
-            )
-        )
+    jd_raw_text = (jd_snapshot.raw_text if cv and jd else (jd.requirements_text if jd else "")) or ""
+    await insert_ignoring_conflict(
+        db,
+        DocumentArtifact.__table__,
+        {
+            "id": jd_document_id,
+            "user_id": user_id,
+            "document_type": "JD",
+            "source_entity_id": jd_id,
+            "source_snapshot_id": match.jd_snapshot_id,
+            "raw_text": jd_raw_text,
+            "structured_json": (jd_snapshot.requirements_json if cv and jd else (jd.normalized_json if jd else {})) or {},
+            "normalized_json": structured_jd,
+            "pages_json": (jd_snapshot.pages_json if cv and jd else _pages(jd_raw_text)),
+        },
+        index_elements=["id"],
+    )
 
     job_artifact_id = f"JOB_{jd_id}"
-    if await db.get(JobArtifact, job_artifact_id) is None:
-        job_data = dict(structured_jd.get("job") or {})
-        db.add(
-            JobArtifact(
-                id=job_artifact_id,
-                source_jd_id=jd_id,
-                title_original=(jd.title if jd else "") or str(job_data.get("title_original") or ""),
-                title_normalized=job_data.get("title_normalized"),
-                structured_json=structured_jd,
-            )
-        )
+    job_data = dict(structured_jd.get("job") or {})
+    await insert_ignoring_conflict(
+        db,
+        JobArtifact.__table__,
+        {
+            "id": job_artifact_id,
+            "source_jd_id": jd_id,
+            "title_original": (jd.title if jd else "") or str(job_data.get("title_original") or ""),
+            "title_normalized": job_data.get("title_normalized"),
+            "structured_json": structured_jd,
+        },
+        index_elements=["id"],
+    )
 
+    # RUBRIC_DEFAULT_V1 dùng chung cho MỌI người dùng, không gắn với ai — nên
+    # đây là chỗ dễ đụng nhất: bất kỳ hai lượt chấm điểm nào chạy chồng nhau
+    # cũng tranh đúng hàng này, kể cả của hai người dùng không liên quan.
     rubric_id = match.rubric_id or "RUBRIC_DEFAULT_V1"
-    if await db.get(RubricDefinition, rubric_id) is None:
-        db.add(
-            RubricDefinition(
-                id=rubric_id,
-                name="CV-JD Default Rubric",
-                version=str(result.get("versions", {}).get("rubric", "1.0")),
-                config_json={
-                    "criteria": [
-                        {"criterion_id": criterion_id, "weight": weight, "enabled": True}
-                        for criterion_id, weight in DEFAULT_RUBRIC.items()
-                    ]
+    created_rubric = await insert_ignoring_conflict(
+        db,
+        RubricDefinition.__table__,
+        {
+            "id": rubric_id,
+            "name": "CV-JD Default Rubric",
+            "version": str(result.get("versions", {}).get("rubric", "1.0")),
+            "config_json": {
+                "criteria": [
+                    {"criterion_id": criterion_id, "weight": weight, "enabled": True}
+                    for criterion_id, weight in DEFAULT_RUBRIC.items()
+                ]
+            },
+        },
+        index_elements=["id"],
+    )
+    if created_rubric:
+        # Chỉ lượt tạo được rubric mới ghi tiêu chí, giữ đúng hành vi cũ: lượt
+        # thua cuộc bỏ qua vì lượt thắng đã ghi trong cùng transaction của nó.
+        # Vẫn bỏ qua va chạm — uq_rubric_criterion là ràng buộc riêng, không
+        # phải khoá chính, nên ON CONFLICT phải nhắm đúng nó.
+        for criterion_id, weight in DEFAULT_RUBRIC.items():
+            await insert_ignoring_conflict(
+                db,
+                RubricCriterionDefinition.__table__,
+                {
+                    "rubric_id": rubric_id,
+                    "criterion_id": criterion_id,
+                    "weight": weight,
+                    "enabled": True,
+                    "config_json": {},
                 },
+                index_elements=["rubric_id", "criterion_id"],
             )
-        )
-        await db.flush()
-        db.add_all(
-            [
-                RubricCriterionDefinition(
-                    rubric_id=rubric_id,
-                    criterion_id=criterion_id,
-                    weight=weight,
-                    enabled=True,
-                    config_json={},
-                )
-                for criterion_id, weight in DEFAULT_RUBRIC.items()
-            ]
-        )
 
+    logger.info("Staging detailed match artifacts match_id=%s", match.id)
     db.add(CVProfileArtifact(match_id=match.id, candidate_id=candidate_id, payload_json=structured_cv))
     db.add_all(_cv_records(CVExperienceArtifact, match.id, structured_cv.get("experience", [])))
     db.add_all(_cv_records(CVProjectArtifact, match.id, structured_cv.get("projects", [])))
@@ -237,6 +286,10 @@ async def persist_match_artifacts(
     )
     embeddings = {item["chunk_id"]: item for item in result.get("embedding_records", [])}
 
+    raw_cv_chunks = result.get("cv_chunks", [])
+    seen_chunks: set[str] = set()
+    deduped_chunks = [c for c in raw_cv_chunks if c.get("chunk_id") and not (c["chunk_id"] in seen_chunks or seen_chunks.add(c["chunk_id"]))]
+
     db.add_all(
         [
             CVChunkArtifact(
@@ -253,7 +306,7 @@ async def persist_match_artifacts(
                 embedding_model=(embeddings.get(item["chunk_id"]) or {}).get("model"),
                 embedding_json=(embeddings.get(item["chunk_id"]) or {}).get("vector"),
             )
-            for item in result.get("cv_chunks", [])
+            for item in deduped_chunks
         ]
     )
     db.add_all(
@@ -272,6 +325,11 @@ async def persist_match_artifacts(
             for item in _evaluated_requirements(result)
         ]
     )
+
+    raw_retrieval = result.get("retrieval_results", [])
+    seen_retrieval: set[str] = set()
+    deduped_retrieval = [r for r in raw_retrieval if r.get("requirement_id") and not (r["requirement_id"] in seen_retrieval or seen_retrieval.add(r["requirement_id"]))]
+
     db.add_all(
         [
             RetrievalArtifact(
@@ -281,9 +339,14 @@ async def persist_match_artifacts(
                 semantic_results_json=item.get("semantic_results", []),
                 hybrid_results_json=item.get("hybrid_results", []),
             )
-            for item in result.get("retrieval_results", [])
+            for item in deduped_retrieval
         ]
     )
+
+    raw_evidence = result.get("evidence", [])
+    seen_evidence: set[str] = set()
+    deduped_evidence = [e for e in raw_evidence if e.get("evidence_id") and not (e["evidence_id"] in seen_evidence or seen_evidence.add(e["evidence_id"]))]
+
     db.add_all(
         [
             MatchEvidenceArtifact(
@@ -303,9 +366,42 @@ async def persist_match_artifacts(
                     "fusion_rank": item.get("fusion_rank"),
                 },
             )
-            for item in result.get("evidence", [])
+            for item in deduped_evidence
         ]
     )
+
+    raw_criteria = result.get("criterion_evaluations", [])
+    if not raw_criteria and result.get("groups"):
+        raw_criteria = [
+            {
+                "criterion_id": f"CRIT_{g.get('group', 'general').upper()}",
+                "raw_score": float(g.get("score") or 0.0),
+                "weight": float(g.get("weight") or 1.0),
+                "weighted_score": float(g.get("weighted_score") or 0.0),
+                "status": "SUPPORTED" if (g.get("score") or 0) >= 70 else ("PARTIALLY_SUPPORTED" if (g.get("score") or 0) >= 40 else "NOT_FOUND"),
+                "reason": f"Group evaluation for {g.get('group', 'general')}",
+                "requirement_ids": [r.get("requirement_id") for r in g.get("requirements", []) if r.get("requirement_id")],
+                "evidence_ids": [],
+            }
+            for g in result.get("groups", [])
+        ]
+    elif not raw_criteria and _evaluated_requirements(result):
+        eval_reqs = _evaluated_requirements(result)
+        raw_criteria = [
+            {
+                "criterion_id": "CRIT_REQUIREMENTS_MATCH",
+                "raw_score": float(result.get("match_score") or 0.0),
+                "weight": 1.0,
+                "weighted_score": float(result.get("match_score") or 0.0),
+                "status": "SUPPORTED" if (result.get("match_score") or 0) >= 70 else "PARTIALLY_SUPPORTED",
+                "reason": "Overall requirements evaluation",
+                "requirement_ids": [r.get("requirement_id") for r in eval_reqs if r.get("requirement_id")],
+                "evidence_ids": [],
+            }
+        ]
+    seen_criteria: set[str] = set()
+    deduped_criteria = [c for c in raw_criteria if c.get("criterion_id") and not (c["criterion_id"] in seen_criteria or seen_criteria.add(c["criterion_id"]))]
+
     db.add_all(
         [
             CriterionEvaluationArtifact(
@@ -319,7 +415,7 @@ async def persist_match_artifacts(
                 requirement_ids_json=item.get("requirement_ids", []),
                 evidence_ids_json=item.get("evidence_ids", []),
             )
-            for item in result.get("criteria", [])
+            for item in deduped_criteria
         ]
     )
     db.add(
@@ -330,4 +426,5 @@ async def persist_match_artifacts(
             result_json=result,
         )
     )
+    logger.info("Detailed match artifacts staged match_id=%s", match.id)
     return match

@@ -23,29 +23,44 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
 
-# Default 5-pillar rubric weights
+# Default 6-group rubric weights
 DEFAULT_RUBRIC_WEIGHTS: dict[str, float] = {
-    "CRIT_REQUIRED_SKILL": 35.0,
-    "CRIT_EXPERIENCE": 30.0,
+    "CRIT_SKILLS": 35.0,
+    "CRIT_RESPONSIBILITIES": 20.0,
+    "CRIT_EXPERIENCE": 20.0,
     "CRIT_EDUCATION": 10.0,
-    "CRIT_PREFERRED_SKILL": 10.0,
-    "CRIT_DOMAIN": 15.0,
+    "CRIT_DOMAIN": 10.0,
+    "CRIT_CERTIFICATIONS_OTHER": 5.0,
 }
 
 # Standard name aliases to support flexible input representations
 CRITERION_ALIASES: dict[str, str] = {
-    "required_skills": "CRIT_REQUIRED_SKILL",
-    "required_skill": "CRIT_REQUIRED_SKILL",
-    "skills": "CRIT_REQUIRED_SKILL",
+    "skills": "CRIT_SKILLS",
+    "skill": "CRIT_SKILLS",
+    "required_skills": "CRIT_SKILLS",
+    "required_skill": "CRIT_SKILLS",
+    "must_have_skills": "CRIT_SKILLS",
+    "preferred_skills": "CRIT_SKILLS",
+    "preferred_skill": "CRIT_SKILLS",
+    "nice_to_have_skills": "CRIT_SKILLS",
+    "nice_to_have": "CRIT_SKILLS",
+    "CRIT_SKILLS": "CRIT_SKILLS",
+    "CRIT_REQUIRED_SKILL": "CRIT_SKILLS",
+    "CRIT_PREFERRED_SKILL": "CRIT_SKILLS",
+    "responsibilities_task_fit": "CRIT_RESPONSIBILITIES",
+    "responsibilities": "CRIT_RESPONSIBILITIES",
+    "experience_seniority": "CRIT_EXPERIENCE",
     "experience": "CRIT_EXPERIENCE",
     "relevant_experience": "CRIT_EXPERIENCE",
     "education": "CRIT_EDUCATION",
-    "preferred_skills": "CRIT_PREFERRED_SKILL",
-    "preferred_skill": "CRIT_PREFERRED_SKILL",
-    "nice_to_have": "CRIT_PREFERRED_SKILL",
+    "domain_industry": "CRIT_DOMAIN",
     "domain": "CRIT_DOMAIN",
     "domain_responsibilities": "CRIT_DOMAIN",
-    "responsibilities": "CRIT_DOMAIN",
+    "certifications_languages_other": "CRIT_CERTIFICATIONS_OTHER",
+    "certifications": "CRIT_CERTIFICATIONS_OTHER",
+    "certification": "CRIT_CERTIFICATIONS_OTHER",
+    "languages": "CRIT_CERTIFICATIONS_OTHER",
+    "other": "CRIT_CERTIFICATIONS_OTHER",
 }
 
 
@@ -121,24 +136,65 @@ def calculate_fit_score(
     custom_weights: Mapping[str, float] | None = None,
     decimal_places: int = 1,
 ) -> FitScoreResult:
-    """Calculate the rubric-weighted Fit Score with dynamic active-weight normalization.
+    """Calculate the Fit Score.
 
-    Parameters
-    ----------
-    criteria_input:
-        Criteria evaluation records, Match Engine result, or mapping of
-        criterion_id -> raw_score (0.0 - 100.0). Only present/active criteria
-        are considered.
-    custom_weights:
-        Optional custom base weights for criteria. Defaults to the standard 5-pillar rubric.
-    decimal_places:
-        Number of decimal places for score rounding (default 1).
-
-    Returns
-    -------
-    FitScoreResult
-        Contains raw_fit_score, display_fit_score, and per-criterion breakdown.
+    If the input is from the canonical Match Engine (containing requirement-derived criteria with weights),
+    those dynamic weights and scores are preserved directly.
+    Otherwise, falls back to rubric normalization for legacy raw score dictionaries.
     """
+    # 1. Canonical Match Engine result or dict with precomputed dynamic criteria
+    criteria_list = None
+    direct_score = None
+    if hasattr(criteria_input, "result_json") and isinstance(criteria_input.result_json, Mapping):
+        criteria_list = criteria_input.result_json.get("criteria", [])
+        direct_score = criteria_input.result_json.get("final_score") or criteria_input.result_json.get("match_score")
+    elif isinstance(criteria_input, Mapping) and "result_json" in criteria_input and isinstance(criteria_input["result_json"], Mapping):
+        res = criteria_input["result_json"]
+        criteria_list = res.get("criteria", [])
+        direct_score = res.get("final_score") or res.get("match_score")
+    elif isinstance(criteria_input, Mapping) and "criteria" in criteria_input:
+        criteria_list = criteria_input.get("criteria", [])
+        direct_score = criteria_input.get("final_score") or criteria_input.get("match_score")
+    elif isinstance(criteria_input, Sequence) and not isinstance(criteria_input, (str, bytes)):
+        criteria_list = criteria_input
+
+    if (
+        criteria_list is not None
+        and isinstance(criteria_list, Sequence)
+        and len(criteria_list) > 0
+        and all(isinstance(c, Mapping) and "weight" in c for c in criteria_list)
+        and custom_weights is None
+    ):
+        breakdown: list[CriterionBreakdown] = []
+        active_weights: dict[str, float] = {}
+        total_raw = 0.0
+        for c in criteria_list:
+            cid = _canonical_criterion_id(str(c.get("criterion_id") or c.get("group") or c.get("id") or ""))
+            w = float(c.get("weight") or 0.0)
+            raw = float(c.get("raw_score") if "raw_score" in c else (c.get("score") or 0.0))
+            weighted = float(c.get("weighted_score") if "weighted_score" in c else (raw * w / 100.0))
+            total_raw += weighted
+            active_weights[cid] = round(w, 4)
+            breakdown.append(
+                CriterionBreakdown(
+                    criterion_id=cid,
+                    raw_score=round(raw, decimal_places),
+                    base_weight=round(w, decimal_places),
+                    normalized_weight=round(w, 4),
+                    weighted_score=round(weighted, decimal_places),
+                    enabled=True,
+                )
+            )
+        final_val = float(direct_score) if direct_score is not None else total_raw
+        clamped = min(100.0, max(0.0, final_val))
+        return FitScoreResult(
+            raw_fit_score=round(clamped, 4),
+            display_fit_score=round(clamped, decimal_places),
+            breakdown=breakdown,
+            active_weights=active_weights,
+        )
+
+    # 2. Legacy fallback for raw dictionary mapping
     raw_scores = _extract_criterion_scores(criteria_input)
     base_rubric = dict(custom_weights or DEFAULT_RUBRIC_WEIGHTS)
 

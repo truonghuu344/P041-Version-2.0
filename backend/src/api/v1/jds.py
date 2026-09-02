@@ -1,4 +1,5 @@
 import hashlib
+import logging
 import re
 import uuid
 from pathlib import Path
@@ -9,19 +10,21 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config import get_settings
 from src.core.errors import PipelineError, pipeline_error_from_message
-from src.core.security import get_current_user, require_role
+from src.core.security import get_current_user, get_optional_current_user, require_role
 from src.db.database import get_db
-from src.db.models import JobDescription, User
+from src.db.models import JobDescription, PartnerOrganization, User
 from src.models.schemas import JDCreate, JDOut
 from src.services.cv_jd_matching import parse_job_description
 from src.services.cv_parser import extract_text_from_document, sanitize_extracted_text
 from src.services.file_security import FileSecurityError, scan_uploaded_file
-from src.services.job_catalog import load_enterprise_job_catalog
+from src.services.jd_workflow import attach_jd_provenance
+from src.services.job_catalog import canonicalize_job_location, load_enterprise_job_catalog
 from src.services.object_storage import ObjectStorageError, delete_async, put_bytes_async
 
 router = APIRouter(prefix="/jds", tags=["Job Description Management"])
+logger = logging.getLogger(__name__)
 
-SUPPORTED_JD_EXTENSIONS = {".pdf", ".docx", ".txt", ".jpg", ".jpeg", ".png"}
+SUPPORTED_JD_EXTENSIONS = {".pdf", ".docx", ".txt", ".jpg", ".jpeg", ".png", ".webp"}
 
 SYSTEM_JD_SEEDS = [
     (
@@ -169,7 +172,12 @@ async def _save_private_jd(
     requirements_text: str,
     file_path: str | None = None,
     source_file_hash: str | None = None,
+    file_bytes: bytes | None = None,
+    filename: str = "",
+    content_type: str = "",
+    metadata: dict | None = None,
 ) -> JobDescription:
+    location = canonicalize_job_location(location) or "Chưa xác định"
     requirements_hash = _content_hash(requirements_text)
     duplicate = await _find_duplicate_private_jd(
         db,
@@ -179,16 +187,31 @@ async def _save_private_jd(
     )
     if duplicate is not None:
         return duplicate
-    normalized = parse_job_description(
+    from src.services.jd_parser import parse_structured_jd
+
+    normalized = await parse_structured_jd(
         title=title,
         requirements_text=requirements_text,
-        metadata={"company": company, "location": location},
+        metadata={"company": company, "location": location, **(metadata or {})},
+        file_bytes=file_bytes,
+        filename=filename,
+        content_type=content_type,
     )
+    final_title = str(normalized.get("title") or title).strip() or title
+    normalized = attach_jd_provenance(
+        normalized,
+        creator=current_user,
+        creation_source=f"{current_user.role}_upload" if file_bytes is not None else f"{current_user.role}_manual",
+    )
+    if metadata:
+        for k, v in metadata.items():
+            if v is not None:
+                normalized[k] = v
     normalized["requirements_content_hash"] = requirements_hash
     if source_file_hash:
         normalized["source_file_hash"] = source_file_hash
     new_jd = JobDescription(
-        title=title,
+        title=final_title,
         company=company or "Cá nhân / Công ty ngoài",
         location=location or "Chưa xác định",
         requirements_text=requirements_text,
@@ -200,13 +223,75 @@ async def _save_private_jd(
     db.add(new_jd)
     await db.commit()
     await db.refresh(new_jd)
+
+    # Tự động đồng bộ hóa Vector Embedding cho Chatbot Cascading RAG
+    try:
+        from src.services.assistant_rag import get_assistant_rag_service
+
+        rag_service = get_assistant_rag_service()
+        await rag_service.index_jd(
+            session=db,
+            user_id=current_user.id,
+            jd_id=new_jd.id,
+            title=new_jd.title,
+            company=new_jd.company,
+            requirements_text=new_jd.requirements_text,
+            normalized_json=new_jd.normalized_json,
+        )
+        await db.commit()
+    except Exception:
+        # Logging lỗi mà không làm gián đoạn luồng chính của người dùng
+        pass
+
     return new_jd
+
+
+async def _update_private_jd(
+    *,
+    jd: JobDescription,
+    current_user: User,
+    title: str,
+    company: str,
+    location: str,
+    requirements_text: str,
+    metadata: dict | None = None,
+) -> JobDescription:
+    """Re-parse edited private JD content with the same parser used on upload."""
+    from src.services.jd_parser import parse_structured_jd
+
+    canonical_location = canonicalize_job_location(location) or "Chưa xác định"
+    normalized = await parse_structured_jd(
+        title=title,
+        requirements_text=requirements_text,
+        metadata={"company": company, "location": canonical_location, **(metadata or {})},
+    )
+    final_title = str(normalized.get("title") or title).strip() or title
+    normalized = attach_jd_provenance(
+        normalized,
+        creator=current_user,
+        creation_source=f"{current_user.role}_manual",
+    )
+    if metadata:
+        for k, v in metadata.items():
+            if v is not None:
+                normalized[k] = v
+    normalized["requirements_content_hash"] = _content_hash(requirements_text)
+    previous_metadata = jd.normalized_json or {}
+    if previous_metadata.get("source_file_hash"):
+        normalized["source_file_hash"] = previous_metadata["source_file_hash"]
+
+    jd.title = final_title
+    jd.company = company or "Cá nhân / Công ty ngoài"
+    jd.location = canonical_location
+    jd.requirements_text = requirements_text
+    jd.normalized_json = normalized
+    return jd
 
 
 @router.get("", response_model=list[JDOut])
 async def list_jds(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User | None = Depends(get_optional_current_user),
 ) -> list[JDOut]:
     """Danh sách Job Description (gồm JD mặc định của hệ thống & JD cá nhân tự dán)."""
     # Bảo đảm DB cũ lẫn DB mới đều có đủ thư viện 15 JD demo.
@@ -233,29 +318,53 @@ async def list_jds(
         db.add_all(missing_jds)
         await db.commit()
 
+    conditions = [
+        JobDescription.is_system.is_(True),
+        JobDescription.is_published.is_(True),
+    ]
+    if current_user is not None:
+        conditions.append(JobDescription.created_by_user_id == current_user.id)
+
     stmt = (
         select(JobDescription)
-        .where(
-            or_(
-                JobDescription.is_system.is_(True),
-                JobDescription.is_published.is_(True),
-                JobDescription.created_by_user_id == current_user.id,
-            )
-        )
+        .where(or_(*conditions))
         .order_by(JobDescription.created_at.desc())
     )
     result = await db.execute(stmt)
-    return result.scalars().all()
+    return list(result.scalars().all())
+
+
+@router.get("/mine", response_model=list[JDOut])
+async def list_my_jds(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> list[JDOut]:
+    """Return private drafts and published JDs created by the signed-in user."""
+    result = await db.execute(
+        select(JobDescription)
+        .where(
+            JobDescription.created_by_user_id == current_user.id,
+            JobDescription.is_system.is_(False),
+        )
+        .order_by(JobDescription.created_at.desc())
+    )
+    return list(result.scalars().all())
 
 
 @router.post("/catalog/{source_id}/select", response_model=JDOut)
 async def select_catalog_jd(
     source_id: str,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User | None = Depends(get_optional_current_user),
 ) -> JDOut:
-    """Chọn một JD doanh nghiệp trong data/jds và đưa vào luồng phân tích CV."""
+    """Chọn một JD doanh nghiệp trong database hoặc data/jds và đưa vào luồng phân tích CV."""
     del current_user  # Xác thực vẫn bắt buộc; JD được lưu là dữ liệu hệ thống dùng chung.
+
+    # 1. Kiểm tra nếu source_id là ID của JD đã có sẵn trong database
+    existing_db_jd = await db.execute(select(JobDescription).where(JobDescription.id == source_id))
+    db_jd = existing_db_jd.scalar_one_or_none()
+    if db_jd:
+        return db_jd
     catalog_item = next(
         (
             item
@@ -265,7 +374,7 @@ async def select_catalog_jd(
         None,
     )
     if not catalog_item:
-        raise HTTPException(status_code=404, detail="Không tìm thấy JD trong data/jds.")
+        raise HTTPException(status_code=404, detail="Không tìm thấy JD trong data/jds hoặc database.")
 
     existing_result = await db.execute(select(JobDescription).where(JobDescription.is_system.is_(True)))
     for existing in existing_result.scalars().all():
@@ -316,14 +425,86 @@ async def create_custom_jd(
     current_user: User = Depends(get_current_user),
 ) -> JDOut:
     """Tạo JD tùy chỉnh từ công ty bên ngoài bằng cách dán nội dung."""
-    return await _save_private_jd(
+    metadata = dict(payload.metadata or {})
+    company = payload.company or ""
+    location = payload.location or ""
+    if current_user.role == "counselor":
+        company_id = str(metadata.get("company_id") or "").strip()
+        if not company_id:
+            logger.warning("Counselor %s attempted to create custom JD without company_id", current_user.id)
+            raise HTTPException(status_code=422, detail="Vui lòng chọn doanh nghiệp đối tác cho JD.")
+        partner = await db.get(PartnerOrganization, company_id)
+        if not partner:
+            logger.warning("Counselor %s provided unknown company_id: %s", current_user.id, company_id)
+            raise HTTPException(status_code=404, detail="Không tìm thấy doanh nghiệp đối tác.")
+        metadata["company_id"] = partner.id
+        metadata["company_name"] = partner.name
+        metadata["company_logo"] = partner.logo
+        metadata["creator_role"] = "counselor"
+        metadata["creator_user_id"] = current_user.id
+        company = partner.name
+        location = location or partner.location
+    jd = await _save_private_jd(
         db=db,
         current_user=current_user,
         title=payload.title,
-        company=payload.company or "",
-        location=payload.location or "",
+        company=company,
+        location=location,
         requirements_text=payload.requirements_text,
+        metadata=metadata,
     )
+    logger.info("Created custom JD %s for user %s (role=%s, title=%s, company=%s)", jd.id, current_user.id, current_user.role, jd.title, jd.company)
+    return jd
+
+
+@router.put("/{jd_id}", response_model=JDOut)
+async def update_counselor_jd(
+    jd_id: str,
+    payload: JDCreate,
+    db: AsyncSession = Depends(get_db),
+    counselor: User = Depends(require_role(["counselor"])),
+) -> JDOut:
+    """Persist Counselor edits to an uploaded draft using the shared JD parser."""
+    result = await db.execute(
+        select(JobDescription).where(
+            JobDescription.id == jd_id,
+            JobDescription.created_by_user_id == counselor.id,
+            JobDescription.is_system.is_(False),
+        )
+    )
+    jd = result.scalar_one_or_none()
+    if not jd:
+        logger.warning("Counselor %s update JD %s failed: JD not found or not owned", counselor.id, jd_id)
+        raise HTTPException(status_code=404, detail="JD không thuộc tài khoản hiện tại.")
+
+    metadata = dict(payload.metadata or {})
+    company_id = str(metadata.get("company_id") or "").strip()
+    if not company_id:
+        logger.warning("Counselor %s update JD %s failed: missing company_id", counselor.id, jd_id)
+        raise HTTPException(status_code=422, detail="Vui lòng chọn doanh nghiệp đối tác cho JD.")
+    partner = await db.get(PartnerOrganization, company_id)
+    if not partner:
+        logger.warning("Counselor %s update JD %s failed: unknown partner %s", counselor.id, jd_id, company_id)
+        raise HTTPException(status_code=404, detail="Không tìm thấy doanh nghiệp đối tác.")
+
+    metadata["company_id"] = partner.id
+    metadata["company_name"] = partner.name
+    metadata["company_logo"] = partner.logo
+    metadata["creator_role"] = "counselor"
+    metadata["creator_user_id"] = counselor.id
+    await _update_private_jd(
+        jd=jd,
+        current_user=counselor,
+        title=payload.title,
+        company=partner.name,
+        location=payload.location or partner.location,
+        requirements_text=payload.requirements_text,
+        metadata=metadata,
+    )
+    await db.commit()
+    await db.refresh(jd)
+    logger.info("Counselor %s updated JD %s (%s) for partner %s (location=%s)", counselor.id, jd.id, jd.title, partner.name, jd.location)
+    return jd
 
 
 @router.post("/upload", response_model=JDOut, status_code=status.HTTP_201_CREATED)
@@ -404,6 +585,9 @@ async def upload_jd(
             requirements_text=requirements_text,
             file_path=stored_file_path,
             source_file_hash=source_file_hash,
+            file_bytes=content,
+            filename=filename,
+            content_type=file.content_type or "",
         )
     except ObjectStorageError as exc:
         raise PipelineError("STORAGE_001", "Không thể lưu file JD. Vui lòng thử lại sau.", status_code=503) from exc
@@ -413,24 +597,51 @@ async def upload_jd(
 
 
 @router.patch("/{jd_id}/publish", response_model=JDOut)
-async def publish_enterprise_jd(
+async def publish_owned_jd(
     jd_id: str,
     db: AsyncSession = Depends(get_db),
-    enterprise: User = Depends(require_role(["enterprise"])),
+    owner: User = Depends(require_role(["enterprise", "counselor"])),
 ) -> JDOut:
+    logger.info("Publishing JD %s requested by user %s (role=%s)", jd_id, owner.id, owner.role)
     result = await db.execute(
         select(JobDescription).where(
             JobDescription.id == jd_id,
-            JobDescription.created_by_user_id == enterprise.id,
+            JobDescription.created_by_user_id == owner.id,
             JobDescription.is_system.is_(False),
         )
     )
     jd = result.scalar_one_or_none()
     if not jd:
-        raise HTTPException(status_code=404, detail="JD không thuộc doanh nghiệp hiện tại.")
+        logger.warning("Publish JD %s failed: not found or not owned by user %s (role=%s)", jd_id, owner.id, owner.role)
+        raise HTTPException(status_code=404, detail="JD không thuộc tài khoản hiện tại.")
     jd.is_published = True
     await db.commit()
     await db.refresh(jd)
+    norm = jd.normalized_json or {}
+    logger.info(
+        "JD %s successfully published (title=%s, company=%s, location=%s, creator_role=%s, company_id=%s)",
+        jd.id,
+        jd.title,
+        jd.company,
+        jd.location,
+        norm.get("creator_role"),
+        norm.get("company_id"),
+    )
+
+    try:
+        from src.services.notification_service import NotificationService
+        await NotificationService.trigger_job_published(
+            db=db,
+            job_id=jd.id,
+            job_title=jd.title,
+            company_name=jd.company or owner.full_name or "Tổ chức",
+            enterprise_user_id=owner.id,
+            job_tags=norm.get("required_skills") or norm.get("tags") or [],
+            job_location=jd.location,
+        )
+    except Exception as exc:
+        logger.warning("trigger_job_published error on publish_owned_jd: %s", exc)
+
     return jd
 
 
@@ -438,23 +649,33 @@ async def publish_enterprise_jd(
 async def get_jd_detail(
     jd_id: str,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User | None = Depends(get_optional_current_user),
 ) -> JDOut:
     """Lấy chi tiết Job Description."""
+    conditions = [
+        JobDescription.is_system.is_(True),
+        JobDescription.is_published.is_(True),
+    ]
+    if current_user is not None:
+        conditions.append(JobDescription.created_by_user_id == current_user.id)
+
     stmt = select(JobDescription).where(
         JobDescription.id == jd_id,
-        or_(
-            JobDescription.is_system.is_(True),
-            JobDescription.is_published.is_(True),
-            JobDescription.created_by_user_id == current_user.id,
-        ),
+        or_(*conditions),
     )
     result = await db.execute(stmt)
     jd = result.scalar_one_or_none()
 
     if not jd:
+        logger.warning(
+            "get_jd_detail failed: JD %s not found or access denied for user %s (role=%s)",
+            jd_id,
+            current_user.id if current_user else "anonymous",
+            current_user.role if current_user else "guest",
+        )
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Không tìm thấy Job Description được yêu cầu",
         )
     return jd
+

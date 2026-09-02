@@ -1,0 +1,876 @@
+{
+  "metadata": {
+    "timestamp_utc": "2026-08-29T08:18:28.147642+00:00",
+    "pipeline_version": "1.0",
+    "total_cases": 2,
+    "real_cases": 1,
+    "synthetic_cases": 1
+  },
+  "overall_metrics": {
+    "cases_count": 2,
+    "retrieval_layers": {
+      "bm25": {
+        "recall_at_1": 0.0,
+        "recall_at_3": 0.8571,
+        "recall_at_5": 0.9286,
+        "mrr": 0.4524,
+        "ndcg_at_5": 0.5866,
+        "evaluated_queries": 7
+      },
+      "semantic": {
+        "recall_at_1": 0.0714,
+        "recall_at_3": 0.0714,
+        "recall_at_5": 0.0714,
+        "mrr": 0.1429,
+        "ndcg_at_5": 0.0876,
+        "evaluated_queries": 7
+      },
+      "hybrid": {
+        "recall_at_1": 0.0714,
+        "recall_at_3": 0.8571,
+        "recall_at_5": 0.9286,
+        "mrr": 0.5238,
+        "ndcg_at_5": 0.6117,
+        "evaluated_queries": 7
+      },
+      "final": {
+        "recall_at_1": 0.7143,
+        "recall_at_3": 0.9286,
+        "recall_at_5": 0.9286,
+        "mrr": 1.0,
+        "ndcg_at_5": 0.9103,
+        "evaluated_queries": 7
+      }
+    },
+    "evidence_relation": {
+      "accuracy": 0.875,
+      "precision_macro": 0.75,
+      "recall_macro": 0.9286,
+      "f1_macro": 0.7949,
+      "f1_weighted": 0.891,
+      "total_samples": 8,
+      "per_class": {
+        "DIRECT": {
+          "precision": 1.0,
+          "recall": 0.8571,
+          "f1": 0.9231,
+          "support": 7,
+          "true_positive": 6,
+          "false_positive": 0,
+          "false_negative": 1
+        },
+        "EQUIVALENT": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0,
+          "true_positive": 0,
+          "false_positive": 0,
+          "false_negative": 0
+        },
+        "INFERRED": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0,
+          "true_positive": 0,
+          "false_positive": 0,
+          "false_negative": 0
+        },
+        "ADJACENT": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0,
+          "true_positive": 0,
+          "false_positive": 0,
+          "false_negative": 0
+        },
+        "WEAK_EVIDENCE": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0,
+          "true_positive": 0,
+          "false_positive": 0,
+          "false_negative": 0
+        },
+        "NO_EVIDENCE": {
+          "precision": 0.5,
+          "recall": 1.0,
+          "f1": 0.6667,
+          "support": 1,
+          "true_positive": 1,
+          "false_positive": 1,
+          "false_negative": 0
+        }
+      },
+      "confusion_matrix": {
+        "DIRECT": {
+          "DIRECT": 6,
+          "EQUIVALENT": 0,
+          "INFERRED": 0,
+          "ADJACENT": 0,
+          "WEAK_EVIDENCE": 0,
+          "NO_EVIDENCE": 1
+        },
+        "EQUIVALENT": {
+          "DIRECT": 0,
+          "EQUIVALENT": 0,
+          "INFERRED": 0,
+          "ADJACENT": 0,
+          "WEAK_EVIDENCE": 0,
+          "NO_EVIDENCE": 0
+        },
+        "INFERRED": {
+          "DIRECT": 0,
+          "EQUIVALENT": 0,
+          "INFERRED": 0,
+          "ADJACENT": 0,
+          "WEAK_EVIDENCE": 0,
+          "NO_EVIDENCE": 0
+        },
+        "ADJACENT": {
+          "DIRECT": 0,
+          "EQUIVALENT": 0,
+          "INFERRED": 0,
+          "ADJACENT": 0,
+          "WEAK_EVIDENCE": 0,
+          "NO_EVIDENCE": 0
+        },
+        "WEAK_EVIDENCE": {
+          "DIRECT": 0,
+          "EQUIVALENT": 0,
+          "INFERRED": 0,
+          "ADJACENT": 0,
+          "WEAK_EVIDENCE": 0,
+          "NO_EVIDENCE": 0
+        },
+        "NO_EVIDENCE": {
+          "DIRECT": 0,
+          "EQUIVALENT": 0,
+          "INFERRED": 0,
+          "ADJACENT": 0,
+          "WEAK_EVIDENCE": 0,
+          "NO_EVIDENCE": 1
+        }
+      }
+    },
+    "evidence_relation_diagnostics": {
+      "no_evidence_false_positive_rate": 0.0,
+      "no_evidence_false_positives": 0,
+      "no_evidence_total": 1,
+      "evidence_false_negative_rate": 0.1429,
+      "evidence_false_negatives": 1,
+      "evidence_total": 7,
+      "inferred_f1": 0.0,
+      "adjacent_f1": 0.0
+    },
+    "requirement_outcome": {
+      "accuracy": 1.0,
+      "precision_macro": 1.0,
+      "recall_macro": 1.0,
+      "f1_macro": 1.0,
+      "f1_weighted": 1.0,
+      "total_samples": 8,
+      "per_class": {
+        "SATISFIED": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "support": 6,
+          "true_positive": 6,
+          "false_positive": 0,
+          "false_negative": 0
+        },
+        "PARTIAL": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0,
+          "true_positive": 0,
+          "false_positive": 0,
+          "false_negative": 0
+        },
+        "UNSATISFIED": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "support": 2,
+          "true_positive": 2,
+          "false_positive": 0,
+          "false_negative": 0
+        },
+        "UNKNOWN": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0,
+          "true_positive": 0,
+          "false_positive": 0,
+          "false_negative": 0
+        }
+      },
+      "confusion_matrix": {
+        "SATISFIED": {
+          "SATISFIED": 6,
+          "PARTIAL": 0,
+          "UNSATISFIED": 0,
+          "UNKNOWN": 0
+        },
+        "PARTIAL": {
+          "SATISFIED": 0,
+          "PARTIAL": 0,
+          "UNSATISFIED": 0,
+          "UNKNOWN": 0
+        },
+        "UNSATISFIED": {
+          "SATISFIED": 0,
+          "PARTIAL": 0,
+          "UNSATISFIED": 2,
+          "UNKNOWN": 0
+        },
+        "UNKNOWN": {
+          "SATISFIED": 0,
+          "PARTIAL": 0,
+          "UNSATISFIED": 0,
+          "UNKNOWN": 0
+        }
+      }
+    },
+    "critical_gap": {
+      "critical_gap_precision": 1.0,
+      "critical_gap_recall": 1.0,
+      "critical_gap_f1": 1.0,
+      "true_positives": 1,
+      "false_positives": 0,
+      "false_negatives": 0,
+      "total_critical_gaps": 1
+    },
+    "boolean_groups": {
+      "boolean_group_accuracy": 0.0,
+      "any_of_accuracy": 0.0,
+      "all_of_accuracy": 0.0,
+      "total_groups": 0,
+      "any_of_total": 0,
+      "all_of_total": 0
+    },
+    "rating_correlation": {
+      "pearson_r": 1.0,
+      "spearman_rho": 1.0,
+      "mae": 4.95,
+      "rmse": 5.08,
+      "samples": 2
+    }
+  },
+  "by_origin": {
+    "REAL": {
+      "cases_count": 1,
+      "retrieval_layers": {
+        "bm25": {
+          "recall_at_1": 0.0,
+          "recall_at_3": 1.0,
+          "recall_at_5": 1.0,
+          "mrr": 0.5,
+          "ndcg_at_5": 0.6309,
+          "evaluated_queries": 2
+        },
+        "semantic": {
+          "recall_at_1": 0.0,
+          "recall_at_3": 0.0,
+          "recall_at_5": 0.0,
+          "mrr": 0.0,
+          "ndcg_at_5": 0.0,
+          "evaluated_queries": 2
+        },
+        "hybrid": {
+          "recall_at_1": 0.0,
+          "recall_at_3": 1.0,
+          "recall_at_5": 1.0,
+          "mrr": 0.4167,
+          "ndcg_at_5": 0.5655,
+          "evaluated_queries": 2
+        },
+        "final": {
+          "recall_at_1": 1.0,
+          "recall_at_3": 1.0,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_5": 1.0,
+          "evaluated_queries": 2
+        }
+      },
+      "evidence_relation": {
+        "accuracy": 0.5,
+        "precision_macro": 1.0,
+        "recall_macro": 0.5,
+        "f1_macro": 0.6667,
+        "f1_weighted": 0.6667,
+        "total_samples": 2,
+        "per_class": {
+          "DIRECT": {
+            "precision": 1.0,
+            "recall": 0.5,
+            "f1": 0.6667,
+            "support": 2,
+            "true_positive": 1,
+            "false_positive": 0,
+            "false_negative": 1
+          },
+          "EQUIVALENT": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0,
+            "true_positive": 0,
+            "false_positive": 0,
+            "false_negative": 0
+          },
+          "INFERRED": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0,
+            "true_positive": 0,
+            "false_positive": 0,
+            "false_negative": 0
+          },
+          "ADJACENT": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0,
+            "true_positive": 0,
+            "false_positive": 0,
+            "false_negative": 0
+          },
+          "WEAK_EVIDENCE": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0,
+            "true_positive": 0,
+            "false_positive": 0,
+            "false_negative": 0
+          },
+          "NO_EVIDENCE": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0,
+            "true_positive": 0,
+            "false_positive": 1,
+            "false_negative": 0
+          }
+        },
+        "confusion_matrix": {
+          "DIRECT": {
+            "DIRECT": 1,
+            "EQUIVALENT": 0,
+            "INFERRED": 0,
+            "ADJACENT": 0,
+            "WEAK_EVIDENCE": 0,
+            "NO_EVIDENCE": 1
+          },
+          "EQUIVALENT": {
+            "DIRECT": 0,
+            "EQUIVALENT": 0,
+            "INFERRED": 0,
+            "ADJACENT": 0,
+            "WEAK_EVIDENCE": 0,
+            "NO_EVIDENCE": 0
+          },
+          "INFERRED": {
+            "DIRECT": 0,
+            "EQUIVALENT": 0,
+            "INFERRED": 0,
+            "ADJACENT": 0,
+            "WEAK_EVIDENCE": 0,
+            "NO_EVIDENCE": 0
+          },
+          "ADJACENT": {
+            "DIRECT": 0,
+            "EQUIVALENT": 0,
+            "INFERRED": 0,
+            "ADJACENT": 0,
+            "WEAK_EVIDENCE": 0,
+            "NO_EVIDENCE": 0
+          },
+          "WEAK_EVIDENCE": {
+            "DIRECT": 0,
+            "EQUIVALENT": 0,
+            "INFERRED": 0,
+            "ADJACENT": 0,
+            "WEAK_EVIDENCE": 0,
+            "NO_EVIDENCE": 0
+          },
+          "NO_EVIDENCE": {
+            "DIRECT": 0,
+            "EQUIVALENT": 0,
+            "INFERRED": 0,
+            "ADJACENT": 0,
+            "WEAK_EVIDENCE": 0,
+            "NO_EVIDENCE": 0
+          }
+        }
+      },
+      "evidence_relation_diagnostics": {
+        "no_evidence_false_positive_rate": 0.0,
+        "no_evidence_false_positives": 0,
+        "no_evidence_total": 0,
+        "evidence_false_negative_rate": 0.5,
+        "evidence_false_negatives": 1,
+        "evidence_total": 2,
+        "inferred_f1": 0.0,
+        "adjacent_f1": 0.0
+      },
+      "requirement_outcome": {
+        "accuracy": 1.0,
+        "precision_macro": 1.0,
+        "recall_macro": 1.0,
+        "f1_macro": 1.0,
+        "f1_weighted": 1.0,
+        "total_samples": 2,
+        "per_class": {
+          "SATISFIED": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 1,
+            "true_positive": 1,
+            "false_positive": 0,
+            "false_negative": 0
+          },
+          "PARTIAL": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0,
+            "true_positive": 0,
+            "false_positive": 0,
+            "false_negative": 0
+          },
+          "UNSATISFIED": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 1,
+            "true_positive": 1,
+            "false_positive": 0,
+            "false_negative": 0
+          },
+          "UNKNOWN": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0,
+            "true_positive": 0,
+            "false_positive": 0,
+            "false_negative": 0
+          }
+        },
+        "confusion_matrix": {
+          "SATISFIED": {
+            "SATISFIED": 1,
+            "PARTIAL": 0,
+            "UNSATISFIED": 0,
+            "UNKNOWN": 0
+          },
+          "PARTIAL": {
+            "SATISFIED": 0,
+            "PARTIAL": 0,
+            "UNSATISFIED": 0,
+            "UNKNOWN": 0
+          },
+          "UNSATISFIED": {
+            "SATISFIED": 0,
+            "PARTIAL": 0,
+            "UNSATISFIED": 1,
+            "UNKNOWN": 0
+          },
+          "UNKNOWN": {
+            "SATISFIED": 0,
+            "PARTIAL": 0,
+            "UNSATISFIED": 0,
+            "UNKNOWN": 0
+          }
+        }
+      },
+      "critical_gap": {
+        "critical_gap_precision": 1.0,
+        "critical_gap_recall": 1.0,
+        "critical_gap_f1": 1.0,
+        "true_positives": 1,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "total_critical_gaps": 1
+      },
+      "boolean_groups": {
+        "boolean_group_accuracy": 0.0,
+        "any_of_accuracy": 0.0,
+        "all_of_accuracy": 0.0,
+        "total_groups": 0,
+        "any_of_total": 0,
+        "all_of_total": 0
+      },
+      "rating_correlation": {
+        "pearson_r": 0.0,
+        "spearman_rho": 0.0,
+        "mae": 0.0,
+        "rmse": 0.0,
+        "samples": 1
+      }
+    },
+    "SYNTHETIC": {
+      "cases_count": 1,
+      "retrieval_layers": {
+        "bm25": {
+          "recall_at_1": 0.0,
+          "recall_at_3": 0.8,
+          "recall_at_5": 0.9,
+          "mrr": 0.4333,
+          "ndcg_at_5": 0.5689,
+          "evaluated_queries": 5
+        },
+        "semantic": {
+          "recall_at_1": 0.1,
+          "recall_at_3": 0.1,
+          "recall_at_5": 0.1,
+          "mrr": 0.2,
+          "ndcg_at_5": 0.1226,
+          "evaluated_queries": 5
+        },
+        "hybrid": {
+          "recall_at_1": 0.1,
+          "recall_at_3": 0.8,
+          "recall_at_5": 0.9,
+          "mrr": 0.5667,
+          "ndcg_at_5": 0.6302,
+          "evaluated_queries": 5
+        },
+        "final": {
+          "recall_at_1": 0.6,
+          "recall_at_3": 0.9,
+          "recall_at_5": 0.9,
+          "mrr": 1.0,
+          "ndcg_at_5": 0.8745,
+          "evaluated_queries": 5
+        }
+      },
+      "evidence_relation": {
+        "accuracy": 1.0,
+        "precision_macro": 1.0,
+        "recall_macro": 1.0,
+        "f1_macro": 1.0,
+        "f1_weighted": 1.0,
+        "total_samples": 6,
+        "per_class": {
+          "DIRECT": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 5,
+            "true_positive": 5,
+            "false_positive": 0,
+            "false_negative": 0
+          },
+          "EQUIVALENT": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0,
+            "true_positive": 0,
+            "false_positive": 0,
+            "false_negative": 0
+          },
+          "INFERRED": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0,
+            "true_positive": 0,
+            "false_positive": 0,
+            "false_negative": 0
+          },
+          "ADJACENT": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0,
+            "true_positive": 0,
+            "false_positive": 0,
+            "false_negative": 0
+          },
+          "WEAK_EVIDENCE": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0,
+            "true_positive": 0,
+            "false_positive": 0,
+            "false_negative": 0
+          },
+          "NO_EVIDENCE": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 1,
+            "true_positive": 1,
+            "false_positive": 0,
+            "false_negative": 0
+          }
+        },
+        "confusion_matrix": {
+          "DIRECT": {
+            "DIRECT": 5,
+            "EQUIVALENT": 0,
+            "INFERRED": 0,
+            "ADJACENT": 0,
+            "WEAK_EVIDENCE": 0,
+            "NO_EVIDENCE": 0
+          },
+          "EQUIVALENT": {
+            "DIRECT": 0,
+            "EQUIVALENT": 0,
+            "INFERRED": 0,
+            "ADJACENT": 0,
+            "WEAK_EVIDENCE": 0,
+            "NO_EVIDENCE": 0
+          },
+          "INFERRED": {
+            "DIRECT": 0,
+            "EQUIVALENT": 0,
+            "INFERRED": 0,
+            "ADJACENT": 0,
+            "WEAK_EVIDENCE": 0,
+            "NO_EVIDENCE": 0
+          },
+          "ADJACENT": {
+            "DIRECT": 0,
+            "EQUIVALENT": 0,
+            "INFERRED": 0,
+            "ADJACENT": 0,
+            "WEAK_EVIDENCE": 0,
+            "NO_EVIDENCE": 0
+          },
+          "WEAK_EVIDENCE": {
+            "DIRECT": 0,
+            "EQUIVALENT": 0,
+            "INFERRED": 0,
+            "ADJACENT": 0,
+            "WEAK_EVIDENCE": 0,
+            "NO_EVIDENCE": 0
+          },
+          "NO_EVIDENCE": {
+            "DIRECT": 0,
+            "EQUIVALENT": 0,
+            "INFERRED": 0,
+            "ADJACENT": 0,
+            "WEAK_EVIDENCE": 0,
+            "NO_EVIDENCE": 1
+          }
+        }
+      },
+      "evidence_relation_diagnostics": {
+        "no_evidence_false_positive_rate": 0.0,
+        "no_evidence_false_positives": 0,
+        "no_evidence_total": 1,
+        "evidence_false_negative_rate": 0.0,
+        "evidence_false_negatives": 0,
+        "evidence_total": 5,
+        "inferred_f1": 0.0,
+        "adjacent_f1": 0.0
+      },
+      "requirement_outcome": {
+        "accuracy": 1.0,
+        "precision_macro": 1.0,
+        "recall_macro": 1.0,
+        "f1_macro": 1.0,
+        "f1_weighted": 1.0,
+        "total_samples": 6,
+        "per_class": {
+          "SATISFIED": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 5,
+            "true_positive": 5,
+            "false_positive": 0,
+            "false_negative": 0
+          },
+          "PARTIAL": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0,
+            "true_positive": 0,
+            "false_positive": 0,
+            "false_negative": 0
+          },
+          "UNSATISFIED": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 1,
+            "true_positive": 1,
+            "false_positive": 0,
+            "false_negative": 0
+          },
+          "UNKNOWN": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0,
+            "true_positive": 0,
+            "false_positive": 0,
+            "false_negative": 0
+          }
+        },
+        "confusion_matrix": {
+          "SATISFIED": {
+            "SATISFIED": 5,
+            "PARTIAL": 0,
+            "UNSATISFIED": 0,
+            "UNKNOWN": 0
+          },
+          "PARTIAL": {
+            "SATISFIED": 0,
+            "PARTIAL": 0,
+            "UNSATISFIED": 0,
+            "UNKNOWN": 0
+          },
+          "UNSATISFIED": {
+            "SATISFIED": 0,
+            "PARTIAL": 0,
+            "UNSATISFIED": 1,
+            "UNKNOWN": 0
+          },
+          "UNKNOWN": {
+            "SATISFIED": 0,
+            "PARTIAL": 0,
+            "UNSATISFIED": 0,
+            "UNKNOWN": 0
+          }
+        }
+      },
+      "critical_gap": {
+        "critical_gap_precision": 0.0,
+        "critical_gap_recall": 0.0,
+        "critical_gap_f1": 0.0,
+        "true_positives": 0,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "total_critical_gaps": 0
+      },
+      "boolean_groups": {
+        "boolean_group_accuracy": 0.0,
+        "any_of_accuracy": 0.0,
+        "all_of_accuracy": 0.0,
+        "total_groups": 0,
+        "any_of_total": 0,
+        "all_of_total": 0
+      },
+      "rating_correlation": {
+        "pearson_r": 0.0,
+        "spearman_rho": 0.0,
+        "mae": 0.0,
+        "rmse": 0.0,
+        "samples": 1
+      }
+    }
+  },
+  "annotator_agreement": {
+    "multi_annotated_requirements": 0,
+    "total_annotated_requirements": 0,
+    "evidence_relation_raw_agreement": 0.0,
+    "evidence_relation_cohen_kappa": 0.0,
+    "requirement_outcome_raw_agreement": 0.0,
+    "requirement_outcome_cohen_kappa": 0.0
+  },
+  "failure_analysis": {
+    "total_evaluated_requirements": 8,
+    "total_mismatches": 1,
+    "mismatch_rate": 0.125,
+    "failures_by_category_counts": {
+      "PARSING_ERROR": 0,
+      "RETRIEVAL_MISS": 0,
+      "RERANKING_ERROR": 0,
+      "SEMANTIC_VALIDATION_ERROR": 1,
+      "BOOLEAN_GROUP_ERROR": 0,
+      "SCORING_ERROR": 0,
+      "EXPLANATION_ERROR": 0
+    },
+    "failures_by_category": {
+      "PARSING_ERROR": [],
+      "RETRIEVAL_MISS": [],
+      "RERANKING_ERROR": [],
+      "SEMANTIC_VALIDATION_ERROR": [
+        {
+          "case_id": "CASE_SAMPLE_002_DURATION_GAP",
+          "requirement_id": "REQ_PY_EXP (Python Experience)",
+          "human_evidence": [
+            {
+              "section": "experience",
+              "parent_title": "Junior Python Developer",
+              "quote": "Lập trình backend bằng Python và PostgreSQL trong 1 năm.",
+              "start_offset": null,
+              "end_offset": null
+            }
+          ],
+          "retrieved_evidence": [
+            "Lập trình backend bằng Python và PostgreSQL trong 1 năm.",
+            "Backend Developer với 1 năm kinh nghiệm phát triển REST API với Python và PostgreSQL.",
+            "Python, PostgreSQL, REST API"
+          ],
+          "human_evidence_relation": "DIRECT",
+          "engine_evidence_relation": "NO_EVIDENCE",
+          "human_outcome": "UNSATISFIED",
+          "engine_outcome": "UNSATISFIED",
+          "boolean_group": null,
+          "scores": {
+            "match_score": 0.0,
+            "criterion_score": 0.0,
+            "weight": 56.2
+          },
+          "failure_category": "SEMANTIC_VALIDATION_ERROR",
+          "reason": "Phân loại quan hệ ngữ nghĩa sai: Ground truth là 'DIRECT', matcher phân loại thành 'NO_EVIDENCE'."
+        }
+      ],
+      "BOOLEAN_GROUP_ERROR": [],
+      "SCORING_ERROR": [],
+      "EXPLANATION_ERROR": []
+    },
+    "failure_items": [
+      {
+        "case_id": "CASE_SAMPLE_002_DURATION_GAP",
+        "requirement_id": "REQ_PY_EXP (Python Experience)",
+        "human_evidence": [
+          {
+            "section": "experience",
+            "parent_title": "Junior Python Developer",
+            "quote": "Lập trình backend bằng Python và PostgreSQL trong 1 năm.",
+            "start_offset": null,
+            "end_offset": null
+          }
+        ],
+        "retrieved_evidence": [
+          "Lập trình backend bằng Python và PostgreSQL trong 1 năm.",
+          "Backend Developer với 1 năm kinh nghiệm phát triển REST API với Python và PostgreSQL.",
+          "Python, PostgreSQL, REST API"
+        ],
+        "human_evidence_relation": "DIRECT",
+        "engine_evidence_relation": "NO_EVIDENCE",
+        "human_outcome": "UNSATISFIED",
+        "engine_outcome": "UNSATISFIED",
+        "boolean_group": null,
+        "scores": {
+          "match_score": 0.0,
+          "criterion_score": 0.0,
+          "weight": 56.2
+        },
+        "failure_category": "SEMANTIC_VALIDATION_ERROR",
+        "reason": "Phân loại quan hệ ngữ nghĩa sai: Ground truth là 'DIRECT', matcher phân loại thành 'NO_EVIDENCE'."
+      }
+    ]
+  }
+}

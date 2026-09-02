@@ -2,7 +2,7 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import ProfileView from '../ProfileView';
+import ProfileView from '@/components/candidate/ProfileView';
 
 describe('ProfileView Component', () => {
   beforeEach(() => {

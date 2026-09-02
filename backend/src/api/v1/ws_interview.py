@@ -21,12 +21,12 @@ from src.db.models import (
     InterviewSession,
     UsageEvent,
 )
+from src.services.interview_agenda_service import enabled_questions, get_existing_agenda
 from src.services.interview_service import (
     evaluate_answer_and_check_followup,
     generate_final_star_report,
 )
 from src.services.voice import tts_service
-from src.services.voice.keyterms import extract_keyterms
 from src.services.voice.silence_handler import SilenceHandler
 from src.services.voice.stt_service import STTStream
 from src.services.voice.voice_orchestrator import VoiceInterviewOrchestrator
@@ -74,8 +74,10 @@ class VoiceInterviewSession:
         self.stt_stream: STTStream | None = None
         self.silence_handler: SilenceHandler | None = None
         self._transcript_buffer: list[str] = []
-        self._keyterms: list[str] = []
         self._silence_task: asyncio.Task[None] | None = None
+        # Số hàng InterviewQuestion đã ghi cho phiên này. Dùng làm question_index
+        # thay cho turn_count vì lượt chào không sinh hàng.
+        self._recorded_questions: int = 0
 
     async def run(self) -> None:
         started_at = perf_counter()
@@ -94,42 +96,70 @@ class VoiceInterviewSession:
             jd_title = session.jd.title
             jd_requirements = session.jd.requirements_text
 
-            # Mớm thuật ngữ của chính CV/JD này cho STT. Transcript sai thuật
-            # ngữ ("OAuth2" thành "OAuth") sẽ kéo theo chấm STAR sai.
-            self._keyterms = extract_keyterms(jd_title, jd_requirements, cv_text)
-            logger.info(
-                "Voice session %s: %d keyterm rút từ CV/JD",
-                self.session_id, len(self._keyterms),
-            )
+            # Buổi phỏng vấn có thể đã chạy dở ở một kết nối trước. Hội thoại
+            # của orchestrator không được lưu nên phải dựng lại từ các cặp
+            # hỏi–đáp trong DB, nếu không AI sẽ chào và hỏi lại từ đầu.
+            previous_pairs = await self._load_previous_qa(db)
 
             # Phase 1: Preparing
             await _send_json(self.ws, {
                 "type": "status",
                 "status": "preparing",
-                "message": "Đợi tôi một chút, tôi sẽ xem qua CV của bạn..."
+                "message": (
+                    "Đợi tôi một chút, tôi sẽ xem lại phần chúng ta trao đổi dở..."
+                    if previous_pairs
+                    else "Đợi tôi một chút, tôi sẽ xem qua CV của bạn..."
+                )
                 if language == "vi"
-                else "Give me a moment, I'll review your CV...",
+                else (
+                    "Give me a moment, I'll review where we left off..."
+                    if previous_pairs
+                    else "Give me a moment, I'll review your CV..."
+                ),
             })
+
+            # Nếu ứng viên đã tạo agenda ở trang phỏng vấn thì dùng luôn để
+            # LLM bám câu hỏi đã duyệt. CỐ Ý chỉ TRA CỨU chứ không sinh mới:
+            # sinh agenda tốn một lời gọi LLM vài giây, làm chậm lúc kết nối
+            # WebSocket và tiêu quota của người dùng ngoài ý muốn.
+            agenda_questions: list[dict[str, Any]] = []
+            try:
+                agenda = await get_existing_agenda(
+                    db, user=session.user, cv=session.cv, jd=session.jd
+                )
+                if agenda:
+                    agenda_questions = enabled_questions(agenda)
+            except Exception as exc:
+                logger.warning("Không nạp được agenda cho phiên voice: %s", exc)
 
             self.orchestrator = VoiceInterviewOrchestrator(
                 cv_text=cv_text,
                 jd_title=jd_title,
                 jd_requirements=jd_requirements,
                 language=language,
+                agenda_questions=agenda_questions,
             )
             self.silence_handler = SilenceHandler(language=language)
 
             await _send_json(self.ws, {
                 "type": "status",
                 "status": "ready",
-                "message": "Tôi đã xem qua hồ sơ CV của bạn. Bắt đầu vào phòng phỏng vấn."
+                "message": (
+                    "Tôi đã xem lại phần chúng ta trao đổi dở. Mình tiếp tục nhé."
+                    if previous_pairs
+                    else "Tôi đã xem qua hồ sơ CV của bạn. Bắt đầu vào phòng phỏng vấn."
+                )
                 if language == "vi"
-                else "I've reviewed your CV. Let's begin the interview.",
+                else (
+                    "I've reviewed where we left off. Let's continue."
+                    if previous_pairs
+                    else "I've reviewed your CV. Let's begin the interview."
+                ),
             })
 
-            # Phase 2: Greeting
-            greeting = await self.orchestrator.start()
-            await self._send_ai_message(greeting, language)
+            # Phase 2: Chào lần đầu, hoặc nối lại buổi phỏng vấn dở
+            opening = await self._begin_conversation(previous_pairs)
+            await self._send_ai_message(opening, language)
 
             # Main loop
             try:
@@ -178,7 +208,6 @@ class VoiceInterviewSession:
                     on_partial=self._on_stt_partial,
                     on_final=self._on_stt_final,
                     on_utterance_end=self._on_utterance_end,
-                    keyterms=self._keyterms,
                 )
                 await self.stt_stream.start()
                 self._start_silence_monitor()
@@ -206,23 +235,7 @@ class VoiceInterviewSession:
                 await self._send_ai_message(result, language)
 
                 # Store Q&A
-                q_index = self.orchestrator.turn_count - 1
-                prev_messages = self.orchestrator.conversation
-                ai_question = ""
-                for m in reversed(prev_messages):
-                    if m["role"] == "assistant" and m["content"] != result["ai_message"]:
-                        ai_question = m["content"]
-                        break
-
-                q_obj = InterviewQuestion(
-                    session_id=self.session_id,
-                    question_index=q_index,
-                    question_text=ai_question,
-                    user_answer=user_text,
-                )
-                db.add(q_obj)
-                session.current_question_index = q_index + 1
-                await db.flush()
+                await self._record_answer(db, session, user_text, result)
 
                 if result["is_complete"]:
                     await self._complete_session(db, session)
@@ -239,6 +252,72 @@ class VoiceInterviewSession:
                 await self._send_ai_message(result, language)
                 await self._complete_session(db, session)
                 return
+
+    async def _load_previous_qa(self, db: AsyncSession) -> list[dict[str, str]]:
+        """Các cặp hỏi–đáp đã lưu của phiên, dùng để nối lại buổi phỏng vấn dở."""
+        rows = (
+            await db.scalars(
+                select(InterviewQuestion)
+                .where(
+                    InterviewQuestion.session_id == self.session_id,
+                    InterviewQuestion.user_answer.is_not(None),
+                )
+                .order_by(InterviewQuestion.question_index)
+            )
+        ).all()
+        return [
+            {"question": row.question_text, "answer": row.user_answer or ""}
+            for row in rows
+        ]
+
+    async def _begin_conversation(
+        self, previous_pairs: list[dict[str, str]]
+    ) -> dict[str, Any]:
+        """Mở đầu buổi phỏng vấn: chào mới, hoặc nối tiếp phần đang dở."""
+        if not previous_pairs:
+            return await self.orchestrator.start()
+
+        # Đánh số tiếp từ số câu đã lưu. Nếu bỏ bước này, kết nối lại sẽ ghi đè
+        # question_index từ 0 và làm trùng chỉ số với các câu của lần trước.
+        self._recorded_questions = len(previous_pairs)
+        await _send_json(self.ws, {"type": "history", "pairs": previous_pairs})
+        return await self.orchestrator.resume(previous_pairs)
+
+    def _preceding_ai_question(self, current_ai_message: str) -> str:
+        """Message assistant gần nhất đứng trước lượt trả lời hiện tại."""
+        for message in reversed(self.orchestrator.conversation):
+            if message["role"] == "assistant" and message["content"] != current_ai_message:
+                return message["content"]
+        return ""
+
+    async def _record_answer(
+        self,
+        db: AsyncSession,
+        session: InterviewSession,
+        user_text: str,
+        result: dict[str, Any],
+    ) -> InterviewQuestion | None:
+        """Ghi một cặp hỏi–đáp thật vào DB, trả về hàng vừa tạo (nếu có).
+
+        Lượt trả lời đầu tiên bị bỏ qua: message assistant đứng trước nó là lời
+        chào mở đầu, không phải câu hỏi phỏng vấn. Ghi lại lượt đó sẽ làm các
+        hàng InterviewQuestion lệch một nhịp so với cặp hỏi–đáp dùng chấm STAR
+        (`VoiceInterviewOrchestrator.get_qa_pairs()` loại lời chào ra).
+        """
+        if self.orchestrator.turn_count <= 1:
+            return None
+
+        q_obj = InterviewQuestion(
+            session_id=self.session_id,
+            question_index=self._recorded_questions,
+            question_text=self._preceding_ai_question(result["ai_message"]),
+            user_answer=user_text,
+        )
+        db.add(q_obj)
+        self._recorded_questions += 1
+        session.current_question_index = self._recorded_questions
+        await db.flush()
+        return q_obj
 
     async def _send_ai_message(self, result: dict[str, Any], language: str) -> None:
         ai_text = result["ai_message"]
@@ -259,33 +338,41 @@ class VoiceInterviewSession:
         session.status = "completed"
         session.completed_at = datetime.now(UTC)
 
-        qa_pairs = self.orchestrator.get_qa_pairs()
         cv_text = self.orchestrator.cv_text
 
+        # Chấm điểm ngay trên từng hàng InterviewQuestion đã lưu, thay vì chấm
+        # trên một danh sách riêng rồi ghép ngược lại bằng zip() theo vị trí.
+        # Cách ghép theo vị trí từng gán điểm sang nhầm câu khi hai danh sách
+        # không cùng độ dài hoặc không cùng thứ tự.
+        answered_questions = (
+            await db.scalars(
+                select(InterviewQuestion)
+                .where(
+                    InterviewQuestion.session_id == self.session_id,
+                    InterviewQuestion.user_answer.is_not(None),
+                )
+                .order_by(InterviewQuestion.question_index)
+            )
+        ).all()
+
         history_list: list[dict[str, Any]] = []
-        for pair in qa_pairs:
+        for q_obj in answered_questions:
             try:
                 evaluation = await evaluate_answer_and_check_followup(
-                    question_text=pair["question"],
-                    user_answer=pair["answer"],
+                    question_text=q_obj.question_text,
+                    user_answer=q_obj.user_answer or "",
                     cv_text=cv_text,
                 )
             except Exception:
                 evaluation = {"star_score": {"situation": 50, "task": 50, "action": 50, "result": 50}}
 
+            star_score = evaluation.get("star_score", {})
+            q_obj.star_score_json = star_score
             history_list.append({
-                "question": pair["question"],
-                "answer": pair["answer"],
-                "score": evaluation.get("star_score", {}),
+                "question": q_obj.question_text,
+                "answer": q_obj.user_answer or "",
+                "score": star_score,
             })
-
-        questions = await db.scalars(
-            select(InterviewQuestion)
-            .where(InterviewQuestion.session_id == self.session_id)
-            .order_by(InterviewQuestion.question_index)
-        )
-        for q_obj, hist in zip(questions.all(), history_list):
-            q_obj.star_score_json = hist["score"]
 
         session.total_questions = len(history_list)
 
@@ -329,6 +416,10 @@ class VoiceInterviewSession:
             .options(
                 selectinload(InterviewSession.cv),
                 selectinload(InterviewSession.jd),
+                # user cần cho get_existing_agenda(); thiếu selectinload ở đây
+                # thì truy cập session.user sẽ lazy-load trong ngữ cảnh async
+                # và ném MissingGreenlet.
+                selectinload(InterviewSession.user),
             )
         )
         return result.scalar_one_or_none()
@@ -349,18 +440,7 @@ class VoiceInterviewSession:
         await _send_json(self.ws, {"type": "transcript_final", "text": text})
 
     async def _on_utterance_end(self) -> None:
-        """Gemini VAD báo một đoạn nói đã kết thúc.
-
-        CỐ Ý KHÔNG tự gửi câu trả lời ở đây. Ứng viên phỏng vấn ngập ngừng
-        giữa chừng là chuyện bình thường, và VAD chốt ngay ở lần im lặng đầu
-        tiên — tự submit sẽ cắt ngang câu trả lời đang dở. Tín hiệu này chỉ
-        dùng để báo giao diện là đã nghe xong đoạn vừa rồi; quyết định gửi
-        vẫn thuộc về ứng viên, hoặc về `SilenceHandler` khi im lặng đủ lâu.
-        """
-        await _send_json(self.ws, {
-            "type": "utterance_end",
-            "text": " ".join(self._transcript_buffer).strip(),
-        })
+        pass
 
     def _start_silence_monitor(self) -> None:
         self._stop_silence_monitor()

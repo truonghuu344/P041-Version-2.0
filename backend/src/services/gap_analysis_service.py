@@ -10,7 +10,7 @@ async def perform_cv_jd_gap_analysis(
     jd_requirements: str,
     jd_parsed_json: dict[str, Any] | None = None,
     rubric: dict[str, Any] | None = None,
-    allow_llm: bool | None = None,
+    on_progress: Any = None,
 ) -> dict[str, Any]:
     """Compatibility facade cho API: thực thi CV Gap Analysis Agent."""
     return await gap_analysis_agent.run(
@@ -20,5 +20,5 @@ async def perform_cv_jd_gap_analysis(
         jd_requirements=jd_requirements,
         jd_parsed_json=jd_parsed_json,
         rubric=rubric,
-        allow_llm=allow_llm,
+        on_progress=on_progress,
     )

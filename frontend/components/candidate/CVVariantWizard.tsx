@@ -1,12 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertTriangle,
+  BriefcaseBusiness,
   Check,
   CheckCircle2,
+  ChevronDown,
+  Download,
   Eye,
   History,
   LogIn,
-  Plus,
+  Search,
   ShieldAlert,
   ShieldCheck,
   XCircle,
@@ -21,8 +24,10 @@ import {
   VariantSuggestion,
   VariantValidation,
   cvVariantsApi,
-} from '../../lib/cvVariantsApi';
+} from '@/lib/cvVariantsApi';
 import { CV_TEMPLATES, MiniCVSheet } from './TemplatePreviewCard';
+import CVLivePreview from './CVLivePreview';
+import CVEntryListEditor from './CVEntryListEditor';
 
 const VALIDATOR_LABELS: Record<string, { title: string; desc: string }> = {
   schema: {
@@ -63,6 +68,36 @@ const VALIDATOR_LABELS: Record<string, { title: string; desc: string }> = {
   },
 };
 
+type StudentValidationIssue = { reason: string; section: string };
+
+const SECTION_LABELS: Record<string, string> = {
+  skills: 'Kỹ năng', summary: 'Tóm tắt', experience: 'Kinh nghiệm làm việc',
+  projects: 'Dự án', education: 'Học vấn', certifications: 'Chứng chỉ', personal_info: 'Thông tin cá nhân',
+};
+
+function studentIssues(validatorName: string, errors: string[]): StudentValidationIssue[] {
+  const skillPaths = errors.filter((item) => /^skills\.\d+(?:\.\d+)?[:.]/i.test(item));
+  const output: StudentValidationIssue[] = skillPaths.length
+    ? [{ reason: `Có ${skillPaths.length} kỹ năng chưa đủ dữ liệu để xác minh.`, section: 'Kỹ năng' }]
+    : [];
+  for (const raw of errors) {
+    if (/^skills\.\d+(?:\.\d+)?[:.]/i.test(raw)) continue;
+    const sectionKey = Object.keys(SECTION_LABELS).find((key) => new RegExp(`(^|\\.)${key}(\\.|:|$)`, 'i').test(raw));
+    const section = SECTION_LABELS[sectionKey || ''] || (
+      validatorName === 'protected_content' ? 'Thông tin cá nhân' : 'Nội dung CV'
+    );
+    let reason = 'Một số thông tin chưa thể xác minh từ CV gốc.';
+    if (/name|họ tên|full_name/i.test(raw)) reason = 'Họ tên cần khớp với CV gốc.';
+    else if (/email|phone|điện thoại/i.test(raw)) reason = 'Thông tin liên hệ cần đầy đủ và khớp với CV gốc.';
+    else if (/markdown|định dạng|schema|object|danh sách/i.test(raw)) reason = 'Nội dung có định dạng chưa phù hợp để xuất CV.';
+    else if (/số|ngày|date|numeric/i.test(raw)) reason = 'Số liệu hoặc thời gian cần khớp với CV gốc.';
+    else if (/keyword|JD|kỹ năng còn thiếu|công nghệ/i.test(raw)) reason = 'CV đang có từ khóa chưa có bằng chứng trong hồ sơ gốc.';
+    else if (/render|PDF|trang|layout/i.test(raw)) reason = 'Bố cục PDF cần được điều chỉnh để in rõ ràng.';
+    output.push({ reason, section });
+  }
+  return Array.from(new Map(output.map((item) => [`${item.section}|${item.reason}`, item])).values());
+}
+
 const emptyContent = (): VariantContent => ({
   personal_info: { full_name: '', email: '', phone: '' },
   summary: '',
@@ -74,19 +109,227 @@ const emptyContent = (): VariantContent => ({
   template_name: 'classic',
 });
 
-function recordsToText(records: Array<Record<string, unknown>> = []): string {
-  return records
-    .map((item) => String(item.description || item.title || ''))
-    .filter(Boolean)
-    .join('\n');
+function normalizeSearchValue(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLocaleLowerCase('vi')
+    .trim();
 }
 
-function textToRecords(value: string): Array<Record<string, unknown>> {
-  return value
-    .split('\n')
-    .map((item) => item.trim())
-    .filter(Boolean)
-    .map((description) => ({ description }));
+interface SearchableJdSelectProps {
+  items: JDSummary[];
+  value: string;
+  disabled: boolean;
+  onChange: (value: string) => void;
+}
+
+function SearchableJdSelect({ items, value, disabled, onChange }: SearchableJdSelectProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const [activeIndex, setActiveIndex] = useState(0);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const selectedItem = items.find((item) => item.id === value);
+  const normalizedQuery = normalizeSearchValue(query);
+  const filteredItems = useMemo(
+    () =>
+      items.filter((item) => {
+        if (!normalizedQuery) return true;
+        const searchableValue = normalizeSearchValue(`${item.title} ${item.company || ''}`);
+        return normalizedQuery.split(/\s+/).every((term) => searchableValue.includes(term));
+      }),
+    [items, normalizedQuery],
+  );
+
+  const closeMenu = useCallback((restoreFocus = false) => {
+    setIsOpen(false);
+    setQuery('');
+    setActiveIndex(0);
+    if (restoreFocus) requestAnimationFrame(() => triggerRef.current?.focus());
+  }, []);
+
+  const openMenu = useCallback(() => {
+    if (disabled) return;
+    const selectedIndex = items.findIndex((item) => item.id === value);
+    setActiveIndex(selectedIndex >= 0 ? selectedIndex : 0);
+    setIsOpen(true);
+  }, [disabled, items, value]);
+
+  const selectItem = useCallback(
+    (item: JDSummary) => {
+      onChange(item.id);
+      closeMenu(true);
+    },
+    [closeMenu, onChange],
+  );
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) closeMenu();
+    };
+    document.addEventListener('pointerdown', handlePointerDown);
+    requestAnimationFrame(() => searchRef.current?.focus());
+    return () => document.removeEventListener('pointerdown', handlePointerDown);
+  }, [closeMenu, isOpen]);
+
+  useEffect(() => {
+    setActiveIndex((current) => Math.min(current, Math.max(filteredItems.length - 1, 0)));
+  }, [filteredItems.length]);
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Escape' && isOpen) {
+      event.preventDefault();
+      closeMenu(true);
+      return;
+    }
+    if (event.key === 'Tab') {
+      closeMenu();
+      return;
+    }
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      if (!isOpen) {
+        openMenu();
+        return;
+      }
+      const direction = event.key === 'ArrowDown' ? 1 : -1;
+      setActiveIndex((current) => {
+        if (!filteredItems.length) return 0;
+        return (current + direction + filteredItems.length) % filteredItems.length;
+      });
+      return;
+    }
+    if (event.key === 'Enter') {
+      if (!isOpen) {
+        event.preventDefault();
+        openMenu();
+      } else if (filteredItems[activeIndex]) {
+        event.preventDefault();
+        selectItem(filteredItems[activeIndex]);
+      }
+    }
+  };
+
+  const placeholder = disabled
+    ? 'Đăng nhập để xem danh sách JD'
+    : items.length === 0
+      ? 'Chưa có JD khả dụng'
+      : `Chọn trong ${items.length} JD có sẵn`;
+
+  return (
+    <div
+      ref={rootRef}
+      className={`cv-jd-combobox${isOpen ? ' is-open' : ''}${disabled ? ' is-disabled' : ''}`}
+      onKeyDown={handleKeyDown}
+    >
+      <button
+        ref={triggerRef}
+        type="button"
+        className="cv-jd-combobox-trigger"
+        role="combobox"
+        aria-label="Chọn JD mục tiêu ứng tuyển"
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+        aria-controls="cv-jd-combobox-list"
+        aria-activedescendant={
+          isOpen && filteredItems[activeIndex]
+            ? `cv-jd-option-${filteredItems[activeIndex].id}`
+            : undefined
+        }
+        disabled={disabled}
+        onClick={() => (isOpen ? closeMenu() : openMenu())}
+      >
+        <span className="cv-jd-combobox-leading" aria-hidden="true">
+          <BriefcaseBusiness size={17} />
+        </span>
+        <span className="cv-jd-combobox-value">
+          <strong>{selectedItem?.title || placeholder}</strong>
+          {selectedItem?.company && <small>{selectedItem.company}</small>}
+        </span>
+        <ChevronDown className="cv-jd-combobox-chevron" size={18} aria-hidden="true" />
+      </button>
+
+      {isOpen && (
+        <div className="cv-jd-combobox-menu">
+          <div className="cv-jd-combobox-search">
+            <Search size={17} aria-hidden="true" />
+            <input
+              ref={searchRef}
+              type="search"
+              value={query}
+              onChange={(event) => {
+                setQuery(event.target.value);
+                setActiveIndex(0);
+              }}
+              placeholder="Tìm vị trí hoặc công ty..."
+              aria-label="Tìm kiếm JD"
+              autoComplete="off"
+            />
+            <span>
+              {filteredItems.length}/{items.length}
+            </span>
+          </div>
+          <div
+            id="cv-jd-combobox-list"
+            className="cv-jd-combobox-list"
+            role="listbox"
+            aria-label="Danh sách JD"
+          >
+            {filteredItems.length === 0 ? (
+              <div className="cv-jd-combobox-empty" role="status">
+                <Search size={22} aria-hidden="true" />
+                <strong>Không tìm thấy JD</strong>
+                <span>Thử tên vị trí, kỹ năng hoặc công ty khác.</span>
+              </div>
+            ) : (
+              filteredItems.map((item, index) => {
+                const isSelected = item.id === value;
+                const isActive = index === activeIndex;
+                return (
+                  <button
+                    key={item.id}
+                    id={`cv-jd-option-${item.id}`}
+                    type="button"
+                    role="option"
+                    aria-selected={isSelected}
+                    className={`cv-jd-combobox-option${isSelected ? ' is-selected' : ''}${isActive ? ' is-active' : ''}`}
+                    onMouseEnter={() => setActiveIndex(index)}
+                    onClick={() => selectItem(item)}
+                  >
+                    <span className="cv-jd-combobox-option-icon" aria-hidden="true">
+                      <BriefcaseBusiness size={16} />
+                    </span>
+                    <span className="cv-jd-combobox-option-copy">
+                      <strong>{item.title}</strong>
+                      <small>{item.company || 'Chưa cập nhật công ty'}</small>
+                    </span>
+                    {isSelected && (
+                      <Check className="cv-jd-combobox-check" size={17} aria-hidden="true" />
+                    )}
+                  </button>
+                );
+              })
+            )}
+          </div>
+          <div className="cv-jd-combobox-hint">
+            <span>
+              <kbd>↑</kbd>
+              <kbd>↓</kbd> Di chuyển
+            </span>
+            <span>
+              <kbd>Enter</kbd> Chọn
+            </span>
+            <span>
+              <kbd>Esc</kbd> Đóng
+            </span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 function statusLabel(status: CVVariant['status']): string {
@@ -112,7 +355,9 @@ export default function CVVariantWizard() {
   const [customJdText, setCustomJdText] = useState('');
   const [savingCustomJd, setSavingCustomJd] = useState(false);
   const [title, setTitle] = useState('CV tối ưu theo JD');
-  const [template, setTemplate] = useState<'classic' | 'modern' | 'compact' | 'creative' | 'elegant'>('classic');
+  const [template, setTemplate] = useState<
+    'classic' | 'modern' | 'compact' | 'creative' | 'elegant'
+  >('classic');
   const [rawFullName, setRawFullName] = useState('');
   const [rawEmail, setRawEmail] = useState('');
   const [rawSummary, setRawSummary] = useState('');
@@ -121,10 +366,7 @@ export default function CVVariantWizard() {
   const [rawProjects, setRawProjects] = useState('');
   const [rawEducation, setRawEducation] = useState('');
 
-  const insertBullet = (
-    currentValue: string,
-    setter: (val: string) => void,
-  ) => {
+  const insertBullet = (currentValue: string, setter: (val: string) => void) => {
     const trimmed = currentValue.trimEnd();
     const nextVal = trimmed ? `${trimmed}\n• ` : '• ';
     setter(nextVal);
@@ -166,31 +408,59 @@ export default function CVVariantWizard() {
   const [confirmedClaim, setConfirmedClaim] = useState('');
   const [confirmClaimChecked, setConfirmClaimChecked] = useState(false);
   const [suggestionEdits, setSuggestionEdits] = useState<Record<string, string>>({});
-  const [showManualEditor, setShowManualEditor] = useState(false);
+  const [editorTab, setEditorTab] = useState<'ai' | 'manual'>('ai');
+  const [isCreateExpanded, setIsCreateExpanded] = useState(false);
+  const [isValidationExpanded, setIsValidationExpanded] = useState(false);
+  const [isHistoryExpanded, setIsHistoryExpanded] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [busy, setBusy] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const autosaveGeneration = useRef(0);
+  const studentValidators = useMemo(() => {
+    const shown = new Set<string>();
+    return (validation?.validators || []).map((validator) => {
+      const issues = studentIssues(validator.name, validator.errors).filter((issue) => {
+        const key = `${issue.section}|${issue.reason}`;
+        if (shown.has(key)) return false;
+        shown.add(key);
+        return true;
+      });
+      return { ...validator, issues };
+    }).filter((validator) => validator.passed || validator.issues.length > 0);
+  }, [validation]);
+  const validationValidators = validation?.validators || [];
+  const hasValidationFailures = validationValidators.some((validator) => !validator.passed);
+  const showValidationDetails = hasValidationFailures || isValidationExpanded;
+  const activeId = active?.id;
+  const selectedCvTitle = cvs.find((cv) => cv.id === cvId)?.title || 'Chưa chọn CV nguồn';
+  const selectedJdTitle = jds.find((jd) => jd.id === jdId)?.title || 'Chưa chọn JD mục tiêu';
+
+  useEffect(() => {
+    if (activeId) setIsCreateExpanded(false);
+  }, [activeId]);
 
   useEffect(() => {
     if (active && !dirty && !validation) {
-      void cvVariantsApi.validate(active.id).then((report) => {
-        setValidation(report);
-      }).catch(() => {});
+      void cvVariantsApi
+        .validate(active.id)
+        .then((report) => {
+          setValidation(report);
+        })
+        .catch(() => {});
     }
   }, [active, dirty, validation]);
 
   const load = useCallback(async () => {
-    const token = typeof window !== 'undefined' ? window.localStorage.getItem('access_token') : null;
+    const token =
+      typeof window !== 'undefined' ? window.localStorage.getItem('access_token') : null;
     if (!token && !isAuthenticated) return;
     setBusy('load');
     setError('');
     try {
-      const [options, history] = await Promise.all([
-        cvVariantsApi.prerequisites(),
-        cvVariantsApi.list(),
-      ]);
+      // CV/JD là điều kiện cần để tạo bản tối ưu; lịch sử variant chỉ là phần bổ trợ.
+      // Không để một bản revision cũ bị lỗi trên server khóa toàn bộ luồng tạo CV mới.
+      const options = await cvVariantsApi.prerequisites();
 
       // Tự động lọc trùng (Deduplicate) CV theo tên/tiêu đề
       const uniqueCvs: CVSummary[] = [];
@@ -225,13 +495,31 @@ export default function CVVariantWizard() {
             window.sessionStorage.getItem('career-preselected-jd-id'))) ||
         '';
 
-      setCvId((current) => (uniqueCvs.some((c) => c.id === current) ? current : uniqueCvs[0]?.id || ''));
+      setCvId((current) =>
+        uniqueCvs.some((c) => c.id === current) ? current : uniqueCvs[0]?.id || '',
+      );
       setJdId((current) => {
         if (current && uniqueJds.some((j) => j.id === current)) return current;
         if (preferredJd && uniqueJds.some((j) => j.id === preferredJd)) return preferredJd;
         return uniqueJds[0]?.id || '';
       });
-      setVariants(history.items);
+      try {
+        const history = await cvVariantsApi.list();
+        setVariants(history.items);
+      } catch (historyError) {
+        setVariants([]);
+        setMessage(
+          'Chưa tải được lịch sử revision cũ. Bạn vẫn có thể tạo và tối ưu CV mới bình thường.',
+        );
+        console.warn('Không tải được lịch sử CV variant:', historyError);
+      }
+      const win =
+        typeof window !== 'undefined'
+          ? (window as unknown as { loadSpaceshipCVList?: () => void })
+          : null;
+      if (win?.loadSpaceshipCVList) {
+        void win.loadSpaceshipCVList();
+      }
     } catch (loadError) {
       setError(
         loadError instanceof Error ? loadError.message : 'Không tải được dữ liệu CV Variant.',
@@ -243,8 +531,11 @@ export default function CVVariantWizard() {
 
   useEffect(() => {
     const checkAuth = () => {
-      const token = typeof window !== 'undefined' ? window.localStorage.getItem('access_token') : null;
-      const apiAuth = (window as unknown as { ApiClient?: { isAuthenticated?: () => boolean } })?.ApiClient?.isAuthenticated?.();
+      const token =
+        typeof window !== 'undefined' ? window.localStorage.getItem('access_token') : null;
+      const apiAuth = (
+        window as unknown as { ApiClient?: { isAuthenticated?: () => boolean } }
+      )?.ApiClient?.isAuthenticated?.();
       const isAuth = Boolean(token || apiAuth);
       setIsAuthenticated(isAuth);
       return isAuth;
@@ -255,7 +546,8 @@ export default function CVVariantWizard() {
     const handleAuthChanged = (e: Event | CustomEvent<{ user?: unknown }>) => {
       const customEvent = e as CustomEvent<{ user?: unknown }>;
       const user = customEvent?.detail?.user;
-      const token = typeof window !== 'undefined' ? window.localStorage.getItem('access_token') : null;
+      const token =
+        typeof window !== 'undefined' ? window.localStorage.getItem('access_token') : null;
       if (user || token) {
         setIsAuthenticated(true);
       } else {
@@ -268,13 +560,16 @@ export default function CVVariantWizard() {
       }
     };
 
+    const handleSessionCleared = () =>
+      handleAuthChanged(new CustomEvent('auth:cleared', { detail: { user: null } }));
+
     document.addEventListener('auth:changed', handleAuthChanged);
     window.addEventListener('career:session-ready', checkAuth);
-    window.addEventListener('career:session-cleared', () => handleAuthChanged(new CustomEvent('auth:cleared', { detail: { user: null } })));
+    window.addEventListener('career:session-cleared', handleSessionCleared);
     return () => {
       document.removeEventListener('auth:changed', handleAuthChanged);
       window.removeEventListener('career:session-ready', checkAuth);
-      window.removeEventListener('career:session-cleared', () => handleAuthChanged(new CustomEvent('auth:cleared', { detail: { user: null } })));
+      window.removeEventListener('career:session-cleared', handleSessionCleared);
     };
   }, []);
 
@@ -350,7 +645,9 @@ export default function CVVariantWizard() {
       setCustomJdText('');
 
       const selectedCv = cvs.find((c) => c.id === cvId);
-      const cleanCv = selectedCv ? selectedCv.title.replace(/\.[^/.]+$/, '').replace(/_/g, ' ') : 'CV';
+      const cleanCv = selectedCv
+        ? selectedCv.title.replace(/\.[^/.]+$/, '').replace(/_/g, ' ')
+        : 'CV';
       const cleanJd = customJdTitle.trim();
       setTitle(`CV ${cleanCv} tối ưu theo ${cleanJd}`);
       setMessage(`Đã lưu JD "${createdJd.title}" vào tài khoản và chọn cho phiên tối ưu.`);
@@ -428,8 +725,17 @@ export default function CVVariantWizard() {
       );
       setVariants((items) => [variant, ...items.filter((item) => item.id !== variant.id)]);
       setMessage('Đã khởi tạo bản CV tối ưu; hồ sơ gốc được bảo toàn 100%.');
+      const win =
+        typeof window !== 'undefined'
+          ? (window as unknown as { loadSpaceshipCVList?: () => void })
+          : null;
+      if (win?.loadSpaceshipCVList) {
+        void win.loadSpaceshipCVList();
+      }
     } catch (createError) {
-      setError(createError instanceof Error ? createError.message : 'Không tạo được bản CV tối ưu.');
+      setError(
+        createError instanceof Error ? createError.message : 'Không tạo được bản CV tối ưu.',
+      );
     } finally {
       setBusy('');
     }
@@ -442,6 +748,11 @@ export default function CVVariantWizard() {
       const variant = await cvVariantsApi.get(id);
       setActive(variant);
       setContent(variant.content);
+      if (variant.content?.template_name) {
+        setTemplate(variant.content.template_name as typeof template);
+      } else if (variant.template?.name) {
+        setTemplate(variant.template.name as typeof template);
+      }
       setValidation(variant.validator_result);
       setSuggestionEdits(
         Object.fromEntries(
@@ -493,7 +804,12 @@ export default function CVVariantWizard() {
       for (const suggestion of suggestions) {
         if (suggestion.decision !== 'accept') {
           const text = suggestionEdits[suggestion.id] || suggestion.proposed;
-          currentVariant = await cvVariantsApi.decide(currentVariant.id, suggestion.id, 'accept', text);
+          currentVariant = await cvVariantsApi.decide(
+            currentVariant.id,
+            suggestion.id,
+            'accept',
+            text,
+          );
         }
       }
       setActive(currentVariant);
@@ -502,39 +818,80 @@ export default function CVVariantWizard() {
       setDirty(false);
       setMessage('Đã áp dụng tất cả đề xuất tối ưu.');
     } catch (applyError) {
-      setError(applyError instanceof Error ? applyError.message : 'Không thể áp dụng tất cả đề xuất.');
+      setError(
+        applyError instanceof Error ? applyError.message : 'Không thể áp dụng tất cả đề xuất.',
+      );
     } finally {
       setBusy('');
     }
   };
 
-  const handlePreviewAndDownload = async () => {
+  const handlePreviewAndDownload = async (download = false) => {
     if (!active) return;
-    setBusy('preview');
+    // Open synchronously while this click still has user-gesture permission.
+    // Opening only after the async validation/export requests causes browsers
+    // to treat the preview as an unsolicited popup and block it.
+    const previewWindow = window.open('', '_blank');
+    if (previewWindow) previewWindow.opener = null;
+    setBusy(download ? 'download' : 'preview');
     setError('');
     try {
-      let currentReport = validation;
+      // Preview/export must be generated from the same saved revision the user
+      // is looking at.  Previously a pending autosave could validate/export an
+      // older revision and make the button appear to do nothing.
+      let currentVariant = active;
+      let currentReport = dirty ? null : validation;
+      if (dirty) {
+        currentVariant = await cvVariantsApi.autosave(
+          active.id,
+          content,
+          content._confirmed_claims || [],
+        );
+        setActive(currentVariant);
+        setContent(currentVariant.content);
+        setValidation(null);
+        setDirty(false);
+      }
       if (!currentReport || !currentReport.passed) {
-        currentReport = await cvVariantsApi.validate(active.id);
+        currentReport = await cvVariantsApi.validate(currentVariant.id);
         setValidation(currentReport);
       }
-      if (currentReport?.passed) {
-        if (active.status !== 'PUBLISHED') {
-          await cvVariantsApi.publish(active.id);
-          const refreshed = await cvVariantsApi.get(active.id);
+      if (currentReport?.passed && download) {
+        if (currentVariant.status !== 'PUBLISHED') {
+          await cvVariantsApi.publish(currentVariant.id);
+          const refreshed = await cvVariantsApi.get(currentVariant.id);
+          currentVariant = refreshed;
           setActive(refreshed);
           setVariants((items) => [refreshed, ...items.filter((item) => item.id !== refreshed.id)]);
         }
-        setMessage('✓ Bản CV đạt chuẩn ATS 100% và đã mở bản xem trước để tải về.');
-      } else {
+      } else if (!currentReport?.passed && download) {
         const failedCount = currentReport?.validators.filter((v) => !v.passed).length || 1;
-        setError(`⚠️ Bản CV có ${failedCount} tiêu chí kiểm định chưa đạt. Vui lòng xem chi tiết các mục vi phạm màu đỏ bên dưới.`);
+        setError(
+          `⚠️ Bản CV có ${failedCount} tiêu chí kiểm định chưa đạt. Vui lòng xem chi tiết các mục vi phạm màu đỏ bên dưới.`,
+        );
+        previewWindow?.close();
+        return;
       }
-      const blob = await cvVariantsApi.pdf(active.id, true);
+      // Fetch the published immutable asset rather than asking the server to
+      // re-render a preview. This makes preview and download byte-identical.
+      const blob = await cvVariantsApi.pdf(currentVariant.id, !download);
       const url = URL.createObjectURL(blob);
-      window.open(url, '_blank', 'noopener,noreferrer');
+      if (previewWindow) {
+        previewWindow.location.replace(url);
+      } else {
+        window.open(url, '_blank', 'noopener,noreferrer');
+      }
+      if (download) {
+        const downloadLink = document.createElement('a');
+        downloadLink.href = url;
+        downloadLink.download = `cv-${active.id}.pdf`;
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        downloadLink.remove();
+      }
       window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
     } catch (pdfError) {
+      previewWindow?.close();
       setError(pdfError instanceof Error ? pdfError.message : 'Không mở được PDF.');
     } finally {
       setBusy('');
@@ -563,13 +920,26 @@ export default function CVVariantWizard() {
     }
   };
 
+  const handleSelectTemplate = (selectedTemplate: typeof template) => {
+    setTemplate(selectedTemplate);
+    if (active) {
+      updateContent((prev) => ({
+        ...prev,
+        template_name: selectedTemplate,
+      }));
+    }
+  };
+
   return (
     <section className="cv-variant-wizard" aria-labelledby="cv-variant-title">
       <header className="cv-variant-wizard-head">
         <div>
           <p>TỐI ƯU HỒ SƠ ỨNG TUYỂN</p>
           <h3 id="cv-variant-title">Tạo và tối ưu CV theo JD</h3>
-          <span>Hồ sơ gốc luôn được bảo toàn 100%. Hệ thống tự động kiểm định 7 tiêu chuẩn ATS để đảm bảo CV trung thực và tối ưu nhất.</span>
+          <span>
+            Hồ sơ gốc luôn được bảo toàn 100%. Hệ thống tự động kiểm định 7 tiêu chuẩn ATS để đảm
+            bảo CV trung thực và tối ưu nhất.
+          </span>
         </div>
         <button
           type="button"
@@ -591,6 +961,24 @@ export default function CVVariantWizard() {
         </div>
       )}
 
+      {active && !isCreateExpanded ? (
+        <div className="cv-variant-create-summary">
+          <div className="cv-variant-create-summary-copy">
+            <span>CV: <strong>{mode === 'NO_CV' ? 'CV mới từ đầu' : selectedCvTitle}</strong></span>
+            <span aria-hidden="true">→</span>
+            <span>JD: <strong>{selectedJdTitle}</strong></span>
+          </div>
+          <button
+            type="button"
+            className="cv-variant-disclosure-btn"
+            onClick={() => setIsCreateExpanded(true)}
+            aria-expanded="false"
+          >
+            Đổi lựa chọn <ChevronDown size={16} />
+          </button>
+        </div>
+      ) : (
+        <>
       <div className="cv-variant-mode" role="group" aria-label="Chọn cách tạo CV">
         <button
           type="button"
@@ -611,13 +999,17 @@ export default function CVVariantWizard() {
       {!isAuthenticated && mode === 'HAS_CV' && (
         <div className="cv-variant-login-notice">
           <div className="cv-variant-login-notice-text">
-            <strong>Bạn chưa đăng nhập:</strong> Vui lòng đăng nhập tài khoản để chọn CV và JD đã lưu, hoặc chuyển sang chế độ <strong>&quot;Tạo CV mới từ đầu&quot;</strong> để tự tạo CV mới.
+            <strong>Bạn chưa đăng nhập:</strong> Vui lòng đăng nhập tài khoản để chọn CV và JD đã
+            lưu, hoặc chuyển sang chế độ <strong>&quot;Tạo CV mới từ đầu&quot;</strong> để tự tạo CV
+            mới.
           </div>
           <button
             type="button"
             className="cv-variant-login-btn"
             onClick={() => {
-              const btn = document.getElementById('header-login-btn') || document.querySelector('.header-login-btn') as HTMLElement;
+              const btn =
+                document.getElementById('header-login-btn') ||
+                (document.querySelector('.header-login-btn') as HTMLElement);
               btn?.click();
             }}
           >
@@ -640,7 +1032,9 @@ export default function CVVariantWizard() {
               {!isAuthenticated ? (
                 <option value="">Đăng nhập để xem danh sách CV đã lưu</option>
               ) : cvs.length === 0 ? (
-                <option value="">Chưa có CV nào (Tải lên CV ở trên hoặc chọn &apos;Tạo CV mới từ đầu&apos;)</option>
+                <option value="">
+                  Chưa có CV nào (Tải lên CV ở trên hoặc chọn &apos;Tạo CV mới từ đầu&apos;)
+                </option>
               ) : (
                 <>
                   <option value="">-- Chọn CV nguồn ({cvs.length} CV có sẵn) --</option>
@@ -658,36 +1052,13 @@ export default function CVVariantWizard() {
         <div className="cv-variant-field-group">
           <div className="cv-variant-label-row">
             <span className="cv-variant-label-text">JD mục tiêu ứng tuyển</span>
-            <button
-              type="button"
-              className="cv-variant-paste-jd-trigger-btn"
-              onClick={() => setShowPasteJdModal(true)}
-              title="Dán nội dung JD từ tin tuyển dụng mới"
-            >
-              <Plus size={13} /> Dán JD mới
-            </button>
           </div>
-          <select
+          <SearchableJdSelect
+            items={jds}
             value={jdId}
-            onChange={(event) => handleJdChange(event.target.value)}
+            onChange={handleJdChange}
             disabled={!isAuthenticated || jds.length === 0}
-          >
-            {!isAuthenticated ? (
-              <option value="">Đăng nhập để xem danh sách JD</option>
-            ) : jds.length === 0 ? (
-              <option value="">Chưa có JD khả dụng (Bấm &apos;+ Dán JD mới&apos; ở trên)</option>
-            ) : (
-              <>
-                <option value="">-- Chọn JD mục tiêu ({jds.length} JD có sẵn) --</option>
-                {jds.map((jd) => (
-                  <option key={jd.id} value={jd.id}>
-                    {jd.title}
-                    {jd.company ? ` — ${jd.company}` : ''}
-                  </option>
-                ))}
-              </>
-            )}
-          </select>
+          />
         </div>
 
         <div className="cv-variant-field-group">
@@ -697,45 +1068,35 @@ export default function CVVariantWizard() {
           <input value={title} onChange={(event) => setTitle(event.target.value)} />
         </div>
 
-        <div className="cv-variant-field-group">
-          <div className="cv-variant-label-row">
-            <span className="cv-variant-label-text">Template (Chọn nhanh)</span>
-          </div>
-          <select
-            value={template}
-            onChange={(event) => setTemplate(event.target.value as typeof template)}
-          >
-            <option value="classic">Classic Harvard ATS (1 cột)</option>
-            <option value="modern">Modern Tech Pro (2 cột)</option>
-            <option value="compact">Minimalist Compact (1 trang)</option>
-            <option value="creative">Creative Dark Timeline</option>
-            <option value="elegant">Elegant Executive</option>
-          </select>
-        </div>
       </div>
 
-      <div className="cv-variant-template-picker">
+      <div className="cv-variant-template-picker cv-variant-template-strip">
         <label className="cv-variant-template-picker-label">
           <span>Chọn mẫu CV trực quan</span>
           <span style={{ fontSize: '0.8rem', color: '#0d9488', fontWeight: 600 }}>
-            {CV_TEMPLATES.find((t) => t.id === template)?.name} · {CV_TEMPLATES.find((t) => t.id === template)?.badge}
+            {CV_TEMPLATES.find((t) => t.id === template)?.name} ·{' '}
+            {CV_TEMPLATES.find((t) => t.id === template)?.badge}
           </span>
         </label>
-        <div className="cv-variant-template-grid" role="radiogroup" aria-label="Chọn mẫu thiết kế CV">
+        <div
+          className="cv-variant-template-grid"
+          role="radiogroup"
+          aria-label="Chọn mẫu thiết kế CV"
+        >
           {CV_TEMPLATES.map((tmpl) => {
             const isSelected = template === tmpl.id;
             return (
               <div
                 key={tmpl.id}
                 className={`cv-variant-template-option${isSelected ? ' is-active' : ''}`}
-                onClick={() => setTemplate(tmpl.id as typeof template)}
+                onClick={() => handleSelectTemplate(tmpl.id as typeof template)}
                 role="radio"
                 aria-checked={isSelected}
                 tabIndex={0}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
-                    setTemplate(tmpl.id as typeof template);
+                    handleSelectTemplate(tmpl.id as typeof template);
                   }
                 }}
               >
@@ -759,7 +1120,10 @@ export default function CVVariantWizard() {
         <div className="cv-variant-guided-form">
           <div className="cv-variant-guided-form-head">
             <h4>Nhập thông tin hồ sơ của bạn</h4>
-            <p>Điền các thông tin thực tế từ quá trình học tập và làm việc. Hệ thống sẽ tự động chuyển đổi thành hồ sơ chuẩn ATS.</p>
+            <p>
+              Điền các thông tin thực tế từ quá trình học tập và làm việc. Hệ thống sẽ tự động
+              chuyển đổi thành hồ sơ chuẩn ATS.
+            </p>
           </div>
           <div className="cv-variant-field-group">
             <div className="cv-variant-label-row">
@@ -869,7 +1233,8 @@ export default function CVVariantWizard() {
               checked={sourceConfirmed}
               onChange={(event) => setSourceConfirmed(event.target.checked)}
             />{' '}
-            Tôi cam kết toàn bộ thông tin trên là trung thực và chính xác theo trải nghiệm thực tế của tôi.
+            Tôi cam kết toàn bộ thông tin trên là trung thực và chính xác theo trải nghiệm thực tế
+            của tôi.
           </label>
         </div>
       )}
@@ -884,6 +1249,8 @@ export default function CVVariantWizard() {
           {busy === 'create' ? 'Đang phân tích & tối ưu CV…' : 'Khởi tạo và tối ưu CV theo JD'}
         </button>
       </div>
+        </>
+      )}
 
       {active && (
         <div className="cv-variant-editor">
@@ -912,25 +1279,48 @@ export default function CVVariantWizard() {
               <div className="cv-variant-score-box">
                 <span className="cv-variant-score-label">Đề xuất tối ưu từ AI</span>
                 <strong className="cv-variant-score-val after">
-                  {suggestions.filter((s) => s.decision === 'accept').length} / {suggestions.length} đã duyệt
+                  {suggestions.filter((s) => s.decision === 'accept').length} / {suggestions.length}{' '}
+                  đã duyệt
                 </strong>
               </div>
               <div
                 className="cv-variant-trust-pill"
                 title="Hệ thống chỉ tối ưu từ ngữ và bám sát sự thật, tuyệt đối không bịa đặt kinh nghiệm/kỹ năng"
               >
-                <ShieldCheck size={16} /> 100% Xác thực từ hồ sơ gốc
+                <ShieldCheck size={16} /> {validation ? `${validation.claims_supported}/${validation.claims_total} claims verified · ${validation.verification_status}` : 'Chưa kiểm định nguồn'}
               </div>
             </div>
           </div>
 
-          {/* AI Suggestions Section at the top */}
+          <div className="cv-variant-split">
+            <div className="cv-variant-split-left">
+              <div className="cv-variant-tabs" role="tablist">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={editorTab === 'ai'}
+                  onClick={() => setEditorTab('ai')}
+                >
+                  Đề xuất AI {suggestions.length ? `(${suggestions.length})` : ''}
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={editorTab === 'manual'}
+                  onClick={() => setEditorTab('manual')}
+                >
+                  Chỉnh sửa thủ công
+                </button>
+              </div>
+
+              {editorTab === 'ai' && (
           <section className="cv-variant-suggestions-section">
             <div className="cv-variant-section-head">
               <div>
                 <h4>Đề xuất tối ưu từ AI</h4>
                 <p className="cv-variant-section-desc">
-                  Các câu gợi ý viết lại bám sát yêu cầu JD mà vẫn giữ 100% sự thật từ kinh nghiệm của bạn.
+                  Các câu gợi ý viết lại bám sát yêu cầu JD mà vẫn giữ 100% sự thật từ kinh nghiệm
+                  của bạn.
                 </p>
               </div>
               {suggestions.length > 0 && active.status !== 'PUBLISHED' && (
@@ -968,7 +1358,7 @@ export default function CVVariantWizard() {
                       <div className="cv-variant-diff-proposed">
                         <b>Đề xuất tối ưu theo JD</b>
                         <textarea
-                          disabled={active.status === 'PUBLISHED'}
+                          disabled={active.status === 'PUBLISHED' || suggestion.is_actionable === false}
                           value={
                             suggestionEdits[suggestion.id] ??
                             suggestion.final_text ??
@@ -994,7 +1384,7 @@ export default function CVVariantWizard() {
                         </p>
                       ) : null}
                     </div>
-                    {active.status !== 'PUBLISHED' && (
+                    {active.status !== 'PUBLISHED' && suggestion.is_actionable !== false && (
                       <div className="cv-variant-suggestion-actions">
                         <button
                           type="button"
@@ -1031,7 +1421,8 @@ export default function CVVariantWizard() {
                   <span className="cv-variant-gap-tag">💡 GỢI Ý NÂNG CAO NĂNG LỰC</span>
                   <h4>Khoảng trống kỹ năng & Gợi ý Dự án thực chiến</h4>
                   <p className="cv-variant-section-desc">
-                    Dựa trên các kỹ năng trọng tâm của JD mà CV chưa thể hiện, AI gợi ý đề tài dự án thực tế để bạn tham khảo phát triển chuyên môn:
+                    Dựa trên các kỹ năng trọng tâm của JD mà CV chưa thể hiện, AI gợi ý đề tài dự án
+                    thực tế để bạn tham khảo phát triển chuyên môn:
                   </p>
                 </div>
 
@@ -1051,13 +1442,14 @@ export default function CVVariantWizard() {
                 {active.content._gap_analysis.blueprint && (
                   <div className="cv-variant-blueprint-card">
                     <div className="cv-variant-blueprint-title">
-                      🎯 Dự án gợi ý: <strong>{active.content._gap_analysis.blueprint.title}</strong>
+                      🎯 Dự án gợi ý:{' '}
+                      <strong>{active.content._gap_analysis.blueprint.title}</strong>
                     </div>
                     <p className="cv-variant-blueprint-desc">
                       {active.content._gap_analysis.blueprint.description}
                     </p>
                     <div className="cv-variant-blueprint-bullet">
-                      <strong>Câu mô tả chuẩn ATS để đưa vào CV sau khi thực hiện:</strong>
+                      <strong>Chỉ thêm vào CV sau khi bạn hoàn thành và xác nhận thông tin là chính xác:</strong>
                       <p>{active.content._gap_analysis.blueprint.draft_bullet}</p>
                     </div>
                   </div>
@@ -1065,24 +1457,16 @@ export default function CVVariantWizard() {
               </section>
             )}
           </section>
+              )}
 
-          {/* Toggle Manual Full Editor */}
-          <div className="cv-variant-manual-toggle">
-            <button
-              type="button"
-              className="cv-variant-secondary-btn"
-              onClick={() => setShowManualEditor((prev) => !prev)}
-            >
-              {showManualEditor ? 'Ẩn form chỉnh sửa chi tiết ▲' : 'Mở form chỉnh sửa thủ công ▼'}
-            </button>
-          </div>
-
-          {showManualEditor && (
+              {editorTab === 'manual' && (
             <div className="cv-variant-manual-editor-card">
               <div className="cv-variant-truth-warning">
                 <ShieldAlert size={18} />
                 <div>
-                  <strong>Lưu ý về tính trung thực của hồ sơ:</strong> Vui lòng chỉ chỉnh sửa hoặc bổ sung những trải nghiệm, kỹ năng và kết quả mà bạn đã thực sự thực hiện. Hệ thống sẽ tự động đối chiếu với hồ sơ gốc để đảm bảo độ tin cậy khi xuất bản.
+                  <strong>Lưu ý về tính trung thực của hồ sơ:</strong> Vui lòng chỉ chỉnh sửa hoặc
+                  bổ sung những trải nghiệm, kỹ năng và kết quả mà bạn đã thực sự thực hiện. Hệ
+                  thống sẽ tự động đối chiếu với hồ sơ gốc để đảm bảo độ tin cậy khi xuất bản.
                 </div>
               </div>
 
@@ -1136,64 +1520,112 @@ export default function CVVariantWizard() {
                     }
                   />
                 </label>
-                <label>
-                  Kinh nghiệm
-                  <textarea
-                    value={recordsToText(content.experience)}
-                    onChange={(event) =>
-                      updateContent((item) => ({
-                        ...item,
-                        experience: textToRecords(event.target.value),
-                      }))
-                    }
-                  />
-                </label>
-                <label>
-                  Dự án
-                  <textarea
-                    value={recordsToText(content.projects)}
-                    onChange={(event) =>
-                      updateContent((item) => ({
-                        ...item,
-                        projects: textToRecords(event.target.value),
-                      }))
-                    }
-                  />
-                </label>
-                <label>
-                  Học vấn
-                  <textarea
-                    value={recordsToText(content.education)}
-                    onChange={(event) =>
-                      updateContent((item) => ({
-                        ...item,
-                        education: textToRecords(event.target.value),
-                      }))
-                    }
-                  />
-                </label>
+              </div>
+
+              <div className="cv-variant-entry-section">
+                <h5>Kinh nghiệm làm việc</h5>
+                <CVEntryListEditor
+                  items={content.experience}
+                  onChange={(next) => updateContent((item) => ({ ...item, experience: next }))}
+                  fields={[
+                    { key: 'role', label: 'Vị trí', placeholder: 'AI Engineer Intern' },
+                    { key: 'company', label: 'Công ty', placeholder: 'VNG, FPT Software...' },
+                    { key: 'period', label: 'Thời gian', placeholder: 'Th6 2025 – Hiện tại' },
+                  ]}
+                  addLabel="Thêm kinh nghiệm làm việc"
+                  emptyLabel="Chưa có kinh nghiệm nào."
+                  disabled={active.status === 'PUBLISHED'}
+                />
+              </div>
+
+              <div className="cv-variant-entry-section">
+                <h5>Dự án tiêu biểu</h5>
+                <CVEntryListEditor
+                  items={content.projects}
+                  onChange={(next) => updateContent((item) => ({ ...item, projects: next }))}
+                  fields={[
+                    { key: 'title', label: 'Tên dự án', placeholder: 'AI-Powered Career Platform' },
+                    { key: 'technologies', label: 'Công nghệ', placeholder: 'Python, FastAPI, React' },
+                    { key: 'period', label: 'Thời gian', placeholder: 'Th3 2026 – nay' },
+                  ]}
+                  addLabel="Thêm dự án"
+                  emptyLabel="Chưa có dự án nào."
+                  disabled={active.status === 'PUBLISHED'}
+                />
+              </div>
+
+              <div className="cv-variant-entry-section">
+                <h5>Học vấn</h5>
+                <CVEntryListEditor
+                  items={content.education}
+                  onChange={(next) => updateContent((item) => ({ ...item, education: next }))}
+                  fields={[
+                    { key: 'school', label: 'Trường', placeholder: 'Đại học Bách Khoa Hà Nội' },
+                    { key: 'degree', label: 'Bằng cấp', placeholder: 'Cử nhân CNTT' },
+                    { key: 'period', label: 'Thời gian', placeholder: '2022 – 2026' },
+                  ]}
+                  addLabel="Thêm học vấn"
+                  emptyLabel="Chưa có thông tin học vấn."
+                  disabled={active.status === 'PUBLISHED'}
+                />
+              </div>
+
+              <div className="cv-variant-entry-section">
+                <h5>Chứng chỉ & Hoạt động</h5>
+                <CVEntryListEditor
+                  items={content.certifications || []}
+                  onChange={(next) => updateContent((item) => ({ ...item, certifications: next }))}
+                  fields={[
+                    { key: 'title', label: 'Tên chứng chỉ', placeholder: 'AWS Certified Cloud Practitioner' },
+                    { key: 'issuer', label: 'Đơn vị cấp', placeholder: 'Amazon Web Services' },
+                    { key: 'period', label: 'Thời gian', placeholder: '2025' },
+                  ]}
+                  addLabel="Thêm chứng chỉ / hoạt động"
+                  emptyLabel="Chưa có chứng chỉ hoặc hoạt động nào."
+                  disabled={active.status === 'PUBLISHED'}
+                />
               </div>
             </div>
-          )}
+              )}
+            </div>
+
+            <div className="cv-variant-split-right">
+              <CVLivePreview content={content} template={template} />
+            </div>
+          </div>
 
           {/* Publish & Export Gate */}
           <section className="cv-variant-validation">
             <div className="cv-variant-validation-head">
               <div>
                 <h4>Kiểm định ATS & Xuất file CV</h4>
-                <p className="cv-variant-section-desc">
-                  Hệ thống tự động kiểm tra 7 tiêu chí ATS và chuẩn bị bản in PDF hoàn chỉnh theo mẫu thiết kế đã chọn.
-                </p>
+                {validation ? (
+                  <p className={hasValidationFailures ? 'cv-variant-validation-result failed' : 'cv-variant-validation-result'}>
+                    {hasValidationFailures ? '✕' : '✓'} {validationValidators.filter((validator) => validator.passed).length}/{validationValidators.length} tiêu chí đạt
+                  </p>
+                ) : (
+                  <p className="cv-variant-section-desc">Đang kiểm tra các tiêu chí ATS cho bản CV này.</p>
+                )}
               </div>
+              {validation && (
+                <button
+                  type="button"
+                  className={`cv-variant-disclosure-btn${showValidationDetails ? ' is-open' : ''}`}
+                  onClick={() => setIsValidationExpanded((expanded) => !expanded)}
+                  aria-expanded={showValidationDetails}
+                >
+                  {showValidationDetails ? 'Ẩn chi tiết' : 'Xem chi tiết'} <ChevronDown size={16} />
+                </button>
+              )}
             </div>
 
-            {validation && (
+            {validation && showValidationDetails && (
               <div className="cv-variant-validator-summary">
                 <div className="cv-variant-validator-grid">
-                  {validation.validators.map((validator) => {
+                  {validationValidators.map((validator) => {
                     const label = VALIDATOR_LABELS[validator.name] || {
-                      title: validator.name,
-                      desc: '',
+                      title: 'Kiểm tra nội dung CV',
+                      desc: 'Kiểm tra thông tin cần thiết trước khi xuất PDF.',
                     };
                     return (
                       <article
@@ -1205,9 +1637,7 @@ export default function CVVariantWizard() {
                             {validator.passed ? '✓' : '✕'} {label.title}
                           </strong>
                         </div>
-                        {label.desc && (
-                          <p className="cv-variant-validator-desc">{label.desc}</p>
-                        )}
+                        {label.desc && <p className="cv-variant-validator-desc">{label.desc}</p>}
                         {validator.errors.map((item) => (
                           <small key={item}>{item}</small>
                         ))}
@@ -1216,7 +1646,8 @@ export default function CVVariantWizard() {
                   })}
                 </div>
                 <p className="cv-variant-validation-stats">
-                  {validation.claims_supported}/{validation.claims_total} thông tin đã xác thực nguồn · Bản in PDF {validation.render.pages} trang chuẩn ATS
+                  {validation.claims_supported}/{validation.claims_total} thông tin đã xác thực
+                  nguồn · Bản in PDF {validation.render.pages} trang chuẩn ATS
                 </p>
               </div>
             )}
@@ -1225,21 +1656,36 @@ export default function CVVariantWizard() {
             <div className="cv-variant-unified-action-row">
               <button
                 type="button"
-                className="cv-variant-preview-download-btn"
-                onClick={() => void handlePreviewAndDownload()}
+                className="cv-variant-preview-btn"
+                onClick={() => void handlePreviewAndDownload(false)}
                 disabled={Boolean(busy)}
-                title="Preview PDF và Tải PDF"
+                title="Xem trước bản in PDF (không tải file về máy)"
               >
-                <Eye size={18} /> Xem trước & Tải CV (PDF)
+                <Eye size={18} /> {busy === 'preview' ? 'Đang xem trước…' : 'Xem trước PDF'}
               </button>
+              <button
+                type="button"
+                className="cv-variant-preview-download-btn"
+                onClick={() => void handlePreviewAndDownload(true)}
+                disabled={Boolean(busy)}
+                title="Kiểm định đạt chuẩn ATS, publish và tải file PDF về máy"
+              >
+                <Download size={18} /> {busy === 'download' ? 'Đang tải CV…' : 'Tải CV (PDF)'}
+              </button>
+              {validation && !validation.passed && (
+                <small className="cv-variant-export-block-reason">
+                  Chưa thể tải: {studentValidators.flatMap((item) => item.issues).map((item) => `${item.section}: ${item.reason}`)[0] || 'Hãy hoàn tất kiểm định.'}
+                </small>
+              )}
               {validation ? (
                 validation.passed ? (
                   <div className="cv-variant-verified-badge">
-                    <CheckCircle2 size={16} /> Đạt chuẩn ATS 100% (Sẵn sàng ứng tuyển)
+                    <CheckCircle2 size={16} /> {validation.verification_status || 'Verified'} · JD keyword coverage {validation.jd_keyword_coverage ?? 0}% · ATS content coverage {validation.ats_content_coverage ?? 0}%
                   </div>
                 ) : (
                   <div className="cv-variant-failed-badge">
-                    <XCircle size={16} /> Chưa đạt kiểm định ({validation.validators.filter((v) => !v.passed).length} tiêu chí vi phạm)
+                    <XCircle size={16} /> Chưa đạt kiểm định (
+                    {validation.validators.filter((v) => !v.passed).length} tiêu chí vi phạm)
                   </div>
                 )
               ) : (
@@ -1253,15 +1699,20 @@ export default function CVVariantWizard() {
       )}
 
       <section className="cv-variant-history">
-        <div className="cv-variant-section-head">
+        <div className="cv-variant-section-head cv-variant-history-head">
           <div>
-            <h4>Lịch sử revision</h4>
-            <p className="cv-variant-section-desc">
-              Lưu giữ 5 phiên bản tối ưu gần nhất cùng mốc thời gian tạo.
-            </p>
+            <h4>Lịch sử revision ({Math.min(variants.length, 5)})</h4>
           </div>
+          <button
+            type="button"
+            className={`cv-variant-disclosure-btn${isHistoryExpanded ? ' is-open' : ''}`}
+            onClick={() => setIsHistoryExpanded((expanded) => !expanded)}
+            aria-expanded={isHistoryExpanded}
+          >
+            {isHistoryExpanded ? 'Ẩn lịch sử' : 'Xem lịch sử'} <ChevronDown size={16} />
+          </button>
         </div>
-        {variants.length ? (
+        {isHistoryExpanded && (variants.length ? (
           <div className="cv-variant-history-list">
             {variants.slice(0, 5).map((variant) => {
               let formattedDate = 'Vừa xong';
@@ -1284,7 +1735,9 @@ export default function CVVariantWizard() {
                 }
               }
 
-              const tplName = CV_TEMPLATES.find((t) => t.id === variant.content?.template_name)?.name || 'Mẫu Harvard ATS';
+              const tplName =
+                CV_TEMPLATES.find((t) => t.id === variant.content?.template_name)?.name ||
+                'Mẫu Harvard ATS';
 
               return (
                 <div key={variant.id} className="cv-variant-history-item">
@@ -1298,7 +1751,11 @@ export default function CVVariantWizard() {
                     <div className="cv-variant-history-meta">
                       <span className="cv-variant-history-template-tag">{tplName}</span>
                       <span className="cv-variant-dot">•</span>
-                      <span>{variant.revision_no > 1 ? `Chỉnh sửa lần ${variant.revision_no}` : 'Bản tạo mới'}</span>
+                      <span>
+                        {variant.revision_no > 1
+                          ? `Chỉnh sửa lần ${variant.revision_no}`
+                          : 'Bản tạo mới'}
+                      </span>
                       <span className="cv-variant-dot">•</span>
                       <span>{formattedDate}</span>
                     </div>
@@ -1316,7 +1773,7 @@ export default function CVVariantWizard() {
           </div>
         ) : (
           <p className="cv-variant-empty-text">Chưa có phiên bản nào được lưu.</p>
-        )}
+        ))}
       </section>
 
       {/* Modal Dán JD mới */}
@@ -1326,7 +1783,9 @@ export default function CVVariantWizard() {
             <div className="cv-variant-modal-head">
               <div className="cv-variant-modal-title">
                 <h4>Dán nội dung JD mới</h4>
-                <p>Nhập thông tin vị trí tuyển dụng để lưu vào hệ thống và tối ưu CV theo JD này.</p>
+                <p>
+                  Nhập thông tin vị trí tuyển dụng để lưu vào hệ thống và tối ưu CV theo JD này.
+                </p>
               </div>
             </div>
 

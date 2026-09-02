@@ -1,0 +1,308 @@
+[
+  {
+    "case_id": "CASE_SAMPLE_001_SENIOR_BE",
+    "cv_id": "CV_SAMPLE_BE_01",
+    "jd_id": "JD_SAMPLE_BE_01",
+    "data_origin": "SYNTHETIC",
+    "source_dataset": "sample_reference",
+    "requirements": [
+      {
+        "requirement_id": "REQ_PY",
+        "canonical_name": "Python",
+        "required_level": "REQUIRED",
+        "expected_proficiency": "SENIOR",
+        "importance": 4.5,
+        "text": "Thành thạo Python backend",
+        "group": "skills",
+        "hard_gate": true,
+        "human_is_critical_gap": false,
+        "group_id": null,
+        "group_operator": null,
+        "evidence_relation": "DIRECT",
+        "requirement_outcome": "SATISFIED",
+        "expected_evidence": [
+          {
+            "section": "experience",
+            "parent_title": "Senior Backend Engineer",
+            "quote": "5 năm kinh nghiệm chuyên sâu Python, FastAPI, PostgreSQL và Docker",
+            "start_offset": null,
+            "end_offset": null
+          }
+        ],
+        "expected_evidence_chunk_ids": [],
+        "annotations": [],
+        "adjudicated": false,
+        "notes": "",
+        "human_label": "DIRECT"
+      },
+      {
+        "requirement_id": "REQ_FASTAPI",
+        "canonical_name": "FastAPI",
+        "required_level": "REQUIRED",
+        "expected_proficiency": "SENIOR",
+        "importance": 4.0,
+        "text": "Kinh nghiệm chuyên sâu với FastAPI",
+        "group": "skills",
+        "hard_gate": true,
+        "human_is_critical_gap": false,
+        "group_id": null,
+        "group_operator": null,
+        "evidence_relation": "DIRECT",
+        "requirement_outcome": "SATISFIED",
+        "expected_evidence": [
+          {
+            "section": "experience",
+            "parent_title": "Senior Backend Engineer",
+            "quote": "Thiết kế kiến trúc microservices bằng Python và FastAPI",
+            "start_offset": null,
+            "end_offset": null
+          }
+        ],
+        "expected_evidence_chunk_ids": [],
+        "annotations": [],
+        "adjudicated": false,
+        "notes": "",
+        "human_label": "DIRECT"
+      },
+      {
+        "requirement_id": "REQ_PG",
+        "canonical_name": "PostgreSQL",
+        "required_level": "REQUIRED",
+        "expected_proficiency": "SENIOR",
+        "importance": 3.5,
+        "text": "Thành thạo PostgreSQL",
+        "group": "skills",
+        "hard_gate": true,
+        "human_is_critical_gap": false,
+        "group_id": null,
+        "group_operator": null,
+        "evidence_relation": "DIRECT",
+        "requirement_outcome": "SATISFIED",
+        "expected_evidence": [
+          {
+            "section": "experience",
+            "parent_title": "Senior Backend Engineer",
+            "quote": "tối ưu hóa PostgreSQL",
+            "start_offset": null,
+            "end_offset": null
+          }
+        ],
+        "expected_evidence_chunk_ids": [],
+        "annotations": [],
+        "adjudicated": false,
+        "notes": "",
+        "human_label": "DIRECT"
+      },
+      {
+        "requirement_id": "REQ_DOCKER",
+        "canonical_name": "Docker",
+        "required_level": "REQUIRED",
+        "expected_proficiency": "MIDDLE",
+        "importance": 3.0,
+        "text": "Kinh nghiệm Docker",
+        "group": "skills",
+        "hard_gate": true,
+        "human_is_critical_gap": false,
+        "group_id": null,
+        "group_operator": null,
+        "evidence_relation": "DIRECT",
+        "requirement_outcome": "SATISFIED",
+        "expected_evidence": [
+          {
+            "section": "experience",
+            "parent_title": "Senior Backend Engineer",
+            "quote": "quản lý Docker trên AWS",
+            "start_offset": null,
+            "end_offset": null
+          }
+        ],
+        "expected_evidence_chunk_ids": [],
+        "annotations": [],
+        "adjudicated": false,
+        "notes": "",
+        "human_label": "DIRECT"
+      },
+      {
+        "requirement_id": "PREF_REDIS",
+        "canonical_name": "Redis",
+        "required_level": "PREFERRED",
+        "expected_proficiency": "MIDDLE",
+        "importance": 1.0,
+        "text": "Kinh nghiệm Redis",
+        "group": "skills",
+        "hard_gate": false,
+        "human_is_critical_gap": false,
+        "group_id": null,
+        "group_operator": null,
+        "evidence_relation": "DIRECT",
+        "requirement_outcome": "SATISFIED",
+        "expected_evidence": [
+          {
+            "section": "projects",
+            "parent_title": "E-Commerce Microservices",
+            "quote": "kết nối Redis và Kafka",
+            "start_offset": null,
+            "end_offset": null
+          }
+        ],
+        "expected_evidence_chunk_ids": [],
+        "annotations": [],
+        "adjudicated": false,
+        "notes": "",
+        "human_label": "DIRECT"
+      },
+      {
+        "requirement_id": "REQ_K8S",
+        "canonical_name": "Kubernetes",
+        "required_level": "PREFERRED",
+        "expected_proficiency": "MIDDLE",
+        "importance": 2.0,
+        "text": "Kinh nghiệm Kubernetes k8s",
+        "group": "skills",
+        "hard_gate": false,
+        "human_is_critical_gap": false,
+        "group_id": null,
+        "group_operator": null,
+        "evidence_relation": "NO_EVIDENCE",
+        "requirement_outcome": "UNSATISFIED",
+        "expected_evidence": [],
+        "expected_evidence_chunk_ids": [],
+        "annotations": [],
+        "adjudicated": false,
+        "notes": "",
+        "human_label": "NO_EVIDENCE"
+      }
+    ],
+    "boolean_groups": [],
+    "human_overall_score": 95.0,
+    "cv_text": "Senior Backend Developer với 5 năm kinh nghiệm chuyên sâu Python, FastAPI, PostgreSQL và Docker. Thiết kế microservices tích hợp Redis cache và Kafka trên AWS.",
+    "cv_parsed": {
+      "skills": [
+        "Python",
+        "FastAPI",
+        "PostgreSQL",
+        "Docker",
+        "Redis",
+        "Kafka",
+        "AWS"
+      ],
+      "experience": [
+        {
+          "title": "Senior Backend Engineer",
+          "duration_months": 60,
+          "description": "Thiết kế kiến trúc microservices bằng Python và FastAPI, tối ưu hóa PostgreSQL, quản lý Docker trên AWS."
+        }
+      ],
+      "projects": [
+        {
+          "name": "E-Commerce Microservices",
+          "description": "Xây dựng hệ thống backend chịu tải cao bằng FastAPI và PostgreSQL, kết nối Redis và Kafka."
+        }
+      ],
+      "ats_quality": {
+        "score": 92
+      }
+    },
+    "jd_title": "Senior Python Backend Engineer",
+    "jd_requirements": "Yêu cầu Python, FastAPI, PostgreSQL, Docker. Ưu tiên Redis, Kafka, AWS.",
+    "jd_parsed": null,
+    "domain": "backend",
+    "seniority": "senior",
+    "notes": "",
+    "human_overall_rating": null
+  },
+  {
+    "case_id": "CASE_SAMPLE_002_DURATION_GAP",
+    "cv_id": "CV_SAMPLE_JR_02",
+    "jd_id": "JD_SAMPLE_SR_02",
+    "data_origin": "REAL",
+    "source_dataset": "sample_reference_real",
+    "requirements": [
+      {
+        "requirement_id": "REQ_PY_EXP",
+        "canonical_name": "Python Experience",
+        "required_level": "REQUIRED",
+        "expected_proficiency": "SENIOR",
+        "importance": 4.5,
+        "text": "Tối thiểu 4 năm kinh nghiệm Python",
+        "group": "skills",
+        "hard_gate": true,
+        "human_is_critical_gap": true,
+        "group_id": null,
+        "group_operator": null,
+        "evidence_relation": "DIRECT",
+        "requirement_outcome": "UNSATISFIED",
+        "expected_evidence": [
+          {
+            "section": "experience",
+            "parent_title": "Junior Python Developer",
+            "quote": "Lập trình backend bằng Python và PostgreSQL trong 1 năm.",
+            "start_offset": null,
+            "end_offset": null
+          }
+        ],
+        "expected_evidence_chunk_ids": [],
+        "annotations": [],
+        "adjudicated": false,
+        "notes": "",
+        "human_label": "DIRECT"
+      },
+      {
+        "requirement_id": "REQ_PG",
+        "canonical_name": "PostgreSQL",
+        "required_level": "REQUIRED",
+        "expected_proficiency": "SENIOR",
+        "importance": 3.5,
+        "text": "Thành thạo PostgreSQL",
+        "group": "skills",
+        "hard_gate": false,
+        "human_is_critical_gap": false,
+        "group_id": null,
+        "group_operator": null,
+        "evidence_relation": "DIRECT",
+        "requirement_outcome": "SATISFIED",
+        "expected_evidence": [
+          {
+            "section": "experience",
+            "parent_title": "Junior Python Developer",
+            "quote": "Lập trình backend bằng Python và PostgreSQL trong 1 năm.",
+            "start_offset": null,
+            "end_offset": null
+          }
+        ],
+        "expected_evidence_chunk_ids": [],
+        "annotations": [],
+        "adjudicated": false,
+        "notes": "",
+        "human_label": "DIRECT"
+      }
+    ],
+    "boolean_groups": [],
+    "human_overall_score": 40.0,
+    "cv_text": "Backend Developer với 1 năm kinh nghiệm phát triển REST API với Python và PostgreSQL.",
+    "cv_parsed": {
+      "skills": [
+        "Python",
+        "PostgreSQL",
+        "REST API"
+      ],
+      "experience": [
+        {
+          "title": "Junior Python Developer",
+          "duration_months": 12,
+          "description": "Lập trình backend bằng Python và PostgreSQL trong 1 năm."
+        }
+      ],
+      "ats_quality": {
+        "score": 75
+      }
+    },
+    "jd_title": "Senior Backend Developer (4+ years Python)",
+    "jd_requirements": "Tuyển Senior Python Backend. Bắt buộc 4+ năm kinh nghiệm Python và PostgreSQL.",
+    "jd_parsed": null,
+    "domain": "backend",
+    "seniority": "senior",
+    "notes": "",
+    "human_overall_rating": null
+  }
+]

@@ -15,7 +15,22 @@
 @import url('./styles/candidate-flow.css');
 @import url('./styles/ai-activity.css');
 @import url('./styles/profile.css');
-@import url('./styles/enterprise.css');
 @import url('./styles/notifications.css');
 @import url('./styles/template-gallery.css');
+@import url('./styles/counselor.css');
+/* Unified auth modal (login/register/forgot) — before the shared layers. */
+@import url('./styles/auth-modal.css');
+/* Shared responsive header — must stay after all legacy page scopes. */
+@import url('./styles/navbar.css');
+/* Global responsive layer (grids, tables, modals, touch targets) — after navbar.css. */
+@import url('./styles/responsive.css');
+/*
+ * Shared UI system (Preflight shim, buttons, search fields, KPI cards, modal scroll)
+ * — MUST stay last so one shared rule set wins over every per-page scope.
+ */
+@import url('./styles/shared-ui.css');
+/* Job-detail modal is intentionally last: its responsive behavior must not be
+   reset by the broad legacy responsive layer above. */
+@import url('./styles/job-detail-modal.css');
+
 

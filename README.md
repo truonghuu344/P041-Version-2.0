@@ -253,14 +253,14 @@ bash scripts/_pyrun.sh scripts/log_manual.py --tool chatgpt --prompt "What you a
 |---|---|:---:|
 | 1 | Source Code | ✅ |
 | 2 | README.md | ✅ |
-| 3 | Architecture Diagram | 📝 Cần điền (`ARCHITECTURE.md`, `docs/architecture_diagram.md`) |
+| 3 | Architecture Diagram | ✅ `docs/architecture.md`, `ARCHITECTURE.md`, `docs/architecture_diagram.md` |
 | 4 | AI Logs | ✅ Tự động |
 | 5 | Live URL | ⏳ Chưa deploy public — hiện chạy local qua Docker |
-| 6 | Video Demo | 📝 Cần làm (`presentation/`) |
-| 7 | Pitch Deck | 📝 Cần làm (`presentation/`) |
-| 8 | Development Journal | 📝 Cần điền (`JOURNAL.md`) |
-| 9 | Worklog | 📝 Cần điền (`WORKLOG.md`) |
-| 10 | Evaluation Evidence | ✅ `eval/` (CV parser + CV-JD matching, 15/15 case pass) |
+| 6 | Video Demo | ⏳ Chờ link YouTube do thành viên xác nhận (`docs/video-demo.md`) |
+| 7 | Pitch Deck | ✅ `docs/pitch-deck.pdf` |
+| 8 | Development Journal | ✅ `docs/journal.md` → `JOURNAL.md` |
+| 9 | Worklog | ✅ `docs/worklog.md` → `WORKLOG.md` |
+| 10 | Evaluation Evidence | ✅ `docs/evaluation.md`, `eval/` |
 
 ## 📖 Technical Guidebook (tài liệu chung khóa học)
 

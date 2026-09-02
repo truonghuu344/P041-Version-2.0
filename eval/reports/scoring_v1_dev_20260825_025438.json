@@ -1,0 +1,3705 @@
+{
+  "metadata": {
+    "scoring_version": "scoring_v1",
+    "dataset_version": "1.0",
+    "split": "dev",
+    "timestamp_utc": "2026-08-25T02:54:32.211724+00:00",
+    "total_jobs": 5,
+    "total_evaluations": 26
+  },
+  "configuration": {
+    "max_preferred_share": 0.25,
+    "embedding_provider": "hashing",
+    "bm25_top_k": 20,
+    "semantic_top_k": 20,
+    "semantic_min_score": 0.45,
+    "rrf_k": 60,
+    "top_jobs_cache_version": "v1",
+    "gap_analysis_cache_version": "v1"
+  },
+  "summary_metrics": {
+    "ndcg_at_5": 0.9866,
+    "ndcg_at_10": 0.9866,
+    "spearman_rho": 0.1267,
+    "pearson_r": 0.1293,
+    "mae": 48.87,
+    "pairwise_inversion_rate": 0.1042,
+    "total_pairs_compared": 48,
+    "correct_pairs": 9,
+    "inverted_pairs": 5,
+    "tied_pairs": 34
+  },
+  "layer_metrics": {
+    "layer_a_retrieval": {
+      "status": "OPERATIONAL",
+      "note": "BM25 + Hashing Vector + RRF hybrid retrieval running on atomic requirements."
+    },
+    "layer_b_requirement_matching": {
+      "accuracy": 0.2188,
+      "macro_f1": 0.1197,
+      "confusion_matrix": {
+        "MATCHED": {
+          "MATCHED": 0,
+          "PARTIAL": 0,
+          "NOT_FOUND": 24,
+          "CONFLICT": 0
+        },
+        "PARTIAL": {
+          "MATCHED": 0,
+          "PARTIAL": 0,
+          "NOT_FOUND": 0,
+          "CONFLICT": 0
+        },
+        "NOT_FOUND": {
+          "MATCHED": 0,
+          "PARTIAL": 0,
+          "NOT_FOUND": 7,
+          "CONFLICT": 0
+        },
+        "CONFLICT": {
+          "MATCHED": 0,
+          "PARTIAL": 0,
+          "NOT_FOUND": 1,
+          "CONFLICT": 0
+        }
+      },
+      "per_class": {
+        "MATCHED": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 24
+        },
+        "PARTIAL": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        },
+        "NOT_FOUND": {
+          "precision": 0.2188,
+          "recall": 1.0,
+          "f1": 0.359,
+          "support": 7
+        },
+        "CONFLICT": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 1
+        }
+      }
+    },
+    "layer_b_hard_constraints": {
+      "accuracy": 0.9231,
+      "macro_f1": 0.32,
+      "confusion_matrix": {
+        "ELIGIBLE": {
+          "ELIGIBLE": 24,
+          "UNKNOWN": 0,
+          "NOT_ELIGIBLE": 0
+        },
+        "UNKNOWN": {
+          "ELIGIBLE": 1,
+          "UNKNOWN": 0,
+          "NOT_ELIGIBLE": 0
+        },
+        "NOT_ELIGIBLE": {
+          "ELIGIBLE": 1,
+          "UNKNOWN": 0,
+          "NOT_ELIGIBLE": 0
+        }
+      },
+      "per_class": {
+        "ELIGIBLE": {
+          "precision": 0.9231,
+          "recall": 1.0,
+          "f1": 0.96,
+          "support": 24
+        },
+        "UNKNOWN": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 1
+        },
+        "NOT_ELIGIBLE": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 1
+        }
+      }
+    },
+    "layer_c_ranking": {
+      "mean_ndcg_5": 0.9866,
+      "mean_ndcg_10": 0.9866,
+      "mean_spearman_rho": 0.1267,
+      "inversion_rate": 0.1042
+    }
+  },
+  "error_analysis": {
+    "total_inversions": 39,
+    "inversions_by_layer": {
+      "RETRIEVAL_ERROR": 0,
+      "REQUIREMENT_EXTRACTION_ERROR": 0,
+      "SEMANTIC_MATCH_ERROR": 0,
+      "EXPERIENCE_CALCULATION_ERROR": 0,
+      "IMPORTANCE_ERROR": 0,
+      "PREFERRED_GUARDRAIL_ERROR": 0,
+      "HARD_CONSTRAINT_ERROR": 0,
+      "FINAL_RANKING_ERROR": 39,
+      "OTHER": 0
+    },
+    "detailed_inversion_diagnostics": [
+      {
+        "job_id": "JD-BE-001",
+        "inverted_pair": "CV-BE-01 (Human=4, Sys=0.0) < CV-BE-02 (Human=3, Sys=0.0)",
+        "human_ranking": "CV-BE-01 (4) > CV-BE-02 (3)",
+        "system_ranking": "CV-BE-02 (0.0) > CV-BE-01 (0.0)",
+        "score_difference": 0.0,
+        "likely_failure_layer": "FINAL_RANKING_ERROR",
+        "diagnosis_reason": "Tổng hợp điểm số chênh lệch trên nhiều tiêu chí nhỏ.",
+        "top_contributing_requirements": []
+      },
+      {
+        "job_id": "JD-BE-001",
+        "inverted_pair": "CV-BE-01 (Human=4, Sys=0.0) < CV-BE-06 (Human=3, Sys=0.0)",
+        "human_ranking": "CV-BE-01 (4) > CV-BE-06 (3)",
+        "system_ranking": "CV-BE-06 (0.0) > CV-BE-01 (0.0)",
+        "score_difference": 0.0,
+        "likely_failure_layer": "FINAL_RANKING_ERROR",
+        "diagnosis_reason": "Tổng hợp điểm số chênh lệch trên nhiều tiêu chí nhỏ.",
+        "top_contributing_requirements": []
+      },
+      {
+        "job_id": "JD-BE-001",
+        "inverted_pair": "CV-BE-01 (Human=4, Sys=0.0) < CV-BE-03 (Human=2, Sys=0.0)",
+        "human_ranking": "CV-BE-01 (4) > CV-BE-03 (2)",
+        "system_ranking": "CV-BE-03 (0.0) > CV-BE-01 (0.0)",
+        "score_difference": 0.0,
+        "likely_failure_layer": "FINAL_RANKING_ERROR",
+        "diagnosis_reason": "Tổng hợp điểm số chênh lệch trên nhiều tiêu chí nhỏ.",
+        "top_contributing_requirements": []
+      },
+      {
+        "job_id": "JD-BE-001",
+        "inverted_pair": "CV-BE-01 (Human=4, Sys=0.0) < CV-BE-04 (Human=1, Sys=0.0)",
+        "human_ranking": "CV-BE-01 (4) > CV-BE-04 (1)",
+        "system_ranking": "CV-BE-04 (0.0) > CV-BE-01 (0.0)",
+        "score_difference": 0.0,
+        "likely_failure_layer": "FINAL_RANKING_ERROR",
+        "diagnosis_reason": "Tổng hợp điểm số chênh lệch trên nhiều tiêu chí nhỏ.",
+        "top_contributing_requirements": []
+      },
+      {
+        "job_id": "JD-BE-001",
+        "inverted_pair": "CV-BE-01 (Human=4, Sys=0.0) < CV-BE-05 (Human=0, Sys=0.0)",
+        "human_ranking": "CV-BE-01 (4) > CV-BE-05 (0)",
+        "system_ranking": "CV-BE-05 (0.0) > CV-BE-01 (0.0)",
+        "score_difference": 0.0,
+        "likely_failure_layer": "FINAL_RANKING_ERROR",
+        "diagnosis_reason": "Tổng hợp điểm số chênh lệch trên nhiều tiêu chí nhỏ.",
+        "top_contributing_requirements": []
+      },
+      {
+        "job_id": "JD-BE-001",
+        "inverted_pair": "CV-BE-02 (Human=3, Sys=0.0) < CV-BE-03 (Human=2, Sys=0.0)",
+        "human_ranking": "CV-BE-02 (3) > CV-BE-03 (2)",
+        "system_ranking": "CV-BE-03 (0.0) > CV-BE-02 (0.0)",
+        "score_difference": 0.0,
+        "likely_failure_layer": "FINAL_RANKING_ERROR",
+        "diagnosis_reason": "Tổng hợp điểm số chênh lệch trên nhiều tiêu chí nhỏ.",
+        "top_contributing_requirements": []
+      },
+      {
+        "job_id": "JD-BE-001",
+        "inverted_pair": "CV-BE-02 (Human=3, Sys=0.0) < CV-BE-04 (Human=1, Sys=0.0)",
+        "human_ranking": "CV-BE-02 (3) > CV-BE-04 (1)",
+        "system_ranking": "CV-BE-04 (0.0) > CV-BE-02 (0.0)",
+        "score_difference": 0.0,
+        "likely_failure_layer": "FINAL_RANKING_ERROR",
+        "diagnosis_reason": "Tổng hợp điểm số chênh lệch trên nhiều tiêu chí nhỏ.",
+        "top_contributing_requirements": []
+      },
+      {
+        "job_id": "JD-BE-001",
+        "inverted_pair": "CV-BE-02 (Human=3, Sys=0.0) < CV-BE-05 (Human=0, Sys=0.0)",
+        "human_ranking": "CV-BE-02 (3) > CV-BE-05 (0)",
+        "system_ranking": "CV-BE-05 (0.0) > CV-BE-02 (0.0)",
+        "score_difference": 0.0,
+        "likely_failure_layer": "FINAL_RANKING_ERROR",
+        "diagnosis_reason": "Tổng hợp điểm số chênh lệch trên nhiều tiêu chí nhỏ.",
+        "top_contributing_requirements": []
+      },
+      {
+        "job_id": "JD-BE-001",
+        "inverted_pair": "CV-BE-06 (Human=3, Sys=0.0) < CV-BE-03 (Human=2, Sys=0.0)",
+        "human_ranking": "CV-BE-06 (3) > CV-BE-03 (2)",
+        "system_ranking": "CV-BE-03 (0.0) > CV-BE-06 (0.0)",
+        "score_difference": 0.0,
+        "likely_failure_layer": "FINAL_RANKING_ERROR",
+        "diagnosis_reason": "Tổng hợp điểm số chênh lệch trên nhiều tiêu chí nhỏ.",
+        "top_contributing_requirements": []
+      },
+      {
+        "job_id": "JD-BE-001",
+        "inverted_pair": "CV-BE-06 (Human=3, Sys=0.0) < CV-BE-04 (Human=1, Sys=0.0)",
+        "human_ranking": "CV-BE-06 (3) > CV-BE-04 (1)",
+        "system_ranking": "CV-BE-04 (0.0) > CV-BE-06 (0.0)",
+        "score_difference": 0.0,
+        "likely_failure_layer": "FINAL_RANKING_ERROR",
+        "diagnosis_reason": "Tổng hợp điểm số chênh lệch trên nhiều tiêu chí nhỏ.",
+        "top_contributing_requirements": []
+      },
+      {
+        "job_id": "JD-BE-001",
+        "inverted_pair": "CV-BE-06 (Human=3, Sys=0.0) < CV-BE-05 (Human=0, Sys=0.0)",
+        "human_ranking": "CV-BE-06 (3) > CV-BE-05 (0)",
+        "system_ranking": "CV-BE-05 (0.0) > CV-BE-06 (0.0)",
+        "score_difference": 0.0,
+        "likely_failure_layer": "FINAL_RANKING_ERROR",
+        "diagnosis_reason": "Tổng hợp điểm số chênh lệch trên nhiều tiêu chí nhỏ.",
+        "top_contributing_requirements": []
+      },
+      {
+        "job_id": "JD-BE-001",
+        "inverted_pair": "CV-BE-03 (Human=2, Sys=0.0) < CV-BE-04 (Human=1, Sys=0.0)",
+        "human_ranking": "CV-BE-03 (2) > CV-BE-04 (1)",
+        "system_ranking": "CV-BE-04 (0.0) > CV-BE-03 (0.0)",
+        "score_difference": 0.0,
+        "likely_failure_layer": "FINAL_RANKING_ERROR",
+        "diagnosis_reason": "Tổng hợp điểm số chênh lệch trên nhiều tiêu chí nhỏ.",
+        "top_contributing_requirements": []
+      },
+      {
+        "job_id": "JD-BE-001",
+        "inverted_pair": "CV-BE-03 (Human=2, Sys=0.0) < CV-BE-05 (Human=0, Sys=0.0)",
+        "human_ranking": "CV-BE-03 (2) > CV-BE-05 (0)",
+        "system_ranking": "CV-BE-05 (0.0) > CV-BE-03 (0.0)",
+        "score_difference": 0.0,
+        "likely_failure_layer": "FINAL_RANKING_ERROR",
+        "diagnosis_reason": "Tổng hợp điểm số chênh lệch trên nhiều tiêu chí nhỏ.",
+        "top_contributing_requirements": []
+      },
+      {
+        "job_id": "JD-BE-001",
+        "inverted_pair": "CV-BE-04 (Human=1, Sys=0.0) < CV-BE-05 (Human=0, Sys=0.0)",
+        "human_ranking": "CV-BE-04 (1) > CV-BE-05 (0)",
+        "system_ranking": "CV-BE-05 (0.0) > CV-BE-04 (0.0)",
+        "score_difference": 0.0,
+        "likely_failure_layer": "FINAL_RANKING_ERROR",
+        "diagnosis_reason": "Tổng hợp điểm số chênh lệch trên nhiều tiêu chí nhỏ.",
+        "top_contributing_requirements": []
+      },
+      {
+        "job_id": "JD-FE-001",
+        "inverted_pair": "CV-FE-01 (Human=4, Sys=18.2) < CV-FE-02 (Human=2, Sys=18.2)",
+        "human_ranking": "CV-FE-01 (4) > CV-FE-02 (2)",
+        "system_ranking": "CV-FE-02 (18.2) > CV-FE-01 (18.2)",
+        "score_difference": 0.0,
+        "likely_failure_layer": "FINAL_RANKING_ERROR",
+        "diagnosis_reason": "Tổng hợp điểm số chênh lệch trên nhiều tiêu chí nhỏ.",
+        "top_contributing_requirements": []
+      },
+      {
+        "job_id": "JD-FE-001",
+        "inverted_pair": "CV-FE-01 (Human=4, Sys=18.2) < CV-FE-04 (Human=1, Sys=18.2)",
+        "human_ranking": "CV-FE-01 (4) > CV-FE-04 (1)",
+        "system_ranking": "CV-FE-04 (18.2) > CV-FE-01 (18.2)",
+        "score_difference": 0.0,
+        "likely_failure_layer": "FINAL_RANKING_ERROR",
+        "diagnosis_reason": "Tổng hợp điểm số chênh lệch trên nhiều tiêu chí nhỏ.",
+        "top_contributing_requirements": []
+      },
+      {
+        "job_id": "JD-FE-001",
+        "inverted_pair": "CV-FE-05 (Human=4, Sys=18.2) < CV-FE-02 (Human=2, Sys=18.2)",
+        "human_ranking": "CV-FE-05 (4) > CV-FE-02 (2)",
+        "system_ranking": "CV-FE-02 (18.2) > CV-FE-05 (18.2)",
+        "score_difference": 0.0,
+        "likely_failure_layer": "FINAL_RANKING_ERROR",
+        "diagnosis_reason": "Tổng hợp điểm số chênh lệch trên nhiều tiêu chí nhỏ.",
+        "top_contributing_requirements": []
+      },
+      {
+        "job_id": "JD-FE-001",
+        "inverted_pair": "CV-FE-05 (Human=4, Sys=18.2) < CV-FE-04 (Human=1, Sys=18.2)",
+        "human_ranking": "CV-FE-05 (4) > CV-FE-04 (1)",
+        "system_ranking": "CV-FE-04 (18.2) > CV-FE-05 (18.2)",
+        "score_difference": 0.0,
+        "likely_failure_layer": "FINAL_RANKING_ERROR",
+        "diagnosis_reason": "Tổng hợp điểm số chênh lệch trên nhiều tiêu chí nhỏ.",
+        "top_contributing_requirements": []
+      },
+      {
+        "job_id": "JD-FE-001",
+        "inverted_pair": "CV-FE-02 (Human=2, Sys=18.2) < CV-FE-04 (Human=1, Sys=18.2)",
+        "human_ranking": "CV-FE-02 (2) > CV-FE-04 (1)",
+        "system_ranking": "CV-FE-04 (18.2) > CV-FE-02 (18.2)",
+        "score_difference": 0.0,
+        "likely_failure_layer": "FINAL_RANKING_ERROR",
+        "diagnosis_reason": "Tổng hợp điểm số chênh lệch trên nhiều tiêu chí nhỏ.",
+        "top_contributing_requirements": []
+      },
+      {
+        "job_id": "JD-FE-001",
+        "inverted_pair": "CV-FE-03 (Human=2, Sys=0.0) < CV-FE-04 (Human=1, Sys=18.2)",
+        "human_ranking": "CV-FE-03 (2) > CV-FE-04 (1)",
+        "system_ranking": "CV-FE-04 (18.2) > CV-FE-03 (0.0)",
+        "score_difference": 18.2,
+        "likely_failure_layer": "FINAL_RANKING_ERROR",
+        "diagnosis_reason": "Tổng hợp điểm số chênh lệch trên nhiều tiêu chí nhỏ.",
+        "top_contributing_requirements": [
+          {
+            "requirement_id": "RESP_1",
+            "requirement_text": {
+              "id": "responsibility-1",
+              "text": "Tuyển Mid-Level Frontend Developer.",
+              "importance": 3
+            },
+            "requirement_type": "RESPONSIBILITY",
+            "group": "responsibilities_task_fit",
+            "score_expected_better": 0.0,
+            "score_expected_worse": 18.2,
+            "delta_favoring_worse": 18.2
+          }
+        ]
+      },
+      {
+        "job_id": "JD-DO-001",
+        "inverted_pair": "CV-DO-01 (Human=4, Sys=18.2) < CV-DO-04 (Human=2, Sys=18.2)",
+        "human_ranking": "CV-DO-01 (4) > CV-DO-04 (2)",
+        "system_ranking": "CV-DO-04 (18.2) > CV-DO-01 (18.2)",
+        "score_difference": 0.0,
+        "likely_failure_layer": "FINAL_RANKING_ERROR",
+        "diagnosis_reason": "Tổng hợp điểm số chênh lệch trên nhiều tiêu chí nhỏ.",
+        "top_contributing_requirements": []
+      },
+      {
+        "job_id": "JD-DO-001",
+        "inverted_pair": "CV-DO-01 (Human=4, Sys=18.2) < CV-DO-05 (Human=0, Sys=18.2)",
+        "human_ranking": "CV-DO-01 (4) > CV-DO-05 (0)",
+        "system_ranking": "CV-DO-05 (18.2) > CV-DO-01 (18.2)",
+        "score_difference": 0.0,
+        "likely_failure_layer": "FINAL_RANKING_ERROR",
+        "diagnosis_reason": "Tổng hợp điểm số chênh lệch trên nhiều tiêu chí nhỏ.",
+        "top_contributing_requirements": []
+      },
+      {
+        "job_id": "JD-DO-001",
+        "inverted_pair": "CV-DO-03 (Human=4, Sys=18.2) < CV-DO-04 (Human=2, Sys=18.2)",
+        "human_ranking": "CV-DO-03 (4) > CV-DO-04 (2)",
+        "system_ranking": "CV-DO-04 (18.2) > CV-DO-03 (18.2)",
+        "score_difference": 0.0,
+        "likely_failure_layer": "FINAL_RANKING_ERROR",
+        "diagnosis_reason": "Tổng hợp điểm số chênh lệch trên nhiều tiêu chí nhỏ.",
+        "top_contributing_requirements": []
+      },
+      {
+        "job_id": "JD-DO-001",
+        "inverted_pair": "CV-DO-03 (Human=4, Sys=18.2) < CV-DO-05 (Human=0, Sys=18.2)",
+        "human_ranking": "CV-DO-03 (4) > CV-DO-05 (0)",
+        "system_ranking": "CV-DO-05 (18.2) > CV-DO-03 (18.2)",
+        "score_difference": 0.0,
+        "likely_failure_layer": "FINAL_RANKING_ERROR",
+        "diagnosis_reason": "Tổng hợp điểm số chênh lệch trên nhiều tiêu chí nhỏ.",
+        "top_contributing_requirements": []
+      },
+      {
+        "job_id": "JD-DO-001",
+        "inverted_pair": "CV-DO-04 (Human=2, Sys=18.2) < CV-DO-05 (Human=0, Sys=18.2)",
+        "human_ranking": "CV-DO-04 (2) > CV-DO-05 (0)",
+        "system_ranking": "CV-DO-05 (18.2) > CV-DO-04 (18.2)",
+        "score_difference": 0.0,
+        "likely_failure_layer": "FINAL_RANKING_ERROR",
+        "diagnosis_reason": "Tổng hợp điểm số chênh lệch trên nhiều tiêu chí nhỏ.",
+        "top_contributing_requirements": []
+      },
+      {
+        "job_id": "JD-DO-001",
+        "inverted_pair": "CV-DO-02 (Human=3, Sys=0.0) < CV-DO-04 (Human=2, Sys=18.2)",
+        "human_ranking": "CV-DO-02 (3) > CV-DO-04 (2)",
+        "system_ranking": "CV-DO-04 (18.2) > CV-DO-02 (0.0)",
+        "score_difference": 18.2,
+        "likely_failure_layer": "FINAL_RANKING_ERROR",
+        "diagnosis_reason": "Tổng hợp điểm số chênh lệch trên nhiều tiêu chí nhỏ.",
+        "top_contributing_requirements": [
+          {
+            "requirement_id": "RESP_1",
+            "requirement_text": {
+              "id": "responsibility-4",
+              "text": "Có kinh nghiệm xây dựng CI/CD pipeline (GitLab CI hoặc GitHub Actions).",
+              "importance": 3
+            },
+            "requirement_type": "RESPONSIBILITY",
+            "group": "responsibilities_task_fit",
+            "score_expected_better": 0.0,
+            "score_expected_worse": 18.2,
+            "delta_favoring_worse": 18.2
+          }
+        ]
+      },
+      {
+        "job_id": "JD-DO-001",
+        "inverted_pair": "CV-DO-02 (Human=3, Sys=0.0) < CV-DO-05 (Human=0, Sys=18.2)",
+        "human_ranking": "CV-DO-02 (3) > CV-DO-05 (0)",
+        "system_ranking": "CV-DO-05 (18.2) > CV-DO-02 (0.0)",
+        "score_difference": 18.2,
+        "likely_failure_layer": "FINAL_RANKING_ERROR",
+        "diagnosis_reason": "Tổng hợp điểm số chênh lệch trên nhiều tiêu chí nhỏ.",
+        "top_contributing_requirements": [
+          {
+            "requirement_id": "RESP_1",
+            "requirement_text": {
+              "id": "responsibility-4",
+              "text": "Có kinh nghiệm xây dựng CI/CD pipeline (GitLab CI hoặc GitHub Actions).",
+              "importance": 3
+            },
+            "requirement_type": "RESPONSIBILITY",
+            "group": "responsibilities_task_fit",
+            "score_expected_better": 0.0,
+            "score_expected_worse": 18.2,
+            "delta_favoring_worse": 18.2
+          }
+        ]
+      },
+      {
+        "job_id": "JD-DS-001",
+        "inverted_pair": "CV-DS-01 (Human=4, Sys=0.0) < CV-DS-02 (Human=2, Sys=0.0)",
+        "human_ranking": "CV-DS-01 (4) > CV-DS-02 (2)",
+        "system_ranking": "CV-DS-02 (0.0) > CV-DS-01 (0.0)",
+        "score_difference": 0.0,
+        "likely_failure_layer": "FINAL_RANKING_ERROR",
+        "diagnosis_reason": "Tổng hợp điểm số chênh lệch trên nhiều tiêu chí nhỏ.",
+        "top_contributing_requirements": []
+      },
+      {
+        "job_id": "JD-DS-001",
+        "inverted_pair": "CV-DS-01 (Human=4, Sys=0.0) < CV-DS-03 (Human=2, Sys=0.0)",
+        "human_ranking": "CV-DS-01 (4) > CV-DS-03 (2)",
+        "system_ranking": "CV-DS-03 (0.0) > CV-DS-01 (0.0)",
+        "score_difference": 0.0,
+        "likely_failure_layer": "FINAL_RANKING_ERROR",
+        "diagnosis_reason": "Tổng hợp điểm số chênh lệch trên nhiều tiêu chí nhỏ.",
+        "top_contributing_requirements": []
+      },
+      {
+        "job_id": "JD-DS-001",
+        "inverted_pair": "CV-DS-01 (Human=4, Sys=0.0) < CV-DS-04 (Human=2, Sys=0.0)",
+        "human_ranking": "CV-DS-01 (4) > CV-DS-04 (2)",
+        "system_ranking": "CV-DS-04 (0.0) > CV-DS-01 (0.0)",
+        "score_difference": 0.0,
+        "likely_failure_layer": "FINAL_RANKING_ERROR",
+        "diagnosis_reason": "Tổng hợp điểm số chênh lệch trên nhiều tiêu chí nhỏ.",
+        "top_contributing_requirements": []
+      },
+      {
+        "job_id": "JD-DS-001",
+        "inverted_pair": "CV-DS-01 (Human=4, Sys=0.0) < CV-DS-05 (Human=0, Sys=0.0)",
+        "human_ranking": "CV-DS-01 (4) > CV-DS-05 (0)",
+        "system_ranking": "CV-DS-05 (0.0) > CV-DS-01 (0.0)",
+        "score_difference": 0.0,
+        "likely_failure_layer": "FINAL_RANKING_ERROR",
+        "diagnosis_reason": "Tổng hợp điểm số chênh lệch trên nhiều tiêu chí nhỏ.",
+        "top_contributing_requirements": []
+      },
+      {
+        "job_id": "JD-DS-001",
+        "inverted_pair": "CV-DS-02 (Human=2, Sys=0.0) < CV-DS-05 (Human=0, Sys=0.0)",
+        "human_ranking": "CV-DS-02 (2) > CV-DS-05 (0)",
+        "system_ranking": "CV-DS-05 (0.0) > CV-DS-02 (0.0)",
+        "score_difference": 0.0,
+        "likely_failure_layer": "FINAL_RANKING_ERROR",
+        "diagnosis_reason": "Tổng hợp điểm số chênh lệch trên nhiều tiêu chí nhỏ.",
+        "top_contributing_requirements": []
+      },
+      {
+        "job_id": "JD-DS-001",
+        "inverted_pair": "CV-DS-03 (Human=2, Sys=0.0) < CV-DS-05 (Human=0, Sys=0.0)",
+        "human_ranking": "CV-DS-03 (2) > CV-DS-05 (0)",
+        "system_ranking": "CV-DS-05 (0.0) > CV-DS-03 (0.0)",
+        "score_difference": 0.0,
+        "likely_failure_layer": "FINAL_RANKING_ERROR",
+        "diagnosis_reason": "Tổng hợp điểm số chênh lệch trên nhiều tiêu chí nhỏ.",
+        "top_contributing_requirements": []
+      },
+      {
+        "job_id": "JD-DS-001",
+        "inverted_pair": "CV-DS-04 (Human=2, Sys=0.0) < CV-DS-05 (Human=0, Sys=0.0)",
+        "human_ranking": "CV-DS-04 (2) > CV-DS-05 (0)",
+        "system_ranking": "CV-DS-05 (0.0) > CV-DS-04 (0.0)",
+        "score_difference": 0.0,
+        "likely_failure_layer": "FINAL_RANKING_ERROR",
+        "diagnosis_reason": "Tổng hợp điểm số chênh lệch trên nhiều tiêu chí nhỏ.",
+        "top_contributing_requirements": []
+      },
+      {
+        "job_id": "JD-QA-001",
+        "inverted_pair": "CV-QA-01 (Human=4, Sys=26.6) < CV-QA-02 (Human=2, Sys=26.6)",
+        "human_ranking": "CV-QA-01 (4) > CV-QA-02 (2)",
+        "system_ranking": "CV-QA-02 (26.6) > CV-QA-01 (26.6)",
+        "score_difference": 0.0,
+        "likely_failure_layer": "FINAL_RANKING_ERROR",
+        "diagnosis_reason": "Tổng hợp điểm số chênh lệch trên nhiều tiêu chí nhỏ.",
+        "top_contributing_requirements": []
+      },
+      {
+        "job_id": "JD-QA-001",
+        "inverted_pair": "CV-QA-01 (Human=4, Sys=26.6) < CV-QA-04 (Human=1, Sys=26.6)",
+        "human_ranking": "CV-QA-01 (4) > CV-QA-04 (1)",
+        "system_ranking": "CV-QA-04 (26.6) > CV-QA-01 (26.6)",
+        "score_difference": 0.0,
+        "likely_failure_layer": "FINAL_RANKING_ERROR",
+        "diagnosis_reason": "Tổng hợp điểm số chênh lệch trên nhiều tiêu chí nhỏ.",
+        "top_contributing_requirements": []
+      },
+      {
+        "job_id": "JD-QA-001",
+        "inverted_pair": "CV-QA-02 (Human=2, Sys=26.6) < CV-QA-04 (Human=1, Sys=26.6)",
+        "human_ranking": "CV-QA-02 (2) > CV-QA-04 (1)",
+        "system_ranking": "CV-QA-04 (26.6) > CV-QA-02 (26.6)",
+        "score_difference": 0.0,
+        "likely_failure_layer": "FINAL_RANKING_ERROR",
+        "diagnosis_reason": "Tổng hợp điểm số chênh lệch trên nhiều tiêu chí nhỏ.",
+        "top_contributing_requirements": []
+      },
+      {
+        "job_id": "JD-QA-001",
+        "inverted_pair": "CV-QA-03 (Human=3, Sys=13.3) < CV-QA-02 (Human=2, Sys=26.6)",
+        "human_ranking": "CV-QA-03 (3) > CV-QA-02 (2)",
+        "system_ranking": "CV-QA-02 (26.6) > CV-QA-03 (13.3)",
+        "score_difference": 13.3,
+        "likely_failure_layer": "FINAL_RANKING_ERROR",
+        "diagnosis_reason": "Tổng hợp điểm số chênh lệch trên nhiều tiêu chí nhỏ.",
+        "top_contributing_requirements": [
+          {
+            "requirement_id": "RESP_2",
+            "requirement_text": {
+              "id": "responsibility-4",
+              "text": "Có kinh nghiệm kiểm thử API với Postman/RestAssured và tích hợp CI/CD.",
+              "importance": 3
+            },
+            "requirement_type": "RESPONSIBILITY",
+            "group": "responsibilities_task_fit",
+            "score_expected_better": 0.0,
+            "score_expected_worse": 13.3,
+            "delta_favoring_worse": 13.3
+          }
+        ]
+      },
+      {
+        "job_id": "JD-QA-001",
+        "inverted_pair": "CV-QA-03 (Human=3, Sys=13.3) < CV-QA-04 (Human=1, Sys=26.6)",
+        "human_ranking": "CV-QA-03 (3) > CV-QA-04 (1)",
+        "system_ranking": "CV-QA-04 (26.6) > CV-QA-03 (13.3)",
+        "score_difference": 13.3,
+        "likely_failure_layer": "FINAL_RANKING_ERROR",
+        "diagnosis_reason": "Tổng hợp điểm số chênh lệch trên nhiều tiêu chí nhỏ.",
+        "top_contributing_requirements": [
+          {
+            "requirement_id": "RESP_2",
+            "requirement_text": {
+              "id": "responsibility-4",
+              "text": "Có kinh nghiệm kiểm thử API với Postman/RestAssured và tích hợp CI/CD.",
+              "importance": 3
+            },
+            "requirement_type": "RESPONSIBILITY",
+            "group": "responsibilities_task_fit",
+            "score_expected_better": 0.0,
+            "score_expected_worse": 13.3,
+            "delta_favoring_worse": 13.3
+          }
+        ]
+      }
+    ]
+  },
+  "per_job_results": [
+    {
+      "job_id": "JD-BE-001",
+      "title": "Senior Backend Engineer (Python/FastAPI)",
+      "domain": "backend",
+      "seniority": "senior",
+      "split": "dev",
+      "candidate_count": 6,
+      "ndcg_at_5": 1.0,
+      "ndcg_at_10": 1.0,
+      "spearman_rho": 0.0,
+      "pearson_r": 0.0,
+      "mae": 54.17,
+      "pairwise_inversions": {
+        "total_pairs": 14,
+        "correct_pairs": 0,
+        "inverted_pairs": 0,
+        "tied_pairs": 14,
+        "inversion_rate": 0.0,
+        "inversion_details": [
+          {
+            "expected_better": "CV-BE-01",
+            "expected_worse": "CV-BE-02",
+            "human_better": 4.0,
+            "human_worse": 3.0,
+            "system_better": 0.0,
+            "system_worse": 0.0,
+            "score_gap": 0.0,
+            "note": "System scored both candidates equally despite human relevance difference.",
+            "job_id": "JD-BE-001"
+          },
+          {
+            "expected_better": "CV-BE-01",
+            "expected_worse": "CV-BE-06",
+            "human_better": 4.0,
+            "human_worse": 3.0,
+            "system_better": 0.0,
+            "system_worse": 0.0,
+            "score_gap": 0.0,
+            "note": "System scored both candidates equally despite human relevance difference.",
+            "job_id": "JD-BE-001"
+          },
+          {
+            "expected_better": "CV-BE-01",
+            "expected_worse": "CV-BE-03",
+            "human_better": 4.0,
+            "human_worse": 2.0,
+            "system_better": 0.0,
+            "system_worse": 0.0,
+            "score_gap": 0.0,
+            "note": "System scored both candidates equally despite human relevance difference.",
+            "job_id": "JD-BE-001"
+          },
+          {
+            "expected_better": "CV-BE-01",
+            "expected_worse": "CV-BE-04",
+            "human_better": 4.0,
+            "human_worse": 1.0,
+            "system_better": 0.0,
+            "system_worse": 0.0,
+            "score_gap": 0.0,
+            "note": "System scored both candidates equally despite human relevance difference.",
+            "job_id": "JD-BE-001"
+          },
+          {
+            "expected_better": "CV-BE-01",
+            "expected_worse": "CV-BE-05",
+            "human_better": 4.0,
+            "human_worse": 0.0,
+            "system_better": 0.0,
+            "system_worse": 0.0,
+            "score_gap": 0.0,
+            "note": "System scored both candidates equally despite human relevance difference.",
+            "job_id": "JD-BE-001"
+          },
+          {
+            "expected_better": "CV-BE-02",
+            "expected_worse": "CV-BE-03",
+            "human_better": 3.0,
+            "human_worse": 2.0,
+            "system_better": 0.0,
+            "system_worse": 0.0,
+            "score_gap": 0.0,
+            "note": "System scored both candidates equally despite human relevance difference.",
+            "job_id": "JD-BE-001"
+          },
+          {
+            "expected_better": "CV-BE-02",
+            "expected_worse": "CV-BE-04",
+            "human_better": 3.0,
+            "human_worse": 1.0,
+            "system_better": 0.0,
+            "system_worse": 0.0,
+            "score_gap": 0.0,
+            "note": "System scored both candidates equally despite human relevance difference.",
+            "job_id": "JD-BE-001"
+          },
+          {
+            "expected_better": "CV-BE-02",
+            "expected_worse": "CV-BE-05",
+            "human_better": 3.0,
+            "human_worse": 0.0,
+            "system_better": 0.0,
+            "system_worse": 0.0,
+            "score_gap": 0.0,
+            "note": "System scored both candidates equally despite human relevance difference.",
+            "job_id": "JD-BE-001"
+          },
+          {
+            "expected_better": "CV-BE-06",
+            "expected_worse": "CV-BE-03",
+            "human_better": 3.0,
+            "human_worse": 2.0,
+            "system_better": 0.0,
+            "system_worse": 0.0,
+            "score_gap": 0.0,
+            "note": "System scored both candidates equally despite human relevance difference.",
+            "job_id": "JD-BE-001"
+          },
+          {
+            "expected_better": "CV-BE-06",
+            "expected_worse": "CV-BE-04",
+            "human_better": 3.0,
+            "human_worse": 1.0,
+            "system_better": 0.0,
+            "system_worse": 0.0,
+            "score_gap": 0.0,
+            "note": "System scored both candidates equally despite human relevance difference.",
+            "job_id": "JD-BE-001"
+          },
+          {
+            "expected_better": "CV-BE-06",
+            "expected_worse": "CV-BE-05",
+            "human_better": 3.0,
+            "human_worse": 0.0,
+            "system_better": 0.0,
+            "system_worse": 0.0,
+            "score_gap": 0.0,
+            "note": "System scored both candidates equally despite human relevance difference.",
+            "job_id": "JD-BE-001"
+          },
+          {
+            "expected_better": "CV-BE-03",
+            "expected_worse": "CV-BE-04",
+            "human_better": 2.0,
+            "human_worse": 1.0,
+            "system_better": 0.0,
+            "system_worse": 0.0,
+            "score_gap": 0.0,
+            "note": "System scored both candidates equally despite human relevance difference.",
+            "job_id": "JD-BE-001"
+          },
+          {
+            "expected_better": "CV-BE-03",
+            "expected_worse": "CV-BE-05",
+            "human_better": 2.0,
+            "human_worse": 0.0,
+            "system_better": 0.0,
+            "system_worse": 0.0,
+            "score_gap": 0.0,
+            "note": "System scored both candidates equally despite human relevance difference.",
+            "job_id": "JD-BE-001"
+          },
+          {
+            "expected_better": "CV-BE-04",
+            "expected_worse": "CV-BE-05",
+            "human_better": 1.0,
+            "human_worse": 0.0,
+            "system_better": 0.0,
+            "system_worse": 0.0,
+            "score_gap": 0.0,
+            "note": "System scored both candidates equally despite human relevance difference.",
+            "job_id": "JD-BE-001"
+          }
+        ]
+      },
+      "binary_ranking": {
+        "precision_at_5": 0.6,
+        "recall_at_5": 1.0,
+        "mrr": 1.0,
+        "map": 1.0
+      },
+      "candidates": [
+        {
+          "cv_id": "CV-BE-01",
+          "human_relevance": 4,
+          "normalized_human_score": 100.0,
+          "system_score": 0.0,
+          "eligibility_expected": "ELIGIBLE",
+          "eligibility_actual": "ELIGIBLE",
+          "edge_case_tags": [
+            "ideal_senior_match"
+          ],
+          "latency_ms": 3.3,
+          "evaluated_requirements": [
+            {
+              "requirement_id": "REQ_EXP",
+              "group": "experience_seniority",
+              "type": "REQUIRED",
+              "importance": 3.5,
+              "text": "Tối thiểu 4 năm kinh nghiệm",
+              "minimum_years": 4.0,
+              "mandatory": true,
+              "status": "NOT_FOUND",
+              "match_status": "NOT_FOUND",
+              "match_score": 0.0,
+              "match_classification": "NOT_FOUND",
+              "criterion_score": 0.0,
+              "score": 0.0,
+              "reason": "JD yêu cầu Tối thiểu 4 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "comparison": "JD yêu cầu Tối thiểu 4 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "jd_text": "Tối thiểu 4 năm kinh nghiệm",
+              "cv_text": "Thiết kế kiến trúc microservices bằng Python và FastAPI, tối ưu hóa PostgreSQL, quản lý Docker trên AWS. Senior Backend Engineer",
+              "evidence_ids": [
+                "EVD_6FF86436231B"
+              ],
+              "evidence": [
+                {
+                  "evidence_id": "EVD_6FF86436231B",
+                  "requirement_id": "REQ_EXP",
+                  "chunk_id": "CV_CHUNK_002_7E50DD89",
+                  "text": "Thiết kế kiến trúc microservices bằng Python và FastAPI, tối ưu hóa PostgreSQL, quản lý Docker trên AWS. Senior Backend Engineer",
+                  "source_page": null,
+                  "source_section": "experience[0]",
+                  "semantic_score": null,
+                  "semantic_rank": null,
+                  "bm25_score": 0.914903,
+                  "bm25_rank": 1,
+                  "fusion_score": 0.01639344,
+                  "fusion_rank": 1
+                }
+              ],
+              "weight": 100.0,
+              "weighted_score": 0.0
+            }
+          ],
+          "criteria": [
+            {
+              "criterion_id": "CRIT_EXPERIENCE",
+              "group": "experience_seniority",
+              "label": "Kinh nghiệm & Cấp bậc",
+              "raw_score": 0.0,
+              "weight": 100.0,
+              "weighted_score": 0.0,
+              "status": "NOT_FOUND",
+              "reason": "Đáp ứng 0/1 yêu cầu đối chiếu.",
+              "requirement_ids": [
+                "REQ_EXP"
+              ],
+              "evidence_ids": [
+                "EVD_6FF86436231B"
+              ]
+            }
+          ],
+          "system_rank": 1,
+          "human_rank": 1,
+          "rank_delta": 0
+        },
+        {
+          "cv_id": "CV-BE-02",
+          "human_relevance": 3,
+          "normalized_human_score": 75.0,
+          "system_score": 0.0,
+          "eligibility_expected": "ELIGIBLE",
+          "eligibility_actual": "ELIGIBLE",
+          "edge_case_tags": [
+            "strong_core_missing_some_pref"
+          ],
+          "latency_ms": 1.8,
+          "evaluated_requirements": [
+            {
+              "requirement_id": "REQ_EXP",
+              "group": "experience_seniority",
+              "type": "REQUIRED",
+              "importance": 3.5,
+              "text": "Tối thiểu 4 năm kinh nghiệm",
+              "minimum_years": 4.0,
+              "mandatory": true,
+              "status": "NOT_FOUND",
+              "match_status": "NOT_FOUND",
+              "match_score": 0.0,
+              "match_classification": "NOT_FOUND",
+              "criterion_score": 0.0,
+              "score": 0.0,
+              "reason": "JD yêu cầu Tối thiểu 4 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "comparison": "JD yêu cầu Tối thiểu 4 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "jd_text": "Tối thiểu 4 năm kinh nghiệm",
+              "cv_text": "",
+              "evidence_ids": [],
+              "evidence": [],
+              "weight": 100.0,
+              "weighted_score": 0.0
+            }
+          ],
+          "criteria": [
+            {
+              "criterion_id": "CRIT_EXPERIENCE",
+              "group": "experience_seniority",
+              "label": "Kinh nghiệm & Cấp bậc",
+              "raw_score": 0.0,
+              "weight": 100.0,
+              "weighted_score": 0.0,
+              "status": "NOT_FOUND",
+              "reason": "Đáp ứng 0/1 yêu cầu đối chiếu.",
+              "requirement_ids": [
+                "REQ_EXP"
+              ],
+              "evidence_ids": []
+            }
+          ],
+          "system_rank": 2,
+          "human_rank": 2,
+          "rank_delta": 0
+        },
+        {
+          "cv_id": "CV-BE-06",
+          "human_relevance": 3,
+          "normalized_human_score": 75.0,
+          "system_score": 0.0,
+          "eligibility_expected": "ELIGIBLE",
+          "eligibility_actual": "ELIGIBLE",
+          "edge_case_tags": [
+            "semantic_framework_substitute_django_vs_fastapi"
+          ],
+          "latency_ms": 1.4,
+          "evaluated_requirements": [
+            {
+              "requirement_id": "REQ_EXP",
+              "group": "experience_seniority",
+              "type": "REQUIRED",
+              "importance": 3.5,
+              "text": "Tối thiểu 4 năm kinh nghiệm",
+              "minimum_years": 4.0,
+              "mandatory": true,
+              "status": "NOT_FOUND",
+              "match_status": "NOT_FOUND",
+              "match_score": 0.0,
+              "match_classification": "NOT_FOUND",
+              "criterion_score": 0.0,
+              "score": 0.0,
+              "reason": "JD yêu cầu Tối thiểu 4 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "comparison": "JD yêu cầu Tối thiểu 4 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "jd_text": "Tối thiểu 4 năm kinh nghiệm",
+              "cv_text": "",
+              "evidence_ids": [],
+              "evidence": [],
+              "weight": 100.0,
+              "weighted_score": 0.0
+            }
+          ],
+          "criteria": [
+            {
+              "criterion_id": "CRIT_EXPERIENCE",
+              "group": "experience_seniority",
+              "label": "Kinh nghiệm & Cấp bậc",
+              "raw_score": 0.0,
+              "weight": 100.0,
+              "weighted_score": 0.0,
+              "status": "NOT_FOUND",
+              "reason": "Đáp ứng 0/1 yêu cầu đối chiếu.",
+              "requirement_ids": [
+                "REQ_EXP"
+              ],
+              "evidence_ids": []
+            }
+          ],
+          "system_rank": 3,
+          "human_rank": 3,
+          "rank_delta": 0
+        },
+        {
+          "cv_id": "CV-BE-03",
+          "human_relevance": 2,
+          "normalized_human_score": 50.0,
+          "system_score": 0.0,
+          "eligibility_expected": "ELIGIBLE",
+          "eligibility_actual": "ELIGIBLE",
+          "edge_case_tags": [
+            "partial_experience_match",
+            "many_pref_less_years"
+          ],
+          "latency_ms": 1.5,
+          "evaluated_requirements": [
+            {
+              "requirement_id": "REQ_EXP",
+              "group": "experience_seniority",
+              "type": "REQUIRED",
+              "importance": 3.5,
+              "text": "Tối thiểu 4 năm kinh nghiệm",
+              "minimum_years": 4.0,
+              "mandatory": true,
+              "status": "NOT_FOUND",
+              "match_status": "NOT_FOUND",
+              "match_score": 0.0,
+              "match_classification": "NOT_FOUND",
+              "criterion_score": 0.0,
+              "score": 0.0,
+              "reason": "JD yêu cầu Tối thiểu 4 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "comparison": "JD yêu cầu Tối thiểu 4 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "jd_text": "Tối thiểu 4 năm kinh nghiệm",
+              "cv_text": "",
+              "evidence_ids": [],
+              "evidence": [],
+              "weight": 100.0,
+              "weighted_score": 0.0
+            }
+          ],
+          "criteria": [
+            {
+              "criterion_id": "CRIT_EXPERIENCE",
+              "group": "experience_seniority",
+              "label": "Kinh nghiệm & Cấp bậc",
+              "raw_score": 0.0,
+              "weight": 100.0,
+              "weighted_score": 0.0,
+              "status": "NOT_FOUND",
+              "reason": "Đáp ứng 0/1 yêu cầu đối chiếu.",
+              "requirement_ids": [
+                "REQ_EXP"
+              ],
+              "evidence_ids": []
+            }
+          ],
+          "system_rank": 4,
+          "human_rank": 4,
+          "rank_delta": 0
+        },
+        {
+          "cv_id": "CV-BE-04",
+          "human_relevance": 1,
+          "normalized_human_score": 25.0,
+          "system_score": 0.0,
+          "eligibility_expected": "ELIGIBLE",
+          "eligibility_actual": "ELIGIBLE",
+          "edge_case_tags": [
+            "many_preferred_missing_core_stack"
+          ],
+          "latency_ms": 1.6,
+          "evaluated_requirements": [
+            {
+              "requirement_id": "REQ_EXP",
+              "group": "experience_seniority",
+              "type": "REQUIRED",
+              "importance": 3.5,
+              "text": "Tối thiểu 4 năm kinh nghiệm",
+              "minimum_years": 4.0,
+              "mandatory": true,
+              "status": "NOT_FOUND",
+              "match_status": "NOT_FOUND",
+              "match_score": 0.0,
+              "match_classification": "NOT_FOUND",
+              "criterion_score": 0.0,
+              "score": 0.0,
+              "reason": "JD yêu cầu Tối thiểu 4 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "comparison": "JD yêu cầu Tối thiểu 4 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "jd_text": "Tối thiểu 4 năm kinh nghiệm",
+              "cv_text": "",
+              "evidence_ids": [],
+              "evidence": [],
+              "weight": 100.0,
+              "weighted_score": 0.0
+            }
+          ],
+          "criteria": [
+            {
+              "criterion_id": "CRIT_EXPERIENCE",
+              "group": "experience_seniority",
+              "label": "Kinh nghiệm & Cấp bậc",
+              "raw_score": 0.0,
+              "weight": 100.0,
+              "weighted_score": 0.0,
+              "status": "NOT_FOUND",
+              "reason": "Đáp ứng 0/1 yêu cầu đối chiếu.",
+              "requirement_ids": [
+                "REQ_EXP"
+              ],
+              "evidence_ids": []
+            }
+          ],
+          "system_rank": 5,
+          "human_rank": 5,
+          "rank_delta": 0
+        },
+        {
+          "cv_id": "CV-BE-05",
+          "human_relevance": 0,
+          "normalized_human_score": 0.0,
+          "system_score": 0.0,
+          "eligibility_expected": "ELIGIBLE",
+          "eligibility_actual": "ELIGIBLE",
+          "edge_case_tags": [
+            "unrelated_domain_role"
+          ],
+          "latency_ms": 1.2,
+          "evaluated_requirements": [
+            {
+              "requirement_id": "REQ_EXP",
+              "group": "experience_seniority",
+              "type": "REQUIRED",
+              "importance": 3.5,
+              "text": "Tối thiểu 4 năm kinh nghiệm",
+              "minimum_years": 4.0,
+              "mandatory": true,
+              "status": "NOT_FOUND",
+              "match_status": "NOT_FOUND",
+              "match_score": 0.0,
+              "match_classification": "NOT_FOUND",
+              "criterion_score": 0.0,
+              "score": 0.0,
+              "reason": "JD yêu cầu Tối thiểu 4 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "comparison": "JD yêu cầu Tối thiểu 4 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "jd_text": "Tối thiểu 4 năm kinh nghiệm",
+              "cv_text": "",
+              "evidence_ids": [],
+              "evidence": [],
+              "weight": 100.0,
+              "weighted_score": 0.0
+            }
+          ],
+          "criteria": [
+            {
+              "criterion_id": "CRIT_EXPERIENCE",
+              "group": "experience_seniority",
+              "label": "Kinh nghiệm & Cấp bậc",
+              "raw_score": 0.0,
+              "weight": 100.0,
+              "weighted_score": 0.0,
+              "status": "NOT_FOUND",
+              "reason": "Đáp ứng 0/1 yêu cầu đối chiếu.",
+              "requirement_ids": [
+                "REQ_EXP"
+              ],
+              "evidence_ids": []
+            }
+          ],
+          "system_rank": 6,
+          "human_rank": 6,
+          "rank_delta": 0
+        }
+      ]
+    },
+    {
+      "job_id": "JD-FE-001",
+      "title": "Mid-Level Frontend Developer (React/TypeScript)",
+      "domain": "frontend",
+      "seniority": "mid",
+      "split": "dev",
+      "candidate_count": 5,
+      "ndcg_at_5": 0.9968,
+      "ndcg_at_10": 0.9968,
+      "spearman_rho": 0.1863,
+      "pearson_r": 0.25,
+      "mae": 50.44,
+      "pairwise_inversions": {
+        "total_pairs": 8,
+        "correct_pairs": 2,
+        "inverted_pairs": 1,
+        "tied_pairs": 5,
+        "inversion_rate": 0.125,
+        "inversion_details": [
+          {
+            "expected_better": "CV-FE-01",
+            "expected_worse": "CV-FE-02",
+            "human_better": 4.0,
+            "human_worse": 2.0,
+            "system_better": 18.2,
+            "system_worse": 18.2,
+            "score_gap": 0.0,
+            "note": "System scored both candidates equally despite human relevance difference.",
+            "job_id": "JD-FE-001"
+          },
+          {
+            "expected_better": "CV-FE-01",
+            "expected_worse": "CV-FE-04",
+            "human_better": 4.0,
+            "human_worse": 1.0,
+            "system_better": 18.2,
+            "system_worse": 18.2,
+            "score_gap": 0.0,
+            "note": "System scored both candidates equally despite human relevance difference.",
+            "job_id": "JD-FE-001"
+          },
+          {
+            "expected_better": "CV-FE-05",
+            "expected_worse": "CV-FE-02",
+            "human_better": 4.0,
+            "human_worse": 2.0,
+            "system_better": 18.2,
+            "system_worse": 18.2,
+            "score_gap": 0.0,
+            "note": "System scored both candidates equally despite human relevance difference.",
+            "job_id": "JD-FE-001"
+          },
+          {
+            "expected_better": "CV-FE-05",
+            "expected_worse": "CV-FE-04",
+            "human_better": 4.0,
+            "human_worse": 1.0,
+            "system_better": 18.2,
+            "system_worse": 18.2,
+            "score_gap": 0.0,
+            "note": "System scored both candidates equally despite human relevance difference.",
+            "job_id": "JD-FE-001"
+          },
+          {
+            "expected_better": "CV-FE-02",
+            "expected_worse": "CV-FE-04",
+            "human_better": 2.0,
+            "human_worse": 1.0,
+            "system_better": 18.2,
+            "system_worse": 18.2,
+            "score_gap": 0.0,
+            "note": "System scored both candidates equally despite human relevance difference.",
+            "job_id": "JD-FE-001"
+          },
+          {
+            "expected_better": "CV-FE-03",
+            "expected_worse": "CV-FE-04",
+            "human_better": 2.0,
+            "human_worse": 1.0,
+            "system_better": 0.0,
+            "system_worse": 18.2,
+            "score_gap": 18.2,
+            "job_id": "JD-FE-001"
+          }
+        ]
+      },
+      "binary_ranking": {
+        "precision_at_5": 0.4,
+        "recall_at_5": 1.0,
+        "mrr": 1.0,
+        "map": 1.0
+      },
+      "candidates": [
+        {
+          "cv_id": "CV-FE-01",
+          "human_relevance": 4,
+          "normalized_human_score": 100.0,
+          "system_score": 18.2,
+          "eligibility_expected": "ELIGIBLE",
+          "eligibility_actual": "ELIGIBLE",
+          "edge_case_tags": [
+            "no_education_required_case",
+            "strong_fit"
+          ],
+          "latency_ms": 2.5,
+          "evaluated_requirements": [
+            {
+              "requirement_id": "REQ_EXP",
+              "group": "experience_seniority",
+              "type": "REQUIRED",
+              "importance": 3.5,
+              "text": "Tối thiểu 2 năm kinh nghiệm",
+              "minimum_years": 2.0,
+              "mandatory": true,
+              "status": "NOT_FOUND",
+              "match_status": "NOT_FOUND",
+              "match_score": 0.0,
+              "match_classification": "NOT_FOUND",
+              "criterion_score": 0.0,
+              "score": 0.0,
+              "reason": "JD yêu cầu Tối thiểu 2 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "comparison": "JD yêu cầu Tối thiểu 2 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "jd_text": "Tối thiểu 2 năm kinh nghiệm",
+              "cv_text": "",
+              "evidence_ids": [],
+              "evidence": [],
+              "weight": 63.6,
+              "weighted_score": 0.0
+            },
+            {
+              "requirement_id": "RESP_1",
+              "group": "responsibilities_task_fit",
+              "type": "RESPONSIBILITY",
+              "importance": 2.0,
+              "text": {
+                "id": "responsibility-1",
+                "text": "Tuyển Mid-Level Frontend Developer.",
+                "importance": 3
+              },
+              "mandatory": false,
+              "status": "PARTIALLY_SUPPORTED",
+              "match_status": "PARTIAL",
+              "match_score": 0.5,
+              "match_classification": "PARTIAL_MATCH",
+              "criterion_score": 50.0,
+              "score": 50.0,
+              "reason": "CV có thông tin liên quan đến {'id': 'responsibility-1', 'text': 'Tuyển Mid-Level Frontend Developer.', 'importance': 3} nhưng chưa đầy đủ.",
+              "comparison": "CV có thông tin liên quan đến {'id': 'responsibility-1', 'text': 'Tuyển Mid-Level Frontend Developer.', 'importance': 3} nhưng chưa đầy đủ.",
+              "jd_text": "{'id': 'responsibility-1', 'text': 'Tuyển Mid-Level Frontend Developer.', 'importance': 3}",
+              "cv_text": "Phát triển web app SPA và SSR bằng React, TypeScript, Tailwind và Next.js. Frontend Engineer",
+              "evidence_ids": [
+                "EVD_831B713319B7"
+              ],
+              "evidence": [
+                {
+                  "evidence_id": "EVD_831B713319B7",
+                  "requirement_id": "RESP_1",
+                  "chunk_id": "CV_CHUNK_002_3FBB76CB",
+                  "text": "Phát triển web app SPA và SSR bằng React, TypeScript, Tailwind và Next.js. Frontend Engineer",
+                  "source_page": null,
+                  "source_section": "experience[0]",
+                  "semantic_score": null,
+                  "semantic_rank": null,
+                  "bm25_score": 0.864167,
+                  "bm25_rank": 1,
+                  "fusion_score": 0.01639344,
+                  "fusion_rank": 1
+                }
+              ],
+              "weight": 36.4,
+              "weighted_score": 18.2
+            }
+          ],
+          "criteria": [
+            {
+              "criterion_id": "CRIT_RESPONSIBILITIES",
+              "group": "responsibilities_task_fit",
+              "label": "Trách nhiệm & Nhiệm vụ",
+              "raw_score": 50.0,
+              "weight": 36.4,
+              "weighted_score": 18.2,
+              "status": "PARTIALLY_SUPPORTED",
+              "reason": "Đáp ứng 0/1 yêu cầu đối chiếu.",
+              "requirement_ids": [
+                "RESP_1"
+              ],
+              "evidence_ids": [
+                "EVD_831B713319B7"
+              ]
+            },
+            {
+              "criterion_id": "CRIT_EXPERIENCE",
+              "group": "experience_seniority",
+              "label": "Kinh nghiệm & Cấp bậc",
+              "raw_score": 0.0,
+              "weight": 63.6,
+              "weighted_score": 0.0,
+              "status": "NOT_FOUND",
+              "reason": "Đáp ứng 0/1 yêu cầu đối chiếu.",
+              "requirement_ids": [
+                "REQ_EXP"
+              ],
+              "evidence_ids": []
+            }
+          ],
+          "system_rank": 1,
+          "human_rank": 1,
+          "rank_delta": 0
+        },
+        {
+          "cv_id": "CV-FE-05",
+          "human_relevance": 4,
+          "normalized_human_score": 100.0,
+          "system_score": 18.2,
+          "eligibility_expected": "ELIGIBLE",
+          "eligibility_actual": "ELIGIBLE",
+          "edge_case_tags": [
+            "fullstack_for_frontend_role"
+          ],
+          "latency_ms": 1.6,
+          "evaluated_requirements": [
+            {
+              "requirement_id": "REQ_EXP",
+              "group": "experience_seniority",
+              "type": "REQUIRED",
+              "importance": 3.5,
+              "text": "Tối thiểu 2 năm kinh nghiệm",
+              "minimum_years": 2.0,
+              "mandatory": true,
+              "status": "NOT_FOUND",
+              "match_status": "NOT_FOUND",
+              "match_score": 0.0,
+              "match_classification": "NOT_FOUND",
+              "criterion_score": 0.0,
+              "score": 0.0,
+              "reason": "JD yêu cầu Tối thiểu 2 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "comparison": "JD yêu cầu Tối thiểu 2 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "jd_text": "Tối thiểu 2 năm kinh nghiệm",
+              "cv_text": "",
+              "evidence_ids": [],
+              "evidence": [],
+              "weight": 63.6,
+              "weighted_score": 0.0
+            },
+            {
+              "requirement_id": "RESP_1",
+              "group": "responsibilities_task_fit",
+              "type": "RESPONSIBILITY",
+              "importance": 2.0,
+              "text": {
+                "id": "responsibility-1",
+                "text": "Tuyển Mid-Level Frontend Developer.",
+                "importance": 3
+              },
+              "mandatory": false,
+              "status": "PARTIALLY_SUPPORTED",
+              "match_status": "PARTIAL",
+              "match_score": 0.5,
+              "match_classification": "PARTIAL_MATCH",
+              "criterion_score": 50.0,
+              "score": 50.0,
+              "reason": "CV có thông tin liên quan đến {'id': 'responsibility-1', 'text': 'Tuyển Mid-Level Frontend Developer.', 'importance': 3} nhưng chưa đầy đủ.",
+              "comparison": "CV có thông tin liên quan đến {'id': 'responsibility-1', 'text': 'Tuyển Mid-Level Frontend Developer.', 'importance': 3} nhưng chưa đầy đủ.",
+              "jd_text": "{'id': 'responsibility-1', 'text': 'Tuyển Mid-Level Frontend Developer.', 'importance': 3}",
+              "cv_text": "Phát triển frontend React TypeScript và backend Node.js. Fullstack Developer",
+              "evidence_ids": [
+                "EVD_5D196FE0A714"
+              ],
+              "evidence": [
+                {
+                  "evidence_id": "EVD_5D196FE0A714",
+                  "requirement_id": "RESP_1",
+                  "chunk_id": "CV_CHUNK_002_68DB17A0",
+                  "text": "Phát triển frontend React TypeScript và backend Node.js. Fullstack Developer",
+                  "source_page": null,
+                  "source_section": "experience[0]",
+                  "semantic_score": null,
+                  "semantic_rank": null,
+                  "bm25_score": 0.946746,
+                  "bm25_rank": 1,
+                  "fusion_score": 0.01639344,
+                  "fusion_rank": 1
+                }
+              ],
+              "weight": 36.4,
+              "weighted_score": 18.2
+            }
+          ],
+          "criteria": [
+            {
+              "criterion_id": "CRIT_RESPONSIBILITIES",
+              "group": "responsibilities_task_fit",
+              "label": "Trách nhiệm & Nhiệm vụ",
+              "raw_score": 50.0,
+              "weight": 36.4,
+              "weighted_score": 18.2,
+              "status": "PARTIALLY_SUPPORTED",
+              "reason": "Đáp ứng 0/1 yêu cầu đối chiếu.",
+              "requirement_ids": [
+                "RESP_1"
+              ],
+              "evidence_ids": [
+                "EVD_5D196FE0A714"
+              ]
+            },
+            {
+              "criterion_id": "CRIT_EXPERIENCE",
+              "group": "experience_seniority",
+              "label": "Kinh nghiệm & Cấp bậc",
+              "raw_score": 0.0,
+              "weight": 63.6,
+              "weighted_score": 0.0,
+              "status": "NOT_FOUND",
+              "reason": "Đáp ứng 0/1 yêu cầu đối chiếu.",
+              "requirement_ids": [
+                "REQ_EXP"
+              ],
+              "evidence_ids": []
+            }
+          ],
+          "system_rank": 2,
+          "human_rank": 2,
+          "rank_delta": 0
+        },
+        {
+          "cv_id": "CV-FE-02",
+          "human_relevance": 2,
+          "normalized_human_score": 50.0,
+          "system_score": 18.2,
+          "eligibility_expected": "ELIGIBLE",
+          "eligibility_actual": "ELIGIBLE",
+          "edge_case_tags": [
+            "missing_core_typescript"
+          ],
+          "latency_ms": 1.6,
+          "evaluated_requirements": [
+            {
+              "requirement_id": "REQ_EXP",
+              "group": "experience_seniority",
+              "type": "REQUIRED",
+              "importance": 3.5,
+              "text": "Tối thiểu 2 năm kinh nghiệm",
+              "minimum_years": 2.0,
+              "mandatory": true,
+              "status": "NOT_FOUND",
+              "match_status": "NOT_FOUND",
+              "match_score": 0.0,
+              "match_classification": "NOT_FOUND",
+              "criterion_score": 0.0,
+              "score": 0.0,
+              "reason": "JD yêu cầu Tối thiểu 2 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "comparison": "JD yêu cầu Tối thiểu 2 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "jd_text": "Tối thiểu 2 năm kinh nghiệm",
+              "cv_text": "",
+              "evidence_ids": [],
+              "evidence": [],
+              "weight": 63.6,
+              "weighted_score": 0.0
+            },
+            {
+              "requirement_id": "RESP_1",
+              "group": "responsibilities_task_fit",
+              "type": "RESPONSIBILITY",
+              "importance": 2.0,
+              "text": {
+                "id": "responsibility-1",
+                "text": "Tuyển Mid-Level Frontend Developer.",
+                "importance": 3
+              },
+              "mandatory": false,
+              "status": "PARTIALLY_SUPPORTED",
+              "match_status": "PARTIAL",
+              "match_score": 0.5,
+              "match_classification": "PARTIAL_MATCH",
+              "criterion_score": 50.0,
+              "score": 50.0,
+              "reason": "CV có thông tin liên quan đến {'id': 'responsibility-1', 'text': 'Tuyển Mid-Level Frontend Developer.', 'importance': 3} nhưng chưa đầy đủ.",
+              "comparison": "CV có thông tin liên quan đến {'id': 'responsibility-1', 'text': 'Tuyển Mid-Level Frontend Developer.', 'importance': 3} nhưng chưa đầy đủ.",
+              "jd_text": "{'id': 'responsibility-1', 'text': 'Tuyển Mid-Level Frontend Developer.', 'importance': 3}",
+              "cv_text": "Lập trình giao diện ReactJS và Redux với TailwindCSS. Frontend Dev",
+              "evidence_ids": [
+                "EVD_AEFA569FF255"
+              ],
+              "evidence": [
+                {
+                  "evidence_id": "EVD_AEFA569FF255",
+                  "requirement_id": "RESP_1",
+                  "chunk_id": "CV_CHUNK_002_519E25FB",
+                  "text": "Lập trình giao diện ReactJS và Redux với TailwindCSS. Frontend Dev",
+                  "source_page": null,
+                  "source_section": "experience[0]",
+                  "semantic_score": null,
+                  "semantic_rank": null,
+                  "bm25_score": 0.964142,
+                  "bm25_rank": 1,
+                  "fusion_score": 0.01639344,
+                  "fusion_rank": 1
+                }
+              ],
+              "weight": 36.4,
+              "weighted_score": 18.2
+            }
+          ],
+          "criteria": [
+            {
+              "criterion_id": "CRIT_RESPONSIBILITIES",
+              "group": "responsibilities_task_fit",
+              "label": "Trách nhiệm & Nhiệm vụ",
+              "raw_score": 50.0,
+              "weight": 36.4,
+              "weighted_score": 18.2,
+              "status": "PARTIALLY_SUPPORTED",
+              "reason": "Đáp ứng 0/1 yêu cầu đối chiếu.",
+              "requirement_ids": [
+                "RESP_1"
+              ],
+              "evidence_ids": [
+                "EVD_AEFA569FF255"
+              ]
+            },
+            {
+              "criterion_id": "CRIT_EXPERIENCE",
+              "group": "experience_seniority",
+              "label": "Kinh nghiệm & Cấp bậc",
+              "raw_score": 0.0,
+              "weight": 63.6,
+              "weighted_score": 0.0,
+              "status": "NOT_FOUND",
+              "reason": "Đáp ứng 0/1 yêu cầu đối chiếu.",
+              "requirement_ids": [
+                "REQ_EXP"
+              ],
+              "evidence_ids": []
+            }
+          ],
+          "system_rank": 3,
+          "human_rank": 3,
+          "rank_delta": 0
+        },
+        {
+          "cv_id": "CV-FE-04",
+          "human_relevance": 1,
+          "normalized_human_score": 25.0,
+          "system_score": 18.2,
+          "eligibility_expected": "ELIGIBLE",
+          "eligibility_actual": "ELIGIBLE",
+          "edge_case_tags": [
+            "fresher_short_experience"
+          ],
+          "latency_ms": 1.3,
+          "evaluated_requirements": [
+            {
+              "requirement_id": "REQ_EXP",
+              "group": "experience_seniority",
+              "type": "REQUIRED",
+              "importance": 3.5,
+              "text": "Tối thiểu 2 năm kinh nghiệm",
+              "minimum_years": 2.0,
+              "mandatory": true,
+              "status": "NOT_FOUND",
+              "match_status": "NOT_FOUND",
+              "match_score": 0.0,
+              "match_classification": "NOT_FOUND",
+              "criterion_score": 0.0,
+              "score": 0.0,
+              "reason": "JD yêu cầu Tối thiểu 2 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "comparison": "JD yêu cầu Tối thiểu 2 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "jd_text": "Tối thiểu 2 năm kinh nghiệm",
+              "cv_text": "",
+              "evidence_ids": [],
+              "evidence": [],
+              "weight": 63.6,
+              "weighted_score": 0.0
+            },
+            {
+              "requirement_id": "RESP_1",
+              "group": "responsibilities_task_fit",
+              "type": "RESPONSIBILITY",
+              "importance": 2.0,
+              "text": {
+                "id": "responsibility-1",
+                "text": "Tuyển Mid-Level Frontend Developer.",
+                "importance": 3
+              },
+              "mandatory": false,
+              "status": "PARTIALLY_SUPPORTED",
+              "match_status": "PARTIAL",
+              "match_score": 0.5,
+              "match_classification": "PARTIAL_MATCH",
+              "criterion_score": 50.0,
+              "score": 50.0,
+              "reason": "CV có thông tin liên quan đến {'id': 'responsibility-1', 'text': 'Tuyển Mid-Level Frontend Developer.', 'importance': 3} nhưng chưa đầy đủ.",
+              "comparison": "CV có thông tin liên quan đến {'id': 'responsibility-1', 'text': 'Tuyển Mid-Level Frontend Developer.', 'importance': 3} nhưng chưa đầy đủ.",
+              "jd_text": "{'id': 'responsibility-1', 'text': 'Tuyển Mid-Level Frontend Developer.', 'importance': 3}",
+              "cv_text": "Thực tập sinh lập trình React và TypeScript. Frontend Intern",
+              "evidence_ids": [
+                "EVD_0DE5D1C9214C"
+              ],
+              "evidence": [
+                {
+                  "evidence_id": "EVD_0DE5D1C9214C",
+                  "requirement_id": "RESP_1",
+                  "chunk_id": "CV_CHUNK_002_C61EBD19",
+                  "text": "Thực tập sinh lập trình React và TypeScript. Frontend Intern",
+                  "source_page": null,
+                  "source_section": "experience[0]",
+                  "semantic_score": null,
+                  "semantic_rank": null,
+                  "bm25_score": 0.824591,
+                  "bm25_rank": 1,
+                  "fusion_score": 0.01639344,
+                  "fusion_rank": 1
+                }
+              ],
+              "weight": 36.4,
+              "weighted_score": 18.2
+            }
+          ],
+          "criteria": [
+            {
+              "criterion_id": "CRIT_RESPONSIBILITIES",
+              "group": "responsibilities_task_fit",
+              "label": "Trách nhiệm & Nhiệm vụ",
+              "raw_score": 50.0,
+              "weight": 36.4,
+              "weighted_score": 18.2,
+              "status": "PARTIALLY_SUPPORTED",
+              "reason": "Đáp ứng 0/1 yêu cầu đối chiếu.",
+              "requirement_ids": [
+                "RESP_1"
+              ],
+              "evidence_ids": [
+                "EVD_0DE5D1C9214C"
+              ]
+            },
+            {
+              "criterion_id": "CRIT_EXPERIENCE",
+              "group": "experience_seniority",
+              "label": "Kinh nghiệm & Cấp bậc",
+              "raw_score": 0.0,
+              "weight": 63.6,
+              "weighted_score": 0.0,
+              "status": "NOT_FOUND",
+              "reason": "Đáp ứng 0/1 yêu cầu đối chiếu.",
+              "requirement_ids": [
+                "REQ_EXP"
+              ],
+              "evidence_ids": []
+            }
+          ],
+          "system_rank": 4,
+          "human_rank": 5,
+          "rank_delta": -1
+        },
+        {
+          "cv_id": "CV-FE-03",
+          "human_relevance": 2,
+          "normalized_human_score": 50.0,
+          "system_score": 0.0,
+          "eligibility_expected": "ELIGIBLE",
+          "eligibility_actual": "ELIGIBLE",
+          "edge_case_tags": [
+            "vue_vs_react_related_framework"
+          ],
+          "latency_ms": 1.6,
+          "evaluated_requirements": [
+            {
+              "requirement_id": "REQ_EXP",
+              "group": "experience_seniority",
+              "type": "REQUIRED",
+              "importance": 3.5,
+              "text": "Tối thiểu 2 năm kinh nghiệm",
+              "minimum_years": 2.0,
+              "mandatory": true,
+              "status": "NOT_FOUND",
+              "match_status": "NOT_FOUND",
+              "match_score": 0.0,
+              "match_classification": "NOT_FOUND",
+              "criterion_score": 0.0,
+              "score": 0.0,
+              "reason": "JD yêu cầu Tối thiểu 2 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "comparison": "JD yêu cầu Tối thiểu 2 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "jd_text": "Tối thiểu 2 năm kinh nghiệm",
+              "cv_text": "",
+              "evidence_ids": [],
+              "evidence": [],
+              "weight": 63.6,
+              "weighted_score": 0.0
+            },
+            {
+              "requirement_id": "RESP_1",
+              "group": "responsibilities_task_fit",
+              "type": "RESPONSIBILITY",
+              "importance": 2.0,
+              "text": {
+                "id": "responsibility-1",
+                "text": "Tuyển Mid-Level Frontend Developer.",
+                "importance": 3
+              },
+              "mandatory": false,
+              "status": "NOT_FOUND",
+              "match_status": "NOT_FOUND",
+              "match_score": 0.0,
+              "match_classification": "NOT_FOUND",
+              "criterion_score": 0.0,
+              "score": 0.0,
+              "reason": "JD yêu cầu {'id': 'responsibility-1', 'text': 'Tuyển Mid-Level Frontend Developer.', 'importance': 3}; CV không đề cập thông tin này.",
+              "comparison": "JD yêu cầu {'id': 'responsibility-1', 'text': 'Tuyển Mid-Level Frontend Developer.', 'importance': 3}; CV không đề cập thông tin này.",
+              "jd_text": "{'id': 'responsibility-1', 'text': 'Tuyển Mid-Level Frontend Developer.', 'importance': 3}",
+              "cv_text": "",
+              "evidence_ids": [],
+              "evidence": [],
+              "weight": 36.4,
+              "weighted_score": 0.0
+            }
+          ],
+          "criteria": [
+            {
+              "criterion_id": "CRIT_RESPONSIBILITIES",
+              "group": "responsibilities_task_fit",
+              "label": "Trách nhiệm & Nhiệm vụ",
+              "raw_score": 0.0,
+              "weight": 36.4,
+              "weighted_score": 0.0,
+              "status": "NOT_FOUND",
+              "reason": "Đáp ứng 0/1 yêu cầu đối chiếu.",
+              "requirement_ids": [
+                "RESP_1"
+              ],
+              "evidence_ids": []
+            },
+            {
+              "criterion_id": "CRIT_EXPERIENCE",
+              "group": "experience_seniority",
+              "label": "Kinh nghiệm & Cấp bậc",
+              "raw_score": 0.0,
+              "weight": 63.6,
+              "weighted_score": 0.0,
+              "status": "NOT_FOUND",
+              "reason": "Đáp ứng 0/1 yêu cầu đối chiếu.",
+              "requirement_ids": [
+                "REQ_EXP"
+              ],
+              "evidence_ids": []
+            }
+          ],
+          "system_rank": 5,
+          "human_rank": 4,
+          "rank_delta": 1
+        }
+      ]
+    },
+    {
+      "job_id": "JD-DO-001",
+      "title": "DevOps / Cloud Infrastructure Engineer",
+      "domain": "devops",
+      "seniority": "mid_senior",
+      "split": "dev",
+      "candidate_count": 5,
+      "ndcg_at_5": 0.98,
+      "ndcg_at_10": 0.98,
+      "spearman_rho": 0.0,
+      "pearson_r": -0.1336,
+      "mae": 57.72,
+      "pairwise_inversions": {
+        "total_pairs": 9,
+        "correct_pairs": 2,
+        "inverted_pairs": 2,
+        "tied_pairs": 5,
+        "inversion_rate": 0.2222,
+        "inversion_details": [
+          {
+            "expected_better": "CV-DO-01",
+            "expected_worse": "CV-DO-04",
+            "human_better": 4.0,
+            "human_worse": 2.0,
+            "system_better": 18.2,
+            "system_worse": 18.2,
+            "score_gap": 0.0,
+            "note": "System scored both candidates equally despite human relevance difference.",
+            "job_id": "JD-DO-001"
+          },
+          {
+            "expected_better": "CV-DO-01",
+            "expected_worse": "CV-DO-05",
+            "human_better": 4.0,
+            "human_worse": 0.0,
+            "system_better": 18.2,
+            "system_worse": 18.2,
+            "score_gap": 0.0,
+            "note": "System scored both candidates equally despite human relevance difference.",
+            "job_id": "JD-DO-001"
+          },
+          {
+            "expected_better": "CV-DO-03",
+            "expected_worse": "CV-DO-04",
+            "human_better": 4.0,
+            "human_worse": 2.0,
+            "system_better": 18.2,
+            "system_worse": 18.2,
+            "score_gap": 0.0,
+            "note": "System scored both candidates equally despite human relevance difference.",
+            "job_id": "JD-DO-001"
+          },
+          {
+            "expected_better": "CV-DO-03",
+            "expected_worse": "CV-DO-05",
+            "human_better": 4.0,
+            "human_worse": 0.0,
+            "system_better": 18.2,
+            "system_worse": 18.2,
+            "score_gap": 0.0,
+            "note": "System scored both candidates equally despite human relevance difference.",
+            "job_id": "JD-DO-001"
+          },
+          {
+            "expected_better": "CV-DO-04",
+            "expected_worse": "CV-DO-05",
+            "human_better": 2.0,
+            "human_worse": 0.0,
+            "system_better": 18.2,
+            "system_worse": 18.2,
+            "score_gap": 0.0,
+            "note": "System scored both candidates equally despite human relevance difference.",
+            "job_id": "JD-DO-001"
+          },
+          {
+            "expected_better": "CV-DO-02",
+            "expected_worse": "CV-DO-04",
+            "human_better": 3.0,
+            "human_worse": 2.0,
+            "system_better": 0.0,
+            "system_worse": 18.2,
+            "score_gap": 18.2,
+            "job_id": "JD-DO-001"
+          },
+          {
+            "expected_better": "CV-DO-02",
+            "expected_worse": "CV-DO-05",
+            "human_better": 3.0,
+            "human_worse": 0.0,
+            "system_better": 0.0,
+            "system_worse": 18.2,
+            "score_gap": 18.2,
+            "job_id": "JD-DO-001"
+          }
+        ]
+      },
+      "binary_ranking": {
+        "precision_at_5": 0.6,
+        "recall_at_5": 1.0,
+        "mrr": 1.0,
+        "map": 0.8667
+      },
+      "candidates": [
+        {
+          "cv_id": "CV-DO-01",
+          "human_relevance": 4,
+          "normalized_human_score": 100.0,
+          "system_score": 18.2,
+          "eligibility_expected": "ELIGIBLE",
+          "eligibility_actual": "ELIGIBLE",
+          "edge_case_tags": [
+            "hard_constraint_satisfied"
+          ],
+          "latency_ms": 2.6,
+          "evaluated_requirements": [
+            {
+              "requirement_id": "REQ_EXP",
+              "group": "experience_seniority",
+              "type": "REQUIRED",
+              "importance": 3.5,
+              "text": "Tối thiểu 3 năm kinh nghiệm",
+              "minimum_years": 3.0,
+              "mandatory": true,
+              "status": "NOT_FOUND",
+              "match_status": "NOT_FOUND",
+              "match_score": 0.0,
+              "match_classification": "NOT_FOUND",
+              "criterion_score": 0.0,
+              "score": 0.0,
+              "reason": "JD yêu cầu Tối thiểu 3 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "comparison": "JD yêu cầu Tối thiểu 3 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "jd_text": "Tối thiểu 3 năm kinh nghiệm",
+              "cv_text": "",
+              "evidence_ids": [],
+              "evidence": [],
+              "weight": 63.6,
+              "weighted_score": 0.0
+            },
+            {
+              "requirement_id": "RESP_1",
+              "group": "responsibilities_task_fit",
+              "type": "RESPONSIBILITY",
+              "importance": 2.0,
+              "text": {
+                "id": "responsibility-4",
+                "text": "Có kinh nghiệm xây dựng CI/CD pipeline (GitLab CI hoặc GitHub Actions).",
+                "importance": 3
+              },
+              "mandatory": false,
+              "status": "PARTIALLY_SUPPORTED",
+              "match_status": "PARTIAL",
+              "match_score": 0.5,
+              "match_classification": "PARTIAL_MATCH",
+              "criterion_score": 50.0,
+              "score": 50.0,
+              "reason": "CV có thông tin liên quan đến {'id': 'responsibility-4', 'text': 'Có kinh nghiệm xây dựng CI/CD pipeline (GitLab CI hoặc GitHub Actions).', 'importance': 3} nhưng chưa đầy đủ.",
+              "comparison": "CV có thông tin liên quan đến {'id': 'responsibility-4', 'text': 'Có kinh nghiệm xây dựng CI/CD pipeline (GitLab CI hoặc GitHub Actions).', 'importance': 3} nhưng chưa đầy đủ.",
+              "jd_text": "{'id': 'responsibility-4', 'text': 'Có kinh nghiệm xây dựng CI/CD pipeline (GitLab CI hoặc GitHub Actions).', 'importance': 3}",
+              "cv_text": "Thiết kế hạ tầng AWS bằng Terraform, vận hành cụm Kubernetes EKS và CI/CD. DevOps Engineer",
+              "evidence_ids": [
+                "EVD_F785FA479810",
+                "EVD_8911F7BA3F8E"
+              ],
+              "evidence": [
+                {
+                  "evidence_id": "EVD_F785FA479810",
+                  "requirement_id": "RESP_1",
+                  "chunk_id": "CV_CHUNK_002_6B99F878",
+                  "text": "Thiết kế hạ tầng AWS bằng Terraform, vận hành cụm Kubernetes EKS và CI/CD. DevOps Engineer",
+                  "source_page": null,
+                  "source_section": "experience[0]",
+                  "semantic_score": null,
+                  "semantic_rank": null,
+                  "bm25_score": 0.893267,
+                  "bm25_rank": 1,
+                  "fusion_score": 0.01639344,
+                  "fusion_rank": 1
+                },
+                {
+                  "evidence_id": "EVD_8911F7BA3F8E",
+                  "requirement_id": "RESP_1",
+                  "chunk_id": "CV_CHUNK_003_5E615A02",
+                  "text": "Quốc tịch Việt Nam, cư trú hợp pháp và có giấy phép lao động hợp lệ tại Việt Nam",
+                  "source_page": null,
+                  "source_section": "other[0]",
+                  "semantic_score": null,
+                  "semantic_rank": null,
+                  "bm25_score": 0.879576,
+                  "bm25_rank": 2,
+                  "fusion_score": 0.01612903,
+                  "fusion_rank": 2
+                }
+              ],
+              "weight": 36.4,
+              "weighted_score": 18.2
+            }
+          ],
+          "criteria": [
+            {
+              "criterion_id": "CRIT_RESPONSIBILITIES",
+              "group": "responsibilities_task_fit",
+              "label": "Trách nhiệm & Nhiệm vụ",
+              "raw_score": 50.0,
+              "weight": 36.4,
+              "weighted_score": 18.2,
+              "status": "PARTIALLY_SUPPORTED",
+              "reason": "Đáp ứng 0/1 yêu cầu đối chiếu.",
+              "requirement_ids": [
+                "RESP_1"
+              ],
+              "evidence_ids": [
+                "EVD_F785FA479810",
+                "EVD_8911F7BA3F8E"
+              ]
+            },
+            {
+              "criterion_id": "CRIT_EXPERIENCE",
+              "group": "experience_seniority",
+              "label": "Kinh nghiệm & Cấp bậc",
+              "raw_score": 0.0,
+              "weight": 63.6,
+              "weighted_score": 0.0,
+              "status": "NOT_FOUND",
+              "reason": "Đáp ứng 0/1 yêu cầu đối chiếu.",
+              "requirement_ids": [
+                "REQ_EXP"
+              ],
+              "evidence_ids": []
+            }
+          ],
+          "system_rank": 1,
+          "human_rank": 1,
+          "rank_delta": 0
+        },
+        {
+          "cv_id": "CV-DO-03",
+          "human_relevance": 4,
+          "normalized_human_score": 100.0,
+          "system_score": 18.2,
+          "eligibility_expected": "NOT_ELIGIBLE",
+          "eligibility_actual": "ELIGIBLE",
+          "edge_case_tags": [
+            "hard_constraint_explicitly_violated",
+            "strong_skill_ineligible"
+          ],
+          "latency_ms": 1.4,
+          "evaluated_requirements": [
+            {
+              "requirement_id": "REQ_EXP",
+              "group": "experience_seniority",
+              "type": "REQUIRED",
+              "importance": 3.5,
+              "text": "Tối thiểu 3 năm kinh nghiệm",
+              "minimum_years": 3.0,
+              "mandatory": true,
+              "status": "NOT_FOUND",
+              "match_status": "NOT_FOUND",
+              "match_score": 0.0,
+              "match_classification": "NOT_FOUND",
+              "criterion_score": 0.0,
+              "score": 0.0,
+              "reason": "JD yêu cầu Tối thiểu 3 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "comparison": "JD yêu cầu Tối thiểu 3 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "jd_text": "Tối thiểu 3 năm kinh nghiệm",
+              "cv_text": "",
+              "evidence_ids": [],
+              "evidence": [],
+              "weight": 63.6,
+              "weighted_score": 0.0
+            },
+            {
+              "requirement_id": "RESP_1",
+              "group": "responsibilities_task_fit",
+              "type": "RESPONSIBILITY",
+              "importance": 2.0,
+              "text": {
+                "id": "responsibility-4",
+                "text": "Có kinh nghiệm xây dựng CI/CD pipeline (GitLab CI hoặc GitHub Actions).",
+                "importance": 3
+              },
+              "mandatory": false,
+              "status": "PARTIALLY_SUPPORTED",
+              "match_status": "PARTIAL",
+              "match_score": 0.5,
+              "match_classification": "PARTIAL_MATCH",
+              "criterion_score": 50.0,
+              "score": 50.0,
+              "reason": "CV có thông tin liên quan đến {'id': 'responsibility-4', 'text': 'Có kinh nghiệm xây dựng CI/CD pipeline (GitLab CI hoặc GitHub Actions).', 'importance': 3} nhưng chưa đầy đủ.",
+              "comparison": "CV có thông tin liên quan đến {'id': 'responsibility-4', 'text': 'Có kinh nghiệm xây dựng CI/CD pipeline (GitLab CI hoặc GitHub Actions).', 'importance': 3} nhưng chưa đầy đủ.",
+              "jd_text": "{'id': 'responsibility-4', 'text': 'Có kinh nghiệm xây dựng CI/CD pipeline (GitLab CI hoặc GitHub Actions).', 'importance': 3}",
+              "cv_text": "Người nước ngoài chưa có giấy phép lao động, không có work permit tại Việt Nam",
+              "evidence_ids": [
+                "EVD_3A7BDDD93ABA"
+              ],
+              "evidence": [
+                {
+                  "evidence_id": "EVD_3A7BDDD93ABA",
+                  "requirement_id": "RESP_1",
+                  "chunk_id": "CV_CHUNK_003_CDEC1BCB",
+                  "text": "Người nước ngoài chưa có giấy phép lao động, không có work permit tại Việt Nam",
+                  "source_page": null,
+                  "source_section": "other[0]",
+                  "semantic_score": null,
+                  "semantic_rank": null,
+                  "bm25_score": 1.222563,
+                  "bm25_rank": 1,
+                  "fusion_score": 0.01639344,
+                  "fusion_rank": 1
+                }
+              ],
+              "weight": 36.4,
+              "weighted_score": 18.2
+            }
+          ],
+          "criteria": [
+            {
+              "criterion_id": "CRIT_RESPONSIBILITIES",
+              "group": "responsibilities_task_fit",
+              "label": "Trách nhiệm & Nhiệm vụ",
+              "raw_score": 50.0,
+              "weight": 36.4,
+              "weighted_score": 18.2,
+              "status": "PARTIALLY_SUPPORTED",
+              "reason": "Đáp ứng 0/1 yêu cầu đối chiếu.",
+              "requirement_ids": [
+                "RESP_1"
+              ],
+              "evidence_ids": [
+                "EVD_3A7BDDD93ABA"
+              ]
+            },
+            {
+              "criterion_id": "CRIT_EXPERIENCE",
+              "group": "experience_seniority",
+              "label": "Kinh nghiệm & Cấp bậc",
+              "raw_score": 0.0,
+              "weight": 63.6,
+              "weighted_score": 0.0,
+              "status": "NOT_FOUND",
+              "reason": "Đáp ứng 0/1 yêu cầu đối chiếu.",
+              "requirement_ids": [
+                "REQ_EXP"
+              ],
+              "evidence_ids": []
+            }
+          ],
+          "system_rank": 2,
+          "human_rank": 2,
+          "rank_delta": 0
+        },
+        {
+          "cv_id": "CV-DO-04",
+          "human_relevance": 2,
+          "normalized_human_score": 50.0,
+          "system_score": 18.2,
+          "eligibility_expected": "UNKNOWN",
+          "eligibility_actual": "ELIGIBLE",
+          "edge_case_tags": [
+            "hard_constraint_unknown",
+            "missing_terraform_k8s"
+          ],
+          "latency_ms": 1.0,
+          "evaluated_requirements": [
+            {
+              "requirement_id": "REQ_EXP",
+              "group": "experience_seniority",
+              "type": "REQUIRED",
+              "importance": 3.5,
+              "text": "Tối thiểu 3 năm kinh nghiệm",
+              "minimum_years": 3.0,
+              "mandatory": true,
+              "status": "NOT_FOUND",
+              "match_status": "NOT_FOUND",
+              "match_score": 0.0,
+              "match_classification": "NOT_FOUND",
+              "criterion_score": 0.0,
+              "score": 0.0,
+              "reason": "JD yêu cầu Tối thiểu 3 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "comparison": "JD yêu cầu Tối thiểu 3 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "jd_text": "Tối thiểu 3 năm kinh nghiệm",
+              "cv_text": "",
+              "evidence_ids": [],
+              "evidence": [],
+              "weight": 63.6,
+              "weighted_score": 0.0
+            },
+            {
+              "requirement_id": "RESP_1",
+              "group": "responsibilities_task_fit",
+              "type": "RESPONSIBILITY",
+              "importance": 2.0,
+              "text": {
+                "id": "responsibility-4",
+                "text": "Có kinh nghiệm xây dựng CI/CD pipeline (GitLab CI hoặc GitHub Actions).",
+                "importance": 3
+              },
+              "mandatory": false,
+              "status": "PARTIALLY_SUPPORTED",
+              "match_status": "PARTIAL",
+              "match_score": 0.5,
+              "match_classification": "PARTIAL_MATCH",
+              "criterion_score": 50.0,
+              "score": 50.0,
+              "reason": "CV có thông tin liên quan đến {'id': 'responsibility-4', 'text': 'Có kinh nghiệm xây dựng CI/CD pipeline (GitLab CI hoặc GitHub Actions).', 'importance': 3} nhưng chưa đầy đủ.",
+              "comparison": "CV có thông tin liên quan đến {'id': 'responsibility-4', 'text': 'Có kinh nghiệm xây dựng CI/CD pipeline (GitLab CI hoặc GitHub Actions).', 'importance': 3} nhưng chưa đầy đủ.",
+              "jd_text": "{'id': 'responsibility-4', 'text': 'Có kinh nghiệm xây dựng CI/CD pipeline (GitLab CI hoặc GitHub Actions).', 'importance': 3}",
+              "cv_text": "Quản trị AWS EC2 và triển khai CI/CD Jenkins với Docker. DevOps Engineer",
+              "evidence_ids": [
+                "EVD_4F714DC32450"
+              ],
+              "evidence": [
+                {
+                  "evidence_id": "EVD_4F714DC32450",
+                  "requirement_id": "RESP_1",
+                  "chunk_id": "CV_CHUNK_002_76662995",
+                  "text": "Quản trị AWS EC2 và triển khai CI/CD Jenkins với Docker. DevOps Engineer",
+                  "source_page": null,
+                  "source_section": "experience[0]",
+                  "semantic_score": null,
+                  "semantic_rank": null,
+                  "bm25_score": 0.475621,
+                  "bm25_rank": 1,
+                  "fusion_score": 0.01639344,
+                  "fusion_rank": 1
+                }
+              ],
+              "weight": 36.4,
+              "weighted_score": 18.2
+            }
+          ],
+          "criteria": [
+            {
+              "criterion_id": "CRIT_RESPONSIBILITIES",
+              "group": "responsibilities_task_fit",
+              "label": "Trách nhiệm & Nhiệm vụ",
+              "raw_score": 50.0,
+              "weight": 36.4,
+              "weighted_score": 18.2,
+              "status": "PARTIALLY_SUPPORTED",
+              "reason": "Đáp ứng 0/1 yêu cầu đối chiếu.",
+              "requirement_ids": [
+                "RESP_1"
+              ],
+              "evidence_ids": [
+                "EVD_4F714DC32450"
+              ]
+            },
+            {
+              "criterion_id": "CRIT_EXPERIENCE",
+              "group": "experience_seniority",
+              "label": "Kinh nghiệm & Cấp bậc",
+              "raw_score": 0.0,
+              "weight": 63.6,
+              "weighted_score": 0.0,
+              "status": "NOT_FOUND",
+              "reason": "Đáp ứng 0/1 yêu cầu đối chiếu.",
+              "requirement_ids": [
+                "REQ_EXP"
+              ],
+              "evidence_ids": []
+            }
+          ],
+          "system_rank": 3,
+          "human_rank": 4,
+          "rank_delta": -1
+        },
+        {
+          "cv_id": "CV-DO-05",
+          "human_relevance": 0,
+          "normalized_human_score": 0.0,
+          "system_score": 18.2,
+          "eligibility_expected": "ELIGIBLE",
+          "eligibility_actual": "ELIGIBLE",
+          "edge_case_tags": [
+            "low_match_sysadmin"
+          ],
+          "latency_ms": 0.7,
+          "evaluated_requirements": [
+            {
+              "requirement_id": "REQ_EXP",
+              "group": "experience_seniority",
+              "type": "REQUIRED",
+              "importance": 3.5,
+              "text": "Tối thiểu 3 năm kinh nghiệm",
+              "minimum_years": 3.0,
+              "mandatory": true,
+              "status": "NOT_FOUND",
+              "match_status": "NOT_FOUND",
+              "match_score": 0.0,
+              "match_classification": "NOT_FOUND",
+              "criterion_score": 0.0,
+              "score": 0.0,
+              "reason": "JD yêu cầu Tối thiểu 3 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "comparison": "JD yêu cầu Tối thiểu 3 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "jd_text": "Tối thiểu 3 năm kinh nghiệm",
+              "cv_text": "",
+              "evidence_ids": [],
+              "evidence": [],
+              "weight": 63.6,
+              "weighted_score": 0.0
+            },
+            {
+              "requirement_id": "RESP_1",
+              "group": "responsibilities_task_fit",
+              "type": "RESPONSIBILITY",
+              "importance": 2.0,
+              "text": {
+                "id": "responsibility-4",
+                "text": "Có kinh nghiệm xây dựng CI/CD pipeline (GitLab CI hoặc GitHub Actions).",
+                "importance": 3
+              },
+              "mandatory": false,
+              "status": "PARTIALLY_SUPPORTED",
+              "match_status": "PARTIAL",
+              "match_score": 0.5,
+              "match_classification": "PARTIAL_MATCH",
+              "criterion_score": 50.0,
+              "score": 50.0,
+              "reason": "CV có thông tin liên quan đến {'id': 'responsibility-4', 'text': 'Có kinh nghiệm xây dựng CI/CD pipeline (GitLab CI hoặc GitHub Actions).', 'importance': 3} nhưng chưa đầy đủ.",
+              "comparison": "CV có thông tin liên quan đến {'id': 'responsibility-4', 'text': 'Có kinh nghiệm xây dựng CI/CD pipeline (GitLab CI hoặc GitHub Actions).', 'importance': 3} nhưng chưa đầy đủ.",
+              "jd_text": "{'id': 'responsibility-4', 'text': 'Có kinh nghiệm xây dựng CI/CD pipeline (GitLab CI hoặc GitHub Actions).', 'importance': 3}",
+              "cv_text": "Quản trị máy chủ Linux cơ bản. SysAdmin",
+              "evidence_ids": [
+                "EVD_6D6C73FE6B74"
+              ],
+              "evidence": [
+                {
+                  "evidence_id": "EVD_6D6C73FE6B74",
+                  "requirement_id": "RESP_1",
+                  "chunk_id": "CV_CHUNK_002_24758320",
+                  "text": "Quản trị máy chủ Linux cơ bản. SysAdmin",
+                  "source_page": null,
+                  "source_section": "experience[0]",
+                  "semantic_score": null,
+                  "semantic_rank": null,
+                  "bm25_score": 0.575443,
+                  "bm25_rank": 1,
+                  "fusion_score": 0.01639344,
+                  "fusion_rank": 1
+                }
+              ],
+              "weight": 36.4,
+              "weighted_score": 18.2
+            }
+          ],
+          "criteria": [
+            {
+              "criterion_id": "CRIT_RESPONSIBILITIES",
+              "group": "responsibilities_task_fit",
+              "label": "Trách nhiệm & Nhiệm vụ",
+              "raw_score": 50.0,
+              "weight": 36.4,
+              "weighted_score": 18.2,
+              "status": "PARTIALLY_SUPPORTED",
+              "reason": "Đáp ứng 0/1 yêu cầu đối chiếu.",
+              "requirement_ids": [
+                "RESP_1"
+              ],
+              "evidence_ids": [
+                "EVD_6D6C73FE6B74"
+              ]
+            },
+            {
+              "criterion_id": "CRIT_EXPERIENCE",
+              "group": "experience_seniority",
+              "label": "Kinh nghiệm & Cấp bậc",
+              "raw_score": 0.0,
+              "weight": 63.6,
+              "weighted_score": 0.0,
+              "status": "NOT_FOUND",
+              "reason": "Đáp ứng 0/1 yêu cầu đối chiếu.",
+              "requirement_ids": [
+                "REQ_EXP"
+              ],
+              "evidence_ids": []
+            }
+          ],
+          "system_rank": 4,
+          "human_rank": 5,
+          "rank_delta": -1
+        },
+        {
+          "cv_id": "CV-DO-02",
+          "human_relevance": 3,
+          "normalized_human_score": 75.0,
+          "system_score": 0.0,
+          "eligibility_expected": "ELIGIBLE",
+          "eligibility_actual": "ELIGIBLE",
+          "edge_case_tags": [
+            "cloud_provider_alias_gcp_vs_aws"
+          ],
+          "latency_ms": 1.2,
+          "evaluated_requirements": [
+            {
+              "requirement_id": "REQ_EXP",
+              "group": "experience_seniority",
+              "type": "REQUIRED",
+              "importance": 3.5,
+              "text": "Tối thiểu 3 năm kinh nghiệm",
+              "minimum_years": 3.0,
+              "mandatory": true,
+              "status": "NOT_FOUND",
+              "match_status": "NOT_FOUND",
+              "match_score": 0.0,
+              "match_classification": "NOT_FOUND",
+              "criterion_score": 0.0,
+              "score": 0.0,
+              "reason": "JD yêu cầu Tối thiểu 3 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "comparison": "JD yêu cầu Tối thiểu 3 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "jd_text": "Tối thiểu 3 năm kinh nghiệm",
+              "cv_text": "",
+              "evidence_ids": [],
+              "evidence": [],
+              "weight": 63.6,
+              "weighted_score": 0.0
+            },
+            {
+              "requirement_id": "RESP_1",
+              "group": "responsibilities_task_fit",
+              "type": "RESPONSIBILITY",
+              "importance": 2.0,
+              "text": {
+                "id": "responsibility-4",
+                "text": "Có kinh nghiệm xây dựng CI/CD pipeline (GitLab CI hoặc GitHub Actions).",
+                "importance": 3
+              },
+              "mandatory": false,
+              "status": "NOT_FOUND",
+              "match_status": "NOT_FOUND",
+              "match_score": 0.0,
+              "match_classification": "NOT_FOUND",
+              "criterion_score": 0.0,
+              "score": 0.0,
+              "reason": "JD yêu cầu {'id': 'responsibility-4', 'text': 'Có kinh nghiệm xây dựng CI/CD pipeline (GitLab CI hoặc GitHub Actions).', 'importance': 3}; CV không đề cập thông tin này.",
+              "comparison": "JD yêu cầu {'id': 'responsibility-4', 'text': 'Có kinh nghiệm xây dựng CI/CD pipeline (GitLab CI hoặc GitHub Actions).', 'importance': 3}; CV không đề cập thông tin này.",
+              "jd_text": "{'id': 'responsibility-4', 'text': 'Có kinh nghiệm xây dựng CI/CD pipeline (GitLab CI hoặc GitHub Actions).', 'importance': 3}",
+              "cv_text": "",
+              "evidence_ids": [],
+              "evidence": [],
+              "weight": 36.4,
+              "weighted_score": 0.0
+            }
+          ],
+          "criteria": [
+            {
+              "criterion_id": "CRIT_RESPONSIBILITIES",
+              "group": "responsibilities_task_fit",
+              "label": "Trách nhiệm & Nhiệm vụ",
+              "raw_score": 0.0,
+              "weight": 36.4,
+              "weighted_score": 0.0,
+              "status": "NOT_FOUND",
+              "reason": "Đáp ứng 0/1 yêu cầu đối chiếu.",
+              "requirement_ids": [
+                "RESP_1"
+              ],
+              "evidence_ids": []
+            },
+            {
+              "criterion_id": "CRIT_EXPERIENCE",
+              "group": "experience_seniority",
+              "label": "Kinh nghiệm & Cấp bậc",
+              "raw_score": 0.0,
+              "weight": 63.6,
+              "weighted_score": 0.0,
+              "status": "NOT_FOUND",
+              "reason": "Đáp ứng 0/1 yêu cầu đối chiếu.",
+              "requirement_ids": [
+                "REQ_EXP"
+              ],
+              "evidence_ids": []
+            }
+          ],
+          "system_rank": 5,
+          "human_rank": 3,
+          "rank_delta": 2
+        }
+      ]
+    },
+    {
+      "job_id": "JD-DS-001",
+      "title": "AI / Data Science Engineer (NLP & LLMs)",
+      "domain": "ai_data",
+      "seniority": "mid_senior",
+      "split": "dev",
+      "candidate_count": 5,
+      "ndcg_at_5": 1.0,
+      "ndcg_at_10": 1.0,
+      "spearman_rho": 0.0,
+      "pearson_r": 0.0,
+      "mae": 50.0,
+      "pairwise_inversions": {
+        "total_pairs": 7,
+        "correct_pairs": 0,
+        "inverted_pairs": 0,
+        "tied_pairs": 7,
+        "inversion_rate": 0.0,
+        "inversion_details": [
+          {
+            "expected_better": "CV-DS-01",
+            "expected_worse": "CV-DS-02",
+            "human_better": 4.0,
+            "human_worse": 2.0,
+            "system_better": 0.0,
+            "system_worse": 0.0,
+            "score_gap": 0.0,
+            "note": "System scored both candidates equally despite human relevance difference.",
+            "job_id": "JD-DS-001"
+          },
+          {
+            "expected_better": "CV-DS-01",
+            "expected_worse": "CV-DS-03",
+            "human_better": 4.0,
+            "human_worse": 2.0,
+            "system_better": 0.0,
+            "system_worse": 0.0,
+            "score_gap": 0.0,
+            "note": "System scored both candidates equally despite human relevance difference.",
+            "job_id": "JD-DS-001"
+          },
+          {
+            "expected_better": "CV-DS-01",
+            "expected_worse": "CV-DS-04",
+            "human_better": 4.0,
+            "human_worse": 2.0,
+            "system_better": 0.0,
+            "system_worse": 0.0,
+            "score_gap": 0.0,
+            "note": "System scored both candidates equally despite human relevance difference.",
+            "job_id": "JD-DS-001"
+          },
+          {
+            "expected_better": "CV-DS-01",
+            "expected_worse": "CV-DS-05",
+            "human_better": 4.0,
+            "human_worse": 0.0,
+            "system_better": 0.0,
+            "system_worse": 0.0,
+            "score_gap": 0.0,
+            "note": "System scored both candidates equally despite human relevance difference.",
+            "job_id": "JD-DS-001"
+          },
+          {
+            "expected_better": "CV-DS-02",
+            "expected_worse": "CV-DS-05",
+            "human_better": 2.0,
+            "human_worse": 0.0,
+            "system_better": 0.0,
+            "system_worse": 0.0,
+            "score_gap": 0.0,
+            "note": "System scored both candidates equally despite human relevance difference.",
+            "job_id": "JD-DS-001"
+          },
+          {
+            "expected_better": "CV-DS-03",
+            "expected_worse": "CV-DS-05",
+            "human_better": 2.0,
+            "human_worse": 0.0,
+            "system_better": 0.0,
+            "system_worse": 0.0,
+            "score_gap": 0.0,
+            "note": "System scored both candidates equally despite human relevance difference.",
+            "job_id": "JD-DS-001"
+          },
+          {
+            "expected_better": "CV-DS-04",
+            "expected_worse": "CV-DS-05",
+            "human_better": 2.0,
+            "human_worse": 0.0,
+            "system_better": 0.0,
+            "system_worse": 0.0,
+            "score_gap": 0.0,
+            "note": "System scored both candidates equally despite human relevance difference.",
+            "job_id": "JD-DS-001"
+          }
+        ]
+      },
+      "binary_ranking": {
+        "precision_at_5": 0.2,
+        "recall_at_5": 1.0,
+        "mrr": 1.0,
+        "map": 1.0
+      },
+      "candidates": [
+        {
+          "cv_id": "CV-DS-01",
+          "human_relevance": 4,
+          "normalized_human_score": 100.0,
+          "system_score": 0.0,
+          "eligibility_expected": "ELIGIBLE",
+          "eligibility_actual": "ELIGIBLE",
+          "edge_case_tags": [
+            "strong_ai_llm_fit"
+          ],
+          "latency_ms": 1.9,
+          "evaluated_requirements": [
+            {
+              "requirement_id": "REQ_EXP",
+              "group": "experience_seniority",
+              "type": "REQUIRED",
+              "importance": 3.5,
+              "text": "Tối thiểu 3 năm kinh nghiệm",
+              "minimum_years": 3.0,
+              "mandatory": true,
+              "status": "NOT_FOUND",
+              "match_status": "NOT_FOUND",
+              "match_score": 0.0,
+              "match_classification": "NOT_FOUND",
+              "criterion_score": 0.0,
+              "score": 0.0,
+              "reason": "JD yêu cầu Tối thiểu 3 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "comparison": "JD yêu cầu Tối thiểu 3 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "jd_text": "Tối thiểu 3 năm kinh nghiệm",
+              "cv_text": "",
+              "evidence_ids": [],
+              "evidence": [],
+              "weight": 100.0,
+              "weighted_score": 0.0
+            }
+          ],
+          "criteria": [
+            {
+              "criterion_id": "CRIT_EXPERIENCE",
+              "group": "experience_seniority",
+              "label": "Kinh nghiệm & Cấp bậc",
+              "raw_score": 0.0,
+              "weight": 100.0,
+              "weighted_score": 0.0,
+              "status": "NOT_FOUND",
+              "reason": "Đáp ứng 0/1 yêu cầu đối chiếu.",
+              "requirement_ids": [
+                "REQ_EXP"
+              ],
+              "evidence_ids": []
+            }
+          ],
+          "system_rank": 1,
+          "human_rank": 1,
+          "rank_delta": 0
+        },
+        {
+          "cv_id": "CV-DS-02",
+          "human_relevance": 2,
+          "normalized_human_score": 50.0,
+          "system_score": 0.0,
+          "eligibility_expected": "ELIGIBLE",
+          "eligibility_actual": "ELIGIBLE",
+          "edge_case_tags": [
+            "tabular_ml_vs_nlp_llm_distinction"
+          ],
+          "latency_ms": 1.3,
+          "evaluated_requirements": [
+            {
+              "requirement_id": "REQ_EXP",
+              "group": "experience_seniority",
+              "type": "REQUIRED",
+              "importance": 3.5,
+              "text": "Tối thiểu 3 năm kinh nghiệm",
+              "minimum_years": 3.0,
+              "mandatory": true,
+              "status": "NOT_FOUND",
+              "match_status": "NOT_FOUND",
+              "match_score": 0.0,
+              "match_classification": "NOT_FOUND",
+              "criterion_score": 0.0,
+              "score": 0.0,
+              "reason": "JD yêu cầu Tối thiểu 3 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "comparison": "JD yêu cầu Tối thiểu 3 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "jd_text": "Tối thiểu 3 năm kinh nghiệm",
+              "cv_text": "",
+              "evidence_ids": [],
+              "evidence": [],
+              "weight": 100.0,
+              "weighted_score": 0.0
+            }
+          ],
+          "criteria": [
+            {
+              "criterion_id": "CRIT_EXPERIENCE",
+              "group": "experience_seniority",
+              "label": "Kinh nghiệm & Cấp bậc",
+              "raw_score": 0.0,
+              "weight": 100.0,
+              "weighted_score": 0.0,
+              "status": "NOT_FOUND",
+              "reason": "Đáp ứng 0/1 yêu cầu đối chiếu.",
+              "requirement_ids": [
+                "REQ_EXP"
+              ],
+              "evidence_ids": []
+            }
+          ],
+          "system_rank": 2,
+          "human_rank": 2,
+          "rank_delta": 0
+        },
+        {
+          "cv_id": "CV-DS-03",
+          "human_relevance": 2,
+          "normalized_human_score": 50.0,
+          "system_score": 0.0,
+          "eligibility_expected": "ELIGIBLE",
+          "eligibility_actual": "ELIGIBLE",
+          "edge_case_tags": [
+            "cv_vision_vs_nlp_distinction"
+          ],
+          "latency_ms": 1.2,
+          "evaluated_requirements": [
+            {
+              "requirement_id": "REQ_EXP",
+              "group": "experience_seniority",
+              "type": "REQUIRED",
+              "importance": 3.5,
+              "text": "Tối thiểu 3 năm kinh nghiệm",
+              "minimum_years": 3.0,
+              "mandatory": true,
+              "status": "NOT_FOUND",
+              "match_status": "NOT_FOUND",
+              "match_score": 0.0,
+              "match_classification": "NOT_FOUND",
+              "criterion_score": 0.0,
+              "score": 0.0,
+              "reason": "JD yêu cầu Tối thiểu 3 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "comparison": "JD yêu cầu Tối thiểu 3 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "jd_text": "Tối thiểu 3 năm kinh nghiệm",
+              "cv_text": "",
+              "evidence_ids": [],
+              "evidence": [],
+              "weight": 100.0,
+              "weighted_score": 0.0
+            }
+          ],
+          "criteria": [
+            {
+              "criterion_id": "CRIT_EXPERIENCE",
+              "group": "experience_seniority",
+              "label": "Kinh nghiệm & Cấp bậc",
+              "raw_score": 0.0,
+              "weight": 100.0,
+              "weighted_score": 0.0,
+              "status": "NOT_FOUND",
+              "reason": "Đáp ứng 0/1 yêu cầu đối chiếu.",
+              "requirement_ids": [
+                "REQ_EXP"
+              ],
+              "evidence_ids": []
+            }
+          ],
+          "system_rank": 3,
+          "human_rank": 3,
+          "rank_delta": 0
+        },
+        {
+          "cv_id": "CV-DS-04",
+          "human_relevance": 2,
+          "normalized_human_score": 50.0,
+          "system_score": 0.0,
+          "eligibility_expected": "ELIGIBLE",
+          "eligibility_actual": "ELIGIBLE",
+          "edge_case_tags": [
+            "fresher_with_matching_tech"
+          ],
+          "latency_ms": 1.3,
+          "evaluated_requirements": [
+            {
+              "requirement_id": "REQ_EXP",
+              "group": "experience_seniority",
+              "type": "REQUIRED",
+              "importance": 3.5,
+              "text": "Tối thiểu 3 năm kinh nghiệm",
+              "minimum_years": 3.0,
+              "mandatory": true,
+              "status": "NOT_FOUND",
+              "match_status": "NOT_FOUND",
+              "match_score": 0.0,
+              "match_classification": "NOT_FOUND",
+              "criterion_score": 0.0,
+              "score": 0.0,
+              "reason": "JD yêu cầu Tối thiểu 3 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "comparison": "JD yêu cầu Tối thiểu 3 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "jd_text": "Tối thiểu 3 năm kinh nghiệm",
+              "cv_text": "",
+              "evidence_ids": [],
+              "evidence": [],
+              "weight": 100.0,
+              "weighted_score": 0.0
+            }
+          ],
+          "criteria": [
+            {
+              "criterion_id": "CRIT_EXPERIENCE",
+              "group": "experience_seniority",
+              "label": "Kinh nghiệm & Cấp bậc",
+              "raw_score": 0.0,
+              "weight": 100.0,
+              "weighted_score": 0.0,
+              "status": "NOT_FOUND",
+              "reason": "Đáp ứng 0/1 yêu cầu đối chiếu.",
+              "requirement_ids": [
+                "REQ_EXP"
+              ],
+              "evidence_ids": []
+            }
+          ],
+          "system_rank": 4,
+          "human_rank": 4,
+          "rank_delta": 0
+        },
+        {
+          "cv_id": "CV-DS-05",
+          "human_relevance": 0,
+          "normalized_human_score": 0.0,
+          "system_score": 0.0,
+          "eligibility_expected": "ELIGIBLE",
+          "eligibility_actual": "ELIGIBLE",
+          "edge_case_tags": [
+            "unrelated_stack"
+          ],
+          "latency_ms": 2.0,
+          "evaluated_requirements": [
+            {
+              "requirement_id": "REQ_EXP",
+              "group": "experience_seniority",
+              "type": "REQUIRED",
+              "importance": 3.5,
+              "text": "Tối thiểu 3 năm kinh nghiệm",
+              "minimum_years": 3.0,
+              "mandatory": true,
+              "status": "NOT_FOUND",
+              "match_status": "NOT_FOUND",
+              "match_score": 0.0,
+              "match_classification": "NOT_FOUND",
+              "criterion_score": 0.0,
+              "score": 0.0,
+              "reason": "JD yêu cầu Tối thiểu 3 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "comparison": "JD yêu cầu Tối thiểu 3 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "jd_text": "Tối thiểu 3 năm kinh nghiệm",
+              "cv_text": "",
+              "evidence_ids": [],
+              "evidence": [],
+              "weight": 100.0,
+              "weighted_score": 0.0
+            }
+          ],
+          "criteria": [
+            {
+              "criterion_id": "CRIT_EXPERIENCE",
+              "group": "experience_seniority",
+              "label": "Kinh nghiệm & Cấp bậc",
+              "raw_score": 0.0,
+              "weight": 100.0,
+              "weighted_score": 0.0,
+              "status": "NOT_FOUND",
+              "reason": "Đáp ứng 0/1 yêu cầu đối chiếu.",
+              "requirement_ids": [
+                "REQ_EXP"
+              ],
+              "evidence_ids": []
+            }
+          ],
+          "system_rank": 5,
+          "human_rank": 5,
+          "rank_delta": 0
+        }
+      ]
+    },
+    {
+      "job_id": "JD-QA-001",
+      "title": "QA Automation Test Engineer",
+      "domain": "qa",
+      "seniority": "mid",
+      "split": "dev",
+      "candidate_count": 5,
+      "ndcg_at_5": 0.956,
+      "ndcg_at_10": 0.956,
+      "spearman_rho": 0.4472,
+      "pearson_r": 0.5303,
+      "mae": 32.02,
+      "pairwise_inversions": {
+        "total_pairs": 10,
+        "correct_pairs": 5,
+        "inverted_pairs": 2,
+        "tied_pairs": 3,
+        "inversion_rate": 0.2,
+        "inversion_details": [
+          {
+            "expected_better": "CV-QA-01",
+            "expected_worse": "CV-QA-02",
+            "human_better": 4.0,
+            "human_worse": 2.0,
+            "system_better": 26.6,
+            "system_worse": 26.6,
+            "score_gap": 0.0,
+            "note": "System scored both candidates equally despite human relevance difference.",
+            "job_id": "JD-QA-001"
+          },
+          {
+            "expected_better": "CV-QA-01",
+            "expected_worse": "CV-QA-04",
+            "human_better": 4.0,
+            "human_worse": 1.0,
+            "system_better": 26.6,
+            "system_worse": 26.6,
+            "score_gap": 0.0,
+            "note": "System scored both candidates equally despite human relevance difference.",
+            "job_id": "JD-QA-001"
+          },
+          {
+            "expected_better": "CV-QA-02",
+            "expected_worse": "CV-QA-04",
+            "human_better": 2.0,
+            "human_worse": 1.0,
+            "system_better": 26.6,
+            "system_worse": 26.6,
+            "score_gap": 0.0,
+            "note": "System scored both candidates equally despite human relevance difference.",
+            "job_id": "JD-QA-001"
+          },
+          {
+            "expected_better": "CV-QA-03",
+            "expected_worse": "CV-QA-02",
+            "human_better": 3.0,
+            "human_worse": 2.0,
+            "system_better": 13.3,
+            "system_worse": 26.6,
+            "score_gap": 13.3,
+            "job_id": "JD-QA-001"
+          },
+          {
+            "expected_better": "CV-QA-03",
+            "expected_worse": "CV-QA-04",
+            "human_better": 3.0,
+            "human_worse": 1.0,
+            "system_better": 13.3,
+            "system_worse": 26.6,
+            "score_gap": 13.3,
+            "job_id": "JD-QA-001"
+          }
+        ]
+      },
+      "binary_ranking": {
+        "precision_at_5": 0.4,
+        "recall_at_5": 1.0,
+        "mrr": 1.0,
+        "map": 0.75
+      },
+      "candidates": [
+        {
+          "cv_id": "CV-QA-01",
+          "human_relevance": 4,
+          "normalized_human_score": 100.0,
+          "system_score": 26.6,
+          "eligibility_expected": "ELIGIBLE",
+          "eligibility_actual": "ELIGIBLE",
+          "edge_case_tags": [
+            "strong_qa_fit_with_cert"
+          ],
+          "latency_ms": 2.2,
+          "evaluated_requirements": [
+            {
+              "requirement_id": "REQ_EXP",
+              "group": "experience_seniority",
+              "type": "REQUIRED",
+              "importance": 3.5,
+              "text": "Tối thiểu 2 năm kinh nghiệm",
+              "minimum_years": 2.0,
+              "mandatory": true,
+              "status": "NOT_FOUND",
+              "match_status": "NOT_FOUND",
+              "match_score": 0.0,
+              "match_classification": "NOT_FOUND",
+              "criterion_score": 0.0,
+              "score": 0.0,
+              "reason": "JD yêu cầu Tối thiểu 2 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "comparison": "JD yêu cầu Tối thiểu 2 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "jd_text": "Tối thiểu 2 năm kinh nghiệm",
+              "cv_text": "",
+              "evidence_ids": [],
+              "evidence": [],
+              "weight": 46.7,
+              "weighted_score": 0.0
+            },
+            {
+              "requirement_id": "RESP_1",
+              "group": "responsibilities_task_fit",
+              "type": "RESPONSIBILITY",
+              "importance": 2.0,
+              "text": {
+                "id": "responsibility-1",
+                "text": "Tuyển dụng QA Automation Test Engineer.",
+                "importance": 3
+              },
+              "mandatory": false,
+              "status": "PARTIALLY_SUPPORTED",
+              "match_status": "PARTIAL",
+              "match_score": 0.5,
+              "match_classification": "PARTIAL_MATCH",
+              "criterion_score": 50.0,
+              "score": 50.0,
+              "reason": "CV có thông tin liên quan đến {'id': 'responsibility-1', 'text': 'Tuyển dụng QA Automation Test Engineer.', 'importance': 3} nhưng chưa đầy đủ.",
+              "comparison": "CV có thông tin liên quan đến {'id': 'responsibility-1', 'text': 'Tuyển dụng QA Automation Test Engineer.', 'importance': 3} nhưng chưa đầy đủ.",
+              "jd_text": "{'id': 'responsibility-1', 'text': 'Tuyển dụng QA Automation Test Engineer.', 'importance': 3}",
+              "cv_text": "Xây dựng automation framework bằng Python và Selenium, tích hợp CI/CD. QA Automation Engineer",
+              "evidence_ids": [
+                "EVD_1FAA693A64E5"
+              ],
+              "evidence": [
+                {
+                  "evidence_id": "EVD_1FAA693A64E5",
+                  "requirement_id": "RESP_1",
+                  "chunk_id": "CV_CHUNK_002_AAD24253",
+                  "text": "Xây dựng automation framework bằng Python và Selenium, tích hợp CI/CD. QA Automation Engineer",
+                  "source_page": null,
+                  "source_section": "experience[0]",
+                  "semantic_score": null,
+                  "semantic_rank": null,
+                  "bm25_score": 2.139028,
+                  "bm25_rank": 1,
+                  "fusion_score": 0.01639344,
+                  "fusion_rank": 1
+                }
+              ],
+              "weight": 26.7,
+              "weighted_score": 13.3
+            },
+            {
+              "requirement_id": "RESP_2",
+              "group": "responsibilities_task_fit",
+              "type": "RESPONSIBILITY",
+              "importance": 2.0,
+              "text": {
+                "id": "responsibility-4",
+                "text": "Có kinh nghiệm kiểm thử API với Postman/RestAssured và tích hợp CI/CD.",
+                "importance": 3
+              },
+              "mandatory": false,
+              "status": "PARTIALLY_SUPPORTED",
+              "match_status": "PARTIAL",
+              "match_score": 0.5,
+              "match_classification": "PARTIAL_MATCH",
+              "criterion_score": 50.0,
+              "score": 50.0,
+              "reason": "CV có thông tin liên quan đến {'id': 'responsibility-4', 'text': 'Có kinh nghiệm kiểm thử API với Postman/RestAssured và tích hợp CI/CD.', 'importance': 3} nhưng chưa đầy đủ.",
+              "comparison": "CV có thông tin liên quan đến {'id': 'responsibility-4', 'text': 'Có kinh nghiệm kiểm thử API với Postman/RestAssured và tích hợp CI/CD.', 'importance': 3} nhưng chưa đầy đủ.",
+              "jd_text": "{'id': 'responsibility-4', 'text': 'Có kinh nghiệm kiểm thử API với Postman/RestAssured và tích hợp CI/CD.', 'importance': 3}",
+              "cv_text": "Xây dựng automation framework bằng Python và Selenium, tích hợp CI/CD. QA Automation Engineer",
+              "evidence_ids": [
+                "EVD_0E54A247A2D4"
+              ],
+              "evidence": [
+                {
+                  "evidence_id": "EVD_0E54A247A2D4",
+                  "requirement_id": "RESP_2",
+                  "chunk_id": "CV_CHUNK_002_AAD24253",
+                  "text": "Xây dựng automation framework bằng Python và Selenium, tích hợp CI/CD. QA Automation Engineer",
+                  "source_page": null,
+                  "source_section": "experience[0]",
+                  "semantic_score": null,
+                  "semantic_rank": null,
+                  "bm25_score": 2.729993,
+                  "bm25_rank": 1,
+                  "fusion_score": 0.01639344,
+                  "fusion_rank": 1
+                }
+              ],
+              "weight": 26.6,
+              "weighted_score": 13.3
+            }
+          ],
+          "criteria": [
+            {
+              "criterion_id": "CRIT_RESPONSIBILITIES",
+              "group": "responsibilities_task_fit",
+              "label": "Trách nhiệm & Nhiệm vụ",
+              "raw_score": 49.9,
+              "weight": 53.3,
+              "weighted_score": 26.6,
+              "status": "PARTIALLY_SUPPORTED",
+              "reason": "Đáp ứng 0/2 yêu cầu đối chiếu.",
+              "requirement_ids": [
+                "RESP_1",
+                "RESP_2"
+              ],
+              "evidence_ids": [
+                "EVD_1FAA693A64E5",
+                "EVD_0E54A247A2D4"
+              ]
+            },
+            {
+              "criterion_id": "CRIT_EXPERIENCE",
+              "group": "experience_seniority",
+              "label": "Kinh nghiệm & Cấp bậc",
+              "raw_score": 0.0,
+              "weight": 46.7,
+              "weighted_score": 0.0,
+              "status": "NOT_FOUND",
+              "reason": "Đáp ứng 0/1 yêu cầu đối chiếu.",
+              "requirement_ids": [
+                "REQ_EXP"
+              ],
+              "evidence_ids": []
+            }
+          ],
+          "system_rank": 1,
+          "human_rank": 1,
+          "rank_delta": 0
+        },
+        {
+          "cv_id": "CV-QA-02",
+          "human_relevance": 2,
+          "normalized_human_score": 50.0,
+          "system_score": 26.6,
+          "eligibility_expected": "ELIGIBLE",
+          "eligibility_actual": "ELIGIBLE",
+          "edge_case_tags": [
+            "manual_qc_vs_automation_engineer"
+          ],
+          "latency_ms": 1.5,
+          "evaluated_requirements": [
+            {
+              "requirement_id": "REQ_EXP",
+              "group": "experience_seniority",
+              "type": "REQUIRED",
+              "importance": 3.5,
+              "text": "Tối thiểu 2 năm kinh nghiệm",
+              "minimum_years": 2.0,
+              "mandatory": true,
+              "status": "NOT_FOUND",
+              "match_status": "NOT_FOUND",
+              "match_score": 0.0,
+              "match_classification": "NOT_FOUND",
+              "criterion_score": 0.0,
+              "score": 0.0,
+              "reason": "JD yêu cầu Tối thiểu 2 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "comparison": "JD yêu cầu Tối thiểu 2 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "jd_text": "Tối thiểu 2 năm kinh nghiệm",
+              "cv_text": "",
+              "evidence_ids": [],
+              "evidence": [],
+              "weight": 46.7,
+              "weighted_score": 0.0
+            },
+            {
+              "requirement_id": "RESP_1",
+              "group": "responsibilities_task_fit",
+              "type": "RESPONSIBILITY",
+              "importance": 2.0,
+              "text": {
+                "id": "responsibility-1",
+                "text": "Tuyển dụng QA Automation Test Engineer.",
+                "importance": 3
+              },
+              "mandatory": false,
+              "status": "PARTIALLY_SUPPORTED",
+              "match_status": "PARTIAL",
+              "match_score": 0.5,
+              "match_classification": "PARTIAL_MATCH",
+              "criterion_score": 50.0,
+              "score": 50.0,
+              "reason": "CV có thông tin liên quan đến {'id': 'responsibility-1', 'text': 'Tuyển dụng QA Automation Test Engineer.', 'importance': 3} nhưng chưa đầy đủ.",
+              "comparison": "CV có thông tin liên quan đến {'id': 'responsibility-1', 'text': 'Tuyển dụng QA Automation Test Engineer.', 'importance': 3} nhưng chưa đầy đủ.",
+              "jd_text": "{'id': 'responsibility-1', 'text': 'Tuyển dụng QA Automation Test Engineer.', 'importance': 3}",
+              "cv_text": "Thực hiện manual testing, quản lý defect trên Jira và test API bằng Postman. Senior QC Tester",
+              "evidence_ids": [
+                "EVD_4B0F8BCE91FD"
+              ],
+              "evidence": [
+                {
+                  "evidence_id": "EVD_4B0F8BCE91FD",
+                  "requirement_id": "RESP_1",
+                  "chunk_id": "CV_CHUNK_002_50BC9DB7",
+                  "text": "Thực hiện manual testing, quản lý defect trên Jira và test API bằng Postman. Senior QC Tester",
+                  "source_page": null,
+                  "source_section": "experience[0]",
+                  "semantic_score": null,
+                  "semantic_rank": null,
+                  "bm25_score": 0.16192,
+                  "bm25_rank": 1,
+                  "fusion_score": 0.01639344,
+                  "fusion_rank": 1
+                }
+              ],
+              "weight": 26.7,
+              "weighted_score": 13.3
+            },
+            {
+              "requirement_id": "RESP_2",
+              "group": "responsibilities_task_fit",
+              "type": "RESPONSIBILITY",
+              "importance": 2.0,
+              "text": {
+                "id": "responsibility-4",
+                "text": "Có kinh nghiệm kiểm thử API với Postman/RestAssured và tích hợp CI/CD.",
+                "importance": 3
+              },
+              "mandatory": false,
+              "status": "PARTIALLY_SUPPORTED",
+              "match_status": "PARTIAL",
+              "match_score": 0.5,
+              "match_classification": "PARTIAL_MATCH",
+              "criterion_score": 50.0,
+              "score": 50.0,
+              "reason": "CV có thông tin liên quan đến {'id': 'responsibility-4', 'text': 'Có kinh nghiệm kiểm thử API với Postman/RestAssured và tích hợp CI/CD.', 'importance': 3} nhưng chưa đầy đủ.",
+              "comparison": "CV có thông tin liên quan đến {'id': 'responsibility-4', 'text': 'Có kinh nghiệm kiểm thử API với Postman/RestAssured và tích hợp CI/CD.', 'importance': 3} nhưng chưa đầy đủ.",
+              "jd_text": "{'id': 'responsibility-4', 'text': 'Có kinh nghiệm kiểm thử API với Postman/RestAssured và tích hợp CI/CD.', 'importance': 3}",
+              "cv_text": "Thực hiện manual testing, quản lý defect trên Jira và test API bằng Postman. Senior QC Tester",
+              "evidence_ids": [
+                "EVD_3349A87D73CA"
+              ],
+              "evidence": [
+                {
+                  "evidence_id": "EVD_3349A87D73CA",
+                  "requirement_id": "RESP_2",
+                  "chunk_id": "CV_CHUNK_002_50BC9DB7",
+                  "text": "Thực hiện manual testing, quản lý defect trên Jira và test API bằng Postman. Senior QC Tester",
+                  "source_page": null,
+                  "source_section": "experience[0]",
+                  "semantic_score": null,
+                  "semantic_rank": null,
+                  "bm25_score": 0.16192,
+                  "bm25_rank": 1,
+                  "fusion_score": 0.01639344,
+                  "fusion_rank": 1
+                }
+              ],
+              "weight": 26.6,
+              "weighted_score": 13.3
+            }
+          ],
+          "criteria": [
+            {
+              "criterion_id": "CRIT_RESPONSIBILITIES",
+              "group": "responsibilities_task_fit",
+              "label": "Trách nhiệm & Nhiệm vụ",
+              "raw_score": 49.9,
+              "weight": 53.3,
+              "weighted_score": 26.6,
+              "status": "PARTIALLY_SUPPORTED",
+              "reason": "Đáp ứng 0/2 yêu cầu đối chiếu.",
+              "requirement_ids": [
+                "RESP_1",
+                "RESP_2"
+              ],
+              "evidence_ids": [
+                "EVD_4B0F8BCE91FD",
+                "EVD_3349A87D73CA"
+              ]
+            },
+            {
+              "criterion_id": "CRIT_EXPERIENCE",
+              "group": "experience_seniority",
+              "label": "Kinh nghiệm & Cấp bậc",
+              "raw_score": 0.0,
+              "weight": 46.7,
+              "weighted_score": 0.0,
+              "status": "NOT_FOUND",
+              "reason": "Đáp ứng 0/1 yêu cầu đối chiếu.",
+              "requirement_ids": [
+                "REQ_EXP"
+              ],
+              "evidence_ids": []
+            }
+          ],
+          "system_rank": 2,
+          "human_rank": 3,
+          "rank_delta": -1
+        },
+        {
+          "cv_id": "CV-QA-04",
+          "human_relevance": 1,
+          "normalized_human_score": 25.0,
+          "system_score": 26.6,
+          "eligibility_expected": "ELIGIBLE",
+          "eligibility_actual": "ELIGIBLE",
+          "edge_case_tags": [
+            "dev_unit_testing_vs_qa_automation"
+          ],
+          "latency_ms": 1.1,
+          "evaluated_requirements": [
+            {
+              "requirement_id": "REQ_EXP",
+              "group": "experience_seniority",
+              "type": "REQUIRED",
+              "importance": 3.5,
+              "text": "Tối thiểu 2 năm kinh nghiệm",
+              "minimum_years": 2.0,
+              "mandatory": true,
+              "status": "NOT_FOUND",
+              "match_status": "NOT_FOUND",
+              "match_score": 0.0,
+              "match_classification": "NOT_FOUND",
+              "criterion_score": 0.0,
+              "score": 0.0,
+              "reason": "JD yêu cầu Tối thiểu 2 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "comparison": "JD yêu cầu Tối thiểu 2 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "jd_text": "Tối thiểu 2 năm kinh nghiệm",
+              "cv_text": "",
+              "evidence_ids": [],
+              "evidence": [],
+              "weight": 46.7,
+              "weighted_score": 0.0
+            },
+            {
+              "requirement_id": "RESP_1",
+              "group": "responsibilities_task_fit",
+              "type": "RESPONSIBILITY",
+              "importance": 2.0,
+              "text": {
+                "id": "responsibility-1",
+                "text": "Tuyển dụng QA Automation Test Engineer.",
+                "importance": 3
+              },
+              "mandatory": false,
+              "status": "PARTIALLY_SUPPORTED",
+              "match_status": "PARTIAL",
+              "match_score": 0.5,
+              "match_classification": "PARTIAL_MATCH",
+              "criterion_score": 50.0,
+              "score": 50.0,
+              "reason": "CV có thông tin liên quan đến {'id': 'responsibility-1', 'text': 'Tuyển dụng QA Automation Test Engineer.', 'importance': 3} nhưng chưa đầy đủ.",
+              "comparison": "CV có thông tin liên quan đến {'id': 'responsibility-1', 'text': 'Tuyển dụng QA Automation Test Engineer.', 'importance': 3} nhưng chưa đầy đủ.",
+              "jd_text": "{'id': 'responsibility-1', 'text': 'Tuyển dụng QA Automation Test Engineer.', 'importance': 3}",
+              "cv_text": "Phát triển API và viết unit test bằng PyTest. Backend Developer",
+              "evidence_ids": [
+                "EVD_2939FA13380B"
+              ],
+              "evidence": [
+                {
+                  "evidence_id": "EVD_2939FA13380B",
+                  "requirement_id": "RESP_1",
+                  "chunk_id": "CV_CHUNK_002_84463A6F",
+                  "text": "Phát triển API và viết unit test bằng PyTest. Backend Developer",
+                  "source_page": null,
+                  "source_section": "experience[0]",
+                  "semantic_score": null,
+                  "semantic_rank": null,
+                  "bm25_score": 0.602737,
+                  "bm25_rank": 1,
+                  "fusion_score": 0.01639344,
+                  "fusion_rank": 1
+                }
+              ],
+              "weight": 26.7,
+              "weighted_score": 13.3
+            },
+            {
+              "requirement_id": "RESP_2",
+              "group": "responsibilities_task_fit",
+              "type": "RESPONSIBILITY",
+              "importance": 2.0,
+              "text": {
+                "id": "responsibility-4",
+                "text": "Có kinh nghiệm kiểm thử API với Postman/RestAssured và tích hợp CI/CD.",
+                "importance": 3
+              },
+              "mandatory": false,
+              "status": "PARTIALLY_SUPPORTED",
+              "match_status": "PARTIAL",
+              "match_score": 0.5,
+              "match_classification": "PARTIAL_MATCH",
+              "criterion_score": 50.0,
+              "score": 50.0,
+              "reason": "CV có thông tin liên quan đến {'id': 'responsibility-4', 'text': 'Có kinh nghiệm kiểm thử API với Postman/RestAssured và tích hợp CI/CD.', 'importance': 3} nhưng chưa đầy đủ.",
+              "comparison": "CV có thông tin liên quan đến {'id': 'responsibility-4', 'text': 'Có kinh nghiệm kiểm thử API với Postman/RestAssured và tích hợp CI/CD.', 'importance': 3} nhưng chưa đầy đủ.",
+              "jd_text": "{'id': 'responsibility-4', 'text': 'Có kinh nghiệm kiểm thử API với Postman/RestAssured và tích hợp CI/CD.', 'importance': 3}",
+              "cv_text": "Phát triển API và viết unit test bằng PyTest. Backend Developer",
+              "evidence_ids": [
+                "EVD_9F847FDDA453"
+              ],
+              "evidence": [
+                {
+                  "evidence_id": "EVD_9F847FDDA453",
+                  "requirement_id": "RESP_2",
+                  "chunk_id": "CV_CHUNK_002_84463A6F",
+                  "text": "Phát triển API và viết unit test bằng PyTest. Backend Developer",
+                  "source_page": null,
+                  "source_section": "experience[0]",
+                  "semantic_score": null,
+                  "semantic_rank": null,
+                  "bm25_score": 0.602737,
+                  "bm25_rank": 1,
+                  "fusion_score": 0.01639344,
+                  "fusion_rank": 1
+                }
+              ],
+              "weight": 26.6,
+              "weighted_score": 13.3
+            }
+          ],
+          "criteria": [
+            {
+              "criterion_id": "CRIT_RESPONSIBILITIES",
+              "group": "responsibilities_task_fit",
+              "label": "Trách nhiệm & Nhiệm vụ",
+              "raw_score": 49.9,
+              "weight": 53.3,
+              "weighted_score": 26.6,
+              "status": "PARTIALLY_SUPPORTED",
+              "reason": "Đáp ứng 0/2 yêu cầu đối chiếu.",
+              "requirement_ids": [
+                "RESP_1",
+                "RESP_2"
+              ],
+              "evidence_ids": [
+                "EVD_2939FA13380B",
+                "EVD_9F847FDDA453"
+              ]
+            },
+            {
+              "criterion_id": "CRIT_EXPERIENCE",
+              "group": "experience_seniority",
+              "label": "Kinh nghiệm & Cấp bậc",
+              "raw_score": 0.0,
+              "weight": 46.7,
+              "weighted_score": 0.0,
+              "status": "NOT_FOUND",
+              "reason": "Đáp ứng 0/1 yêu cầu đối chiếu.",
+              "requirement_ids": [
+                "REQ_EXP"
+              ],
+              "evidence_ids": []
+            }
+          ],
+          "system_rank": 3,
+          "human_rank": 4,
+          "rank_delta": -1
+        },
+        {
+          "cv_id": "CV-QA-03",
+          "human_relevance": 3,
+          "normalized_human_score": 75.0,
+          "system_score": 13.3,
+          "eligibility_expected": "ELIGIBLE",
+          "eligibility_actual": "ELIGIBLE",
+          "edge_case_tags": [
+            "java_automation_stack"
+          ],
+          "latency_ms": 1.5,
+          "evaluated_requirements": [
+            {
+              "requirement_id": "REQ_EXP",
+              "group": "experience_seniority",
+              "type": "REQUIRED",
+              "importance": 3.5,
+              "text": "Tối thiểu 2 năm kinh nghiệm",
+              "minimum_years": 2.0,
+              "mandatory": true,
+              "status": "NOT_FOUND",
+              "match_status": "NOT_FOUND",
+              "match_score": 0.0,
+              "match_classification": "NOT_FOUND",
+              "criterion_score": 0.0,
+              "score": 0.0,
+              "reason": "JD yêu cầu Tối thiểu 2 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "comparison": "JD yêu cầu Tối thiểu 2 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "jd_text": "Tối thiểu 2 năm kinh nghiệm",
+              "cv_text": "",
+              "evidence_ids": [],
+              "evidence": [],
+              "weight": 46.7,
+              "weighted_score": 0.0
+            },
+            {
+              "requirement_id": "RESP_1",
+              "group": "responsibilities_task_fit",
+              "type": "RESPONSIBILITY",
+              "importance": 2.0,
+              "text": {
+                "id": "responsibility-1",
+                "text": "Tuyển dụng QA Automation Test Engineer.",
+                "importance": 3
+              },
+              "mandatory": false,
+              "status": "PARTIALLY_SUPPORTED",
+              "match_status": "PARTIAL",
+              "match_score": 0.5,
+              "match_classification": "PARTIAL_MATCH",
+              "criterion_score": 50.0,
+              "score": 50.0,
+              "reason": "CV có thông tin liên quan đến {'id': 'responsibility-1', 'text': 'Tuyển dụng QA Automation Test Engineer.', 'importance': 3} nhưng chưa đầy đủ.",
+              "comparison": "CV có thông tin liên quan đến {'id': 'responsibility-1', 'text': 'Tuyển dụng QA Automation Test Engineer.', 'importance': 3} nhưng chưa đầy đủ.",
+              "jd_text": "{'id': 'responsibility-1', 'text': 'Tuyển dụng QA Automation Test Engineer.', 'importance': 3}",
+              "cv_text": "Viết kịch bản tự động bằng Java và Selenium WebDriver. Automation Test Engineer",
+              "evidence_ids": [
+                "EVD_A4B263D9285D"
+              ],
+              "evidence": [
+                {
+                  "evidence_id": "EVD_A4B263D9285D",
+                  "requirement_id": "RESP_1",
+                  "chunk_id": "CV_CHUNK_002_42681EB1",
+                  "text": "Viết kịch bản tự động bằng Java và Selenium WebDriver. Automation Test Engineer",
+                  "source_page": null,
+                  "source_section": "experience[0]",
+                  "semantic_score": null,
+                  "semantic_rank": null,
+                  "bm25_score": 0.803182,
+                  "bm25_rank": 1,
+                  "fusion_score": 0.01639344,
+                  "fusion_rank": 1
+                }
+              ],
+              "weight": 26.7,
+              "weighted_score": 13.3
+            },
+            {
+              "requirement_id": "RESP_2",
+              "group": "responsibilities_task_fit",
+              "type": "RESPONSIBILITY",
+              "importance": 2.0,
+              "text": {
+                "id": "responsibility-4",
+                "text": "Có kinh nghiệm kiểm thử API với Postman/RestAssured và tích hợp CI/CD.",
+                "importance": 3
+              },
+              "mandatory": false,
+              "status": "NOT_FOUND",
+              "match_status": "NOT_FOUND",
+              "match_score": 0.0,
+              "match_classification": "NOT_FOUND",
+              "criterion_score": 0.0,
+              "score": 0.0,
+              "reason": "JD yêu cầu {'id': 'responsibility-4', 'text': 'Có kinh nghiệm kiểm thử API với Postman/RestAssured và tích hợp CI/CD.', 'importance': 3}; CV không đề cập thông tin này.",
+              "comparison": "JD yêu cầu {'id': 'responsibility-4', 'text': 'Có kinh nghiệm kiểm thử API với Postman/RestAssured và tích hợp CI/CD.', 'importance': 3}; CV không đề cập thông tin này.",
+              "jd_text": "{'id': 'responsibility-4', 'text': 'Có kinh nghiệm kiểm thử API với Postman/RestAssured và tích hợp CI/CD.', 'importance': 3}",
+              "cv_text": "",
+              "evidence_ids": [],
+              "evidence": [],
+              "weight": 26.6,
+              "weighted_score": 0.0
+            }
+          ],
+          "criteria": [
+            {
+              "criterion_id": "CRIT_RESPONSIBILITIES",
+              "group": "responsibilities_task_fit",
+              "label": "Trách nhiệm & Nhiệm vụ",
+              "raw_score": 25.0,
+              "weight": 53.3,
+              "weighted_score": 13.3,
+              "status": "PARTIALLY_SUPPORTED",
+              "reason": "Đáp ứng 0/2 yêu cầu đối chiếu.",
+              "requirement_ids": [
+                "RESP_1",
+                "RESP_2"
+              ],
+              "evidence_ids": [
+                "EVD_A4B263D9285D"
+              ]
+            },
+            {
+              "criterion_id": "CRIT_EXPERIENCE",
+              "group": "experience_seniority",
+              "label": "Kinh nghiệm & Cấp bậc",
+              "raw_score": 0.0,
+              "weight": 46.7,
+              "weighted_score": 0.0,
+              "status": "NOT_FOUND",
+              "reason": "Đáp ứng 0/1 yêu cầu đối chiếu.",
+              "requirement_ids": [
+                "REQ_EXP"
+              ],
+              "evidence_ids": []
+            }
+          ],
+          "system_rank": 4,
+          "human_rank": 2,
+          "rank_delta": 2
+        },
+        {
+          "cv_id": "CV-QA-05",
+          "human_relevance": 0,
+          "normalized_human_score": 0.0,
+          "system_score": 0.0,
+          "eligibility_expected": "ELIGIBLE",
+          "eligibility_actual": "ELIGIBLE",
+          "edge_case_tags": [
+            "unrelated_support_role"
+          ],
+          "latency_ms": 1.0,
+          "evaluated_requirements": [
+            {
+              "requirement_id": "REQ_EXP",
+              "group": "experience_seniority",
+              "type": "REQUIRED",
+              "importance": 3.5,
+              "text": "Tối thiểu 2 năm kinh nghiệm",
+              "minimum_years": 2.0,
+              "mandatory": true,
+              "status": "NOT_FOUND",
+              "match_status": "NOT_FOUND",
+              "match_score": 0.0,
+              "match_classification": "NOT_FOUND",
+              "criterion_score": 0.0,
+              "score": 0.0,
+              "reason": "JD yêu cầu Tối thiểu 2 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "comparison": "JD yêu cầu Tối thiểu 2 năm kinh nghiệm; CV không đề cập thông tin này.",
+              "jd_text": "Tối thiểu 2 năm kinh nghiệm",
+              "cv_text": "",
+              "evidence_ids": [],
+              "evidence": [],
+              "weight": 46.7,
+              "weighted_score": 0.0
+            },
+            {
+              "requirement_id": "RESP_1",
+              "group": "responsibilities_task_fit",
+              "type": "RESPONSIBILITY",
+              "importance": 2.0,
+              "text": {
+                "id": "responsibility-1",
+                "text": "Tuyển dụng QA Automation Test Engineer.",
+                "importance": 3
+              },
+              "mandatory": false,
+              "status": "NOT_FOUND",
+              "match_status": "NOT_FOUND",
+              "match_score": 0.0,
+              "match_classification": "NOT_FOUND",
+              "criterion_score": 0.0,
+              "score": 0.0,
+              "reason": "JD yêu cầu {'id': 'responsibility-1', 'text': 'Tuyển dụng QA Automation Test Engineer.', 'importance': 3}; CV không đề cập thông tin này.",
+              "comparison": "JD yêu cầu {'id': 'responsibility-1', 'text': 'Tuyển dụng QA Automation Test Engineer.', 'importance': 3}; CV không đề cập thông tin này.",
+              "jd_text": "{'id': 'responsibility-1', 'text': 'Tuyển dụng QA Automation Test Engineer.', 'importance': 3}",
+              "cv_text": "",
+              "evidence_ids": [],
+              "evidence": [],
+              "weight": 26.7,
+              "weighted_score": 0.0
+            },
+            {
+              "requirement_id": "RESP_2",
+              "group": "responsibilities_task_fit",
+              "type": "RESPONSIBILITY",
+              "importance": 2.0,
+              "text": {
+                "id": "responsibility-4",
+                "text": "Có kinh nghiệm kiểm thử API với Postman/RestAssured và tích hợp CI/CD.",
+                "importance": 3
+              },
+              "mandatory": false,
+              "status": "NOT_FOUND",
+              "match_status": "NOT_FOUND",
+              "match_score": 0.0,
+              "match_classification": "NOT_FOUND",
+              "criterion_score": 0.0,
+              "score": 0.0,
+              "reason": "JD yêu cầu {'id': 'responsibility-4', 'text': 'Có kinh nghiệm kiểm thử API với Postman/RestAssured và tích hợp CI/CD.', 'importance': 3}; CV không đề cập thông tin này.",
+              "comparison": "JD yêu cầu {'id': 'responsibility-4', 'text': 'Có kinh nghiệm kiểm thử API với Postman/RestAssured và tích hợp CI/CD.', 'importance': 3}; CV không đề cập thông tin này.",
+              "jd_text": "{'id': 'responsibility-4', 'text': 'Có kinh nghiệm kiểm thử API với Postman/RestAssured và tích hợp CI/CD.', 'importance': 3}",
+              "cv_text": "",
+              "evidence_ids": [],
+              "evidence": [],
+              "weight": 26.6,
+              "weighted_score": 0.0
+            }
+          ],
+          "criteria": [
+            {
+              "criterion_id": "CRIT_RESPONSIBILITIES",
+              "group": "responsibilities_task_fit",
+              "label": "Trách nhiệm & Nhiệm vụ",
+              "raw_score": 0.0,
+              "weight": 53.3,
+              "weighted_score": 0.0,
+              "status": "NOT_FOUND",
+              "reason": "Đáp ứng 0/2 yêu cầu đối chiếu.",
+              "requirement_ids": [
+                "RESP_1",
+                "RESP_2"
+              ],
+              "evidence_ids": []
+            },
+            {
+              "criterion_id": "CRIT_EXPERIENCE",
+              "group": "experience_seniority",
+              "label": "Kinh nghiệm & Cấp bậc",
+              "raw_score": 0.0,
+              "weight": 46.7,
+              "weighted_score": 0.0,
+              "status": "NOT_FOUND",
+              "reason": "Đáp ứng 0/1 yêu cầu đối chiếu.",
+              "requirement_ids": [
+                "REQ_EXP"
+              ],
+              "evidence_ids": []
+            }
+          ],
+          "system_rank": 5,
+          "human_rank": 5,
+          "rank_delta": 0
+        }
+      ]
+    }
+  ]
+}

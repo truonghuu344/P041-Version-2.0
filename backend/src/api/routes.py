@@ -8,13 +8,15 @@ from src.api.v1.auth import router as auth_router
 from src.api.v1.candidates import router as candidates_router
 from src.api.v1.counselor import router as counselor_router
 from src.api.v1.cvs import router as cvs_router
-from src.api.v1.enterprise import router as enterprise_router
+from src.api.v1.interview_agendas import router as interview_agendas_router
 from src.api.v1.interviews import router as interviews_router
 from src.api.v1.jds import router as jds_router
 from src.api.v1.jobs import router as jobs_router
 from src.api.v1.matches import router as matches_router
 from src.api.v1.metrics import router as metrics_router
 from src.api.v1.notifications import router as notifications_router
+from src.api.v1.rendercv import router as rendercv_router
+from src.api.v1.storage import router as storage_router
 from src.api.v1.ws_interview import router as ws_interview_router
 from src.models.schemas import (
     ChatRequest,
@@ -35,12 +37,16 @@ router.include_router(cvs_router)
 router.include_router(jds_router)
 router.include_router(jobs_router)
 router.include_router(analysis_router)
+# Đăng ký TRƯỚC interviews_router: "/interviews/agenda" phải khớp trước khi
+# rơi vào pattern "/interviews/{session_id}" của interviews_router.
+router.include_router(interview_agendas_router)
 router.include_router(interviews_router)
 router.include_router(admin_router)
 router.include_router(assistant_router)
 router.include_router(counselor_router)
-router.include_router(enterprise_router)
 router.include_router(notifications_router)
+router.include_router(rendercv_router)
+router.include_router(storage_router)
 router.include_router(metrics_router)
 router.include_router(matches_router)
 router.include_router(ws_interview_router)

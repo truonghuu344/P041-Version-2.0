@@ -1,16 +1,18 @@
 # ---- Build dependencies ----
-FROM python:3.12-slim@sha256:09f7da3bc104798d0afb40bc08d23ab2da20a76130cec1f2ef170848f5d85217 AS builder
+FROM python:3.12-slim AS builder
 
 WORKDIR /app
 
 ENV PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_DEFAULT_TIMEOUT=1000 \
+    PIP_RETRIES=10
 
 COPY backend/requirements-prod.txt ./
-RUN pip install --prefix=/install -r requirements-prod.txt
+RUN pip install --default-timeout=1000 --retries=10 --prefix=/install -r requirements-prod.txt
 
 # ---- Runtime ----
-FROM python:3.12-slim@sha256:09f7da3bc104798d0afb40bc08d23ab2da20a76130cec1f2ef170848f5d85217
+FROM python:3.12-slim
 
 WORKDIR /app
 
@@ -25,12 +27,17 @@ RUN apt-get update \
 
 COPY --from=builder /install /usr/local
 COPY --chown=appuser:appuser backend/src ./src
+COPY --chown=appuser:appuser backend/rendercv ./rendercv
+COPY --chown=appuser:appuser backend/migrations ./migrations
+COPY --chown=appuser:appuser backend/docker-entrypoint.sh ./docker-entrypoint.sh
 COPY --chown=appuser:appuser data/clean/jds_clean.json ./data/clean/jds_clean.json
 COPY --chown=appuser:appuser data/jds/raw ./data/jds/raw
 
-RUN mkdir -p /app/data/uploads && chown -R appuser:appuser /app
+RUN mkdir -p /app/data/uploads && chmod 755 /app/docker-entrypoint.sh && chown -R appuser:appuser /app
 
 USER appuser
+
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
 
 EXPOSE 8000
 

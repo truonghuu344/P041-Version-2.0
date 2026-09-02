@@ -70,6 +70,14 @@ def _restore_pending(pending: Path) -> None:
 
 
 def main():
+    # Automatically sync Antigravity prompts if available
+    try:
+        antigravity_script = Path(__file__).parent / "log_antigravity.py"
+        if antigravity_script.exists():
+            subprocess.run([sys.executable, str(antigravity_script), "--auto"], capture_output=True, text=True, check=False)
+    except Exception:
+        pass
+
     if not SERVER_URL:
         print("[ai-log] AI_LOG_SERVER not set; skipping submission.", file=sys.stderr)
         sys.exit(0)

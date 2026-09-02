@@ -16,13 +16,13 @@ os.environ["STORAGE_PROVIDER"] = "local"
 os.environ["GEMINI_API_KEY"] = ""
 os.environ["GOOGLE_API_KEY"] = ""
 os.environ["MAX_REQUEST_BODY_MB"] = "22"
+os.environ["DATABASE_URL"] = "sqlite+aiosqlite://"
 
 from src.config import Settings
 from src.db.database import Base, get_db
 from src.main import app
 from src.services import job_rag
 
-# Tuyệt đối không dùng DATABASE_URL của development/production trong test.
 # SQLite in-memory cô lập hoàn toàn nên drop_all không thể xóa dữ liệu người dùng.
 test_engine = create_async_engine(
     "sqlite+aiosqlite://",

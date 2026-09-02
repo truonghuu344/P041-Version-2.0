@@ -1,6 +1,6 @@
 import pytest
 
-from src.services.job_catalog import load_enterprise_job_catalog
+from src.services.job_catalog import canonicalize_job_location, load_enterprise_job_catalog
 from tests.helpers import insert_cv, register_and_login
 
 
@@ -9,6 +9,15 @@ def test_enterprise_job_catalog_is_backed_by_raw_jd_files():
     assert len(catalog) == 98
     assert all(item["source_id"].startswith("JD-") for item in catalog)
     assert all(item["title"] and item["company"] for item in catalog)
+
+
+def test_job_location_canonicalization_collapses_spelling_and_work_mode_variants():
+    assert canonicalize_job_location("Ha Noi") == "Hà Nội"
+    assert canonicalize_job_location("Hà Nội / Hybrid") == "Hà Nội"
+    assert canonicalize_job_location("Da Nang") == "Đà Nẵng"
+    assert canonicalize_job_location("Ho_Chi_Minh_City") == "TP. Hồ Chí Minh"
+    assert canonicalize_job_location("Binh Duong") == "Bình Dương"
+    assert canonicalize_job_location("Chưa xác định") is None
 
 
 @pytest.mark.asyncio

@@ -1,0 +1,207 @@
+{
+  "benchmark_version": "1.0",
+  "cv_snapshot_id": "e674cfad33dc49f4b54937ead9cee86a",
+  "labelled_jobs": 13,
+  "metrics": {
+    "recall_at_10": 0.5,
+    "precision_at_3": 0.0,
+    "mrr": 0.125,
+    "ndcg_at_10": 0.425,
+    "mandatory_gap_false_negative_rate": 0.9
+  },
+  "misranked_jobs": [
+    {
+      "job_id": "JD-091",
+      "label": "not_relevant",
+      "mandatory_gap_expected": true,
+      "note": "",
+      "returned": true,
+      "rank": 1,
+      "fit_score": 53.9,
+      "mandatory_requirement_failed": false
+    },
+    {
+      "job_id": "JD-090",
+      "label": "not_relevant",
+      "mandatory_gap_expected": true,
+      "note": "",
+      "returned": true,
+      "rank": 2,
+      "fit_score": 44.2,
+      "mandatory_requirement_failed": false
+    },
+    {
+      "job_id": "JD-087",
+      "label": "not_relevant",
+      "mandatory_gap_expected": true,
+      "note": "",
+      "returned": true,
+      "rank": 3,
+      "fit_score": 40.0,
+      "mandatory_requirement_failed": false
+    },
+    {
+      "job_id": "JD-024",
+      "label": "relevant",
+      "mandatory_gap_expected": false,
+      "note": "Ngoài Top 10; phù hợp hướng JavaScript/React/AI và cấp độ Intern.",
+      "returned": false,
+      "rank": null,
+      "fit_score": null,
+      "mandatory_requirement_failed": null
+    },
+    {
+      "job_id": "JD-049",
+      "label": "relevant",
+      "mandatory_gap_expected": false,
+      "note": "Ngoài Top 10; phù hợp nền tảng Python, AI, MongoDB và SQL trong CV.",
+      "returned": false,
+      "rank": null,
+      "fit_score": null,
+      "mandatory_requirement_failed": null
+    },
+    {
+      "job_id": "JD-074",
+      "label": "relevant",
+      "mandatory_gap_expected": false,
+      "note": "Ngoài Top 10; phù hợp hướng Python và React ở cấp độ Junior.",
+      "returned": false,
+      "rank": null,
+      "fit_score": null,
+      "mandatory_requirement_failed": null
+    }
+  ],
+  "warnings": [],
+  "rows": [
+    {
+      "job_id": "JD-091",
+      "label": "not_relevant",
+      "mandatory_gap_expected": true,
+      "note": "",
+      "returned": true,
+      "rank": 1,
+      "fit_score": 53.9,
+      "mandatory_requirement_failed": false
+    },
+    {
+      "job_id": "JD-090",
+      "label": "not_relevant",
+      "mandatory_gap_expected": true,
+      "note": "",
+      "returned": true,
+      "rank": 2,
+      "fit_score": 44.2,
+      "mandatory_requirement_failed": false
+    },
+    {
+      "job_id": "JD-087",
+      "label": "not_relevant",
+      "mandatory_gap_expected": true,
+      "note": "",
+      "returned": true,
+      "rank": 3,
+      "fit_score": 40.0,
+      "mandatory_requirement_failed": false
+    },
+    {
+      "job_id": "JD-086",
+      "label": "not_relevant",
+      "mandatory_gap_expected": true,
+      "note": "",
+      "returned": true,
+      "rank": 4,
+      "fit_score": 37.5,
+      "mandatory_requirement_failed": false
+    },
+    {
+      "job_id": "JD-072",
+      "label": "not_relevant",
+      "mandatory_gap_expected": true,
+      "note": "",
+      "returned": true,
+      "rank": 5,
+      "fit_score": 34.8,
+      "mandatory_requirement_failed": false
+    },
+    {
+      "job_id": "JD-073",
+      "label": "not_relevant",
+      "mandatory_gap_expected": true,
+      "note": "",
+      "returned": true,
+      "rank": 6,
+      "fit_score": 33.9,
+      "mandatory_requirement_failed": false
+    },
+    {
+      "job_id": "JD-060",
+      "label": "not_relevant",
+      "mandatory_gap_expected": true,
+      "note": "",
+      "returned": true,
+      "rank": 7,
+      "fit_score": 33.6,
+      "mandatory_requirement_failed": false
+    },
+    {
+      "job_id": "JD-038",
+      "label": "relevant",
+      "mandatory_gap_expected": true,
+      "note": "",
+      "returned": true,
+      "rank": 8,
+      "fit_score": 32.6,
+      "mandatory_requirement_failed": true
+    },
+    {
+      "job_id": "JD-005",
+      "label": "relevant",
+      "mandatory_gap_expected": true,
+      "note": "",
+      "returned": true,
+      "rank": 9,
+      "fit_score": 32.4,
+      "mandatory_requirement_failed": false
+    },
+    {
+      "job_id": "JD-059",
+      "label": "relevant",
+      "mandatory_gap_expected": true,
+      "note": "",
+      "returned": true,
+      "rank": 10,
+      "fit_score": 29.5,
+      "mandatory_requirement_failed": false
+    },
+    {
+      "job_id": "JD-024",
+      "label": "relevant",
+      "mandatory_gap_expected": false,
+      "note": "Ngoài Top 10; phù hợp hướng JavaScript/React/AI và cấp độ Intern.",
+      "returned": false,
+      "rank": null,
+      "fit_score": null,
+      "mandatory_requirement_failed": null
+    },
+    {
+      "job_id": "JD-049",
+      "label": "relevant",
+      "mandatory_gap_expected": false,
+      "note": "Ngoài Top 10; phù hợp nền tảng Python, AI, MongoDB và SQL trong CV.",
+      "returned": false,
+      "rank": null,
+      "fit_score": null,
+      "mandatory_requirement_failed": null
+    },
+    {
+      "job_id": "JD-074",
+      "label": "relevant",
+      "mandatory_gap_expected": false,
+      "note": "Ngoài Top 10; phù hợp hướng Python và React ở cấp độ Junior.",
+      "returned": false,
+      "rank": null,
+      "fit_score": null,
+      "mandatory_requirement_failed": null
+    }
+  ]
+}

@@ -117,7 +117,7 @@
   max-width: none;
 }
 
-@media (max-width: 760px) {
+@media (max-width: 767.98px) {
   :root {
     --page-title-size: clamp(28px, 8vw, 36px);
   }

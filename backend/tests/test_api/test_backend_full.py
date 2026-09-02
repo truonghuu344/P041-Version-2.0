@@ -98,8 +98,9 @@ async def test_system_allows_exactly_one_immutable_admin(client):
             "role": "admin",
         },
     )
-    assert public_admin_attempt.status_code == 201
-    assert public_admin_attempt.json()["role"] == "student"
+    # Public registration only accepts student/enterprise — an admin role from
+    # the client is rejected outright instead of silently downgraded.
+    assert public_admin_attempt.status_code == 422
 
     create_admin = await client.post(
         "/api/v1/admin/users",
@@ -111,7 +112,9 @@ async def test_system_allows_exactly_one_immutable_admin(client):
             "role": "admin",
         },
     )
-    assert create_admin.status_code == 403
+    # AdminUserCreate schema rejects 'admin' outright (422); the endpoint keeps
+    # its own 403 guard as defense in depth. Either way: no second admin.
+    assert create_admin.status_code in (403, 422)
 
     create_student = await client.post(
         "/api/v1/admin/users",

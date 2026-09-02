@@ -1,10 +1,9 @@
 """Mandatory eligibility gate for Top Jobs recommendations.
 
-If a candidate does not meet the minimum mandatory requirement coverage threshold
-(default 50%), the mandatory gate fails:
-- ``failed`` is set to ``True`` with reason ``"MUST_HAVE_COVERAGE_BELOW_THRESHOLD"``.
-- The user-facing ``display_score`` is capped at 49.0 (preventing ineligible candidates
-  from seeing an artificially high fit score), while the true ``raw_score`` is preserved.
+Evaluates eligibility and coverage metrics without artificially capping or distorting the match score.
+- The user-facing ``display_score`` preserves the true proportional ``raw_score``.
+- Normal ``REQUIRED`` requirements affect the score proportionally through their weights.
+- Only genuine ``HARD_CONSTRAINT`` requirements (e.g. work authorization, legal licenses) affect eligibility status.
 - The gate decision payload is serialized as JSON for persistence in ``mandatory_gate_json``.
 """
 
@@ -14,9 +13,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Any
 
-DEFAULT_MUST_HAVE_THRESHOLD = 0.50
-DEFAULT_SCORE_CAP = 49.0
-REASON_MUST_HAVE_BELOW_THRESHOLD = "MUST_HAVE_COVERAGE_BELOW_THRESHOLD"
+DEFAULT_MUST_HAVE_THRESHOLD = 0.75
+DEFAULT_SCORE_CAP = 100.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -30,11 +28,12 @@ class GateResult:
     gate_json: dict[str, Any] = field(default_factory=dict)
 
 
-def _extract_match_data(match_input: Any) -> tuple[float, float, list[str]]:
-    """Extract raw fit score, must_have coverage, and failed requirement IDs from match input."""
+def _extract_match_data(match_input: Any) -> tuple[float, float, list[str], str]:
+    """Extract raw fit score, must_have coverage, failed requirement IDs, and eligibility status."""
     raw_score = 0.0
     coverage = 1.0
     failed_ids: list[str] = []
+    eligibility_status = "ELIGIBLE"
 
     # 1. Extract raw_score / fit_score
     if hasattr(match_input, "final_score"):
@@ -60,7 +59,13 @@ def _extract_match_data(match_input: Any) -> tuple[float, float, list[str]]:
     elif isinstance(match_input, Mapping) and "must_have_coverage" in match_input:
         coverage = float(match_input["must_have_coverage"])
 
-    # 3. Extract from result_json / requirements if present
+    # 3. Extract eligibility_status
+    if isinstance(match_input, Mapping) and "eligibility_status" in match_input:
+        eligibility_status = str(match_input["eligibility_status"])
+    elif hasattr(match_input, "eligibility_status"):
+        eligibility_status = str(getattr(match_input, "eligibility_status") or "ELIGIBLE")
+
+    # 4. Extract from result_json / requirements if present
     result_json = getattr(match_input, "result_json", None) or (
         match_input.get("result_json") if isinstance(match_input, Mapping) else None
     )
@@ -68,18 +73,19 @@ def _extract_match_data(match_input: Any) -> tuple[float, float, list[str]]:
     if isinstance(result_json, Mapping):
         if "must_have_coverage" in result_json:
             coverage = float(result_json["must_have_coverage"])
+        if "eligibility_status" in result_json:
+            eligibility_status = str(result_json["eligibility_status"])
 
         requirements_group = result_json.get("requirements")
         if isinstance(requirements_group, Mapping):
-            # Inspect missing/partial/matched groups from pipeline output
             missing = requirements_group.get("missing", [])
             for item in missing:
-                if isinstance(item, Mapping) and item.get("mandatory"):
+                if isinstance(item, Mapping) and (item.get("is_hard_constraint") or item.get("type") == "HARD_CONSTRAINT"):
                     req_id = str(item.get("requirement_id") or item.get("id") or "")
                     if req_id and req_id not in failed_ids:
                         failed_ids.append(req_id)
 
-    return raw_score, coverage, failed_ids
+    return raw_score, coverage, failed_ids, eligibility_status
 
 
 def apply_mandatory_gate(
@@ -91,7 +97,7 @@ def apply_mandatory_gate(
     score_cap: float = DEFAULT_SCORE_CAP,
     decimal_places: int = 1,
 ) -> GateResult:
-    """Evaluate whether candidate meets mandatory requirement coverage.
+    """Evaluate candidate eligibility without capping or distorting the fit score.
 
     Parameters
     ----------
@@ -100,20 +106,20 @@ def apply_mandatory_gate(
     must_have_coverage:
         Explicit coverage ratio (0.0 to 1.0). If omitted, extracted from match.
     failed_requirement_ids:
-        Explicit list of unmet mandatory requirement IDs. If omitted, extracted from match.
+        Explicit list of unmet hard constraint requirement IDs. If omitted, extracted from match.
     threshold:
-        Coverage threshold required to pass (default 0.50).
+        Coverage metric tracking parameter.
     score_cap:
-        Upper bound for display_score when gate fails (default 49.0).
+        Unused parameter kept for backward compatibility; score is never artificially capped.
     decimal_places:
         Rounding precision for display score.
 
     Returns
     -------
     GateResult
-        Gate evaluation result with display score and persistence payload.
+        Gate evaluation result with uncorrupted display score and persistence payload.
     """
-    extracted_score, extracted_coverage, extracted_failed_ids = _extract_match_data(match_or_score)
+    extracted_score, extracted_coverage, extracted_failed_ids, extracted_eligibility = _extract_match_data(match_or_score)
 
     raw_score = extracted_score
     coverage = must_have_coverage if must_have_coverage is not None else extracted_coverage
@@ -123,12 +129,14 @@ def apply_mandatory_gate(
 
     coverage = max(0.0, min(1.0, float(coverage)))
 
-    if coverage < threshold:
-        display_score = round(min(raw_score, score_cap), decimal_places)
+    # Match score is driven proportionally by dynamic weights, NOT capped
+    display_score = round(raw_score, decimal_places)
+
+    # Only genuine HARD_CONSTRAINT failure marks gate as failed
+    if extracted_eligibility == "NOT_ELIGIBLE" or bool(failed_ids):
         failed = True
-        reason = REASON_MUST_HAVE_BELOW_THRESHOLD
+        reason = "HARD_CONSTRAINT_NOT_MET"
     else:
-        display_score = round(raw_score, decimal_places)
         failed = False
         reason = None
 
@@ -137,6 +145,7 @@ def apply_mandatory_gate(
         "coverage": round(coverage, 2),
         "reason": reason,
         "failed_requirement_ids": failed_ids,
+        "eligibility_status": extracted_eligibility,
     }
 
     return GateResult(

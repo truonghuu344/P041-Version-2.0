@@ -1,232 +1,175 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import React from 'react';
+'use client';
+
+import React, { useCallback, useEffect, useState } from 'react';
+import Image from 'next/image';
 import {
-  Briefcase,
-  Check,
-  CloudUpload,
-  FileText,
-  Mic,
-  Moon,
-  PencilLine,
-  Search,
-  Sparkles,
-  Sun,
-  Target,
-  Terminal,
-  Upload,
-  X,
+  BarChart3,
+  BriefcaseBusiness,
+  ClipboardCheck,
+  Settings,
+  UserRound,
+  Users,
 } from 'lucide-react';
+import AdminDashboard from './AdminDashboard';
+import AdminUsers from './AdminUsers';
+import AdminCounselors from './AdminCounselors';
+import AdminRecruitment from './AdminRecruitment';
+import AdminSystem from './AdminSystem';
+import AdminProfile from './AdminProfile';
 
-export default function AdminView(props: any) {
+export type AdminTab =
+  | 'dashboard'
+  | 'users'
+  | 'counselors'
+  | 'recruitment'
+  | 'system'
+  | 'profile';
+
+export interface AdminViewProps {
+  isActive?: boolean;
+  initialTab?: AdminTab;
+}
+
+export const ADMIN_TABS: { key: AdminTab; label: string; icon: typeof Users }[] = [
+  { key: 'dashboard', label: 'Tổng quan', icon: BarChart3 },
+  { key: 'users', label: 'Người dùng', icon: Users },
+  { key: 'counselors', label: 'Cố vấn', icon: ClipboardCheck },
+  { key: 'recruitment', label: 'Tuyển dụng', icon: BriefcaseBusiness },
+  { key: 'system', label: 'Hệ thống & AI', icon: Settings },
+  { key: 'profile', label: 'Hồ sơ', icon: UserRound },
+];
+
+export function parseAdminRoute(pathname: string): AdminTab {
+  const parts = pathname.split('/').filter(Boolean);
+  if (parts[0] === 'admin' && parts[1]) {
+    const raw = parts[1].toLowerCase();
+    if (
+      raw === 'users' ||
+      raw === 'counselors' ||
+      raw === 'recruitment' ||
+      raw === 'system' ||
+      raw === 'profile'
+    ) {
+      return raw as AdminTab;
+    }
+  }
+  return 'dashboard';
+}
+
+export function adminTabUrl(tab: AdminTab): string {
+  return tab === 'dashboard' ? '/admin' : `/admin/${tab}`;
+}
+
+export default function AdminView({ isActive = true, initialTab = 'dashboard' }: AdminViewProps) {
+  const [tab, setTab] = useState<AdminTab>(initialTab);
+
+  // Sync tab with initialTab when view becomes active or prop updates.
+  useEffect(() => {
+    if (isActive) {
+      setTab(initialTab);
+    }
+  }, [isActive, initialTab]);
+
+  // Browser Back/Forward support.
+  useEffect(() => {
+    const handlePopState = () => {
+      if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
+        setTab(parseAdminRoute(window.location.pathname));
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const navigate = useCallback((next: AdminTab) => {
+    setTab(next);
+    const targetUrl = adminTabUrl(next);
+    if (window.location.pathname !== targetUrl) {
+      window.history.pushState({ adminTab: next }, '', targetUrl);
+    }
+    if (typeof window !== 'undefined' && window.scrollTo) {
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    }
+  }, []);
+
+  // Listen for custom navigation events dispatched from header/other components.
+  useEffect(() => {
+    const handleNavigateAdmin = (event: Event) => {
+      const detail = (event as CustomEvent).detail;
+      const next = typeof detail === 'string' ? detail : detail?.tab;
+      if (
+        next === 'dashboard' ||
+        next === 'users' ||
+        next === 'counselors' ||
+        next === 'recruitment' ||
+        next === 'system' ||
+        next === 'profile'
+      ) {
+        navigate(next as AdminTab);
+      }
+    };
+    window.addEventListener('navigate-admin', handleNavigateAdmin);
+    return () => window.removeEventListener('navigate-admin', handleNavigateAdmin);
+  }, [navigate]);
+
+  const renderTab = () => {
+    switch (tab) {
+      case 'users':
+        return <AdminUsers />;
+      case 'counselors':
+        return <AdminCounselors />;
+      case 'recruitment':
+        return <AdminRecruitment />;
+      case 'system':
+        return <AdminSystem />;
+      case 'profile':
+        return <AdminProfile />;
+      default:
+        return <AdminDashboard onNavigate={navigate} />;
+    }
+  };
+
   return (
-    <>
-      <section className="app-view" id="view-admin">
-        <div className="spaceship-stage">
-          <div className="section-header center-header" style={{ marginBottom: '32px' }}>
-            <span className="section-tag glow-cyan">👑 QUẢN TRỊ VIÊN HỆ THỐNG</span>
-            <h2 className="section-title-large">Quản Lý Người Dùng & Phân Quyền</h2>
-            <p className="section-subtitle">
-              Quản lý người dùng với một Admin hệ thống duy nhất; không hỗ trợ chuyển quyền Admin
-            </p>
-          </div>
+    <section
+      className={`app-view ${isActive ? 'active' : ''}`}
+      id="view-admin"
+      aria-label="Cổng quản trị hệ thống"
+      style={isActive ? undefined : { display: 'none' }}
+    >
+      {isActive && (
+        <div className="admin-shell">
+          {renderTab()}
 
-          <div className="admin-container">
-            {/* Stats row */}
-            <div className="admin-stats-grid">
-              <div className="admin-stat-card">
-                <span className="admin-stat-num glow-cyan" id="admin-stat-total">
-                  0
-                </span>
-                <span className="admin-stat-lbl">Tổng Người Dùng</span>
-              </div>
-              <div className="admin-stat-card">
-                <span className="admin-stat-num glow-purple" id="admin-stat-admin">
-                  0
-                </span>
-                <span className="admin-stat-lbl">Admin Hệ Thống Duy Nhất</span>
-              </div>
-              <div className="admin-stat-card">
-                <span className="admin-stat-num glow-pink" id="admin-stat-student">
-                  0
-                </span>
-                <span className="admin-stat-lbl">Sinh Viên / Candidate</span>
-              </div>
-              <div className="admin-stat-card">
-                <span className="admin-stat-num glow-green" id="admin-stat-enterprise">
-                  0
-                </span>
-                <span className="admin-stat-lbl">Doanh Nghiệp & Mentor</span>
-              </div>
-              <div className="admin-stat-card">
-                <span className="admin-stat-num glow-cyan" id="admin-stat-jobs">
-                  0
-                </span>
-                <span className="admin-stat-lbl">Tin tuyển dụng</span>
-              </div>
+          {/* Admin System Compact Footer */}
+          <footer
+            role="contentinfo"
+            aria-label="Admin System Footer"
+            className="w-full mt-8 py-3.5 px-5 border border-slate-200 rounded-xl bg-slate-50 text-slate-500 text-xs flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xs"
+          >
+            <div className="flex items-center gap-2.5">
+              <Image
+                src="/images/image2.png"
+                alt="Career Assistant"
+                width={22}
+                height={22}
+                className="w-5.5 h-5.5 object-contain shrink-0"
+              />
+              <span className="font-semibold text-slate-800">&copy; {new Date().getFullYear()} Career Assistant</span>
+              <span className="text-slate-300 hidden md:inline">•</span>
+              <span className="text-slate-500 hidden md:inline">Cổng Quản trị Hệ thống & AI Engine</span>
             </div>
-
-            <div className="admin-section-tabs" role="tablist" aria-label="Khu vực quản trị">
-              <button
-                type="button"
-                id="admin-tab-users"
-                className="admin-section-tab is-active"
-                role="tab"
-                aria-selected="true"
-                aria-controls="admin-users-panel"
-              >
-                👥 Người dùng
-              </button>
-              <button
-                type="button"
-                id="admin-tab-jobs"
-                className="admin-section-tab"
-                role="tab"
-                aria-selected="false"
-                aria-controls="admin-jobs-panel"
-              >
-                Tin tuyển dụng
-              </button>
-              <button
-                type="button"
-                id="admin-tab-ai-logs"
-                className="admin-section-tab"
-                role="tab"
-                aria-selected="false"
-                aria-controls="admin-ai-logs-panel"
-              >
-                ✦ AI Logs
-              </button>
+            <div className="flex items-center gap-4 text-slate-500">
+              <span className="flex items-center gap-1.5 text-slate-600">
+                <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 ring-4 ring-emerald-100"></span>
+                <span>Trạng thái: <strong className="text-emerald-700 font-semibold">Hoạt động bình thường</strong></span>
+              </span>
+              <span className="text-slate-300">•</span>
+              <span className="font-mono text-[11px] bg-slate-200/70 text-slate-700 px-2 py-0.5 rounded font-medium">v1.0.0 Enterprise</span>
             </div>
-
-            <div id="admin-jobs-panel" role="tabpanel" aria-labelledby="admin-tab-jobs" hidden>
-              <div className="admin-toolbar">
-                <div className="admin-search-wrap">
-                  <input
-                    type="search"
-                    id="admin-job-search"
-                    className="form-input"
-                    placeholder="Tìm vị trí, công ty hoặc nhà tuyển dụng..."
-                  />
-                </div>
-                <button type="button" id="btn-refresh-admin-jobs" className="btn-outline">
-                  Làm mới
-                </button>
-              </div>
-              <div className="admin-table-wrap">
-                <table className="admin-users-table">
-                  <thead>
-                    <tr>
-                      <th>Vị trí / Công ty</th>
-                      <th>Nhà tuyển dụng</th>
-                      <th>Ứng tuyển</th>
-                      <th>Trạng thái</th>
-                      <th>Thao tác</th>
-                    </tr>
-                  </thead>
-                  <tbody id="admin-jobs-tbody">
-                    <tr>
-                      <td colSpan={5} style={{ textAlign: 'center', padding: '30px' }}>
-                        Chọn tab để tải tin tuyển dụng.
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div id="admin-users-panel" role="tabpanel" aria-labelledby="admin-tab-users">
-              {/* Actions & Search Header */}
-              <div className="admin-toolbar">
-                <div className="admin-search-wrap">
-                  <input
-                    type="text"
-                    id="admin-user-search"
-                    className="form-input"
-                    placeholder="🔍 Tìm kiếm theo Tên hoặc Email..."
-                  />
-                </div>
-                <button className="btn-primary" id="btn-admin-add-user">
-                  ➕ Thêm User Mới
-                </button>
-              </div>
-
-              {/* Users Table */}
-              <div className="admin-table-wrap">
-                <table className="admin-users-table">
-                  <thead>
-                    <tr>
-                      <th>Họ và Tên</th>
-                      <th>Email</th>
-                      <th>Vai Trò</th>
-                      <th>Ngày Tạo</th>
-                      <th style={{ textAlign: 'center' }}>Thao Tác</th>
-                    </tr>
-                  </thead>
-                  <tbody id="admin-users-tbody">
-                    <tr>
-                      <td colSpan={5} style={{ textAlign: 'center', padding: '30px' }}>
-                        Đang tải danh sách người dùng...
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div
-              id="admin-ai-logs-panel"
-              role="tabpanel"
-              aria-labelledby="admin-tab-ai-logs"
-              hidden
-            >
-              <div className="ai-log-stats" aria-label="Thống kê AI log">
-                <span>
-                  <strong id="ai-log-stat-total">0</strong> lượt gọi
-                </span>
-                <span>
-                  <strong id="ai-log-stat-success">0</strong> thành công
-                </span>
-                <span>
-                  <strong id="ai-log-stat-failed">0</strong> lỗi
-                </span>
-                <span>
-                  <strong id="ai-log-stat-users">0</strong> user
-                </span>
-              </div>
-              <div className="admin-toolbar ai-log-toolbar">
-                <div className="admin-search-wrap">
-                  <input
-                    type="search"
-                    id="admin-ai-log-search"
-                    className="form-input"
-                    placeholder="Tìm theo email, tên hoặc nội dung prompt..."
-                  />
-                </div>
-                <select
-                  id="admin-ai-log-status"
-                  className="form-input ai-log-filter"
-                  aria-label="Lọc trạng thái AI log"
-                >
-                  <option value="">Tất cả trạng thái</option>
-                  <option value="true">LLM thành công</option>
-                  <option value="false">LLM lỗi</option>
-                </select>
-                <button type="button" id="btn-refresh-ai-logs" className="btn-outline">
-                  ↻ Làm mới
-                </button>
-              </div>
-              <p className="ai-log-privacy-note">
-                🔒 Nhật ký chỉ dành cho Admin, bao gồm prompt và phản hồi để kiểm tra chất lượng,
-                lỗi và việc sử dụng AI.
-              </p>
-              <div id="admin-ai-log-list" className="admin-ai-log-list" aria-live="polite">
-                <div className="ai-log-empty">Chọn tab AI Logs để tải nhật ký.</div>
-              </div>
-            </div>
-          </div>
+          </footer>
         </div>
-      </section>
-    </>
+      )}
+    </section>
   );
 }

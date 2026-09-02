@@ -27,7 +27,6 @@ import { escapeHtml, showToast } from './utils.js';
     let conversationHistory = [];
     let currentConversationId = null;
     let historyOpen = false;
-    let assistantStatusLoaded = false;
 
     function getAssistantUnavailableMessage() {
       return 'Nova đang tạm thời chưa sẵn sàng. Bạn có thể thử lại sau hoặc tiếp tục dùng các công cụ Match CV, tối ưu CV và luyện phỏng vấn trong ứng dụng.';
@@ -151,7 +150,6 @@ import { escapeHtml, showToast } from './utils.js';
       hint?.classList.add('is-hidden');
       companion.hidden = isOpen;
       if (isOpen) {
-        void loadAssistantStatus();
         requestAnimationFrame(() => {
           placeChatPanel();
           input.focus();
@@ -159,19 +157,37 @@ import { escapeHtml, showToast } from './utils.js';
       }
     }
 
-    function appendActionList(message, actions = []) {
-      if (!actions || !actions.length) return;
-      const actionList = document.createElement('div');
-      actionList.className = 'ai-chat-actions';
-      actions.forEach(action => {
-        if (!ALL_VIEWS.includes(action.page)) return;
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.dataset.assistantTarget = action.page;
-        button.textContent = action.label;
-        actionList.appendChild(button);
-      });
-      message.appendChild(actionList);
+    function formatChatMessageHtml(text) {
+      if (!text) return '';
+      let html = escapeHtml(text);
+      html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      html = html.replace(/\*([^*]+?)\*/g, '<em>$1</em>');
+      html = html.replace(/`([^`]+?)`/g, '<code class="ai-chat-code">$1</code>');
+
+      const lines = html.split('\n');
+      const processedLines = [];
+      let inQuote = false;
+      let quoteBuffer = [];
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (trimmed.startsWith('&gt;')) {
+          inQuote = true;
+          quoteBuffer.push(trimmed.replace(/^&gt;\s?/, ''));
+        } else {
+          if (inQuote) {
+            processedLines.push(`<blockquote class="ai-chat-quote">${quoteBuffer.join('<br>')}</blockquote>`);
+            inQuote = false;
+            quoteBuffer = [];
+          }
+          processedLines.push(line);
+        }
+      }
+      if (inQuote) {
+        processedLines.push(`<blockquote class="ai-chat-quote">${quoteBuffer.join('<br>')}</blockquote>`);
+      }
+
+      return processedLines.join('<br>');
     }
 
     function appendChatMessage(role, text, actions = []) {
@@ -180,12 +196,64 @@ import { escapeHtml, showToast } from './utils.js';
       const name = document.createElement('span');
       name.className = 'ai-chat-message-name';
       name.textContent = role === 'assistant' ? 'Nova' : 'Bạn';
-      const paragraph = document.createElement('p');
-      paragraph.textContent = text;
-      message.append(name, paragraph);
+      const body = document.createElement('div');
+      body.className = 'ai-chat-message-body';
+      body.innerHTML = formatChatMessageHtml(text);
+      message.append(name, body);
 
       if (role === 'assistant' && actions.length) {
-        appendActionList(message, actions);
+        const actionList = document.createElement('div');
+        actionList.className = 'ai-chat-actions';
+        actions.forEach(action => {
+          if (action.action_type === 'evidence') {
+            const details = document.createElement('details');
+            details.className = 'ai-chat-evidence';
+            const summary = document.createElement('summary');
+            const sourceCount = (action.sources || []).length;
+            summary.innerHTML = `📚 <strong>${escapeHtml(action.label || 'Nguồn & bằng chứng')}</strong> <small>(${sourceCount} trích đoạn)</small>`;
+            details.appendChild(summary);
+
+            (action.sources || []).forEach(source => {
+              const item = document.createElement('div');
+              item.className = 'ai-chat-source';
+              const title = document.createElement('strong');
+              title.textContent = source.title || source.source_type || 'Tài liệu';
+
+              const meta = document.createElement('small');
+              const provenanceLabels = {
+                user_data: 'Hồ sơ người dùng',
+                verified_analysis: 'Phân tích đã kiểm chứng',
+                system_data: 'Dữ liệu hệ thống / JD',
+                recommendation: 'Khuyến nghị tương lai',
+              };
+              const provText = provenanceLabels[source.provenance] || source.provenance || 'Nguồn';
+              const scoreText = source.score ? ` · Khớp ${(source.score * 100).toFixed(0)}%` : '';
+              meta.textContent = `${provText}${scoreText}`;
+              item.append(title, meta);
+
+              if (source.quote) {
+                const quote = document.createElement('blockquote');
+                quote.className = 'ai-chat-source-quote';
+                quote.textContent = source.quote;
+                item.appendChild(quote);
+              }
+              details.appendChild(item);
+            });
+            actionList.appendChild(details);
+            return;
+          }
+
+          if (action.page && ALL_VIEWS.includes(action.page)) {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.dataset.assistantTarget = action.page;
+            button.textContent = action.label;
+            actionList.appendChild(button);
+          }
+        });
+        if (actionList.children.length) {
+          message.appendChild(actionList);
+        }
       }
       messagesElement.appendChild(message);
       messagesElement.scrollTop = messagesElement.scrollHeight;
@@ -203,8 +271,6 @@ import { escapeHtml, showToast } from './utils.js';
     }
 
     async function loadAssistantStatus() {
-      if (assistantStatusLoaded) return;
-      assistantStatusLoaded = true;
       try {
         const status = await ApiClient.getAssistantStatus();
         companion.classList.toggle('is-online', Boolean(status.configured));
@@ -214,7 +280,6 @@ import { escapeHtml, showToast } from './utils.js';
             : 'Dịch vụ AI tạm thời chưa sẵn sàng';
         }
       } catch (_err) {
-        assistantStatusLoaded = false;
         companion.classList.remove('is-online');
         if (statusText) statusText.textContent = 'Dịch vụ AI tạm thời chưa sẵn sàng';
       }
@@ -240,11 +305,11 @@ import { escapeHtml, showToast } from './utils.js';
       const deleteButton = event.target.closest('[data-delete-conversation-id]');
       if (deleteButton) {
         const conversationId = deleteButton.dataset.deleteConversationId;
-        if (!window.confirm('Xóa cuộc hội thoại này? AI audit log dành cho Admin vẫn được giữ lại.')) return;
         try {
           await ApiClient.deleteAssistantConversation(conversationId);
           if (currentConversationId === conversationId) resetConversation();
           await loadConversationHistory();
+          showToast('Đã xóa cuộc hội thoại.', 'info');
         } catch (err) {
           showToast(`Không thể xóa hội thoại: ${err.message}`, 'error');
         }
@@ -276,72 +341,26 @@ import { escapeHtml, showToast } from './utils.js';
         return;
       }
 
-      const previousHistory = conversationHistory.slice(-6);
+      const previousHistory = conversationHistory.slice(-10);
       appendChatMessage('user', text);
       conversationHistory.push({ role: 'user', content: text });
       input.value = '';
       input.style.height = 'auto';
       if (sendButton) sendButton.disabled = true;
       const typing = appendTypingIndicator();
-
-      let streamMessageElement = null;
-      let streamParagraph = null;
-      let hasReceivedFirstChunk = false;
-
-      const onChunk = (chunk, accumulated) => {
-        if (!hasReceivedFirstChunk) {
-          hasReceivedFirstChunk = true;
-          typing.remove();
-          streamMessageElement = document.createElement('div');
-          streamMessageElement.className = 'ai-chat-message assistant';
-          const name = document.createElement('span');
-          name.className = 'ai-chat-message-name';
-          name.textContent = 'Nova';
-          streamParagraph = document.createElement('p');
-          streamMessageElement.append(name, streamParagraph);
-          messagesElement.appendChild(streamMessageElement);
-        }
-        if (streamParagraph) {
-          streamParagraph.textContent = accumulated;
-        }
-        messagesElement.scrollTop = messagesElement.scrollHeight;
-      };
-
       try {
-        const result = await ApiClient.chatWithAssistantStream(
+        const result = await ApiClient.chatWithAssistant(
           text,
           previousHistory,
           currentViewName,
-          currentConversationId,
-          null,
-          {
-            onChunk,
-            onMetadata: data => {
-              if (data.conversation_id) {
-                currentConversationId = data.conversation_id;
-              }
-            },
-          }
+          currentConversationId
         );
-
-        if (!hasReceivedFirstChunk) {
-          typing.remove();
-        }
-
-        currentConversationId = result.conversation_id || currentConversationId;
+        typing.remove();
+        currentConversationId = result.conversation_id;
         const response = result.llm_succeeded
           ? result.response
           : getAssistantUnavailableMessage();
-
-        if (streamMessageElement) {
-          if (streamParagraph) streamParagraph.textContent = response;
-          if (result.suggested_actions && result.suggested_actions.length) {
-            appendActionList(streamMessageElement, result.suggested_actions);
-          }
-        } else {
-          appendChatMessage('assistant', response, result.llm_succeeded ? (result.suggested_actions || []) : []);
-        }
-
+        appendChatMessage('assistant', response, result.llm_succeeded ? (result.suggested_actions || []) : []);
         conversationHistory.push({ role: 'assistant', content: response });
         companion.classList.toggle('is-online', Boolean(result.llm_succeeded));
         if (statusText) {
@@ -351,12 +370,9 @@ import { escapeHtml, showToast } from './utils.js';
         }
       } catch (err) {
         typing.remove();
-        if (streamMessageElement && !streamParagraph?.textContent) {
-          streamMessageElement.remove();
-        }
         if (err.status === 401) {
           performLogout({ notify: false });
-          appendChatMessage('assistant', 'Phiên đăng nhập đã hết hạn. Bạn hãy đăng nhập lại rồi gửi câu hỏi.');
+          appendChatMessage('assistant', 'Phiên đăng nhập đã hết hạn. Bạn hãy đăng nhập lại rồi gửi câu hỏi thời tiết.');
           openAuthModal();
           return;
         }
@@ -400,8 +416,33 @@ import { escapeHtml, showToast } from './utils.js';
     });
 
     if (sourceImage && spriteCanvas) {
-      spriteCanvas.classList.add('is-hidden');
-      sourceImage.classList.add('is-fallback');
+      const spriteContext = spriteCanvas.getContext('2d', { willReadFrequently: true });
+      let lastSpriteFrame = 0;
+      function renderSprite(timestamp) {
+        if (spriteContext && sourceImage.complete && sourceImage.naturalWidth && timestamp - lastSpriteFrame > 70) {
+          lastSpriteFrame = timestamp;
+          try {
+            spriteContext.clearRect(0, 0, 64, 64);
+            spriteContext.imageSmoothingEnabled = false;
+            spriteContext.drawImage(sourceImage, 0, 0, 64, 64);
+            const frame = spriteContext.getImageData(0, 0, 64, 64);
+            for (let index = 0; index < frame.data.length; index += 4) {
+              const red = frame.data[index];
+              const green = frame.data[index + 1];
+              const blue = frame.data[index + 2];
+              if (green > 105 && green > red * 1.35 && green > blue * 1.28) {
+                frame.data[index + 3] = 0;
+              }
+            }
+            spriteContext.putImageData(frame, 0, 0);
+          } catch (_err) {
+            spriteCanvas.classList.add('is-hidden');
+            sourceImage.classList.add('is-fallback');
+          }
+        }
+        requestAnimationFrame(renderSprite);
+      }
+      requestAnimationFrame(renderSprite);
       sourceImage.addEventListener('error', () => {
         spriteCanvas.classList.add('is-hidden');
         sourceImage.classList.add('is-fallback');
@@ -409,6 +450,7 @@ import { escapeHtml, showToast } from './utils.js';
     }
 
     restoreCompanionPosition();
+    loadAssistantStatus();
     window.setTimeout(() => hint?.classList.add('is-hidden'), 6500);
   }
 

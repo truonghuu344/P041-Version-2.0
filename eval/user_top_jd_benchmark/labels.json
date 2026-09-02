@@ -1,0 +1,132 @@
+{
+  "cv_snapshot_id": "e674cfad33dc49f4b54937ead9cee86a",
+  "instructions": "Set role_relevant for career-direction fit and application_ready for readiness to apply. mandatory_gap_expected remains a gate-quality check.",
+  "labels": [
+    {
+      "job_id": "JD-091",
+      "title": "JOB OPENING: FRESHER NODEJS (MERN STACK)",
+      "label": "not_relevant",
+      "role_relevant": false,
+      "application_ready": false,
+      "mandatory_gap_expected": true,
+      "note": ""
+    },
+    {
+      "job_id": "JD-090",
+      "title": "JOB OPENING: NODEJS INTERN / FRESHER",
+      "label": "not_relevant",
+      "role_relevant": false,
+      "application_ready": false,
+      "mandatory_gap_expected": true,
+      "note": ""
+    },
+    {
+      "job_id": "JD-087",
+      "title": "Intern Full-stack Engineer (AI Prompting)",
+      "label": "not_relevant",
+      "role_relevant": false,
+      "application_ready": false,
+      "mandatory_gap_expected": true,
+      "note": ""
+    },
+    {
+      "job_id": "JD-086",
+      "title": "SOFTWARE DEVELOPER INTERNSHIP",
+      "label": "not_relevant",
+      "role_relevant": false,
+      "application_ready": false,
+      "mandatory_gap_expected": true,
+      "note": ""
+    },
+    {
+      "job_id": "JD-072",
+      "role_relevant": true,
+      "application_ready": false,
+      "title": "FullStack Engineer",
+      "label": "not_relevant",
+      "mandatory_gap_expected": true,
+      "note": "Xác nhận: phù hợp hướng Backend hoặc Fullstack thiên backend."
+    },
+    {
+      "job_id": "JD-073",
+      "role_relevant": false,
+      "application_ready": false,
+      "title": "Full-stack Engineer (NextJS, Java, AI-native)",
+      "label": "not_relevant",
+      "mandatory_gap_expected": true,
+      "note": ""
+    },
+    {
+      "job_id": "JD-060",
+      "role_relevant": true,
+      "application_ready": false,
+      "title": "New Product Development Engineer(Fullstack & English)",
+      "label": "not_relevant",
+      "mandatory_gap_expected": true,
+      "note": "Xác nhận: phù hợp hướng Backend hoặc Fullstack thiên backend."
+    },
+    {
+      "job_id": "JD-057",
+      "role_relevant": true,
+      "application_ready": false,
+      "title": "Junior Fullstack Developer (PHP, Python, SQL, OOP)",
+      "label": "relevant",
+      "mandatory_gap_expected": false,
+      "note": "Xác nhận: phù hợp hướng Backend hoặc Fullstack thiên backend; application readiness chưa được người dùng xác nhận."
+    },
+    {
+      "job_id": "JD-038",
+      "role_relevant": true,
+      "application_ready": false,
+      "title": "Junior CloudOps / SysOps Engineer Linux",
+      "label": "relevant",
+      "mandatory_gap_expected": true,
+      "note": ""
+    },
+    {
+      "job_id": "JD-005",
+      "role_relevant": true,
+      "application_ready": false,
+      "title": "Lập trình viênJava",
+      "label": "relevant",
+      "mandatory_gap_expected": true,
+      "note": ""
+    },
+    {
+      "job_id": "JD-059",
+      "role_relevant": true,
+      "application_ready": false,
+      "title": "Remote AI Full-Stack Eng (English C1-$4,500 Gross)",
+      "label": "relevant",
+      "mandatory_gap_expected": true,
+      "note": ""
+    },
+    {
+      "job_id": "JD-024",
+      "role_relevant": true,
+      "application_ready": true,
+      "title": "Javascript Intern",
+      "label": "relevant",
+      "mandatory_gap_expected": false,
+      "note": "Ngoài Top 10; phù hợp hướng JavaScript/React/AI và cấp độ Intern."
+    },
+    {
+      "job_id": "JD-049",
+      "role_relevant": true,
+      "application_ready": true,
+      "title": "AI EngineerIntern",
+      "label": "relevant",
+      "mandatory_gap_expected": false,
+      "note": "Ngoài Top 10; phù hợp nền tảng Python, AI, MongoDB và SQL trong CV."
+    },
+    {
+      "job_id": "JD-074",
+      "role_relevant": true,
+      "application_ready": true,
+      "title": "Junior Full Stack Engineer (Python React/Angular)",
+      "label": "relevant",
+      "mandatory_gap_expected": false,
+      "note": "Ngoài Top 10; phù hợp hướng Python và React ở cấp độ Junior."
+    }
+  ]
+}

@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <title>Kịch bản Thuyết trình Demo Day — Career Assistant</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    @page {
+      size: A4;
+      margin: 16mm 14mm 16mm 14mm;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: #0f172a;
+      background: #ffffff;
+      line-height: 1.55;
+      font-size: 10pt;
+    }
+    h1 {
+      font-size: 18pt;
+      font-weight: 900;
+      color: #0d1a12;
+      border-bottom: 2.5px solid #059669;
+      padding-bottom: 6px;
+      margin-bottom: 10px;
+    }
+    .doc-meta {
+      font-size: 9pt;
+      color: #475569;
+      background: #f8fafc;
+      padding: 6px 12px;
+      border-left: 3px solid #059669;
+      border-radius: 0 4px 4px 0;
+      margin-bottom: 4px;
+    }
+    .section-title {
+      font-size: 13pt;
+      font-weight: 800;
+      color: #047857;
+      margin-top: 24px;
+      margin-bottom: 12px;
+      padding-bottom: 4px;
+      border-bottom: 1.5px solid #a7f3d0;
+      page-break-after: avoid;
+    }
+    .slide-card {
+      margin-top: 14px;
+      margin-bottom: 16px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 8px;
+      background: #ffffff;
+      padding: 12px 16px;
+      page-break-inside: avoid;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+    .slide-header {
+      font-size: 12.5pt;
+      font-weight: 800;
+      color: #047857;
+      background: #ecfdf5;
+      margin: -12px -16px 10px -16px;
+      padding: 8px 16px;
+      border-bottom: 1.5px solid #a7f3d0;
+      border-radius: 7px 7px 0 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .meta-row {
+      font-size: 9pt;
+      color: #334155;
+      background: #f8fafc;
+      padding: 6px 10px;
+      border-radius: 5px;
+      margin-bottom: 10px;
+      line-height: 1.45;
+      border: 1px solid #f1f5f9;
+    }
+    .meta-row strong {
+      color: #0f172a;
+    }
+    .speech-label {
+      font-size: 8pt;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #059669;
+      margin-bottom: 4px;
+    }
+    .speech-bubble {
+      font-size: 10pt;
+      color: #0f172a;
+      line-height: 1.6;
+      background: #fafafa;
+      padding: 10px 14px;
+      border-left: 3.5px solid #059669;
+      border-radius: 0 6px 6px 0;
+      margin-bottom: 8px;
+      font-style: normal;
+    }
+    .transition-callout {
+      font-size: 9pt;
+      color: #065f46;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      padding: 6px 12px;
+      border-radius: 6px;
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      line-height: 1.4;
+    }
+    .trans-icon {
+      font-weight: 900;
+      color: #059669;
+      font-size: 11pt;
+    }
+    .stage-note {
+      font-size: 9pt;
+      color: #64748b;
+      font-style: italic;
+      background: #f1f5f9;
+      padding: 6px 10px;
+      border-radius: 4px;
+      margin: 6px 0;
+    }
+    .bullet-item {
+      font-size: 9.5pt;
+      color: #1e293b;
+      margin-left: 10px;
+      margin-bottom: 4px;
+      line-height: 1.5;
+    }
+    .table-wrap {
+      margin: 12px 0;
+      page-break-inside: avoid;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 9pt;
+      margin-top: 4px;
+    }
+    th, td {
+      border: 1px solid #cbd5e1;
+      padding: 6px 10px;
+      text-align: left;
+    }
+    th {
+      background: #f1f5f9;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    tr:nth-child(even) td {
+      background: #f8fafc;
+    }
+    .footer-bar {
+      text-align: center;
+      font-size: 8pt;
+      color: #94a3b8;
+      margin-top: 24px;
+      padding-top: 8px;
+      border-top: 1px solid #e2e8f0;
+    }
+  </style>
+</head>
+<body>
+  <h1>Kịch bản Thuyết trình Demo Day — Career Assistant</h1>
+<div class="doc-meta"><strong>Dự án</strong>: Career Assistant</div>
+<div class="doc-meta"><strong>Đội ngũ</strong>: Team 041 · WinTop (VinUni AI20K Build Phase — Cohort 3)</div>
+<div class="doc-meta"><strong>Thời gian mục tiêu</strong>: 8–9 phút (Bao gồm video demo, dự phòng 1–2 phút cho khung 10 phút)</div>
+<div class="doc-meta"><strong>Nguyên tắc</strong>: Nói tự nhiên, gãy gọn, không đọc nguyên văn slide. Mọi số liệu và kiến trúc bám sát 100% codebase thực tế.</div>
+<div class="slide-card"><div class="slide-header">Slide 1 — Title</div>
+<div class="meta-row"><strong>Thời gian:</strong> ~30 giây</div>
+<div class="speech-bubble"><strong>Thông điệp chính:</strong> Giới thiệu định vị sản phẩm Career Assistant và nhóm thực hiện WinTop.</div>
+<div class="speech-label">NỘI DUNG NÓI (SPEAKING SCRIPT):</div>
+<div class="speech-bubble">“Kính chào Ban Tổ Chức và Hội Đồng Đánh Giá. Nhóm chúng em là WinTop, Team 041.</div>
+<div class="speech-bubble">Sản phẩm của nhóm là <strong>Career Assistant</strong> — nền tảng đồng hành giúp sinh viên đi từ việc chuẩn bị CV, hiểu rõ khoảng cách với yêu cầu tuyển dụng, cho đến luyện tập phỏng vấn trước khi thực sự nộp hồ sơ.</div>
+<div class="speech-bubble">Hôm nay, nhóm em xin chia sẻ câu chuyện bài toán, giải pháp kỹ thuật và các kết quả đo kiểm thực tế của dự án.”</div>
+<div class="transition-callout"><span class="trans-icon">↪</span> <strong>Chuyển slide:</strong></div>
+<div class="speech-bubble">“Trước hết, hãy cùng nhìn vào những khó khăn rất thật mà sinh viên năm 3, năm 4 đang gặp phải.”</div>
+</div><!-- /.slide-card -->
+<div class="slide-card"><div class="slide-header">Slide 2 — Problem</div>
+<div class="meta-row"><strong>Thời gian:</strong> ~50 giây</div>
+<div class="speech-bubble"><strong>Thông điệp chính:</strong> Vấn đề không phải thiếu công cụ AI, mà thiếu một quy trình hướng nghiệp có phản hồi và có căn cứ.</div>
+<div class="speech-label">NỘI DUNG NÓI (SPEAKING SCRIPT):</div>
+<div class="speech-bubble">“Khi tìm kiếm cơ hội thực tập và việc làm, phần lớn sinh viên thường rơi vào một vòng lặp bế tắc:</div>
+<div class="speech-bubble">Các bạn dùng một bản CV duy nhất để rải cho hàng chục JD khác nhau mà không biết cách tùy biến.</div>
+<div class="speech-bubble">Khi bị từ chối, ứng viên hoàn toàn không nhận được phản hồi: không biết mình thiếu kỹ năng nào, điểm nào chưa phù hợp.</div>
+<div class="speech-bubble">Và hệ quả nghiêm trọng nhất là: chỉ đến khi bước vào phòng phỏng vấn thật và nhận kết quả thất bại, các bạn mới nhận ra mình chưa hề sẵn sàng.</div>
+<div class="speech-bubble">Thực tế hiện nay không thiếu các chatbot AI, nhưng sinh viên đang thiếu một quy trình luyện tập có phản hồi cụ thể, minh bạch và có căn cứ xác thực.”</div>
+<div class="transition-callout"><span class="trans-icon">↪</span> <strong>Chuyển slide:</strong></div>
+<div class="speech-bubble">“Để giải quyết triệt để chuỗi vấn đề này, Career Assistant được thiết kế thành một luồng trải nghiệm liên tục.”</div>
+</div><!-- /.slide-card -->
+<div class="slide-card"><div class="slide-header">Slide 3 — Solution</div>
+<div class="meta-row"><strong>Thời gian:</strong> ~50 giây</div>
+<div class="speech-bubble"><strong>Thông điệp chính:</strong> Phân tích dựa trên bằng chứng thực tế từ CV/JD và điểm số do Backend tính toán tất định.</div>
+<div class="speech-label">NỘI DUNG NÓI (SPEAKING SCRIPT):</div>
+<div class="speech-bubble">“Career Assistant kết nối hành trình của ứng viên qua một chuỗi 6 chặng khép kín:</div>
+<div class="speech-bubble">Từ việc nhận đầu vào CV và JD → Hệ thống thực hiện so khớp (Match) → Chỉ ra khoảng cách kỹ năng (Gap) → Đưa ra gợi ý tối ưu hồ sơ (Improve CV) → Tổ chức phỏng vấn thử theo khung năng lực (Mock Interview) → Và cuối cùng là sẵn sàng ứng tuyển (Apply).</div>
+<div class="speech-bubble">Điểm khác biệt cốt lõi của Career Assistant so với các chatbot thông thường là nguyên tắc: <strong>‘Không evidence → Không claim’</strong>.</div>
+<div class="speech-bubble">Hệ thống không chỉ sinh văn bản đơn thuần. Mọi nhận định đều phải gắn liền với bằng chứng trích xuất từ CV thật, và điểm số FitScore hoàn toàn do logic Backend tính toán tất định theo công thức chuẩn, tuyệt đối không để LLM tự do chấm điểm.”</div>
+<div class="transition-callout"><span class="trans-icon">↪</span> <strong>Chuyển slide:</strong></div>
+<div class="speech-bubble">“Bây giờ, xin mời Hội Đồng cùng xem hành trình sản phẩm thực tế được xây dựng ra sao.”</div>
+</div><!-- /.slide-card -->
+<div class="slide-card"><div class="slide-header">Slide 4 — Product</div>
+<div class="meta-row"><strong>Thời gian:</strong> ~50 giây</div>
+<div class="speech-bubble"><strong>Thông điệp chính:</strong> Trải nghiệm liền mạch 6 bước với cùng một ngữ cảnh hồ sơ xuyên suốt hành trình.</div>
+<div class="speech-label">NỘI DUNG NÓI (SPEAKING SCRIPT):</div>
+<div class="speech-bubble">“Trên màn hình là hành trình 6 bước thực tế của ứng viên trong hệ thống:</div>
+<div class="speech-bubble">Người dùng bắt đầu bằng việc tải lên file CV định dạng PDF hoặc DOCX qua bộ trích xuất OCR.</div>
+<div class="speech-bubble">Sau đó, các bạn có thể dán JD bất kỳ hoặc chọn ngay từ danh mục <strong>98 JD</strong> thực tế đã được chuẩn hóa sẵn trong hệ thống.</div>
+<div class="speech-bubble">Tại đây, cùng một ngữ cảnh CV và JD sẽ đi theo ứng viên xuyên suốt: từ bảng phân tích FitScore minh bạch, báo cáo khoảng cách kỹ năng, giao diện duyệt từng gợi ý chỉnh sửa CV, cho đến phòng phỏng vấn thử bằng giọng nói qua <strong>8 giai đoạn</strong> bài bản.</div>
+<div class="speech-bubble">Quan trọng nhất: hệ thống không bao giờ tự ý bịa thêm kỹ năng mà người dùng không có.”</div>
+<div class="transition-callout"><span class="trans-icon">↪</span> <strong>Chuyển slide:</strong></div>
+<div class="speech-bubble">“Để vận hành trơn tru một quy trình có kiểm soát chặt chẽ như vậy, kiến trúc hệ thống đã được thiết kế phân tầng rõ ràng.”</div>
+</div><!-- /.slide-card -->
+<div class="slide-card"><div class="slide-header">Slide 5 — Architecture</div>
+<div class="meta-row"><strong>Thời gian:</strong> ~60 giây</div>
+<div class="speech-bubble"><strong>Thông điệp chính:</strong> Kiến trúc 5 tầng tinh gọn với 2 lựa chọn then chốt: LangGraph và pgvector.</div>
+<div class="speech-label">NỘI DUNG NÓI (SPEAKING SCRIPT):</div>
+<div class="speech-bubble">“Hệ thống được tổ chức theo kiến trúc 5 tầng:</div>
+<div class="speech-bubble">Giao diện Next.js kết nối với API Gateway FastAPI, tầng điều phối xử lý AI bằng LangGraph, cơ sở dữ liệu PostgreSQL tích hợp `pgvector`, cùng các dịch vụ chuyên biệt như Gemini, Deepgram STT và MinerU OCR.</div>
+<div class="speech-bubble">Trong kiến trúc này, nhóm đã đưa ra hai quyết định kỹ thuật quan trọng:</div>
+<div class="speech-bubble"><strong>Thứ nhất, tại sao chọn LangGraph?</strong></div>
+<div class="speech-bubble">Bởi vì quy trình xử lý hồ sơ cần tính kỷ luật rất cao: cần quản lý trạng thái tập trung, phân nhánh có điều kiện khi phát hiện lỗi đầu vào, cơ chế retry và các chốt chặn an toàn (guardrails). LangGraph đáp ứng hoàn hảo yêu cầu kiểm soát luồng này.</div>
+<div class="speech-bubble"><strong>Thứ hai, tại sao chọn pgvector?</strong></div>
+<div class="speech-bubble">pgvector cho phép lưu trữ dữ liệu quan hệ, lọc metadata và tìm kiếm vector embedding ngay trong một hệ quản trị PostgreSQL duy nhất. Điều này giúp tối ưu tài nguyên, đơn giản hóa hạ tầng và loại bỏ rủi ro lệch pha dữ liệu mà không cần dựng thêm cụm vector DB riêng biệt ở quy mô hiện tại.”</div>
+<div class="transition-callout"><span class="trans-icon">↪</span> <strong>Chuyển slide:</strong></div>
+<div class="speech-bubble">“Đi sâu hơn vào tầng AI, đây là cách nhóm em kiểm soát chất lượng đầu ra và loại bỏ ảo giác.”</div>
+</div><!-- /.slide-card -->
+<div class="slide-card"><div class="slide-header">Slide 6 — AI / LLM Approach</div>
+<div class="meta-row"><strong>Thời gian:</strong> ~70 giây</div>
+<div class="speech-bubble"><strong>Thông điệp chính:</strong> AI dùng để hiểu ngôn ngữ và trích xuất bằng chứng; Backend kiểm soát quyết định và điểm số.</div>
+<div class="speech-label">NỘI DUNG NÓI (SPEAKING SCRIPT):</div>
+<div class="speech-bubble">“Triết lý kỹ thuật của nhóm được đúc kết trong một câu: <strong>‘AI tìm bằng chứng. LangGraph điều phối. Backend quyết định điểm.’</strong></div>
+<div class="speech-bubble">Quy trình diễn ra như sau:</div>
+<div class="speech-bubble">Đầu tiên, hệ thống dùng Hybrid Retrieval kết hợp BM25 và pgvector để tìm các đoạn bằng chứng liên quan.</div>
+<div class="speech-bubble">Tiếp theo, LangGraph State Machine điều phối việc kiểm tra đầu vào, trích xuất quan hệ ngữ nghĩa, dự thảo báo cáo và chạy qua chốt chặn `integrity_guardrail` để phát hiện dữ liệu bất thường.</div>
+<div class="speech-bubble">Cuối cùng, Backend tiếp nhận nhãn bằng chứng và tính toán điểm FitScore theo công thức tất định gồm 5 thành phần: Kỹ năng 35%, Kinh nghiệm 30%, Lĩnh vực 15%, Học vấn 10% và Ưu tiên 10%.</div>
+<div class="speech-bubble">Ba nguyên tắc sống còn mà nhóm tuân thủ là: <strong>Evidence First</strong>, <strong>Structured Output</strong> qua Pydantic Schema, và <strong>Deterministic Scoring</strong>.</div>
+<div class="speech-bubble">Trên tập dữ liệu đánh giá chuẩn Golden Dataset, quy trình đã đạt <strong>14 trên 15 ca kiểm thử thành công</strong>, cho thấy khả năng phân tách điểm số rất rõ ràng giữa hồ sơ đạt và không đạt.”</div>
+<div class="transition-callout"><span class="trans-icon">↪</span> <strong>Chuyển slide:</strong></div>
+<div class="speech-bubble">“Những kết quả này không chỉ nằm trên lý thuyết mà được bảo chứng bởi toàn bộ hệ thống kiểm thử tự động.”</div>
+</div><!-- /.slide-card -->
+<div class="slide-card"><div class="slide-header">Slide 7 — Technical Highlights</div>
+<div class="meta-row"><strong>Thời gian:</strong> ~60 giây</div>
+<div class="speech-bubble"><strong>Thông điệp chính:</strong> Hệ thống được phát triển chuẩn chỉ với kiểm thử tự động, CI/CD và số liệu đo kiểm thực tế.</div>
+<div class="speech-label">NỘI DUNG NÓI (SPEAKING SCRIPT):</div>
+<div class="speech-bubble">“Career Assistant không phải là một bản prototype chỉ chạy được một lần lúc demo. Đội ngũ đã thiết lập quy chuẩn kỹ thuật nghiêm ngặt ngay từ đầu:</div>
+<div class="speech-bubble">Hệ thống hiện có hơn <strong>745 test cases backend</strong> với pytest và <strong>159 tests frontend</strong> với Jest.</div>
+<div class="speech-bubble">Về mặt hiệu năng, đo kiểm trên tập 52 CV và 98 JD cho thấy độ trễ truy xuất P95 chỉ ở mức <strong>dưới 1.2 giây</strong> (1,152.9 ms) và độ phủ <strong>Recall@30 đạt 71.7%</strong>.</div>
+<div class="speech-bubble">Mọi thay đổi mã nguồn đều phải vượt qua pipeline CI/CD 5 bước tự động trên GitHub Actions: từ linting với Ruff, chạy toàn bộ test suite, kiểm tra TypeScript, build Next.js cho đến khi các quality gates đều xanh mới được deploy lên môi trường Vercel và Render.”</div>
+<div class="transition-callout"><span class="trans-icon">↪</span> <strong>Chuyển slide:</strong></div>
+<div class="speech-bubble">“Sau đây, nhóm xin dành ít phút để Hội Đồng tận mắt theo dõi sản phẩm hoạt động trong thực tế.”</div>
+</div><!-- /.slide-card -->
+<div class="slide-card"><div class="slide-header">Slide 8 — Demo Video</div>
+<div class="meta-row"><strong>Thời gian:</strong> ~20 giây giới thiệu + 2 phút 30 giây chiếu video</div>
+<div class="speech-bubble"><strong>Thông điệp chính:</strong> Quan sát luồng dữ liệu CV/JD được duy trì xuyên suốt từ so khớp đến phỏng vấn giọng nói.</div>
+<div class="speech-bubble"><strong>Nội dung nói trước khi phát video:</strong></div>
+<div class="speech-bubble">“Thay vì tiếp tục mô tả bằng lời, nhóm xin dành khoảng 2 đến 3 phút để kính mời Ban Tổ Chức và Hội Đồng cùng theo dõi video trải nghiệm thực tế.</div>
+<div class="speech-bubble">Trong video, xin Hội Đồng chú ý cách một dữ liệu CV và JD duy nhất được giữ xuyên suốt từ bước chấm điểm FitScore, phân tích lỗ hổng kỹ năng, cho đến phòng phỏng vấn giọng nói tương tác thời gian thực.”</div>
+<div class="stage-note">*(Bật video demo — người thuyết trình giữ im lặng hoặc chỉ thuyết minh ngắn gọn khi chuyển tính năng chính)*</div>
+<div class="transition-callout"><span class="trans-icon">↪</span> <strong>Chuyển slide sau khi video kết thúc:</strong></div>
+<div class="speech-bubble">“Để hoàn thiện được trải nghiệm liền mạch như vậy, nhóm đã trải qua nhiều bài học kỹ thuật quan trọng trong quá trình phát triển.”</div>
+</div><!-- /.slide-card -->
+<div class="slide-card"><div class="slide-header">Slide 9 — Challenges & Learnings</div>
+<div class="meta-row"><strong>Thời gian:</strong> ~55 giây</div>
+<div class="speech-bubble"><strong>Thông điệp chính:</strong> Trưởng thành qua các bài toán kỹ thuật thực tế và tư duy thiết kế hệ thống nghiêm túc.</div>
+<div class="speech-label">NỘI DUNG NÓI (SPEAKING SCRIPT):</div>
+<div class="speech-bubble">“Trong suốt quá trình xây dựng sản phẩm, nhóm đã đối mặt với 3 thách thức kỹ thuật lớn:</div>
+<div class="speech-bubble"><strong>Thứ nhất</strong>, khi để LLM tự chấm điểm, kết quả giữa các lần chạy bị dao động → Nhóm giải quyết bằng cách chuyển toàn bộ việc tính toán sang logic Backend tất định.</div>
+<div class="speech-bubble"><strong>Thứ hai</strong>, việc so khớp toàn bộ 98 JD cùng lúc gây nghẽn và phản hồi rất chậm → Nhóm chuyển sang kiến trúc 2-Stage Retrieval, lọc thô Top-30 trước khi phân tích sâu, giảm thời gian gợi ý từ hơn 15 giây xuống dưới 1.8 giây.</div>
+<div class="speech-bubble"><strong>Thứ ba</strong>, phỏng vấn giọng nói dễ bị trôi kịch bản → Nhóm áp dụng State Machine 8 phases một chiều (forward-only) kết hợp cơ chế phục hồi WebSocket.</div>
+<div class="speech-bubble">Và bài học lớn nhất của nhóm là: <strong>Nếu được làm lại từ đầu, chúng em sẽ xây dựng bộ khung đánh giá (Evaluation) và chốt chặn an toàn (Guardrails) ngay từ Sprint 1</strong>.”</div>
+<div class="transition-callout"><span class="trans-icon">↪</span> <strong>Chuyển slide:</strong></div>
+<div class="speech-bubble">“Cuối cùng, nhóm xin chia sẻ về đội ngũ thực hiện và lộ trình phát triển tiếp theo.”</div>
+</div><!-- /.slide-card -->
+<div class="slide-card"><div class="slide-header">Slide 10 — Team & Next Steps</div>
+<div class="meta-row"><strong>Thời gian:</strong> ~40 giây</div>
+<div class="speech-bubble"><strong>Thông điệp chính:</strong> Định hướng phát triển tập trung vào đo lường giá trị thực tế cho người dùng và mở đầu phần Q&A.</div>
+<div class="speech-label">NỘI DUNG NÓI (SPEAKING SCRIPT):</div>
+<div class="speech-bubble">“Dự án được xây dựng bởi 4 thành viên nhóm WinTop dưới sự hướng dẫn của Mentor Trần Vũ Anh: bạn Thanh Hiền phụ trách Frontend & Project Lead, bạn Hữu Trường phụ trách AI & Systems, bạn Xuân Đức phụ trách Backend Core, và bạn Minh Quân phụ trách QA & Evaluation.</div>
+<div class="speech-bubble">Về lộ trình tiếp theo, nhóm định hướng theo 4 bước tăng trưởng sản phẩm:</div>
+<div class="speech-bubble">Bắt đầu với <strong>PILOT</strong> thử nghiệm cùng sinh viên và Career Center → <strong>VALIDATE</strong> đo lường sự tiến bộ về chất lượng hồ sơ và sự tự tin phỏng vấn → <strong>EXPAND</strong> mở rộng danh mục JD và kết nối đối tác tuyển dụng → và <strong>SCALE</strong> tối ưu hóa mở rộng quy mô.</div>
+<div class="speech-bubble">Nhóm em tin rằng bước đi quan trọng nhất lúc này không phải là nhồi nhét thêm thật nhiều tính năng AI, mà là đưa sản phẩm đến tay người dùng thật để kiểm chứng giá trị thực tế.</div>
+<div class="speech-bubble">Nhóm WinTop xin chân thành cảm ơn Ban Tổ Chức và Hội Đồng Đánh Giá. Chúng em rất mong nhận được các câu hỏi và đóng góp từ thầy cô!”</div>
+</div><!-- /.slide-card -->
+<h1>⏱️ Timing Summary</h1>
+<div class="table-wrap"><table><thead><tr><th>STT</th><th>Slide</th><th>Nội dung chính</th><th>Thời lượng dự kiến</th></tr></thead><tbody><tr><td>01</td><td><strong>Title</strong></td><td>Giới thiệu dự án & Nhóm WinTop</td><td>30s</td></tr><tr><td>02</td><td><strong>Problem</strong></td><td>Khó khăn thực tế của sinh viên</td><td>50s</td></tr><tr><td>03</td><td><strong>Solution</strong></td><td>Luồng giải pháp liên tục & Nguyên tắc Evidence</td><td>50s</td></tr><tr><td>04</td><td><strong>Product</strong></td><td>6 bước người dùng & Dữ liệu sản phẩm thực</td><td>50s</td></tr><tr><td>05</td><td><strong>Architecture</strong></td><td>Kiến trúc 5 tầng, LangGraph & pgvector</td><td>60s</td></tr><tr><td>06</td><td><strong>AI / LLM Approach</strong></td><td>Evidence flow, 3 nguyên tắc & FitScore formula</td><td>70s</td></tr><tr><td>07</td><td><strong>Technical Highlights</strong></td><td>Test suite, Benchmark & CI/CD pipeline</td><td>60s</td></tr><tr><td>08</td><td><strong>Demo Video</strong></td><td>Giới thiệu ngắn (20s) + Trình chiếu video demo</td><td>~2m 50s</td></tr><tr><td>09</td><td><strong>Challenges</strong></td><td>3 bài học kỹ thuật & Tư duy cải tiến</td><td>55s</td></tr><tr><td>10</td><td><strong>Team & Next Steps</strong></td><td>Đội ngũ, Roadmap tăng trưởng & Mời Q&A</td><td>40s</td></tr><tr><td><strong>TỔNG</strong></td><td><strong>Toàn bộ bài thuyết trình</strong></td><td>*(Bao gồm cả video demo và chuyển tiếp)*</td><td><strong>~8 phút 35 giây</strong></td></tr></tbody></table></div>
+<div class="stage-note">*(Dự phòng: 1 phút 25 giây cho các tình huống kỹ thuật và bắt đầu phiên Q&A đúng khung 10 phút)*</div>
+<h1>🔁 Kế hoạch 3 Lần Luyện tập (3 Rehearsals)</h1>
+<div class="bullet-item">• <strong>Lần 1 — Nắm vững câu chuyện (Content & Flow)</strong>:</div>
+<div class="bullet-item">• Tập trung ghi nhớ mạch dẫn dắt logic từ Nỗi đau → Giải pháp → Chứng minh kỹ thuật → Trải nghiệm thực tế.</div>
+<div class="bullet-item">• Không nhìn tài liệu, nói tự nhiên theo ý chính từng slide.</div>
+<div class="bullet-item">• <strong>Lần 2 — Kiểm soát thời gian (Pacing & Timing)</strong>:</div>
+<div class="bullet-item">• Bật đồng hồ bấm giờ (timer). Đảm bảo mỗi slide nằm trong khoảng 30–70 giây quy định.</div>
+<div class="bullet-item">• Kiểm soát đoạn mở đầu video demo ngắn gọn dưới 20 giây để không lẹm vào thời lượng phát video.</div>
+<div class="bullet-item">• <strong>Lần 3 — Mô phỏng Demo Day (Full Simulation)</strong>:</div>
+<div class="bullet-item">• Bật chế độ Fullscreen trên trình duyệt, kết nối máy chiếu / màn hình ngoài.</div>
+<div class="bullet-item">• Thuyết trình liền mạch kết hợp bật phát video demo, giả định có sự cố ngắt quãng và chuyển giao mượt mà sang phần phản biện Q&A với tài liệu `SPEAKER_NOTES.md`.</div>
+  <div class="footer-bar">
+    Career Assistant · Team 041 WinTop · Demo Day 03/09/2026
+  </div>
+</body>
+</html>

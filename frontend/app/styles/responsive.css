@@ -1,0 +1,513 @@
+/*
+ * ================================================================
+ *  GLOBAL RESPONSIVE LAYER — SINGLE SOURCE OF TRUTH (mọi portal)
+ *  (student / counselor / enterprise / admin / notifications)
+ *
+ *  Import CUỐI CÙNG trong globals.css (sau navbar.css).
+ *
+ *  HỆ BREAKPOINT DUY NHẤT CỦA APP (đồng bộ với tailwind.config.js):
+ *    Desktop : ≥ 1200px                → layout rộng, thẳng hàng
+ *    Tablet  : 768px – 1199.98px       → grid 2 cột, menu collapse, toolbar wrap
+ *    Mobile  : < 768px (≤ 767.98px)    → 1 cột, filter/search stack, nút full-width
+ *
+ *  Quy tắc:
+ *  - Không file page nào được tự khai breakpoint khác 768/1200.
+ *  - Rule visibility của navbar thuộc navbar.css (không viết ở đây).
+ *  - prefers-reduced-motion không phụ thuộc breakpoint (giữ nguyên tại chỗ cũ).
+ * ================================================================
+ */
+
+/* ── 0. Guards toàn cục — không cho viewport bị tràn ngang ────── */
+body {
+  overflow-x: hidden; /* propagate lên viewport; position:sticky vẫn hoạt động */
+}
+@supports (overflow-x: clip) {
+  body {
+    overflow-x: clip;
+  }
+}
+
+#view-dashboard,
+#view-cv,
+#view-find-jobs,
+#view-jobs,
+#view-match,
+#view-gap,
+#view-interview,
+#view-history,
+#view-profile,
+#view-upgrade,
+#view-counselor,
+#view-enterprise,
+#view-admin,
+#view-notifications {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Chữ dài (email, URL, tên file) tự xuống dòng thay vì đẩy ngang layout */
+#view-dashboard :is(p, h1, h2, h3, h4, h5, h6, li, td, th, span, a, label),
+#view-cv :is(p, h1, h2, h3, h4, h5, h6, li, td, th, span, a, label),
+#view-find-jobs :is(p, h1, h2, h3, h4, h5, h6, li, td, th, span, a, label),
+#view-jobs :is(p, h1, h2, h3, h4, h5, h6, li, td, th, span, a, label),
+#view-match :is(p, h1, h2, h3, h4, h5, h6, li, td, th, span, a, label),
+#view-gap :is(p, h1, h2, h3, h4, h5, h6, li, td, th, span, a, label),
+#view-interview :is(p, h1, h2, h3, h4, h5, h6, li, td, th, span, a, label),
+#view-history :is(p, h1, h2, h3, h4, h5, h6, li, td, th, span, a, label),
+#view-profile :is(p, h1, h2, h3, h4, h5, h6, li, td, th, span, a, label),
+#view-counselor :is(p, h1, h2, h3, h4, h5, h6, li, td, th, span, a, label),
+#view-enterprise :is(p, h1, h2, h3, h4, h5, h6, li, td, th, span, a, label),
+#view-admin :is(p, h1, h2, h3, h4, h5, h6, li, td, th, span, a, label),
+#view-notifications :is(p, h1, h2, h3, h4, h5, h6, li, td, th, span, a, label) {
+  overflow-wrap: break-word;
+}
+
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+}
+
+/* ── 1. Shared container — chuẩn 1 hệ padding theo tier ────────── */
+/* Base (<768): 16px | Tablet: 20px | Desktop: 24px                 */
+.counselor-container,
+.enterprise-container,
+.candidate-container,
+.main-app-container {
+  max-width: 1366px !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+  box-sizing: border-box !important;
+}
+@media (min-width: 768px) {
+  .counselor-container,
+  .enterprise-container,
+  .candidate-container,
+  .main-app-container {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+  }
+}
+@media (min-width: 1200px) {
+  .counselor-container,
+  .enterprise-container,
+  .candidate-container,
+  .main-app-container {
+    padding-left: 24px !important;
+    padding-right: 24px !important;
+  }
+}
+
+/* ── 2. Table: scroll nằm trong container, không phá viewport ─── */
+.recruiter-table-responsive,
+.history-table-container,
+.career-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+}
+
+.recruiter-table {
+  min-width: 700px;
+}
+
+.history-data-table {
+  min-width: 780px;
+}
+
+.career-cv-table {
+  min-width: 660px;
+}
+
+/* Ô bảng co giãn được, không ép chữ */
+.recruiter-table th,
+.recruiter-table td,
+.history-data-table td,
+.career-cv-table td {
+  word-break: normal;
+  white-space: normal;
+}
+
+/* ── 3. Modal / drawer / dropdown luôn trong viewport ─────────── */
+/* `.authx-card` (auth-modal.css) được loại trừ ở cả hai rule dưới: modal
+   Đăng nhập/Đăng ký tự khai báo width/max-height/overflow cho mobile trong
+   file của nó. Để nguyên thì `max-width: !important` + `overflow-y: auto`
+   ở đây ghi đè, làm kích thước card nhảy và sinh thanh cuộn không mong muốn. */
+@media (max-width: 767.98px) {
+  [role='dialog']:not(.authx-card),
+  [role='alertdialog']:not(.authx-card) {
+    max-width: calc(100vw - 16px) !important;
+  }
+
+  /* Chỉ dialog KHÔNG có vùng body riêng mới tự cuộn. Dialog có body riêng do
+     shared-ui.css §5 lo (shell overflow: hidden, body cuộn) — nếu đặt
+     `overflow: auto` ở đây thì cả vỏ modal cuộn theo, sinh ra 2 thanh cuộn. */
+  [role='dialog']:not(.authx-card):not(:has([class*='modal-body'])):not(:has(.ui-modal-body)),
+  [role='alertdialog']:not(.authx-card):not(:has([class*='modal-body'])):not(:has(.ui-modal-body)) {
+    max-height: min(92dvh, calc(100vh - 16px));
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+  }
+
+  .eval-modal,
+  [class*='modal'][class*='content'],
+  [class*='drawer'][class*='panel'] {
+    max-width: calc(100vw - 16px) !important;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   4. TABLET — 768px → 1199.98px
+   Split layout xếp chồng · grid ≥3 cột hạ 2 cột · toolbar wrap
+   ══════════════════════════════════════════════════════════════ */
+@media (max-width: 1199.98px) {
+  /* 4a. Split layouts có cột cố định px → xếp chồng thành 1 cột */
+  #view-dashboard .home-hero-inner,
+  #view-dashboard .about-showcase-inner,
+  .interview-layout,
+  .profile-layout-grid,
+  .profile-workspace,
+  .candidate-preview-grid,
+  .candidate-cv-structured-grid,
+  .match-cv-browser,
+  .recruiter-main-layout,
+  .intent-workspace-grid,
+  .p1-workflow-grid,
+  .role-dashboard-grid,
+  .buddy-hero-shell,
+  #view-history .report-content-grid,
+  #view-history .history-analytics-section,
+  .career-portfolio-hero,
+  .career-primary-card,
+  .dashboard-hero,
+  .dashboard-ecosystem-section,
+  .dashboard-transform-section,
+  .dashboard-interview-section,
+  .dashboard-bento-grid,
+  .hero-container,
+  .agent-card,
+  .jd-create-grid,
+  .gap-advanced-grid,
+  .cv-result-cta-row,
+  .job-drawer-grid,
+  .vessel-header-row {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  /* Hero dashboard: visual co lại, căn giữa khi xếp chồng */
+  #view-dashboard .home-hero-visual {
+    max-width: 560px;
+    margin: 0 auto;
+    min-height: 320px;
+  }
+  #view-dashboard .pipeline-track {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 32px;
+  }
+  #view-dashboard .pipeline-track::before {
+    display: none;
+  }
+
+  /* Journey 3 bước với rail 40px → dọc, ẩn mũi tên nối */
+  #view-find-jobs .top-jobs-journey {
+    grid-template-columns: minmax(0, 1fr) !important;
+    row-gap: 12px;
+  }
+  #view-find-jobs .top-jobs-journey > :nth-child(even) {
+    display: none;
+  }
+
+  /* 4b. Grid ≥4 cột → 2 cột */
+  #view-dashboard .home-stats-grid,
+  #view-dashboard .features-bento-grid,
+  #view-dashboard .footer-top-grid,
+  #view-find-jobs .top-jobs-progress-steps,
+  #view-history .history-kpi-row,
+  #view-history .report-stat-grid,
+  .interview-score-breakdown,
+  .recruiter-kpi-grid,
+  .recruiter-kpi-grid.cols-3,
+  .recruiter-funnel-pipeline,
+  .cv-result-score-breakdown,
+  .gap-score-breakdown,
+  .hitl-stats,
+  .counselor-progress-summary,
+  .ai-log-stats,
+  .archive-detail-star-grid,
+  .agent-runtime-panel,
+  .agent-progress,
+  .color-grid,
+  .dashboard-template-grid,
+  .buddy-template-grid,
+  .trajectory-steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  /* 4c. Grid 3 cột → 2 cột */
+  .template-gallery-grid,
+  .buddy-journey-grid,
+  .gap-skill-analysis-grid,
+  .onboarding-steps-grid,
+  .crew-stats-grid,
+  .counselor-kpi-overview,
+  .p1-result-stats,
+  .workplace-models-row,
+  .preview-photos-gallery,
+  .persona-selector,
+  #view-match #p1-job-grid,
+  #view-match .p1-job-grid,
+  .dashboard-bento-grid,
+  #view-dashboard .features-bento-grid,
+  #view-find-jobs .top-jobs-single-column-list,
+  .job-search-results {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  /* 4d. Chart/form rộng của recruiter → 1 cột sớm vì biểu đồ rộng */
+  .recruiter-chart-grid,
+  .recruiter-form-row {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  /* 4e. Toolbar/filter wrap hợp lý ở tablet (menu đã collapse) */
+  #view-counselor .counselor-toolbar,
+  #view-counselor .counselor-filter-row,
+  #view-enterprise .recruiter-header,
+  .history-heading,
+  .career-table-header {
+    flex-wrap: wrap;
+  }
+
+  /* Bộ lọc tìm kiếm: stack theo hàng dọc, không chồng nhau */
+  #view-find-jobs .filter-items-row {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   5. MOBILE — < 768px (≤ 767.98px)
+   Mọi grid → 1 cột · filter/search stack · button full-width
+   ══════════════════════════════════════════════════════════════ */
+@media (max-width: 767.98px) {
+  /* 5a. Split layouts + mọi grid còn 2 cột → 1 cột (đảm bảo thắng rule cũ) */
+  #view-dashboard .home-hero-inner,
+  #view-dashboard .about-showcase-inner,
+  #view-dashboard .home-stats-grid,
+  #view-dashboard .footer-top-grid,
+  #view-dashboard .features-bento-grid,
+  .interview-layout,
+  .profile-layout-grid,
+  .profile-workspace,
+  .candidate-preview-grid,
+  .candidate-cv-structured-grid,
+  .match-cv-browser,
+  .recruiter-main-layout,
+  .intent-workspace-grid,
+  .p1-workflow-grid,
+  .role-dashboard-grid,
+  .buddy-hero-shell,
+  .buddy-before-after,
+  .buddy-interview-section,
+  .buddy-template-actions,
+  .template-preview-modern,
+  #view-history .report-content-grid,
+  #view-history .history-analytics-section,
+  #view-history .report-stat-grid,
+  .career-portfolio-hero,
+  .career-primary-card,
+  .dashboard-hero,
+  .dashboard-bento-grid,
+  .dashboard-ecosystem-section,
+  .dashboard-transform-section,
+  .dashboard-interview-section,
+  #view-match .match-workflow,
+  #view-match .match-job-grid-footer,
+  #view-match .cv-optimization-report-grid,
+  #view-match .gap-result-detail-grid,
+  #view-match .rewrite-diff-container,
+  #view-match .cv-before-after-grid,
+  #view-match .cv-result-skills-grid,
+  #view-match #p1-job-grid,
+  #view-match .p1-job-grid,
+  .cv-variant-edit-grid,
+  .cv-variant-diff,
+  .cv-variant-validator-grid,
+  .cv-result-score-breakdown,
+  .cv-result-deep-grid,
+  .cv-result-detail-grid,
+  .cv-result-skills-grid,
+  .cv-result-evidence-item,
+  .cv-result-cta-row,
+  .gap-plan-grid,
+  .gap-advanced-grid,
+  .gap-detail-columns,
+  .gap-skill-analysis-grid,
+  .gap-selection-grid,
+  .match-source-grid,
+  .manual-cv-grid,
+  .manual-cv-form,
+  .auth-tabs,
+  .p1-job-mode,
+  .p1-job-grid,
+  .p1-analysis-body,
+  .csat-form,
+  .job-cv-match-row,
+  .job-search-form,
+  .jd-create-grid,
+  .top-job-evidence-body,
+  #view-find-jobs .top-jobs-single-column-list,
+  #view-find-jobs .top-jobs-progress-steps,
+  .job-search-results,
+  .job-drawer-grid,
+  .job-drawer-footer-actions,
+  .hero-container,
+  .features-grid,
+  .template-gallery-grid,
+  .buddy-journey-grid,
+  .onboarding-steps-grid,
+  .crew-stats-grid,
+  .counselor-kpi-overview,
+  .counselor-progress-summary,
+  .p1-result-stats,
+  .workplace-models-row,
+  .preview-photos-gallery,
+  .persona-selector,
+  .recruiter-kpi-grid,
+  .recruiter-kpi-grid.cols-3,
+  .recruiter-funnel-pipeline,
+  .recruiter-chart-grid,
+  .recruiter-form-row,
+  #view-dashboard .pipeline-track,
+  #view-dashboard .about-matrix-col,
+  .vessel-grid,
+  .manifest-card-full .cv-manifest-list,
+  .interview-star-grid,
+  .interview-report-columns,
+  .interview-feedback-form,
+  .interview-form-grid,
+  .interview-score-breakdown,
+  .candidate-job-meta-grid,
+  .profile-form-grid,
+  .trajectory-steps,
+  .hitl-stats,
+  .ai-log-stats,
+  .archive-detail-star-grid,
+  .agent-runtime-panel,
+  .agent-progress,
+  .color-grid,
+  .dashboard-template-grid,
+  .buddy-template-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  /* Feedback form 180px|1fr|auto → từng control một hàng */
+  .interview-feedback-form > * {
+    grid-column: 1 / -1;
+  }
+  .interview-field-wide {
+    grid-column: auto;
+  }
+
+  /* VS-badge giữa 2 panel so sánh → xếp dọc */
+  .buddy-compare-card {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  /* 5b. Filter / search stack full-width, không ép cố định px */
+  #view-counselor .counselor-search-wrapper,
+  #view-counselor .counselor-toolbar .relative,
+  #view-counselor header .relative,
+  #view-counselor .counselor-filter-row .relative,
+  #view-counselor .relative:has(input[type='text']),
+  #view-counselor .relative:has(input[type='search']),
+  #view-enterprise .relative:has(input[type='text']),
+  #view-enterprise .relative:has(input[type='search']),
+  #view-enterprise .custom-dropdown-container {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    flex: 1 1 100% !important;
+  }
+
+  /* Enterprise: dropdown menu min-width lớn không được tràn màn hình */
+  #view-enterprise [class*='dropdown'],
+  #view-enterprise .custom-dropdown-menu {
+    max-width: calc(100vw - 24px);
+  }
+
+  /* 5c. Header/toolbar action rows → column + button full-width khi cần */
+  #view-history .history-heading-actions,
+  .career-table-actions > *,
+  #view-counselor .counselor-profile-header-actions,
+  #view-counselor .counselor-actions {
+    align-items: stretch;
+  }
+  #view-history .history-heading-actions {
+    flex-direction: column;
+  }
+  #view-history .history-export-btn,
+  #view-counselor .counselor-profile-header-actions button,
+  .career-table-actions > * {
+    justify-content: center;
+  }
+  #view-counselor .counselor-profile-header-actions,
+  #view-counselor .counselor-profile-header-actions button {
+    width: 100% !important;
+  }
+
+  /* 5d. Touch-friendly: input/select/textarea tối thiểu 44px */
+  .form-input,
+  .input,
+  input[type='text'],
+  input[type='email'],
+  input[type='password'],
+  input[type='search'],
+  input[type='number'],
+  input[type='date'],
+  select,
+  textarea {
+    min-height: 44px;
+  }
+
+  .btn,
+  .btn-primary,
+  .btn-outline,
+  .btn-secondary {
+    min-height: 44px;
+  }
+
+  /* Nút trong bảng/dòng dữ liệu giữ compact (không phá mật độ) */
+  table .btn,
+  table button,
+  [role='tab'] {
+    min-height: 36px;
+  }
+
+  /* 5e. Tabs: cuộn ngang trong phạm vi chính nó, không đẩy trang */
+  .page-tabs,
+  [role='tablist'] {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+  #view-history .history-page-tabs {
+    display: flex;
+  }
+  #view-history .history-page-tab {
+    flex: 1;
+    justify-content: center;
+    padding: 8px 7px;
+    font-size: 12px;
+  }
+
+  /* 5f. Thu gom rác khoảng trắng cho khung nhỏ */
+  #view-dashboard,
+  #view-counselor > *,
+  #view-enterprise > * {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+}

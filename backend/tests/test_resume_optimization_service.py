@@ -38,6 +38,22 @@ def _analysis(suggestion: dict | None = None) -> dict:
 
 
 @pytest.mark.asyncio
+async def test_optimizer_fails_closed_for_placeholder_cv():
+    result = await service.optimize_resume_for_jd(
+        cv_text="fff\nff",
+        parsed_cv={"summary": "fff", "skills": [], "experience": [], "projects": [], "education": []},
+        jd_title="DevOps Engineer",
+        jd_text="Docker, Kubernetes, CI/CD and Linux required",
+        parsed_jd={},
+        analysis=_analysis(),
+    )
+    assert result["status"] == "insufficient_evidence"
+    assert result["changes"] == []
+    assert result["project_blueprint"] is None
+    assert "placeholder" in result["warnings"][0]
+
+
+@pytest.mark.asyncio
 async def test_optimizer_returns_full_evidence_checked_fallback(monkeypatch):
     monkeypatch.setattr(service, "get_settings", lambda: SimpleNamespace(google_genai_api_key=""))
     result = await service.optimize_resume_for_jd(
