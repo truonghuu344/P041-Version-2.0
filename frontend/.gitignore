@@ -5,3 +5,4 @@ npm-debug.log*
 # Next.js generated types
 next-env.d.ts
 frontend/next-env.d.ts
+.vercel
