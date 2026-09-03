@@ -15,12 +15,18 @@ def test_cv_variant_wizard_covers_both_modes_and_full_publish_journey():
         "autosave",
         "Chấp nhận",
         "Từ chối",
-        "Preview PDF",
         "Publish phiên bản",
         "Lịch sử revision",
-        "Tải PDF",
     ):
         assert contract in WIZARD
+
+    # Xem trước và tải PDF: khẳng định vào HÀM XỬ LÝ, không vào nhãn nút.
+    # Hai nhãn cũ "Preview PDF" và "Tải PDF" đã được Việt hoá thành "Xem trước
+    # PDF" và "Tải CV (PDF)"; test gãy suốt dù hành vi không đổi một chút nào.
+    # Nhãn hiển thị còn đổi nữa, hàm xử lý thì không.
+    assert "handlePreviewAndDownload" in WIZARD
+    assert "handlePreviewAndDownload(false)" in WIZARD  # xem trước, không tải
+    assert "handlePreviewAndDownload(true)" in WIZARD  # publish rồi tải về
 
 
 def test_typed_v2_client_exposes_complete_api_surface_without_legacy_dom_logic():
