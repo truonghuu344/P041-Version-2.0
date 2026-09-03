@@ -1659,8 +1659,8 @@ export default function CVVariantWizard() {
                 className="cv-variant-preview-btn"
                 onClick={() => void handlePreviewAndDownload(false)}
                 disabled={Boolean(busy)}
-                title="Xem trước bản in PDF (không tải file về máy)"
-              >
+                title="Preview PDF: Xem trước bản in PDF (không tải file về máy)"
+                >
                 <Eye size={18} /> {busy === 'preview' ? 'Đang xem trước…' : 'Xem trước PDF'}
               </button>
               <button
@@ -1668,8 +1668,8 @@ export default function CVVariantWizard() {
                 className="cv-variant-preview-download-btn"
                 onClick={() => void handlePreviewAndDownload(true)}
                 disabled={Boolean(busy)}
-                title="Kiểm định đạt chuẩn ATS, publish và tải file PDF về máy"
-              >
+                title="Tải PDF: Kiểm định đạt chuẩn ATS, publish và tải file PDF về máy"
+                >
                 <Download size={18} /> {busy === 'download' ? 'Đang tải CV…' : 'Tải CV (PDF)'}
               </button>
               {validation && !validation.passed && (
