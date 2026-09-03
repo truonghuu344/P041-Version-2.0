@@ -27,6 +27,7 @@ class _FakeSettings:
         self.elevenlabs_model = "eleven_flash_v2_5"
         self.elevenlabs_voice_id_female = "voice-female"
         self.elevenlabs_voice_id_male = "voice-male"
+        self.elevenlabs_voice_gender = "female"
         self.elevenlabs_timeout_seconds = timeout
 
 
@@ -97,6 +98,35 @@ async def test_male_gender_selects_male_voice(settings, monkeypatch):
     await tts_service.synthesize("Xin chào", language="vi", gender="male")
 
     assert calls[0]["voice_id"] == "voice-male"
+
+
+async def test_gender_falls_back_to_configured_voice(settings, monkeypatch):
+    """Không truyền gender thì phải theo ELEVENLABS_VOICE_GENDER.
+
+    Đây là bug đã có thật: ws_interview gọi synthesize_base64(text, language)
+    mà không truyền gender, còn tham số lại mặc định cứng "female" — nên
+    `elevenlabs_voice_id_male` không có đường nào tới được và biến cấu hình
+    không có tác dụng. Hỏng im lặng: không lỗi, chỉ là luôn sai giọng.
+    """
+    settings["value"].elevenlabs_voice_gender = "male"
+    calls: list[dict] = []
+    _install_elevenlabs(monkeypatch, ELEVEN_MP3, calls)
+
+    # Gọi ĐÚNG như ws_interview gọi: chỉ text + language.
+    await tts_service.synthesize_base64("Xin chào", "vi")
+
+    assert calls[0]["voice_id"] == "voice-male"
+
+
+async def test_explicit_gender_overrides_config(settings, monkeypatch):
+    """Truyền tường minh vẫn phải thắng cấu hình, để test ép được giọng."""
+    settings["value"].elevenlabs_voice_gender = "male"
+    calls: list[dict] = []
+    _install_elevenlabs(monkeypatch, ELEVEN_MP3, calls)
+
+    await tts_service.synthesize("Xin chào", language="vi", gender="female")
+
+    assert calls[0]["voice_id"] == "voice-female"
 
 
 async def test_generator_chunks_are_joined(settings, monkeypatch):

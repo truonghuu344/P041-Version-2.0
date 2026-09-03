@@ -108,6 +108,10 @@ class Settings(BaseSettings):
     elevenlabs_model: str = "eleven_flash_v2_5"
     elevenlabs_voice_id_female: str = "EXAVITQu4vr4xnSDxMaL"
     elevenlabs_voice_id_male: str = "JBFqnCBsd6RMkjVDRZzb"
+    # Chọn giọng nào trong hai ID trên. Trước đây không có biến này nên
+    # `elevenlabs_voice_id_male` không có đường nào tới được: ws_interview
+    # gọi TTS mà không truyền gender, tham số luôn rơi về "female".
+    elevenlabs_voice_gender: Literal["female", "male"] = "female"
     elevenlabs_timeout_seconds: float = Field(default=15, ge=3, le=60)
 
     # Database

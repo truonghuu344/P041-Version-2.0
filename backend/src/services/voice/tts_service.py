@@ -68,13 +68,20 @@ def _synthesize_gtts_sync(text: str, language: str) -> bytes:
 async def synthesize(
     text: str,
     language: str = "vi",
-    gender: str = "female",
+    gender: str | None = None,
 ) -> bytes:
-    """Prefer ElevenLabs and fall back to gTTS for MP3 speech."""
+    """Prefer ElevenLabs and fall back to gTTS for MP3 speech.
+
+    `gender=None` nghĩa là theo cấu hình deployment (`ELEVENLABS_VOICE_GENDER`);
+    truyền tường minh để ép trong test. Caller chính là ws_interview không truyền
+    gender, nên nếu mặc định cứng ở đây thì biến cấu hình sẽ không bao giờ có
+    tác dụng.
+    """
     if not text or not text.strip():
         return b""
 
     settings = get_settings()
+    gender = gender or settings.elevenlabs_voice_gender
     if settings.elevenlabs_api_key:
         try:
             audio = await asyncio.wait_for(
@@ -105,7 +112,7 @@ async def synthesize(
 async def synthesize_base64(
     text: str,
     language: str = "vi",
-    gender: str = "female",
+    gender: str | None = None,
 ) -> str:
     """Return synthesized audio as base64."""
     audio = await synthesize(text, language, gender)
