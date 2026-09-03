@@ -412,3 +412,36 @@ def test_jd_list_inflight_is_declared_before_jobs_tab_bootstrap():
         "khai báo `let loadPageJDListInFlight` phải đứng trước khối bootstrap "
         "/student/jobs, nếu không trang sẽ ném ReferenceError lúc khởi tạo"
     )
+
+
+def test_check_user_session_does_not_reset_view_chosen_from_url():
+    """checkUserSession() không được ép view về role home vô điều kiện.
+
+    Phần khởi tạo app.js đặt view theo URL bằng
+    `switchView(initialResolvedView, { skipUrlSync: true })`, rồi gọi ngay
+    checkUserSession(). Nếu hàm này gọi switchToRoleHome() vô điều kiện thì view
+    vừa đặt bị vứt bỏ và pushState ghi URL về /student — mọi deep link, mọi lần
+    F5 hay mở bookmark ở trang con đều bị đá về trang chủ.
+
+    Trường hợp thật sự cần chuyển hướng (view hiện tại không hợp vai trò) đã có
+    guard `if (!canAccessView(currentViewName, user))` ngay bên dưới lo.
+    """
+    start = APP_JS.find("function checkUserSession()")
+    assert start != -1, "không tìm thấy checkUserSession"
+
+    guard = APP_JS.find("if (!canAccessView(currentViewName, user))", start)
+    assert guard != -1, "không tìm thấy guard canAccessView trong checkUserSession"
+
+    # Bỏ dòng comment trước khi kiểm tra: phần giải thích vì sao KHÔNG được gọi
+    # switchToRoleHome() ở đây có nhắc chính tên hàm đó.
+    code_lines = [
+        line
+        for line in APP_JS[start:guard].splitlines()
+        if not line.lstrip().startswith("//")
+    ]
+    between = "\n".join(code_lines)
+
+    assert "switchToRoleHome()" not in between, (
+        "checkUserSession() gọi switchToRoleHome() trước guard canAccessView — "
+        "việc này vứt bỏ view đã đặt theo URL và làm hỏng mọi deep link"
+    )
