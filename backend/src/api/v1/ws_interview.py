@@ -311,7 +311,13 @@ class VoiceInterviewSession:
         db.add(q_obj)
         self._recorded_questions += 1
         session.current_question_index = self._recorded_questions
-        await db.flush()
+        # COMMIT chứ không flush: flush chỉ ghi vào transaction đang mở, nên cả
+        # buổi phỏng vấn treo lơ lửng cho tới lúc run() kết thúc. Backend restart
+        # hay mất kết nối đột ngột giữa chừng là mất SẠCH buổi phỏng vấn chứ
+        # không phải mất một lượt. Quan sát thật: một phiên đang mở query ra 0
+        # câu, đóng tab xong mới hiện đủ 4 câu.
+        # An toàn vì AsyncSessionLocal đặt expire_on_commit=False.
+        await db.commit()
         return q_obj
 
     async def _send_ai_message(self, result: dict[str, Any], language: str) -> None:
