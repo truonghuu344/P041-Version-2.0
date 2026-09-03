@@ -80,7 +80,13 @@ async def test_voice_mode_creates_no_pregenerated_questions(
 
 @pytest.mark.asyncio
 async def test_text_mode_still_pregenerates_questions(client, spy_question_generator):
-    """Không được sửa nhầm luồng text — nó vẫn phải sinh sẵn như cũ."""
+    """Không được sửa nhầm luồng text — nó vẫn phải có sẵn bộ câu hỏi.
+
+    Chỉ khẳng định KẾT QUẢ (có đủ hàng câu hỏi, có câu đầu tiên để trả về), không
+    khẳng định luồng text lấy câu từ đâu. Nguồn câu hỏi đã đổi một lần rồi — từ
+    `generate_interview_questions` sang agenda tái dùng theo cặp CV/JD snapshot —
+    và test bám vào cơ chế thì gãy dù hành vi vẫn đúng.
+    """
     _user, headers = await register_and_login(client, email="text-mode@example.com")
     cv = await insert_cv(email="text-mode@example.com")
     jd = await insert_jd(is_system=True)
@@ -88,8 +94,7 @@ async def test_text_mode_still_pregenerates_questions(client, spy_question_gener
     data = await _start(client, headers, cv, jd)
 
     assert await _count_questions(data["session_id"]) == 3
-    assert spy_question_generator == [3]
-    assert data["question_text"] == "Câu hỏi 1?"
+    assert data["question_text"].strip(), "luồng text phải trả về câu hỏi đầu tiên"
 
 
 @pytest.mark.asyncio

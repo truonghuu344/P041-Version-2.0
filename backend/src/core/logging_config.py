@@ -4,9 +4,17 @@ import os
 import re
 import sys
 import traceback
+from logging.handlers import RotatingFileHandler
+from pathlib import Path
 from typing import Any
 
 from src.config import Settings
+
+# Handler file dùng formatter phẳng, không dùng ColoredFormatter: mã màu ANSI
+# ghi vào file chỉ làm rác, và `scripts/collect_diagnostics.py` phải đọc lại được.
+FILE_LOG_FORMAT = "%(asctime)s %(levelname)-8s %(name)s: %(message)s"
+LOG_FILE_MAX_BYTES = 5 * 1024 * 1024
+LOG_FILE_BACKUPS = 3
 
 SENSITIVE_KEYS = {
     "password",
@@ -147,6 +155,39 @@ class ColoredFormatter(logging.Formatter):
         return formatted
 
 
+def _attach_file_handler(root_logger: logging.Logger, level: int) -> Path | None:
+    """Ghi log ra file, trả về đường dẫn (None nếu không ghi được).
+
+    Chạy native thì log chỉ hiện trên terminal rồi mất, nên sau khi một phiên
+    phỏng vấn kết thúc là không còn gì để chẩn đoán. `scripts/collect_diagnostics.py`
+    đọc chính file này để gom báo cáo.
+
+    Thư mục lấy theo cwd (chạy native là gốc dự án, trong Docker là /app), ghi đè
+    được bằng LOG_DIR. Dựng logging KHÔNG được làm chết ứng dụng, nên mọi lỗi ở
+    đây chỉ hạ cấp xuống "chỉ log ra console".
+    """
+    if any(isinstance(h, RotatingFileHandler) for h in root_logger.handlers):
+        return None  # uvicorn --reload nạp lại module, đừng gắn trùng handler
+
+    try:
+        log_dir = Path(os.getenv("LOG_DIR") or (Path.cwd() / "logs"))
+        log_dir.mkdir(parents=True, exist_ok=True)
+        log_path = log_dir / "backend.log"
+        handler = RotatingFileHandler(
+            log_path,
+            maxBytes=LOG_FILE_MAX_BYTES,
+            backupCount=LOG_FILE_BACKUPS,
+            encoding="utf-8",
+        )
+        handler.setLevel(level)
+        handler.setFormatter(logging.Formatter(FILE_LOG_FORMAT))
+        root_logger.addHandler(handler)
+        return log_path
+    except OSError as exc:
+        root_logger.warning("Không ghi được log ra file (%s); chỉ log ra console.", exc)
+        return None
+
+
 def setup_logging(app_env: str = "development", log_level_str: str = "INFO") -> logging.Logger:
     """Configure standardized application-wide logging."""
     level = getattr(logging, log_level_str.upper(), logging.INFO)
@@ -164,6 +205,10 @@ def setup_logging(app_env: str = "development", log_level_str: str = "INFO") -> 
     else:
         for handler in root_logger.handlers:
             handler.setLevel(level)
+
+    log_path = _attach_file_handler(root_logger, level)
+    if log_path:
+        root_logger.info("Ghi log ra file: %s", log_path)
 
     # Silence overly verbose external loggers
     logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
