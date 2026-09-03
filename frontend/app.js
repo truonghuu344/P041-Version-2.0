@@ -11332,7 +11332,11 @@ TÊN CÔNG TY:
 
     if (user) {
       applyRoleAccess(user);
-      switchToRoleHome();
+      // KHONG switchToRoleHome() o day. Ham nay chay ngay sau khi phan khoi tao
+      // da dat dung view theo URL (switchView(initialResolvedView, {skipUrlSync:true})),
+      // nen goi vo dieu kien la vut bo view vua dat va pushState URL ve /student
+      // — moi deep link, moi lan F5 hay mo bookmark deu bi da ve trang chu.
+      // Truong hop "view hien tai khong hop vai tro" da duoc guard ngay ben duoi lo.
       if (userNameEl) userNameEl.textContent = user.full_name || user.email;
       if (userRoleEl) userRoleEl.textContent = `Vai trò: ${user.role.toUpperCase()}`;
       if (!canAccessView(currentViewName, user)) {
