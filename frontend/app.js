@@ -2895,27 +2895,74 @@ function startAppLogic() {
   }
 
   let selectedCatalogJobSourceId = null;
+  const catalogJDSelectionCache = new Map();
+  const catalogJDSelectionInFlight = new Map();
+
+  function markTargetJobSelected(sourceId) {
+    selectedCatalogJobSourceId = String(sourceId);
+    document.querySelectorAll('[data-target-job]').forEach(card => {
+      const isThis = card.dataset.targetJob === String(sourceId);
+      card.classList.toggle('is-selected', isThis);
+      card.setAttribute('aria-pressed', String(isThis));
+    });
+  }
+
+  async function resolveCatalogJD(sourceId) {
+    const key = String(sourceId);
+    if (catalogJDSelectionCache.has(key)) return catalogJDSelectionCache.get(key);
+    if (!catalogJDSelectionInFlight.has(key)) {
+      catalogJDSelectionInFlight.set(key, ApiClient.selectCatalogJD(key)
+        .then(jd => {
+          catalogJDSelectionCache.set(key, jd);
+          return jd;
+        })
+        .finally(() => catalogJDSelectionInFlight.delete(key)));
+    }
+    return catalogJDSelectionInFlight.get(key);
+  }
+
+  // Keep the current CV selection intact while a catalog JD is imported.  The
+  // previous implementation rebuilt all JD options after this request, making
+  // the matching form race with the background CV list refresh.
+  function applyResolvedCatalogJD(sourceId, selectedJD) {
+    if (!cvAnalysisJdSelect || !selectedJD?.id) return;
+    const jdId = String(selectedJD.id);
+    const catalogValue = `catalog:${sourceId}`;
+    const selectedOption = [...cvAnalysisJdSelect.options]
+      .find(option => option.value === catalogValue);
+    if (selectedOption) {
+      selectedOption.value = jdId;
+    } else if (![...cvAnalysisJdSelect.options].some(option => option.value === jdId)) {
+      const catalogJob = targetJobCatalog.find(job => String(job.source_id) === String(sourceId));
+      const option = document.createElement('option');
+      option.value = jdId;
+      option.textContent = catalogJob
+        ? `${catalogJob.title} · ${catalogJob.company || 'Doanh nghiệp'}`
+        : (selectedJD.title || 'JD đã chọn');
+      cvAnalysisJdSelect.appendChild(option);
+    }
+    cvAnalysisJdSelect.value = jdId;
+    localStorage.setItem('latest_matched_jd_id', jdId);
+    sessionStorage.setItem('career-preselected-jd-id', jdId);
+    updateCVJDSelectionHint();
+    enhanceGapSelect(cvAnalysisJdSelect);
+    window.updateP1UI?.();
+  }
 
   async function chooseTargetCatalogJob(sourceId) {
     if (!sourceId || !cvAnalysisJdSelect) return;
-    selectedCatalogJobSourceId = String(sourceId);
-    const selected = targetJobCatalog.find(job => String(job.source_id) === String(sourceId));
+    markTargetJobSelected(sourceId);
+    const selectedCvId = cvAnalysisCvSelect?.value || '';
+    if (cvSelectedJdHint) {
+      cvSelectedJdHint.textContent = 'Đang chuẩn bị JD đã chọn...';
+      cvSelectedJdHint.classList.add('is-selected');
+    }
     try {
-      cvAnalysisJdSelect.disabled = true;
-      const selectedJD = await ApiClient.selectCatalogJD(sourceId);
-      localStorage.setItem('latest_matched_jd_id', selectedJD.id);
-      sessionStorage.setItem('career-preselected-jd-id', selectedJD.id);
-      await loadCVJDOptions(selectedJD.id);
-      document.querySelectorAll('[data-target-job]').forEach(card => {
-        const isThis = card.dataset.targetJob === String(sourceId);
-        card.classList.toggle('is-selected', isThis);
-        card.setAttribute('aria-pressed', String(isThis));
-      });
-      window.updateP1UI?.();
+      const selectedJD = await resolveCatalogJD(sourceId);
+      applyResolvedCatalogJD(sourceId, selectedJD);
+      if (selectedCvId && cvAnalysisCvSelect) cvAnalysisCvSelect.value = selectedCvId;
     } catch (err) {
       showToast(`Không thể chọn công việc: ${err.message}`, 'error');
-    } finally {
-      cvAnalysisJdSelect.disabled = false;
     }
   }
 
@@ -2931,23 +2978,19 @@ function startAppLogic() {
     }
 
     const sourceId = value.slice('catalog:'.length);
-    cvAnalysisJdSelect.disabled = true;
+    const selectedCvId = cvAnalysisCvSelect?.value || '';
     if (cvSelectedJdHint) {
-      cvSelectedJdHint.textContent = 'Đang nạp JD doanh nghiệp từ data/jds...';
+      cvSelectedJdHint.textContent = 'Đang chuẩn bị JD đã chọn...';
       cvSelectedJdHint?.classList.add('is-selected');
     }
     try {
-      const selectedJD = await ApiClient.selectCatalogJD(sourceId);
-      localStorage.setItem('latest_matched_jd_id', selectedJD.id);
-      sessionStorage.setItem('career-preselected-jd-id', selectedJD.id);
-      await loadCVJDOptions(selectedJD.id);
-
+      const selectedJD = await resolveCatalogJD(sourceId);
+      applyResolvedCatalogJD(sourceId, selectedJD);
+      if (selectedCvId && cvAnalysisCvSelect) cvAnalysisCvSelect.value = selectedCvId;
     } catch (err) {
       cvAnalysisJdSelect.value = '';
       updateCVJDSelectionHint();
       showToast(`❌ Không thể chọn JD trong data: ${err.message}`, 'error');
-    } finally {
-      cvAnalysisJdSelect.disabled = false;
     }
   }
 
@@ -4852,7 +4895,9 @@ function startAppLogic() {
 
   // Load saved CVs into the analysis selector.
   let loadSpaceshipCVListInFlight = null;
+  let requestedCVSelectionId = '';
   async function loadSpaceshipCVList(preferredCvId = '') {
+    if (preferredCvId) requestedCVSelectionId = String(preferredCvId);
     if (loadSpaceshipCVListInFlight) return loadSpaceshipCVListInFlight;
     loadSpaceshipCVListInFlight = (async () => {
       const tableBody = document.getElementById('career-cv-table-body') || careerCVTableBody;
@@ -4876,7 +4921,6 @@ function startAppLogic() {
         return;
       }
 
-      const previousValue = preferredCvId || (cvSelect ? cvSelect.value : '');
       try {
         const cvGate = document.getElementById('p1-cv-login-gate');
         if (cvGate) cvGate.style.display = 'none';
@@ -4884,13 +4928,19 @@ function startAppLogic() {
         if (cvSec) cvSec.style.display = 'block';
         loadedCVs = await ApiClient.listCVs();
         if (cvSelect) {
+          // Read the selector again after the request finishes. A candidate may
+          // have selected/uploaded a CV while this background request was in
+          // flight; using the value captured before await would clear it.
+          const currentValue = cvSelect.value;
+          const preferredValue = requestedCVSelectionId || currentValue;
           cvSelect.disabled = false;
           cvSelect.innerHTML = [
             '<option value="">Chọn một CV đã lưu</option>',
             ...(loadedCVs || []).map(cv => `<option value="${escapeHtml(cv.id)}">${escapeHtml(cv.title || cv.file_name || 'CV Hồ sơ')}</option>`),
           ].join('');
-          if ([...cvSelect.options].some(option => option.value === previousValue)) {
-            cvSelect.value = previousValue;
+          if ([...cvSelect.options].some(option => option.value === preferredValue)) {
+            cvSelect.value = preferredValue;
+            requestedCVSelectionId = '';
           }
           const preselectedCVId = window.sessionStorage.getItem('career-preselected-cv-id');
           if (preselectedCVId && [...cvSelect.options].some(option => option.value === preselectedCVId)) {
