@@ -8914,16 +8914,30 @@ TÊN CÔNG TY:
     const localBackend = location.protocol === 'http:' && ['localhost', '127.0.0.1'].includes(location.hostname)
       ? 'http://localhost:8000'
       : '';
-    const backendBaseUrl = configuredBackend || localBackend;
+    const runtimeWsBackend = window.__CAREER_WS_HOST__ ? `https://${window.__CAREER_WS_HOST__}` : '';
+    let runtimeApiBackend = '';
+    try {
+      runtimeApiBackend = window.__CAREER_API_BASE_URL__
+        ? new URL(window.__CAREER_API_BASE_URL__).origin
+        : '';
+    } catch (_err) { /* Invalid runtime API URL; use other configured sources. */ }
+    const backendBaseUrl = configuredBackend || runtimeWsBackend || runtimeApiBackend || localBackend;
+    const showVoiceConnectionFailure = (message) => {
+      stopVoiceTimer();
+      if (pageChatHistory) {
+        pageChatHistory.innerHTML = `<div class="interview-message interview-message-ai"><strong>Career Buddy</strong><p>${escapeHtml(message)}</p></div>`;
+      }
+      showToast(message, 'error');
+    };
     if (!backendBaseUrl) {
-      showToast('Voice chưa được cấu hình trên môi trường này. Hãy đặt NEXT_PUBLIC_VOICE_WS_URL.', 'error');
+      showVoiceConnectionFailure('Voice chưa được cấu hình trên môi trường này. Vui lòng thử lại sau.');
       return;
     }
     let backendUrl;
     try {
       backendUrl = new URL(backendBaseUrl);
     } catch (_err) {
-      showToast('URL Voice backend không hợp lệ. Hãy kiểm tra NEXT_PUBLIC_VOICE_WS_URL.', 'error');
+      showVoiceConnectionFailure('Không thể xác định máy chủ Voice. Vui lòng thử lại sau.');
       return;
     }
     const wsProto = ['https:', 'wss:'].includes(backendUrl.protocol) ? 'wss:' : 'ws:';
@@ -8931,6 +8945,14 @@ TÊN CÔNG TY:
 
     if (voiceWs) { voiceWs.close(); voiceWs = null; }
     voiceWs = new WebSocket(wsUrl);
+    let receivedFirstVoiceMessage = false;
+    let connectionFailed = false;
+    const connectionTimer = window.setTimeout(() => {
+      if (receivedFirstVoiceMessage || connectionFailed) return;
+      connectionFailed = true;
+      voiceWs?.close();
+      showVoiceConnectionFailure('Kết nối Voice mất quá lâu. Hãy thử lại sau vài giây.');
+    }, 15000);
     voiceTranscriptParts = [];
     voiceConversationHistory = [];
     startVoiceTimer();
@@ -8940,10 +8962,25 @@ TÊN CÔNG TY:
     voiceWs.onmessage = (event) => {
       let msg;
       try { msg = JSON.parse(event.data); } catch { return; }
+      receivedFirstVoiceMessage = true;
+      window.clearTimeout(connectionTimer);
       handleVoiceMessage(msg, language);
     };
-    voiceWs.onerror = () => showToast('Lỗi kết nối voice interview.', 'error');
-    voiceWs.onclose = () => { stopVoiceTimer(); voiceWs = null; };
+    voiceWs.onerror = () => {
+      if (connectionFailed) return;
+      connectionFailed = true;
+      window.clearTimeout(connectionTimer);
+      showVoiceConnectionFailure('Không thể kết nối Voice Interview. Hãy thử lại sau vài giây.');
+    };
+    voiceWs.onclose = () => {
+      window.clearTimeout(connectionTimer);
+      if (!receivedFirstVoiceMessage && !connectionFailed) {
+        connectionFailed = true;
+        showVoiceConnectionFailure('Kết nối Voice đã đóng trước khi có câu hỏi đầu tiên. Hãy thử lại.');
+      }
+      stopVoiceTimer();
+      voiceWs = null;
+    };
   }
 
   function handleVoiceMessage(msg, language) {
