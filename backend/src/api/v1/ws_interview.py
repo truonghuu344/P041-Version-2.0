@@ -217,7 +217,13 @@ class VoiceInterviewSession:
                 )
                 db.add(q_obj)
                 session.current_question_index = q_index + 1
-                await db.flush()
+                # COMMIT chứ không flush: flush chỉ ghi vào transaction đang mở,
+                # nên cả buổi phỏng vấn treo lơ lửng cho tới lúc `run()` kết thúc.
+                # Backend restart hay mất kết nối đột ngột giữa chừng là mất SẠCH
+                # buổi phỏng vấn, không phải mất một lượt. Chốt từng lượt thì tệ
+                # nhất cũng chỉ mất lượt đang dở.
+                # An toàn vì AsyncSessionLocal đặt expire_on_commit=False.
+                await db.commit()
 
                 if result["is_complete"]:
                     await self._complete_session(db, session)
