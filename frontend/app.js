@@ -8340,48 +8340,84 @@ TÊN CÔNG TY:
   });
 
   let populatePageInterviewOptionsInFlight = null;
+  let requestedInterviewCvId = '';
+  let requestedInterviewJdId = '';
   async function populatePageInterviewOptions(preferredCvId = '', preferredJdId = '') {
+    if (preferredCvId) requestedInterviewCvId = String(preferredCvId);
+    if (preferredJdId) requestedInterviewJdId = String(preferredJdId);
     if (populatePageInterviewOptionsInFlight) return populatePageInterviewOptionsInFlight;
     populatePageInterviewOptionsInFlight = (async () => {
-      if (!pageSelectIntCv || !pageSelectIntJd) return;
-      try {
-        const cvsPromise = ApiClient.listCVs();
-        await loadJDOptions(pageSelectIntJd, {
+      // React can remount this view when navigating between menu items. Resolve
+      // the live controls here instead of relying only on references captured
+      // while the dashboard was mounted.
+      const cvSelect = document.getElementById('page-interview-select-cv');
+      const jdSelect = document.getElementById('page-interview-select-jd');
+      if (!cvSelect || !jdSelect) return;
+
+      const preferredCv = requestedInterviewCvId || cvSelect.value || window.sessionStorage.getItem('career-preselected-cv-id') || '';
+      const preferredJd = requestedInterviewJdId || jdSelect.value || window.sessionStorage.getItem('career-preselected-jd-id') || '';
+      const [cvsResult, jdsResult] = await Promise.allSettled([
+        ApiClient.listCVs(),
+        loadJDOptions(jdSelect, {
           includeCatalog: true,
           groupBySource: true,
           dedupe: true,
-          preferredId: preferredJdId,
+          preferredId: preferredJd,
           separator: ' • ',
           emptyLabel: 'Chọn một JD để phỏng vấn thử',
           emptyStateLabel: 'Chưa có JD — hãy chọn hoặc tạo JD',
           catalogLabel: count => `JD TỪ VIỆC LÀM GỢI Ý (${count})`,
           savedLabel: 'JD ĐÃ LƯU HOẶC HỆ THỐNG',
-        });
-        const cvs = await cvsPromise;
-        pageSelectIntCv.innerHTML = buildCvOptions(cvs, {
+        }),
+      ]);
+
+      // Do not let a slow or unavailable JD catalog hide the user's CVs (or
+      // vice versa). Each selector is useful independently and can recover on
+      // the next navigation/backend-ready event.
+      if (cvsResult.status === 'fulfilled') {
+        const cvs = cvsResult.value || [];
+        cvSelect.innerHTML = buildCvOptions(cvs, {
           emptyOption: '<option value="" disabled selected>Chưa có CV — bấm "Tải CV mới" để bắt đầu</option>',
         });
-
-        if (preferredCvId && cvs.some(c => c.id === preferredCvId)) {
-          pageSelectIntCv.value = preferredCvId;
+        if (preferredCv && cvs.some(c => String(c.id) === String(preferredCv))) {
+          cvSelect.value = String(preferredCv);
+          requestedInterviewCvId = '';
+          if (window.sessionStorage.getItem('career-preselected-cv-id') === String(preferredCv)) {
+            window.sessionStorage.removeItem('career-preselected-cv-id');
+          }
         }
-        enhanceGapSelect(pageSelectIntCv);
-        enhanceGapSelect(pageSelectIntJd);
-        await ApiClient.listInterviews();
-        await checkInterviewAgenda();
-      } catch (err) {
-        showToast(`Lỗi lấy dữ liệu CV/JD: ${err.message}`, 'error');
       }
+
+      if (jdsResult.status === 'fulfilled') {
+        if (preferredJd && [...jdSelect.options].some(option => option.value === String(preferredJd))) {
+          jdSelect.value = String(preferredJd);
+          requestedInterviewJdId = '';
+          if (window.sessionStorage.getItem('career-preselected-jd-id') === String(preferredJd)) {
+            window.sessionStorage.removeItem('career-preselected-jd-id');
+          }
+        }
+      }
+
+      enhanceGapSelect(cvSelect);
+      enhanceGapSelect(jdSelect);
+      wireCatalogJDResolver(jdSelect, async newJdId => {
+        await populatePageInterviewOptions('', newJdId);
+      });
+
+      if (cvsResult.status === 'rejected' || jdsResult.status === 'rejected') {
+        const error = cvsResult.status === 'rejected' ? cvsResult.reason : jdsResult.reason;
+        showToast(`Một phần dữ liệu phỏng vấn chưa tải được: ${error?.message || 'Vui lòng thử lại.'}`, 'warning');
+      }
+
+      // The interview history must never prevent the CV/JD selectors from
+      // appearing. It is only supplementary information for the agenda.
+      void ApiClient.listInterviews().catch(() => undefined);
+      await checkInterviewAgenda();
     })().finally(() => {
       populatePageInterviewOptionsInFlight = null;
     });
     return populatePageInterviewOptionsInFlight;
   }
-
-  wireCatalogJDResolver(pageSelectIntJd, async newJdId => {
-    await populatePageInterviewOptions('', newJdId);
-
-  });
 
   if (pageBtnStartInt) {
     pageBtnStartInt?.addEventListener('click', async () => {
