@@ -459,8 +459,19 @@ export class ApiClient {
   }
 
   static async getMe() {
+    // The first render waits for this request before replacing the neutral
+    // bootstrap loader. A cold or unreachable backend must not leave the
+    // whole UI stuck on that loader indefinitely.
+    const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const timeoutId = controller
+      ? setTimeout(() => controller.abort(), 12000)
+      : null;
     try {
-      const user = await this.request('/auth/me', { silent: true });
+      const user = await this.request('/auth/me', {
+        silent: true,
+        noCache: true,
+        ...(controller ? { signal: controller.signal } : {}),
+      });
       if (user) {
         this.setUser(user);
       }
@@ -472,6 +483,8 @@ export class ApiClient {
         return null;
       }
       throw err;
+    } finally {
+      if (timeoutId) clearTimeout(timeoutId);
     }
   }
 
