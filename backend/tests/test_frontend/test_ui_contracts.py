@@ -389,3 +389,26 @@ def test_interview_timeout_ends_session_instead_of_submitting_empty_answer():
     # Câu đang dở vẫn phải được gửi trước khi kết thúc, nếu không là mất câu cuối.
     assert "pendingAnswer" in timeout_block
     assert "stopVoiceTimer();" in timeout_block
+
+
+def test_jd_list_inflight_is_declared_before_jobs_tab_bootstrap():
+    """Khai báo `let` phải đứng TRƯỚC chỗ gọi, nếu không vào /student/jobs là sập.
+
+    Khối bootstrap ở cuối app.js gọi renderStudentJobsTab() ngay lúc khởi tạo
+    module khi pathname là /student/jobs. Chuỗi gọi dẫn tới loadPageJDList(),
+    hàm này đọc `loadPageJDListInFlight`.
+
+    `function` được hoisted, `let` thì không. Có lúc khai báo nằm SAU chỗ gọi 21
+    dòng, nên trang ném ReferenceError (temporal dead zone) và cắt đứt toàn bộ
+    phần khởi tạo còn lại của app.js — URL bật về /student, giao diện kẹt ở hero
+    mờ, không có thông báo lỗi nào cho người dùng.
+    """
+    declaration = APP_JS.find("let loadPageJDListInFlight")
+    bootstrap = APP_JS.find("window.location.pathname === '/student/jobs'")
+
+    assert declaration != -1, "không tìm thấy khai báo loadPageJDListInFlight"
+    assert bootstrap != -1, "không tìm thấy khối bootstrap của tab việc làm"
+    assert declaration < bootstrap, (
+        "khai báo `let loadPageJDListInFlight` phải đứng trước khối bootstrap "
+        "/student/jobs, nếu không trang sẽ ném ReferenceError lúc khởi tạo"
+    )

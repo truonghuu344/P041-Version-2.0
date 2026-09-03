@@ -7584,6 +7584,13 @@ TÊN CÔNG TY:
     })[String(status || '').toLowerCase()] || 'Đang xử lý';
   }
 
+  // PHAI khai bao truoc renderStudentJobsTab: khi vao thang /student/jobs, khoi
+  // lenh o cuoi file goi renderStudentJobsTab() ngay luc khoi tao module ->
+  // loadPageJDList() -> doc bien nay. Khai bao `let` khong duoc hoisted nhu
+  // `function`, nen de o duoi la nem ReferenceError (temporal dead zone) va cat
+  // dut toan bo phan khoi tao con lai cua app.js.
+  let loadPageJDListInFlight = null;
+
   async function renderStudentJobsTab(tab) {
     const list = document.getElementById('student-applications-list');
     const panel = document.getElementById('student-applications-panel');
@@ -7645,7 +7652,6 @@ TÊN CÔNG TY:
     });
   }
 
-  let loadPageJDListInFlight = null;
   async function loadPageJDList() {
     if (loadPageJDListInFlight) return loadPageJDListInFlight;
     loadPageJDListInFlight = (async () => {
