@@ -374,3 +374,18 @@ def test_resume_optimizer_uses_long_running_proxy_and_reports_zero_safe_patches(
     assert "Vì sao các nội dung không được áp dụng?" in APP_JS
     assert "AI đã kiểm tra nhưng chưa có thay đổi nào đủ bằng chứng để áp dụng" in APP_JS
     assert "throw new Error('Không có nội dung nào đủ bằng chứng" not in APP_JS
+
+
+def test_interview_timeout_ends_session_instead_of_submitting_empty_answer():
+    """Hết 10 phút phải kết thúc phiên và ra báo cáo STAR, không được treo.
+
+    Bản cũ gửi 'submit_answer' rồi dừng đồng hồ. Nếu ứng viên chưa kịp nói gì thì
+    text rỗng, backend trả "Không nhận được câu trả lời." rồi tiếp tục chờ —
+    phiên treo vĩnh viễn ở 10:00 và không bao giờ có báo cáo. Đồng hồ đã dừng nên
+    cũng không thử lại lần nào nữa. Quan sát được trên giao diện thật.
+    """
+    timeout_block = APP_JS.split("elapsed >= MAX_INTERVIEW_MS")[1][:800]
+    assert "'end_session'" in timeout_block, "hết giờ phải gửi end_session"
+    # Câu đang dở vẫn phải được gửi trước khi kết thúc, nếu không là mất câu cuối.
+    assert "pendingAnswer" in timeout_block
+    assert "stopVoiceTimer();" in timeout_block

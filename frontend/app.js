@@ -9090,9 +9090,22 @@ TÊN CÔNG TY:
       const mins = Math.floor(elapsed / 60000);
       const secs = Math.floor((elapsed % 60000) / 1000);
       if (timerEl) timerEl.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')} / 10:00`;
-      if (elapsed >= MAX_INTERVIEW_MS && voiceWs) {
-        voiceWs.send(JSON.stringify({ type: 'submit_answer', text: voiceTranscriptParts.join(' ') || '' }));
+      if (elapsed >= MAX_INTERVIEW_MS && voiceWs?.readyState === WebSocket.OPEN) {
+        // Hết giờ phải KẾT THÚC phiên, không phải gửi thêm một lượt trả lời.
+        // Bản cũ gửi 'submit_answer' rồi dừng đồng hồ: nếu ứng viên chưa kịp nói
+        // gì thì backend trả "Không nhận được câu trả lời." và phiên treo vĩnh
+        // viễn, không bao giờ có báo cáo STAR — mà đồng hồ đã dừng nên cũng
+        // không thử lại lần nào nữa.
         stopVoiceTimer();
+        stopVoiceRecording();
+        const pendingAnswer = voiceTranscriptParts.join(' ').trim();
+        if (pendingAnswer) {
+          // Gửi nốt câu đang dở để không mất câu trả lời cuối; backend xử lý
+          // tuần tự nên 'end_session' phía sau vẫn chạy sau khi lượt này xong.
+          voiceWs.send(JSON.stringify({ type: 'submit_answer', text: pendingAnswer }));
+          voiceTranscriptParts = [];
+        }
+        voiceWs.send(JSON.stringify({ type: 'end_session' }));
       }
     }, 1000);
   }
