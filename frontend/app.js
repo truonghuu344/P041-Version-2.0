@@ -8921,7 +8921,11 @@ TÊN CÔNG TY:
         ? new URL(window.__CAREER_API_BASE_URL__).origin
         : '';
     } catch (_err) { /* Invalid runtime API URL; use other configured sources. */ }
-    const backendBaseUrl = configuredBackend || runtimeWsBackend || runtimeApiBackend || localBackend;
+    // Static Next deployments do not automatically execute public/api-config.js.
+    // Keep the known public backend as the final production fallback so the
+    // browser can still establish the direct WebSocket connection.
+    const productionVoiceBackend = 'https://p041-version-2-0.onrender.com';
+    const backendBaseUrl = configuredBackend || runtimeWsBackend || runtimeApiBackend || localBackend || productionVoiceBackend;
     const showVoiceConnectionFailure = (message) => {
       stopVoiceTimer();
       if (pageChatHistory) {
