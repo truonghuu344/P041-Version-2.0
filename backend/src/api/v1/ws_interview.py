@@ -190,15 +190,10 @@ class VoiceInterviewSession:
                 self._stop_silence_monitor()
 
             elif msg_type == "submit_answer":
-                user_text = msg.get("text") or " ".join(self._transcript_buffer)
-                if not user_text.strip():
+                user_text = await self._collect_answer(msg.get("text"))
+                if not user_text:
                     await _send_json(self.ws, {"type": "error", "message": "Không nhận được câu trả lời."})
                     continue
-
-                if self.stt_stream:
-                    await self.stt_stream.close()
-                    self.stt_stream = None
-                self._stop_silence_monitor()
 
                 await _send_json(self.ws, {"type": "ai_thinking"})
 
@@ -222,7 +217,13 @@ class VoiceInterviewSession:
                 )
                 db.add(q_obj)
                 session.current_question_index = q_index + 1
-                await db.flush()
+                # COMMIT chứ không flush: flush chỉ ghi vào transaction đang mở,
+                # nên cả buổi phỏng vấn treo lơ lửng cho tới lúc `run()` kết thúc.
+                # Backend restart hay mất kết nối đột ngột giữa chừng là mất SẠCH
+                # buổi phỏng vấn, không phải mất một lượt. Chốt từng lượt thì tệ
+                # nhất cũng chỉ mất lượt đang dở.
+                # An toàn vì AsyncSessionLocal đặt expire_on_commit=False.
+                await db.commit()
 
                 if result["is_complete"]:
                     await self._complete_session(db, session)
@@ -332,6 +333,31 @@ class VoiceInterviewSession:
             )
         )
         return result.scalar_one_or_none()
+
+    async def _collect_answer(self, client_text: str | None) -> str:
+        """Chốt câu trả lời của ứng viên, ĐÓNG luồng STT trước khi đọc transcript.
+
+        Thứ tự ở đây là bản chất chứ không phải chi tiết: `STTStream.close()`
+        chờ server chốt nốt các đoạn nói cuối (`_drain`), và những đoạn đó chỉ
+        rơi vào `_transcript_buffer` SAU khi close chạy xong. Đọc transcript
+        trước khi đóng là vứt mất phần ứng viên vừa nói — quan sát được trên
+        dữ liệu thật: câu trả lời cụt giữa chừng ở "…sau đó mình sẽ".
+
+        Bản của server đầy đủ hơn bản client gửi lên, vì client chỉ có những
+        `transcript_final` kịp về trước lúc bấm nút. Text từ client chỉ dùng khi
+        ứng viên gõ tay thay vì nói.
+        """
+        if self.stt_stream:
+            await self.stt_stream.close()
+            self.stt_stream = None
+        self._stop_silence_monitor()
+
+        transcribed = " ".join(
+            part.strip() for part in self._transcript_buffer if part and part.strip()
+        )
+        if transcribed:
+            return transcribed
+        return (client_text or "").strip()
 
     async def _on_stt_partial(self, text: str) -> None:
         nudge = self.silence_handler.on_transcript(text)
