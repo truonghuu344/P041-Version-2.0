@@ -75,7 +75,6 @@ async def start_interview_session(
             detail="Bắt buộc phải chọn 1 Job Description hợp lệ trước khi bắt đầu phỏng vấn",
         )
 
-<<<<<<< HEAD
     # Generate questions
     #
     # Luồng voice KHÔNG dùng bộ câu hỏi sinh sẵn: VoiceInterviewOrchestrator tự
@@ -120,21 +119,6 @@ async def start_interview_session(
                 num_questions=payload.total_questions,
             )
             agenda_question_ids = [None] * len(question_texts)
-=======
-    # Chế độ voice KHÔNG sinh sẵn câu hỏi: orchestrator tự sinh theo diễn biến
-    # hội thoại và ghi hàng InterviewQuestion riêng qua WebSocket. Sinh sẵn ở đây
-    # vừa đốt quota LLM cho những câu bị vứt đi, vừa tạo ra các hàng mồ côi trùng
-    # `question_index` với hàng thật — khiến `_complete_session` gắn nhầm điểm
-    # STAR sang câu chưa ai trả lời.
-    question_texts: list[str] = []
-    if payload.mode != "voice":
-        question_texts = await generate_interview_questions(
-            cv_text=cv.raw_text or "",
-            jd_title=jd.title,
-            jd_requirements=jd.requirements_text,
-            num_questions=payload.total_questions,
-        )
->>>>>>> 50ef809c611dd4a2ff99e948272a10c09e3c0475
 
     # Create InterviewSession
     cv_snapshot = await get_or_create_cv_snapshot(db, cv)
@@ -196,13 +180,8 @@ async def start_interview_session(
     return InterviewQuestionOut(
         session_id=session.id,
         question_index=0,
-<<<<<<< HEAD
         # Voice: chưa có câu hỏi nào tồn tại — frontend voice chỉ dùng session_id
         # rồi mở WebSocket, nó không đọc field này.
-=======
-        # Voice: lời chào và câu hỏi đầu tiên do WebSocket gửi xuống, REST không
-        # có gì để trả. Frontend chế độ voice chỉ đọc `session_id` từ đáp ứng này.
->>>>>>> 50ef809c611dd4a2ff99e948272a10c09e3c0475
         question_text=question_texts[0] if question_texts else "",
         follow_up_question=None,
         # Frontend dùng cờ này như `session_completed`, không phải "đây là câu cuối".

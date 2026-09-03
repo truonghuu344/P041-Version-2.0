@@ -2,10 +2,6 @@ import asyncio
 import logging
 import os
 from contextlib import asynccontextmanager, suppress
-<<<<<<< HEAD
-=======
-from logging.handlers import RotatingFileHandler
->>>>>>> 50ef809c611dd4a2ff99e948272a10c09e3c0475
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request, status
@@ -27,65 +23,15 @@ from src.middleware.security import ApiProtectionMiddleware
 from src.services.deployed_data_sync import sync_deployed_job_catalog
 from src.services.job_rag import sync_market_jobs_safely
 
-<<<<<<< HEAD
 settings = get_settings()
 logger = setup_logging(settings.app_env, settings.log_level)
 
 
-=======
-LOG_FORMAT = "%(asctime)s %(levelname)-8s %(name)s: %(message)s"
-
-
-def _configure_logging(level: str) -> Path | None:
-    """Ghi log ra console và ra file, trả về đường dẫn file (None nếu không ghi được).
-
-    Log chạy native vốn chỉ hiện trên terminal rồi mất, nên không chẩn đoán được
-    sau khi phiên phỏng vấn kết thúc. Ghi thêm ra file để `scripts/collect_diagnostics.py`
-    gom lại được.
-
-    Thư mục lấy theo cwd (chạy native là gốc dự án, trong Docker là /app) và có
-    thể ghi đè bằng LOG_DIR. Không được để việc dựng logging làm chết ứng dụng,
-    nên mọi lỗi ở đây chỉ hạ cấp xuống "chỉ log ra console".
-    """
-    root = logging.getLogger()
-    root.setLevel(level)
-    if not any(isinstance(h, logging.StreamHandler) for h in root.handlers):
-        console = logging.StreamHandler()
-        console.setFormatter(logging.Formatter(LOG_FORMAT))
-        root.addHandler(console)
-
-    try:
-        log_dir = Path(os.getenv("LOG_DIR") or (Path.cwd() / "logs"))
-        log_dir.mkdir(parents=True, exist_ok=True)
-        log_path = log_dir / "backend.log"
-        handler = RotatingFileHandler(
-            log_path, maxBytes=5 * 1024 * 1024, backupCount=3, encoding="utf-8",
-        )
-        handler.setFormatter(logging.Formatter(LOG_FORMAT))
-        root.addHandler(handler)
-        return log_path
-    except OSError as exc:
-        root.warning("Không ghi được log ra file (%s); chỉ log ra console.", exc)
-        return None
->>>>>>> 50ef809c611dd4a2ff99e948272a10c09e3c0475
-
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-<<<<<<< HEAD
     log_startup_config(settings, logger)
     logger.info("Initializing database and models...")
     logger.info("[Startup] Build marker: CV-JD Matching & Scoring Engine v2026.08.28-v1")
-=======
-    settings = get_settings()
-    log_path = _configure_logging(settings.log_level)
-    print(f"Starting {settings.app_name} in {settings.app_env} mode...")
-    if log_path:
-        print(f"Ghi log ra: {log_path}")
-    if settings.langchain_tracing_v2 or settings.langsmith_tracing:
-        project_name = settings.langsmith_project or settings.langchain_project or "ai20k-agent"
-        print(f"LangSmith Tracing active for project: {project_name}")
->>>>>>> 50ef809c611dd4a2ff99e948272a10c09e3c0475
     # Tự động tạo bảng DB khi startup
     await init_db()
     if settings.deployed_data_sync_on_startup:

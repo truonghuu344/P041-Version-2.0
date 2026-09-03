@@ -230,33 +230,7 @@ class VoiceInterviewSession:
                 await self._send_ai_message(result, language)
 
                 # Store Q&A
-<<<<<<< HEAD
                 await self._record_answer(db, session, user_text, result)
-=======
-                q_index = self.orchestrator.turn_count - 1
-                prev_messages = self.orchestrator.conversation
-                ai_question = ""
-                for m in reversed(prev_messages):
-                    if m["role"] == "assistant" and m["content"] != result["ai_message"]:
-                        ai_question = m["content"]
-                        break
-
-                q_obj = InterviewQuestion(
-                    session_id=self.session_id,
-                    question_index=q_index,
-                    question_text=ai_question,
-                    user_answer=user_text,
-                )
-                db.add(q_obj)
-                session.current_question_index = q_index + 1
-                # COMMIT chứ không flush: flush chỉ ghi vào transaction đang mở,
-                # nên cả buổi phỏng vấn treo lơ lửng cho tới lúc `run()` kết thúc.
-                # Backend restart hay mất kết nối đột ngột giữa chừng là mất SẠCH
-                # buổi phỏng vấn, không phải mất một lượt. Chốt từng lượt thì tệ
-                # nhất cũng chỉ mất lượt đang dở.
-                # An toàn vì AsyncSessionLocal đặt expire_on_commit=False.
-                await db.commit()
->>>>>>> 50ef809c611dd4a2ff99e948272a10c09e3c0475
 
                 if result["is_complete"]:
                     await self._complete_session(db, session)
