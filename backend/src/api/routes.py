@@ -110,7 +110,7 @@ async def analyze_cv_compat(request: CVAnalyzeRequest, http_request: Request):
     """Phân tích mức độ phù hợp giữa CV và JD, đưa ra Gap Analysis và Suggestions."""
     if not request.jd_text or not request.jd_text.strip():
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="jd_text cannot be empty",
         )
 
