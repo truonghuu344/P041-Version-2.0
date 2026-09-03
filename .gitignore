@@ -64,6 +64,9 @@ docker-compose.override.yml
 node_modules/
 *.tsbuildinfo
 .next/
+# next.config.mjs đặt distDir: 'build_dist' nên đây mới là thư mục build thật,
+# không phải .next/. Các quy tắc dist/ và build/ ở trên KHÔNG khớp tên này.
+build_dist/
 out/
 .nuxt/
 
