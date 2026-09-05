@@ -365,6 +365,25 @@ export default function AppHeader({
   };
 
   const handleNavigate = (item: NavItem, e?: React.MouseEvent) => {
+    // `window.switchView` do app.js định nghĩa, mà app.js được nạp bằng dynamic
+    // import CHỈ SAU KHI `await ApiClient.getMe()` trả về (xem app/page.tsx).
+    // Trong khoảng đó thanh nav đã render và bấm được, nhưng switchView chưa có.
+    // Nếu cứ preventDefault() rồi mới phát hiện thiếu switchView thì cú click bị
+    // nuốt im lặng — bấm mà không có gì xảy ra, không cả báo lỗi.
+    //
+    // Đo trên production build: nav hiện ở 91ms, app.js gắn handler ở 347ms →
+    // cửa sổ chết 256ms (có lượt chỉ 4ms khi cache nóng). Backend càng xa thì
+    // càng rộng, vì getMe() là một vòng gọi mạng thật.
+    //
+    // Nên: chưa xử lý được trong JS thì để nguyên hành vi mặc định của <a href>
+    // cho trình duyệt tải cả trang. Chậm hơn điều hướng SPA nhưng LUÔN có phản
+    // hồi. Mục counselor/admin không có href (render ra '#') nên không áp dụng
+    // được lối thoát này — với chúng vẫn chặn như cũ, thà không đổi gì còn hơn
+    // nhét thêm '#' vào URL.
+    const canSwitchView =
+      typeof window !== 'undefined' && typeof window.switchView === 'function';
+    if (!canSwitchView && item.href) return;
+
     if (e) e.preventDefault();
     setIsDrawerOpen(false);
 
@@ -422,10 +441,12 @@ export default function AppHeader({
             className="brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#006948] rounded-lg p-1"
             id="brand-logo"
             onClick={(e) => {
-              e.preventDefault();
+              // KHÔNG preventDefault() ở đây: handleNavigate mới là chỗ biết
+              // app.js đã sẵn sàng hay chưa. Chặn sẵn tại đây thì lối thoát
+              // "để trình duyệt tải cả trang" bên trong handleNavigate mất tác
+              // dụng, và cú bấm logo lúc trang vừa tải sẽ bị nuốt.
               if (currentRole === 'counselor') {
                 handleNavigate(counselorItems[0], e);
-
               } else if (currentRole === 'admin') {
                 handleNavigate(adminItems[0], e);
               } else {
