@@ -21,6 +21,7 @@ from src.db.models import (
     InterviewSession,
     UsageEvent,
 )
+from src.services import ws_ticket_service
 from src.services.interview_agenda_service import enabled_questions, get_existing_agenda
 from src.services.interview_service import (
     evaluate_answer_and_check_followup,
@@ -35,12 +36,30 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-async def _authenticate_ws(websocket: WebSocket, token: str | None) -> str | None:
-    """Validate JWT from query param or cookie, return user_id or None."""
+async def _authenticate_ws(
+    websocket: WebSocket, ticket: str | None, session_id: str
+) -> str | None:
+    """Xác thực WebSocket bằng vé dùng một lần, hoặc cookie khi cùng site.
+
+    KHÔNG nhận JWT phiên qua query string nữa. URL bị ghi lại ở access log,
+    reverse proxy, CDN, APM và lịch sử trình duyệt; một JWT còn hạn nằm ở đó
+    dùng lại được cho mọi endpoint. Vé thì ngẫu nhiên, sống 30 giây, dùng một
+    lần và chỉ mở đúng một phiên — có lọt log cũng gần như vô hại.
+
+    Cookie vẫn được chấp nhận cho trường hợp cùng site (chạy local qua proxy
+    của Next). Ở production frontend và backend khác site, cookie SameSite=Lax
+    không được gửi kèm handshake, nên vé là đường duy nhất.
+    """
+    if ticket:
+        user_id = ws_ticket_service.redeem(ticket, session_id)
+        if user_id:
+            return user_id
+        logger.warning("WS auth: vé không hợp lệ, hết hạn, đã dùng, hoặc lệch phiên")
+        return None
+
+    token = websocket.cookies.get("career_session")
     if not token:
-        token = websocket.cookies.get("career_session")
-    if not token:
-        logger.warning("WS auth: no token in query param or cookie")
+        logger.warning("WS auth: không có vé lẫn cookie")
         return None
     settings = get_settings()
     try:
@@ -498,11 +517,11 @@ class VoiceInterviewSession:
 
 
 @router.websocket("/ws/interview/{session_id}")
-async def voice_interview_ws(websocket: WebSocket, session_id: str, token: str | None = None):
+async def voice_interview_ws(websocket: WebSocket, session_id: str, ticket: str | None = None):
     """WebSocket endpoint for voice mock interviews."""
     await websocket.accept()
 
-    user_id = await _authenticate_ws(websocket, token)
+    user_id = await _authenticate_ws(websocket, ticket, session_id)
     if not user_id:
         await _send_json(websocket, {"type": "error", "message": "Xác thực thất bại."})
         await websocket.close(code=4001, reason="Unauthorized")

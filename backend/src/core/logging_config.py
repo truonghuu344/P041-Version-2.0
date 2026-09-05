@@ -188,6 +188,29 @@ def _attach_file_handler(root_logger: logging.Logger, level: int) -> Path | None
         return None
 
 
+class _StripQueryStringFilter(logging.Filter):
+    """Bỏ phần `?...` khỏi mọi đường dẫn xuất hiện trong bản ghi log.
+
+    Ghi ĐÈ vào record.args/record.msg thay vì chỉ sửa chuỗi đã format, vì
+    uvicorn truyền đường dẫn qua args và formatter mới ghép lại sau.
+    """
+
+    _PATH_WITH_QUERY = re.compile(r"(/[^\s\"']*)\?[^\s\"']*")
+
+    def _scrub(self, value: object) -> object:
+        if isinstance(value, str) and "?" in value:
+            return self._PATH_WITH_QUERY.sub(r"\1?[ĐÃ CHE]", value)
+        return value
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        record.msg = self._scrub(record.msg)
+        if isinstance(record.args, tuple):
+            record.args = tuple(self._scrub(a) for a in record.args)
+        elif isinstance(record.args, dict):
+            record.args = {k: self._scrub(v) for k, v in record.args.items()}
+        return True
+
+
 def setup_logging(app_env: str = "development", log_level_str: str = "INFO") -> logging.Logger:
     """Configure standardized application-wide logging."""
     level = getattr(logging, log_level_str.upper(), logging.INFO)
@@ -209,6 +232,18 @@ def setup_logging(app_env: str = "development", log_level_str: str = "INFO") -> 
     log_path = _attach_file_handler(root_logger, level)
     if log_path:
         root_logger.info("Ghi log ra file: %s", log_path)
+
+    # Cắt query string khỏi log của uvicorn.
+    #
+    # Bộ lọc bí mật phía trên chỉ soi field của bản ghi log ứng dụng; log của
+    # uvicorn dựng sẵn cả dòng "WebSocket /path?token=..." nên lọt qua. Thực tế
+    # đã có lần cả JWT phiên bị ghi nguyên vào file log theo đường này. Giờ
+    # WebSocket dùng vé dùng một lần nên thiệt hại đã nhỏ, nhưng query string
+    # vốn không nên nằm trong log — bất kỳ ai thêm tham số nhạy cảm sau này
+    # cũng sẽ được che sẵn.
+    logging.getLogger("uvicorn").addFilter(_StripQueryStringFilter())
+    logging.getLogger("uvicorn.access").addFilter(_StripQueryStringFilter())
+    logging.getLogger("uvicorn.error").addFilter(_StripQueryStringFilter())
 
     # Silence overly verbose external loggers
     logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
