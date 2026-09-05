@@ -4,6 +4,9 @@ ROOT = Path(__file__).resolve().parents[3]
 FRONTEND_ROOT = ROOT / "frontend"
 APP_JS = (FRONTEND_ROOT / "app.js").read_text(encoding="utf-8")
 PAGE_SOURCE = (FRONTEND_ROOT / "app" / "page.tsx").read_text(encoding="utf-8")
+APP_HEADER = (
+    FRONTEND_ROOT / "components" / "shared" / "AppHeader.tsx"
+).read_text(encoding="utf-8")
 # The application is composed from React view components. Keep this source
 # contract at the rendered-source level rather than assuming every DOM id
 # remains in app/page.tsx after a component extraction.
@@ -444,4 +447,61 @@ def test_check_user_session_does_not_reset_view_chosen_from_url():
     assert "switchToRoleHome()" not in between, (
         "checkUserSession() gọi switchToRoleHome() trước guard canAccessView — "
         "việc này vứt bỏ view đã đặt theo URL và làm hỏng mọi deep link"
+    )
+
+
+def test_nav_does_not_swallow_clicks_before_app_js_is_ready():
+    """preventDefault() không được chạy trước khi biết có xử lý nổi click không.
+
+    `window.switchView` do app.js định nghĩa, mà app.js nạp bằng dynamic import
+    chỉ sau khi `await ApiClient.getMe()` trả về. Trong khoảng đó thanh nav đã
+    render và bấm được. Nếu handleNavigate() cứ preventDefault() rồi mới thấy
+    thiếu switchView thì cú click biến mất — không đổi view, không đổi URL,
+    không lỗi console. Đo trên production build: cửa sổ chết 4–256ms, rộng hơn
+    nhiều khi backend ở xa.
+
+    Lối thoát là để nguyên <a href> cho trình duyệt tải cả trang, nên guard
+    PHẢI đứng trước preventDefault().
+    """
+    start = APP_HEADER.find("const handleNavigate =")
+    assert start != -1, "không tìm thấy handleNavigate trong AppHeader"
+    end = APP_HEADER.find("const renderPublicItems", start)
+    assert end != -1, "không xác định được điểm kết thúc handleNavigate"
+    body = APP_HEADER[start:end]
+
+    guard = body.find("window.switchView === 'function'")
+    prevent = body.find("e.preventDefault()")
+    assert guard != -1, "handleNavigate không còn kiểm tra window.switchView"
+    assert prevent != -1, "handleNavigate không còn preventDefault — kiểm tra lại"
+    assert guard < prevent, (
+        "handleNavigate gọi preventDefault() TRƯỚC khi kiểm tra window.switchView "
+        "— click vào nav lúc trang vừa tải sẽ bị nuốt im lặng"
+    )
+    assert "if (!canSwitchView && item.href) return;" in body, (
+        "mất lối thoát 'để trình duyệt điều hướng cả trang' khi app.js chưa sẵn sàng"
+    )
+
+
+def test_brand_logo_delegates_prevent_default_to_handle_navigate():
+    """Logo không được tự preventDefault(), nếu không lối thoát ở trên vô dụng.
+
+    Logo gọi handleNavigate(), nhưng nếu nó chặn mặc định trước thì phần
+    fallback bên trong handleNavigate không còn tác dụng và cú bấm logo lúc
+    trang vừa tải vẫn mất.
+    """
+    start = APP_HEADER.find('id="brand-logo"')
+    assert start != -1, "không tìm thấy brand-logo"
+    end = APP_HEADER.find("<span className=\"brand-icon\">", start)
+    assert end != -1, "không xác định được điểm kết thúc thẻ logo"
+
+    # Bỏ dòng comment: phần giải thích vì sao KHÔNG preventDefault ở đây có
+    # nhắc chính tên hàm đó.
+    code = "\n".join(
+        line
+        for line in APP_HEADER[start:end].splitlines()
+        if not line.lstrip().startswith("//")
+    )
+    assert "preventDefault" not in code, (
+        "onClick của brand-logo tự gọi preventDefault() — việc này vô hiệu hoá "
+        "lối thoát điều hướng cả trang trong handleNavigate"
     )
