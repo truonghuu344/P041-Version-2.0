@@ -505,3 +505,28 @@ def test_brand_logo_delegates_prevent_default_to_handle_navigate():
         "onClick của brand-logo tự gọi preventDefault() — việc này vô hiệu hoá "
         "lối thoát điều hướng cả trang trong handleNavigate"
     )
+
+
+def test_websocket_url_khong_mang_jwt():
+    """URL WebSocket không được chứa JWT phiên — chỉ vé dùng một lần.
+
+    URL bị ghi lại ở access log, reverse proxy, CDN, APM và lịch sử trình
+    duyệt. Trước đây client nối bằng `?token=<JWT>`, và uvicorn ghi nguyên URL
+    kèm token vào log — token còn hạn nằm đó dùng lại được cho mọi endpoint.
+    """
+    start = APP_JS.find("function startVoiceSession")
+    assert start != -1, "không tìm thấy startVoiceSession"
+    end = APP_JS.find("voiceWs = new WebSocket", start)
+    assert end != -1, "không tìm thấy chỗ mở WebSocket"
+    body = APP_JS[start:end]
+
+    assert "?token=" not in body, (
+        "URL WebSocket đang mang JWT phiên qua query string — token sẽ rò ra "
+        "access log, proxy, CDN và lịch sử trình duyệt"
+    )
+    assert "?ticket=" in body, "phải dùng vé dùng một lần trên URL WebSocket"
+    assert "ApiClient.getVoiceWsTicket(sessionId)" in body, (
+        "phải xin vé trước khi mở WebSocket"
+    )
+    assert "static async getVoiceWsTicket(sessionId)" in APP_JS
+    assert "/ws-ticket" in APP_JS

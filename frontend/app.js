@@ -419,6 +419,14 @@ class ApiClient {
     });
   }
 
+  // Vé dùng một lần để mở WebSocket. KHÔNG được thay bằng JWT phiên: URL của
+  // WebSocket bị ghi lại ở access log, proxy, CDN và lịch sử trình duyệt, nên
+  // thứ đặt lên đó phải là loại vứt đi được — vé sống 30 giây, dùng một lần,
+  // và chỉ mở đúng phiên này.
+  static async getVoiceWsTicket(sessionId) {
+    return await this.request(`/interviews/${sessionId}/ws-ticket`, { method: 'POST' });
+  }
+
   static async getInterviewReport(sessionId) {
     return await this.request(`/interviews/${sessionId}/report`);
   }
@@ -8907,7 +8915,7 @@ TÊN CÔNG TY:
     startVoiceSession(sessionId, session?.language || 'vi');
   }
 
-  function startVoiceSession(sessionId, language) {
+  async function startVoiceSession(sessionId, language) {
     const token = ApiClient.getToken();
     if (!token) {
       showToast('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.', 'error');
@@ -8951,7 +8959,25 @@ TÊN CÔNG TY:
       return;
     }
     const wsProto = ['https:', 'wss:'].includes(backendUrl.protocol) ? 'wss:' : 'ws:';
-    const wsUrl = `${wsProto}//${backendUrl.host}/api/v1/ws/interview/${sessionId}?token=${encodeURIComponent(token)}`;
+
+    // Đổi JWT lấy vé dùng một lần TRƯỚC khi mở WebSocket. Không bao giờ đặt
+    // JWT phiên lên URL: URL bị ghi lại ở access log, reverse proxy, CDN, APM
+    // và lịch sử trình duyệt, nên một JWT còn hạn nằm đó là thông tin đăng
+    // nhập bị lộ, dùng lại được cho mọi endpoint. Vé chỉ sống 30 giây, dùng
+    // một lần, và chỉ mở đúng phiên này.
+    let ticket;
+    try {
+      const issued = await ApiClient.getVoiceWsTicket(sessionId);
+      ticket = issued?.ticket;
+    } catch (_err) {
+      ticket = null;
+    }
+    if (!ticket) {
+      showVoiceConnectionFailure('Không lấy được quyền vào phòng phỏng vấn. Vui lòng thử lại.');
+      return;
+    }
+
+    const wsUrl = `${wsProto}//${backendUrl.host}/api/v1/ws/interview/${sessionId}?ticket=${encodeURIComponent(ticket)}`;
 
     if (voiceWs) { voiceWs.close(); voiceWs = null; }
     voiceWs = new WebSocket(wsUrl);

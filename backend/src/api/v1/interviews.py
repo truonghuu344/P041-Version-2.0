@@ -29,6 +29,7 @@ from src.models.schemas import (
     InterviewSessionSummaryOut,
     InterviewStartRequest,
 )
+from src.services import ws_ticket_service
 from src.services.interview_agenda_service import enabled_questions, ensure_agenda
 from src.services.interview_service import (
     evaluate_answer_and_check_followup,
@@ -531,3 +532,34 @@ async def submit_interview_feedback(
     await db.commit()
     await db.refresh(feedback)
     return InterviewFeedbackOut.model_validate(feedback)
+
+
+@router.post("/{session_id}/ws-ticket", status_code=status.HTTP_201_CREATED)
+async def create_ws_ticket(
+    session_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> dict[str, object]:
+    """Cấp vé dùng một lần để mở WebSocket phỏng vấn.
+
+    Trình duyệt không đặt được header `Authorization` trên WebSocket, và cookie
+    `career_session` là SameSite=Lax nên không đi kèm handshake cross-site
+    (production: frontend Vercel, backend Render). Thông tin xác thực buộc phải
+    nằm trên URL, mà URL thì bị ghi lại ở access log, proxy, CDN và lịch sử
+    trình duyệt.
+
+    Vé thay cho JWT ở đúng chỗ đó: ngẫu nhiên, sống 30 giây, dùng một lần, và
+    chỉ mở được đúng phiên này. Bản thân request cấp vé vẫn xác thực bình
+    thường qua cookie hoặc header, nơi an toàn.
+    """
+    result = await db.execute(
+        select(InterviewSession).where(
+            InterviewSession.id == session_id,
+            InterviewSession.user_id == current_user.id,
+        )
+    )
+    if result.scalar_one_or_none() is None:
+        raise HTTPException(status_code=404, detail="Không tìm thấy phiên phỏng vấn.")
+
+    ticket = ws_ticket_service.issue(user_id=current_user.id, session_id=session_id)
+    return {"ticket": ticket, "expires_in": int(ws_ticket_service.TICKET_TTL_SECONDS)}
