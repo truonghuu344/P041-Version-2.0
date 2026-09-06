@@ -193,8 +193,7 @@ canvas {
   .jd-create-grid,
   .gap-advanced-grid,
   .cv-result-cta-row,
-  .job-drawer-grid,
-  .vessel-header-row {
+  .job-drawer-grid {
     grid-template-columns: minmax(0, 1fr) !important;
   }
 
