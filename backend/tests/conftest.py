@@ -16,6 +16,18 @@ os.environ["STORAGE_PROVIDER"] = "local"
 os.environ["GEMINI_API_KEY"] = ""
 os.environ["GOOGLE_API_KEY"] = ""
 os.environ["MAX_REQUEST_BODY_MB"] = "22"
+# Bộ test gọi API nhanh hơn người dùng thật rất nhiều — riêng việc đăng ký tài
+# khoản cho từng test đã dựng hàng trăm request trong vài phút. Với trần mặc
+# định 120 req/phút, rate limiter của chính ứng dụng bắt đầu trả 429 và test đỏ
+# hàng loạt với "Too many requests", KHÔNG phải vì logic sai.
+#
+# Lỗi này phụ thuộc tốc độ máy nên rất dễ nhầm là ngẫu nhiên: cùng một commit,
+# CI chạy 144s thì đỏ 9 test, máy local chạy 255s thì xanh. Đặt ở đây (thay vì
+# chỉ trong ci.yml) để cả CI lẫn máy dev đều được, và không ai phải nhớ set env
+# khi chạy tay.
+#
+# 10000 là trần tối đa mà `Settings.api_rate_limit_per_minute` cho phép (le=10_000).
+os.environ["API_RATE_LIMIT_PER_MINUTE"] = "10000"
 os.environ["DATABASE_URL"] = "sqlite+aiosqlite://"
 
 from src.config import Settings
