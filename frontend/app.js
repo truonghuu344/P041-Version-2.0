@@ -13650,75 +13650,10 @@ if (document.readyState === 'loading') {
 })();
 
 /* ============================================================
-   Candidate flow guides — lightweight navigation for first-time users.
-   These are purely presentational helpers; they do not alter any API flow.
+   Cuộn tới bước tiếp theo — trợ giúp điều hướng nhẹ cho người dùng mới.
+   Thuần trình bày, không đụng tới luồng API nào.
    ============================================================ */
 (() => {
-  const guides = [
-    {
-      anchor: '#view-cv .vessel-header',
-      target: '#cv-page-upload-form',
-      icon: '1',
-      title: 'Bắt đầu với CV của bạn',
-      subtitle: 'Tải CV một lần, sau đó dùng lại cho mọi phân tích.',
-      action: 'Tải CV',
-      steps: ['Tải CV', 'AI trích xuất', 'Chọn luồng tiếp theo'],
-    },
-    {
-      anchor: '#view-interview .page-header',
-      target: '#page-interview-setup',
-      icon: '2',
-      title: 'Luyện phỏng vấn theo từng bước',
-      subtitle: 'Chọn CV và vị trí trước khi bắt đầu phiên STAR.',
-      action: 'Thiết lập phiên',
-      steps: ['Chọn CV & vị trí', 'Trả lời câu hỏi', 'Xem báo cáo'],
-    },
-    {
-      anchor: '#view-gap .page-header',
-      target: '#page-gap-select-cv',
-      icon: '3',
-      title: 'Tìm khoảng cách kỹ năng',
-      subtitle: 'Đặt CV cạnh một JD để biết điểm mạnh và phần cần bổ sung.',
-      action: 'Chọn CV & JD',
-      steps: ['Chọn dữ liệu', 'AI đối chiếu', 'Nhận lộ trình'],
-    },
-    {
-      anchor: '#view-history .page-header',
-      target: '#view-history .archive-workspace',
-      icon: '4',
-      title: 'Quay lại đúng nơi bạn đang cần',
-      subtitle: 'Lọc hoạt động, mở báo cáo cũ hoặc tiếp tục một luồng dang dở.',
-      action: 'Xem lịch sử',
-      steps: ['Lọc hoạt động', 'Mở báo cáo', 'Tiếp tục thực hiện'],
-    },
-    {
-      anchor: '#view-profile .page-header',
-      target: '#view-profile .profile-settings-card',
-      icon: '5',
-      title: 'Cá nhân hoá trợ lý của bạn',
-      subtitle: 'Cập nhật hồ sơ và chọn cách AI hỗ trợ phù hợp nhất.',
-      action: 'Mở cài đặt',
-      steps: ['Cập nhật hồ sơ', 'Chọn AI persona', 'Lưu thay đổi'],
-    },
-  ];
-
-  function mountCandidateFlowGuides() {
-    guides.forEach(guide => {
-      const anchor = document.querySelector(guide.anchor);
-      if (!anchor || anchor.parentElement?.querySelector(`[data-flow-guide-for="${guide.target}"]`)) return;
-      const steps = guide.steps.map((step, index) => `<li data-step="${index + 1}">${step}</li>`).join('');
-      anchor.insertAdjacentHTML('afterend', `
-        <aside class="candidate-flow-guide" data-flow-guide-for="${guide.target}" aria-label="Hướng dẫn sử dụng">
-          <div class="candidate-flow-guide-copy">
-            <span class="candidate-flow-guide-icon" aria-hidden="true">${guide.icon}</span>
-            <span><strong class="candidate-flow-guide-title">${guide.title}</strong><small class="candidate-flow-guide-subtitle">${guide.subtitle}</small></span>
-          </div>
-          <ol class="candidate-flow-guide-steps">${steps}</ol>
-          <button type="button" data-flow-target="${guide.target}">${guide.action}</button>
-        </aside>
-      `);
-    });
-  }
 
   function scrollToFlowTarget(selector, focus = true) {
     const target = document.querySelector(selector);
@@ -13728,12 +13663,6 @@ if (document.readyState === 'loading') {
       window.setTimeout(() => target.focus({ preventScroll: true }), 350);
     }
   }
-
-  document.addEventListener('click', event => {
-    const trigger = event.target.closest('[data-flow-target]');
-    if (!trigger) return;
-    scrollToFlowTarget(trigger.dataset.flowTarget);
-  });
 
   document.addEventListener('change', event => {
     const id = event.target?.id;
@@ -13753,10 +13682,4 @@ if (document.readyState === 'loading') {
       if (cv && jd) scrollToFlowTarget('#page-btn-run-gap', false);
     }
   });
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', mountCandidateFlowGuides);
-  } else {
-    mountCandidateFlowGuides();
-  }
 })();
