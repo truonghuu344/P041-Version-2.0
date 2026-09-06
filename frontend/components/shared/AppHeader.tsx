@@ -17,6 +17,10 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import NotificationBell from '@/components/notifications/NotificationBell';
+// Lấy URL từ chính router của mỗi portal thay vì viết cứng chuỗi ở đây: href
+// và route luôn khớp nhau, đổi route một chỗ là nav theo ngay.
+import { getCanonicalUrl as counselorTabUrl } from '@/components/counselor/CounselorView';
+import { adminTabUrl } from '@/components/admin/AdminView';
 import UserAccountMenu from './UserAccountMenu';
 
 export interface AppHeaderProps {
@@ -178,6 +182,7 @@ export default function AppHeader({
       label: 'Tổng quan',
       viewKey: 'counselor',
       subTabKey: 'dashboard',
+      href: counselorTabUrl('dashboard'),
       icon: LayoutDashboard,
       role: 'counselor',
     },
@@ -186,6 +191,7 @@ export default function AppHeader({
       label: 'Sinh viên',
       viewKey: 'counselor',
       subTabKey: 'students',
+      href: counselorTabUrl('students'),
       icon: Users,
       role: 'counselor',
     },
@@ -194,6 +200,7 @@ export default function AppHeader({
       label: 'Cơ hội việc làm',
       viewKey: 'counselor',
       subTabKey: 'opportunities',
+      href: counselorTabUrl('opportunities'),
       icon: Briefcase,
       role: 'counselor',
     },
@@ -202,6 +209,7 @@ export default function AppHeader({
       label: 'Quản lý JD',
       viewKey: 'counselor',
       subTabKey: 'jds',
+      href: counselorTabUrl('jds'),
       icon: FileText,
       role: 'counselor',
     },
@@ -213,6 +221,7 @@ export default function AppHeader({
       label: 'Tổng quan',
       viewKey: 'admin',
       subTabKey: 'dashboard',
+      href: adminTabUrl('dashboard'),
       icon: LayoutDashboard,
       role: 'admin',
     },
@@ -221,6 +230,7 @@ export default function AppHeader({
       label: 'Người dùng',
       viewKey: 'admin',
       subTabKey: 'users',
+      href: adminTabUrl('users'),
       icon: Users,
       role: 'admin',
     },
@@ -229,6 +239,7 @@ export default function AppHeader({
       label: 'Cố vấn',
       viewKey: 'admin',
       subTabKey: 'counselors',
+      href: adminTabUrl('counselors'),
       icon: UserRound,
       role: 'admin',
     },
@@ -237,6 +248,7 @@ export default function AppHeader({
       label: 'Tuyển dụng',
       viewKey: 'admin',
       subTabKey: 'recruitment',
+      href: adminTabUrl('recruitment'),
       icon: Briefcase,
       role: 'admin',
     },
@@ -245,6 +257,7 @@ export default function AppHeader({
       label: 'Hệ thống',
       viewKey: 'admin',
       subTabKey: 'system',
+      href: adminTabUrl('system'),
       icon: ShieldCheck,
       role: 'admin',
     },
@@ -377,9 +390,14 @@ export default function AppHeader({
     //
     // Nên: chưa xử lý được trong JS thì để nguyên hành vi mặc định của <a href>
     // cho trình duyệt tải cả trang. Chậm hơn điều hướng SPA nhưng LUÔN có phản
-    // hồi. Mục counselor/admin không có href (render ra '#') nên không áp dụng
-    // được lối thoát này — với chúng vẫn chặn như cũ, thà không đổi gì còn hơn
-    // nhét thêm '#' vào URL.
+    // hồi.
+    //
+    // Lối thoát này áp dụng cho CẢ BA vai trò. Cả ba đều đổi view qua
+    // `window.switchView`, nên cả ba cùng chết trong khoảng đó. Điều kiện duy
+    // nhất là mục nav phải có href thật để trình duyệt còn chỗ mà đi — href của
+    // counselor/admin lấy thẳng từ router của portal tương ứng, và deep link
+    // của chúng đã hoạt động sẵn (parseCounselorRoute, parseAdminRoute khôi
+    // phục đúng tab khi tải lại cả trang).
     const canSwitchView =
       typeof window !== 'undefined' && typeof window.switchView === 'function';
     if (!canSwitchView && item.href) return;

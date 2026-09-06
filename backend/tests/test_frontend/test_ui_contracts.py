@@ -530,3 +530,39 @@ def test_websocket_url_khong_mang_jwt():
     )
     assert "static async getVoiceWsTicket(sessionId)" in APP_JS
     assert "/ws-ticket" in APP_JS
+
+
+def test_moi_muc_nav_deu_co_href_that():
+    """Không có href thì lối thoát chống nuốt click ở handleNavigate vô dụng.
+
+    handleNavigate chỉ nhả cú click cho trình duyệt khi `item.href` tồn tại.
+    Mục nav thiếu href sẽ render ra `href="#"` và rơi lại đúng lỗi cũ: bấm
+    trong lúc app.js chưa nạp xong thì không có gì xảy ra.
+
+    Cả ba vai trò đều đổi view qua `window.switchView` nên cùng chịu lỗi này.
+    """
+    for block_name in ("studentItems", "counselorItems", "adminItems"):
+        start = APP_HEADER.find(f"const {block_name}: NavItem[] = [")
+        assert start != -1, f"không tìm thấy {block_name}"
+        end = APP_HEADER.find("\n  ];", start)
+        block = APP_HEADER[start:end]
+
+        so_muc = block.count("      id: 'nav-")
+        so_href = block.count("      href: ")
+        assert so_muc > 0, f"{block_name} không có mục nào"
+        assert so_href == so_muc, (
+            f"{block_name}: {so_muc} mục nhưng chỉ {so_href} có href — mục thiếu "
+            "href sẽ bị nuốt click lúc trang vừa tải"
+        )
+
+
+def test_href_counselor_admin_lay_tu_router_khong_viet_cung():
+    """URL lấy từ chính router của portal, để href không trôi khỏi route.
+
+    Viết cứng '/counselor/students' ở AppHeader thì khi router đổi đường dẫn,
+    nav sẽ trỏ vào URL chết mà không có gì báo.
+    """
+    assert "from '@/components/counselor/CounselorView'" in APP_HEADER
+    assert "from '@/components/admin/AdminView'" in APP_HEADER
+    assert "href: counselorTabUrl(" in APP_HEADER
+    assert "href: adminTabUrl(" in APP_HEADER
