@@ -85,7 +85,11 @@ def list_rendercv_themes() -> list[dict[str, Any]]:
         themes.append(
             {
                 "name": theme_name,
-                "design_defaults": design.model_dump(mode="json"),
+                # Some vendored themes normalize ``font_family`` from a string
+                # into a per-role mapping.  The resulting JSON is valid, but
+                # Pydantic warns because the discriminated union still retains
+                # the original string branch in its serializer metadata.
+                "design_defaults": design.model_dump(mode="json", warnings=False),
             }
         )
     return themes

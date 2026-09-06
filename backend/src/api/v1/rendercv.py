@@ -65,7 +65,7 @@ async def validate_rendercv(request: RenderCVDocumentsRequest) -> dict[str, bool
         await asyncio.to_thread(validate_rendercv_documents, request.to_documents())
     except (RenderCVUserError, RenderCVUserValidationError, ValueError) as exc:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail={"errors": rendercv_error_detail(exc)},
         ) from exc
     return {"valid": True}
@@ -86,7 +86,7 @@ async def render_rendercv(request: RenderCVDocumentsRequest) -> Response:
         ) from exc
     except (RenderCVUserError, RenderCVUserValidationError, ValueError) as exc:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail={"errors": rendercv_error_detail(exc)},
         ) from exc
     return Response(content=pdf, media_type="application/pdf")
