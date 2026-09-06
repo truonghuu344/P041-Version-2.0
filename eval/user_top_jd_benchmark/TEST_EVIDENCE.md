@@ -46,7 +46,7 @@ Scoring evidence, mandatory gate, fit score, and rank are unchanged.
 | LIVE-AT-01 | Python Internship / Software Dev Internship | Ranked #9 & #10 with `mandatory_failed=true`, coverage 67-71%. | Pass AT-06, RJ-01: Mandatory gate failures are cleanly demoted to bottom. |
 | LIVE-VL-01 | DevTools run `VM1091` (cache version v14) | Identified that running Docker backend container requires rebuild to pick up new `v15` verdict and dynamic `fit_label` logic. | Pass analysis: code logic verified across all 57 unit/integration tests. |
 | LIVE-VL-02 | Fresh API run `VM1660` (cache version v15) | Top 1–7 (`primary`, `ready: true`) and Rank 8 (`adjacent`, `ready: true`) all have `label='Tiềm năng'` and positive verdict `"Có các điểm phù hợp có thể kiểm chứng..."`. Ranks 9–10 (`mandatory_failed=true`) have `label='Cần cải thiện'` and negative verdict. | **Pass 100% VL-01 đến VL-08**: Verdict, Label và Role Track hoàn toàn đồng bộ, chính xác. |
-| LIVE-CV-03 | `16973a2f3aae44d69c5546b2c80564e9` (`CV_NguyenThiThanhHien_0702636966.pdf`) | Fit score của NodeJS Fresher #1 tăng lên `50.1` (vượt mốc 50đ), Top 5 toàn bộ là `primary ready` với các JD kỹ thuật mới (Product Engineering Intern #2, TypeScript Engineer Intern #3). | Pass: Đã nạp thành công CV PDF mới, điểm số tăng trưởng tích cực theo đúng định vị. |
+| LIVE-CV-03 | `16973a2f3aae44d69c5546b2c80564e9` (tên file gốc đã lược bỏ: chứa họ tên và số điện thoại thật) | Fit score của NodeJS Fresher #1 tăng lên `50.1` (vượt mốc 50đ), Top 5 toàn bộ là `primary ready` với các JD kỹ thuật mới (Product Engineering Intern #2, TypeScript Engineer Intern #3). | Pass: Đã nạp thành công CV PDF mới, điểm số tăng trưởng tích cực theo đúng định vị. |
 
 ## Test case thay đổi ranking
 
