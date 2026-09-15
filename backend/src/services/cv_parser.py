@@ -182,7 +182,7 @@ def _repair_fragmented_vietnamese(value: str) -> str:
     value = re.sub(r"(?<=[A-Za-z])\s+(?=[ÅÆĂá])", "", value)
     value = re.sub(r"(?<=[©¡¯°»™])\s+(?=[a-zá])", "", value)
     # OCR can split a Unicode Vietnamese word into individual characters, e.g.
-    # ``V ũ H ữ u Tr ư ờ ng``. A new capitalized token begins the next word;
+    # ``Đ ỗ Qu ố c Th ắ ng``. A new capitalized token begins the next word;
     # non-capitalized fragments belong to the preceding word.
     words: list[str] = []
     for token in value.split():
