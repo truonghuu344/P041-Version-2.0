@@ -88,26 +88,26 @@ def test_sanitize_extracted_text_removes_postgres_invalid_null_bytes():
 
 def test_local_parser_repairs_fragmented_vietnamese_name_and_location():
     pdf_text = """
-0363616300
-truonghuu344@gmail.com
-Xã Tây Ph ươ ng, TP.Hà N ộ i
+0123456789
+ungvien.mau@example.com
+Xã An Ph ươ ng, TP.Hà N ộ i
 Soft skills
 Teamwork & Collaboration
 Interests
 Learning new things
-V ũ H ữ u Tr ư ờ ng
+Đ ỗ Qu ố c Th ắ ng
 SUMMARY
 Final-year Information Technology student.
 EDUCATION
-Hanoi University of Business and Technology 2022-2026
+Example University of Technology 2022-2026
 SKILLS
 Python, FastAPI, ReactJS
 """
 
     result = parse_cv_locally(pdf_text)
 
-    assert result["personal_info"]["full_name"] == "Vũ Hữu Trường"
-    assert result["personal_info"]["location"] == "Xã Tây Phương, TP.Hà Nội"
+    assert result["personal_info"]["full_name"] == "Đỗ Quốc Thắng"
+    assert result["personal_info"]["location"] == "Xã An Phương, TP.Hà Nội"
 
 
 @pytest.mark.asyncio
