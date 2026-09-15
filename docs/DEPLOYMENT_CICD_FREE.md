@@ -430,8 +430,10 @@ Các giới hạn này là lý do phải có object storage và retry UX. [Rende
 
 Vì frontend hiện proxy `/api/v1/*` qua Next rewrite, phải đặt backend Render URL:
 
+> Đối chiếu URL dưới đây với tên service Render thực tế trước khi dùng. Giá trị này từng ghi sai (`career-assistant-api.onrender.com`, trả 404), và triệu chứng khi trỏ nhầm giống hệt "backend không phản hồi" nên rất khó lần ra.
+
 ```env
-API_PROXY_TARGET=https://career-assistant-api.onrender.com
+API_PROXY_TARGET=https://p041-version-2-0.onrender.com
 NEXT_PUBLIC_GOOGLE_OAUTH_CLIENT_ID=<same Web client ID as backend>
 ```
 
@@ -451,7 +453,7 @@ Ví dụ:
 
 ```text
 Frontend: https://career.example.com
-Backend:  https://career-assistant-api.onrender.com
+Backend:  https://p041-version-2-0.onrender.com
 ```
 
 1. Vercel → Domains: thêm `career.example.com`; cập nhật DNS theo hướng dẫn Vercel.
@@ -501,7 +503,7 @@ AUDIO_RETENTION_DAYS=30
 ### 9.2 Frontend production (Vercel Environment Variables)
 
 ```env
-API_PROXY_TARGET=https://career-assistant-api.onrender.com
+API_PROXY_TARGET=https://p041-version-2-0.onrender.com
 NEXT_PUBLIC_GOOGLE_OAUTH_CLIENT_ID=<client-id>.apps.googleusercontent.com
 ```
 
