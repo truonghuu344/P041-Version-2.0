@@ -188,3 +188,35 @@ async def test_embed_query_cung_bi_dieu_tiet():
     assert "_tokens.acquire" in nguon, (
         "điều tiết token phải nằm trong _embed để mọi đường gọi đều được tính"
     )
+
+
+# ── Mặc định cấu hình vector search ─────────────────────────────────────────
+
+
+def test_vector_search_bat_mac_dinh_o_che_do_auto():
+    """`auto` chứ không phải `gemini`, và không phải `hashing`.
+
+    - `hashing` là chế độ cũ, chất lượng thấp hơn hẳn: cùng một cặp CV-JD chỉ
+      tìm được 8 bằng chứng so với 15-19 của embedding thật.
+    - `gemini` sẽ NÉM LỖI ở môi trường không có GEMINI_API_KEY, làm chết đồng bộ
+      chỉ mục. `auto` tụt về hashing trong tình huống đó.
+    """
+    from src.config import Settings
+
+    mac_dinh = Settings.model_fields
+    assert mac_dinh["vector_search_enabled"].default is True
+    assert mac_dinh["vector_embedding_provider"].default == "auto"
+    assert mac_dinh["cv_jd_embedding_provider"].default == "auto"
+
+
+def test_auto_sync_van_tat_de_khong_treo_request_nguoi_dung():
+    """`vector_auto_sync` chỉ chạy khi chỉ mục rỗng, và nó đồng bộ NGAY TRONG
+    request đang phục vụ — bật lên là một người dùng phải chờ hết 3 phút rưỡi.
+
+    Chỉ mục đã được dựng nền ở mỗi lần khởi động (`vector_sync_on_startup`);
+    nếu lần đó hỏng thì rơi về tìm kiếm từ khoá vẫn tốt hơn là treo một request.
+    """
+    from src.config import Settings
+
+    assert Settings.model_fields["vector_auto_sync"].default is False
+    assert Settings.model_fields["vector_sync_on_startup"].default is True

@@ -135,12 +135,31 @@ class Settings(BaseSettings):
         return self
 
     # pgvector / Market JD RAG
-    vector_search_enabled: bool = False
-    # Do not select a paid embedding API merely because a Gemini key exists.
-    vector_embedding_provider: Literal["auto", "gemini", "hashing"] = "hashing"
+    #
+    # Bật mặc định từ khi hai lỗi chặn đồng bộ chỉ mục được sửa (embed theo lô
+    # trả sai số lượng, và thiếu điều tiết token). Trước đó đồng bộ chưa từng
+    # chạy được nên buộc phải để `hashing`.
+    #
+    # Đo trên cùng một cặp CV-JD: embedding thật tìm được 15-19 bằng chứng so
+    # với 8 của hashing. Đổi lại mỗi lượt so khớp chậm gấp đôi (1,0-1,8s ->
+    # 2,0-3,3s) và đồng bộ 98 JD mất 3 phút 33 thay vì 28 giây.
+    vector_search_enabled: bool = True
+
+    # `auto` chứ KHÔNG phải `gemini`: có key thì dùng Gemini, thiếu key hoặc hết
+    # quota thì tự tụt về hashing thay vì ném lỗi. Quan trọng cho môi trường
+    # không cấu hình Gemini — ở đó `gemini` sẽ làm đồng bộ chết hẳn.
+    vector_embedding_provider: Literal["auto", "gemini", "hashing"] = "auto"
     vector_embedding_model: str = "gemini-embedding-2"
     vector_dimensions: int = Field(default=768, ge=128, le=3072)
-    vector_sync_on_startup: bool = False
+
+    # Chạy nền bằng asyncio.create_task, KHÔNG chặn khởi động, lỗi được nuốt và
+    # ghi log — nên deploy không bị 3 phút rưỡi đồng bộ làm chậm.
+    vector_sync_on_startup: bool = True
+
+    # GIỮ False có chủ đích. Cờ này chỉ kích hoạt khi chỉ mục rỗng, và nó đồng
+    # bộ NGAY TRONG request đang phục vụ — một người dùng xui sẽ phải chờ hết
+    # 3 phút rưỡi. Chỉ mục đã được dựng nền ở mỗi lần khởi động; nếu lần đó
+    # hỏng thì thà rơi về tìm kiếm từ khoá (nhanh) còn hơn treo một request.
     vector_auto_sync: bool = False
     deployed_data_sync_on_startup: bool = True
 
@@ -167,7 +186,11 @@ class Settings(BaseSettings):
     top_jobs_cache_version: str = "v1"
 
     # CV-JD Matching v1 (Requirement -> BM25/Vector -> RRF -> Evidence -> Rubric)
-    cv_jd_embedding_provider: Literal["auto", "gemini", "hashing"] = "hashing"
+    # Cùng lý do và cùng chế độ `auto` như `vector_embedding_provider` ở trên.
+    # Riêng đường này còn một lớp an toàn nữa: cv_jd_pipeline bắt lỗi quota của
+    # Gemini rồi tụt về hashing ngay giữa lượt so khớp, nên một lần 429 chỉ làm
+    # giảm chất lượng lượt đó chứ không làm hỏng kết quả.
+    cv_jd_embedding_provider: Literal["auto", "gemini", "hashing"] = "auto"
     cv_jd_embedding_model: str = "gemini-embedding-2"
     cv_jd_embedding_dimensions: int = Field(default=768, ge=128, le=3072)
     cv_jd_bm25_top_k: int = Field(default=20, ge=1, le=100)
