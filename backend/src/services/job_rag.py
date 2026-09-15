@@ -5,7 +5,9 @@ import hashlib
 import logging
 import math
 import re
+import time
 import unicodedata
+from collections import deque
 from collections.abc import Sequence
 from functools import lru_cache
 from typing import Any, Protocol
@@ -25,6 +27,53 @@ from src.services.job_catalog import (
 
 logger = logging.getLogger(__name__)
 INDEX_NAME = "market_job_embeddings"
+
+# Trần token/phút của Gemini Embedding ở free tier là 30.000. Giữ ngưỡng dưới
+# để chừa chỗ cho embedding câu truy vấn chạy xen giữa lúc đồng bộ.
+EMBED_TOKENS_PER_MINUTE = 24_000
+
+# Số lời gọi embedding chạy song song. Thấp có chủ đích: nút thắt là TOKEN chứ
+# không phải số request (đo thực tế: 43/100 RPM nhưng 71.86K/30K TPM), nên bắn
+# nhiều luồng chỉ làm chạm trần token nhanh hơn chứ không nhanh hơn tổng thể.
+EMBED_CONCURRENCY = 3
+
+# Tỷ lệ ký tự/token đo trên chính catalog JD của dự án: dao động 3,6–5,1 tuỳ tài
+# liệu. Lấy 3.5 để LUÔN ước lượng thừa token — thà chạy chậm hơn dự kiến còn hơn
+# vượt trần rồi ăn 429 giữa chừng và hỏng cả mẻ đồng bộ.
+_CHARS_PER_TOKEN = 3.5
+
+
+def _estimate_tokens(text: str) -> int:
+    return max(1, int(len(text) / _CHARS_PER_TOKEN) + 1)
+
+
+class _TokenRateLimiter:
+    """Giữ mức tiêu thụ token dưới trần TPM bằng cửa sổ trượt 60 giây.
+
+    Cần thiết vì trần của Gemini Embedding là token/phút, không phải request/
+    phút. Nhúng cả catalog JD tốn khoảng 68.000 token, tức gấp hơn hai lần trần
+    một phút — không rải ra thì chắc chắn ăn 429 giữa chừng.
+    """
+
+    def __init__(self, tokens_per_minute: int) -> None:
+        self._budget = tokens_per_minute
+        self._window: deque[tuple[float, int]] = deque()
+        self._lock = asyncio.Lock()
+
+    async def acquire(self, tokens: int) -> None:
+        while True:
+            async with self._lock:
+                now = time.monotonic()
+                while self._window and now - self._window[0][0] >= 60.0:
+                    self._window.popleft()
+                used = sum(amount for _, amount in self._window)
+                # Điều kiện `not self._window` để một tài liệu lớn hơn cả trần
+                # vẫn đi được thay vì treo vĩnh viễn.
+                if used + tokens <= self._budget or not self._window:
+                    self._window.append((now, tokens))
+                    return
+                cho = 60.0 - (now - self._window[0][0])
+            await asyncio.sleep(min(max(cho, 0.05), 5.0))
 
 
 class JobRAGUnavailableError(RuntimeError):
@@ -80,10 +129,18 @@ class GeminiEmbeddingProvider:
 
         self.name, self.vector_size = model_name, vector_size
         self._client = genai.Client(api_key=api_key)
+        # Một bộ điều tiết cho mỗi provider: dùng chung cho cả nhúng tài liệu
+        # lúc đồng bộ lẫn nhúng câu truy vấn, nên hai luồng không cộng dồn
+        # vượt trần mà không ai biết.
+        self._tokens = _TokenRateLimiter(EMBED_TOKENS_PER_MINUTE)
 
     async def _embed(self, content: str) -> list[float]:
         from google.genai import types
 
+        # Xin hạn mức token ở ĐÂY, không phải ở chỗ gọi: `embed_query` đi thẳng
+        # vào hàm này, nên nếu điều tiết ở tầng trên thì truy vấn sẽ lách qua và
+        # âm thầm cộng dồn vào trần chung.
+        await self._tokens.acquire(_estimate_tokens(content))
         try:
             response = await asyncio.wait_for(
                 self._client.aio.models.embed_content(
@@ -101,23 +158,30 @@ class GeminiEmbeddingProvider:
             raise JobRAGUnavailableError("Không thể tạo Gemini embedding hoặc request bị timeout.") from exc
 
     async def embed_documents(self, texts: Sequence[str]) -> list[list[float]]:
-        from google.genai import types
+        """Nhúng từng tài liệu MỘT lời gọi, chạy song song có giới hạn.
 
+        KHÔNG gộp cả danh sách vào một `embed_content`. `gemini-embedding-2`
+        nhận `contents` là danh sách nhưng **luôn chỉ trả về đúng 1 embedding**
+        — đã đo: gửi 10, 50, 100, 113 văn bản đều nhận lại 1. Cách gộp cũ khiến
+        `zip(pending, vectors, strict=True)` ở `_sync_catalog_with` ném
+        `ValueError: zip() argument 2 is shorter than argument 1`, nên việc đồng
+        bộ chỉ mục vector chưa từng chạy được và vector search buộc phải tắt.
+
+        Giới hạn 8 lời gọi đồng thời: đủ nhanh cho catalog cỡ trăm JD mà không
+        dồn ép quota.
+        """
         if not texts:
             return []
         formatted = [f"title: market job | text: {item}" for item in texts]
-        try:
-            response = await asyncio.wait_for(
-                self._client.aio.models.embed_content(
-                    model=self.name,
-                    contents=formatted,
-                    config=types.EmbedContentConfig(output_dimensionality=self.vector_size),
-                ),
-                timeout=8.0,
-            )
-            return [list(emb.values) for emb in response.embeddings]
-        except Exception as exc:
-            raise JobRAGUnavailableError("Không thể tạo Gemini embedding hoặc request bị timeout.") from exc
+        slots = asyncio.Semaphore(EMBED_CONCURRENCY)
+
+        async def one(content: str) -> list[float]:
+            # Điều tiết token nằm trong `_embed`; ở đây chỉ chặn số lời gọi
+            # đồng thời để không mở quá nhiều kết nối cùng lúc.
+            async with slots:
+                return await self._embed(content)
+
+        return await asyncio.gather(*(one(item) for item in formatted))
 
     async def embed_query(self, text_value: str) -> list[float]:
         return await self._embed(f"task: search result | query: {text_value}")
