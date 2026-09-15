@@ -122,4 +122,7 @@ run_local.md
 
 GEMINI.md
 
-
+# Cache embedding lúc chạy (cv_jd_pipeline ghi ra đây). Phình dần theo số CV đã
+# xử lý, và tuy khoá là hash chứ không phải văn bản gốc, vector vẫn suy ngược
+# được phần nào nội dung — không nên nằm trong repo.
+data/cache/
