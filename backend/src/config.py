@@ -66,7 +66,23 @@ class Settings(BaseSettings):
     # tên biến môi trường chuẩn của SDK Google/LangChain.
     gemini_api_key: str = ""
     google_api_key: str = ""
-    model_name: str = "gemini-3.5-flash"
+    # Đo ngày 16/09/2026 trên bốn tác vụ dùng biến này, 3 lượt mỗi ô:
+    #
+    #                        3.1-flash-lite  3.5-flash-lite  3.5-flash
+    #   chấm STAR                    1806 ms         1171 ms   21646 ms
+    #   sinh câu hỏi                 2085 ms         1651 ms   17873 ms
+    #   bóc tách CV (strict)         2387 ms         2107 ms    7124 ms
+    #   biên tập gap (strict)        3962 ms         3394 ms   13810 ms
+    #   đạt kiểm định                  12/12           12/12      12/12
+    #
+    # `gemini-3.5-flash` từng là mặc định và chậm gấp 3-12 lần mà KHÔNG đổi lấy
+    # được chất lượng đo được nào: không model nào bịa kỹ năng ngoài CV, sai
+    # project status hay bóc sai tên. Một lượt phỏng vấn (chấm điểm + sinh câu
+    # hỏi kế tiếp) mất ~2,8 giây với flash-lite so với ~40 giây với bản cũ —
+    # mức đó là hỏng dùng cho hội thoại tương tác.
+    #
+    # Đặt biến môi trường MODEL_NAME để ghi đè cho từng môi trường.
+    model_name: str = "gemini-3.5-flash-lite"
     llm_temperature: float = Field(default=1.0, ge=0.0, le=2.0)
     llm_timeout_seconds: float = Field(default=45, ge=5, le=120)
     llm_max_retries: int = Field(default=1, ge=0, le=3)
