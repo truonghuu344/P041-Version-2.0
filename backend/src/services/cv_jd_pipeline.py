@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import hashlib
-import json
 import logging
 import math
 import re
@@ -10,7 +9,6 @@ from collections import Counter, defaultdict
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from pathlib import Path
 from time import perf_counter
 from typing import Any
 
@@ -759,7 +757,8 @@ class EmbeddingService:
             features[digest % self.dimensions] += 0.15
         norm = math.sqrt(sum(value * value for value in features.values())) or 1.0
         result = {key: value / norm for key, value in features.items()}
-        _EMBEDDING_CACHE[cache_key] = result
+        # Vector hashing thuần CPU: giữ trong RAM thì đáng, ghi xuống DB thì không.
+        _remember_embedding(cache_key, result, persist=False)
         return result
 
     def embed_batch(self, texts: Sequence[str]) -> list[dict[int, float]]:
@@ -772,34 +771,120 @@ class EmbeddingService:
         return sum(value * right.get(key, 0.0) for key, value in left.items())
 
 
-_PERSISTENT_CACHE_PATH = Path("data/cache/embedding_vectors.json")
-_PERSISTENT_CACHE_INITIALIZED = False
+# Trần số vector giữ trong RAM. Mỗi vector 768 chiều chiếm khoảng 40-60 KB ở
+# dạng dict Python, nên 500 mục xấp xỉ 25-30 MB — vừa vặn cho một instance
+# 512 MB. Trước đây dict này không có trần nào và phình mãi.
+_MAX_CACHE_ENTRIES = 500
+
+# Các mục mới sinh ra kể từ lần ghi xuống DB gần nhất. Tầng nhúng chạy đồng bộ
+# trong worker thread (`asyncio.to_thread`) còn dự án chỉ có driver asyncpg,
+# nên không ghi DB tại chỗ được. Gom lại đây rồi ghi ở ranh giới bất đồng bộ.
+_PENDING_CACHE_WRITES: dict[str, dict[int, float]] = {}
 
 
-def _init_persistent_cache() -> None:
-    global _PERSISTENT_CACHE_INITIALIZED
-    if _PERSISTENT_CACHE_INITIALIZED:
-        return
-    _PERSISTENT_CACHE_INITIALIZED = True
+def _remember_embedding(cache_key: str, vector: dict[int, float], *, persist: bool) -> None:
+    """Đưa một vector vào cache RAM, loại mục cũ nhất khi chạm trần."""
+    if cache_key not in _EMBEDDING_CACHE and len(_EMBEDDING_CACHE) >= _MAX_CACHE_ENTRIES:
+        # dict Python giữ thứ tự chèn, nên mục đầu tiên là mục vào sớm nhất.
+        oldest = next(iter(_EMBEDDING_CACHE))
+        _EMBEDDING_CACHE.pop(oldest, None)
+    _EMBEDDING_CACHE[cache_key] = vector
+    if persist:
+        _PENDING_CACHE_WRITES[cache_key] = vector
+
+
+async def load_embedding_cache(session: Any) -> int:
+    """Nạp vector đã nhúng từ DB vào cache RAM. Trả về số mục nạp được.
+
+    Gọi một lần lúc khởi động. Lỗi ở đây không được làm sập ứng dụng — mất cache
+    chỉ tốn thêm vài lời gọi API, không sai kết quả.
+    """
+    from sqlalchemy import select
+
+    from src.db.models import EmbeddingCacheEntry
+
     try:
-        if _PERSISTENT_CACHE_PATH.exists():
-            with open(_PERSISTENT_CACHE_PATH, encoding="utf-8") as f:
-                data = json.load(f)
-                for k, v in data.items():
-                    if k not in _EMBEDDING_CACHE:
-                        _EMBEDDING_CACHE[k] = {int(vk): float(vv) for vk, vv in v.items()}
-    except Exception:
-        pass
+        rows = (
+            await session.scalars(
+                select(EmbeddingCacheEntry)
+                .order_by(EmbeddingCacheEntry.last_used_at.desc())
+                .limit(_MAX_CACHE_ENTRIES)
+            )
+        ).all()
+    except Exception as exc:
+        logger.warning("Không nạp được cache embedding từ DB, sẽ nhúng lại khi cần: %s", exc)
+        return 0
+
+    loaded = 0
+    for row in rows:
+        if row.cache_key in _EMBEDDING_CACHE:
+            continue
+        # Lưu dạng danh sách đặc, dựng lại dict thưa và bỏ các chiều bằng 0.
+        _EMBEDDING_CACHE[row.cache_key] = {
+            index: float(value) for index, value in enumerate(row.vector or []) if value
+        }
+        loaded += 1
+    return loaded
 
 
-def _persist_embedding_cache() -> None:
+async def flush_embedding_cache(session: Any) -> int:
+    """Ghi các vector mới xuống DB. Trả về số mục đã ghi.
+
+    Chỉ ghi phần chênh lệch, không ghi lại toàn bộ cache. Lỗi ở đây cũng không
+    được làm hỏng request đang phục vụ.
+    """
+    if not _PENDING_CACHE_WRITES:
+        return 0
+
+    from sqlalchemy.dialects.postgresql import insert as pg_insert
+
+    from src.db.models import EmbeddingCacheEntry
+
+    pending = dict(_PENDING_CACHE_WRITES)
+    dimensions_by_key = {}
+    for cache_key in pending:
+        try:
+            dimensions_by_key[cache_key] = int(cache_key.split(":")[-2])
+        except (IndexError, ValueError):
+            # Khoá sai định dạng thì bỏ qua thay vì ghi một vector cụt.
+            dimensions_by_key[cache_key] = 0
+
+    payload = []
+    for cache_key, sparse in pending.items():
+        size = dimensions_by_key[cache_key]
+        if size <= 0:
+            continue
+        dense = [0.0] * size
+        for index, value in sparse.items():
+            if 0 <= index < size:
+                dense[index] = float(value)
+        payload.append({"cache_key": cache_key, "vector": dense})
+
+    if not payload:
+        _PENDING_CACHE_WRITES.clear()
+        return 0
+
     try:
-        _PERSISTENT_CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
-        serializable = {k: {str(vk): vv for vk, vv in v.items()} for k, v in _EMBEDDING_CACHE.items()}
-        with open(_PERSISTENT_CACHE_PATH, "w", encoding="utf-8") as f:
-            json.dump(serializable, f)
-    except Exception:
-        pass
+        dialect = session.bind.dialect.name if session.bind else ""
+        if dialect == "postgresql":
+            stmt = pg_insert(EmbeddingCacheEntry).values(payload)
+            # Cùng văn bản + cùng model ⇒ cùng vector, nên trùng khoá là ghi đè vô hại.
+            await session.execute(stmt.on_conflict_do_nothing(index_elements=["cache_key"]))
+        else:
+            for row in payload:
+                await session.merge(EmbeddingCacheEntry(**row))
+        await session.commit()
+    except Exception as exc:
+        logger.warning("Không ghi được cache embedding xuống DB: %s", exc)
+        try:
+            await session.rollback()
+        except Exception:
+            pass
+        return 0
+
+    for cache_key in pending:
+        _PENDING_CACHE_WRITES.pop(cache_key, None)
+    return len(payload)
 
 
 class GeminiEmbeddingService(EmbeddingService):
@@ -811,7 +896,6 @@ class GeminiEmbeddingService(EmbeddingService):
         super().__init__(dimensions)
         self.name = model
         self._client = genai.Client(api_key=api_key)
-        _init_persistent_cache()
 
     def embed_batch(self, texts: Sequence[str]) -> list[dict[int, float]]:
         from google.genai import types
@@ -819,7 +903,6 @@ class GeminiEmbeddingService(EmbeddingService):
         if not texts:
             return []
 
-        _init_persistent_cache()
         results: list[dict[int, float] | None] = [None] * len(texts)
         missing_indices: list[int] = []
         missing_texts: list[str] = []
@@ -856,11 +939,12 @@ class GeminiEmbeddingService(EmbeddingService):
                             f"{self.name}:{self.dimensions}:"
                             f"{hashlib.sha256(missing_texts[batch_start + i].encode('utf-8')).hexdigest()}"
                         )
-                        _EMBEDDING_CACHE[text_key] = vector
+                        # Vector trả phí: giữ RAM và xếp hàng ghi xuống DB.
+                        _remember_embedding(text_key, vector, persist=True)
                         results[original_idx] = vector
                         newly_embedded = True
                 if newly_embedded:
-                    _persist_embedding_cache()
+                    logger.debug("Đã nhúng %s đoạn mới, chờ ghi xuống DB.", len(_PENDING_CACHE_WRITES))
             except Exception as exc:
                 logger.warning(
                     "Gemini batch embedding error (quota/rate-limit); falling back to deterministic hashing: %s",

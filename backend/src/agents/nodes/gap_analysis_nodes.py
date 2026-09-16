@@ -20,6 +20,8 @@ from src.agents.tools.career_tools import (
     mentioned_skills,
 )
 from src.config import get_settings
+from src.db.database import AsyncSessionLocal
+from src.services.cv_jd_pipeline import flush_embedding_cache
 
 logger = logging.getLogger(__name__)
 
@@ -101,6 +103,15 @@ async def extract_gap_evidence(state: GapAnalysisState) -> dict[str, Any]:
         rubric=state.get("rubric", {}),
         on_progress=state.get("on_progress"),
     )
+    # `build_gap_evidence` chạy đồng bộ trong worker thread nên không ghi DB tại
+    # chỗ được (dự án chỉ có driver asyncpg). Đây là ranh giới bất đồng bộ đầu
+    # tiên sau khi nhúng xong, nên ghi các vector mới xuống DB ngay tại đây.
+    # Ghi hỏng không được làm hỏng kết quả phân tích — nó chỉ là cache.
+    try:
+        async with AsyncSessionLocal() as session:
+            await flush_embedding_cache(session)
+    except Exception as exc:
+        logger.warning("Bỏ qua việc ghi cache embedding: %s", exc)
     return {"evidence": evidence}
 
 

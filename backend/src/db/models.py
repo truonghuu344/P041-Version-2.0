@@ -206,6 +206,34 @@ class MarketJobEmbedding(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
 
+class EmbeddingCacheEntry(Base):
+    """Vector đã nhúng bằng nhà cung cấp trả phí, lưu lại để khỏi gọi lần hai.
+
+    Trước đây cache này ghi ra `data/cache/embedding_vectors.json`. Trên nền
+    tảng có hệ thống file phù du (Render gói free) file đó biến mất sau mỗi lần
+    khởi động lại, nên cùng một CV bị nhúng lại từ đầu và tốn quota. Đưa xuống
+    Postgres thì mỗi đoạn văn bản chỉ nhúng đúng một lần.
+
+    Chỉ dùng cho embedding trả phí. Vector hashing cục bộ thuần CPU, tính lại
+    rẻ hơn nhiều so với một vòng truy vấn DB.
+
+    `vector` lưu danh sách float đặc thay vì dict thưa: cả 768 chiều đều khác 0
+    nên dạng dict chỉ tổ thêm khoá chuỗi. Dùng JSON chứ không dùng
+    `EmbeddingVector` vì cột pgvector cố định số chiều, còn cache phải chứa
+    được nhiều số chiều khác nhau cùng lúc.
+    """
+
+    __tablename__ = "embedding_cache"
+
+    # Dạng `{ten_model}:{so_chieu}:{sha256 cua van ban}`.
+    cache_key: Mapped[str] = mapped_column(String(200), primary_key=True)
+    vector: Mapped[list[float]] = mapped_column(JSON, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    last_used_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+
 class JobRecommendationRun(Base):
     """One reproducible Top Jobs retrieval request for a candidate CV snapshot."""
 
