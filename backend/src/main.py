@@ -15,9 +15,10 @@ from src.api.v2.routes import router as v2_router
 from src.config import get_settings
 from src.core.errors import CVVariantError, PipelineError
 from src.core.logging_config import log_error_with_context, log_startup_config, mask_sensitive_data, setup_logging
-from src.db.database import engine, init_db
+from src.db.database import AsyncSessionLocal, engine, init_db
 from src.middleware.logging import RequestLoggingMiddleware
 from src.middleware.security import ApiProtectionMiddleware
+from src.services.cv_jd_pipeline import load_embedding_cache
 from src.services.deployed_data_sync import sync_deployed_job_catalog
 from src.services.job_rag import sync_market_jobs_safely
 
@@ -32,6 +33,12 @@ async def lifespan(app: FastAPI):
     logger.info("[Startup] Build marker: CV-JD Matching & Scoring Engine v2026.08.28-v1")
     # Tự động tạo bảng DB khi startup
     await init_db()
+    # Nạp lại vector đã nhúng ở các lần chạy trước. Nếu bỏ qua bước này thì mỗi
+    # lần khởi động lại (trên gói free là vài lần mỗi ngày) sẽ nhúng lại từ đầu
+    # và tốn quota vô ích.
+    async with AsyncSessionLocal() as session:
+        restored = await load_embedding_cache(session)
+    logger.info("Đã nạp lại %s vector embedding từ cache DB.", restored)
     if settings.deployed_data_sync_on_startup:
         sync_result = await sync_deployed_job_catalog()
         logger.info(
